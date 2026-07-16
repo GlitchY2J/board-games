@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from 'react';
+import { cn } from '../../lib/cn';
 
 type Variant = 'primary' | 'secondary' | 'danger';
 
@@ -23,7 +24,7 @@ export default function Button({
   return (
     <button
       {...props}
-      className={[
+      className={cn(
         'rounded-xl',
         'font-semibold',
         'py-3',
@@ -36,7 +37,7 @@ export default function Button({
         fullWidth ? 'w-full' : 'w-48',
         variants[variant],
         className,
-      ].join(' ')}
+      )}
     >
       {children}
     </button>
