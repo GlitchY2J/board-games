@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 
 type Variant = 'primary' | 'secondary' | 'danger';
 
@@ -14,19 +14,29 @@ export default function Button({
   children,
   ...props
 }: ButtonProps) {
-  const base =
-    'rounded-xl px-6 py-3 font-semibold transition-all duration-200 shadow-md';
-
   const variants = {
-    primary: 'bg-blue-600 hover:bg-blue-500 hover:scale-105 active:scale-95',
-    secondary: 'bg-gray-700 hover:bg-slate-600 hover:scale-105 active:scale-95',
-    danger: 'bg-red-600 hover:bg-red-500 hover:scale-105 active:scale-95',
+    primary: 'bg-blue-600 hover:bg-blue-500',
+    secondary: 'bg-gray-700 hover:bg-slate-600',
+    danger: 'bg-red-600 hover:bg-red-500',
   };
 
   return (
     <button
-      className={`%{base} ${variants[variant]} ${fullWidth ? 'w-full' : 'w-48'} ${className}`}
       {...props}
+      className={[
+        'rounded-xl',
+        'font-semibold',
+        'py-3',
+        'px-6',
+        'shadow-md',
+        'transition-all',
+        'duration-200',
+        'hover:scale-105',
+        'active:scale-95',
+        fullWidth ? 'w-full' : 'w-48',
+        variants[variant],
+        className,
+      ].join(' ')}
     >
       {children}
     </button>

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import Button from '../components/ui/Button';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -19,15 +20,8 @@ export default function Home() {
       </p>
 
       <div className="flex gap-6">
-        <button
-          onClick={() => navigate('/create')}
-          className="w-48 bg-blue-600 hover:bg-blue-500 transition-colors py-4 rounded-xl font-semibold"
-        >
-          Crear sala
-        </button>
-        <button className="w-48 bg-gray-700 hover:bg-gray-600 transition-colors py-4 rounded-xl font-semibold">
-          Unirse
-        </button>
+        <Button onClick={() => navigate('/create')}>Crear sala</Button>
+        <Button variant="secondary">Unirse</Button>
       </div>
     </div>
   );
