@@ -21,11 +21,11 @@ export default function Home() {
       <div className="flex gap-6">
         <button
           onClick={() => navigate('/create')}
-          className="bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-xl"
+          className="w-48 bg-blue-600 hover:bg-blue-500 transition-colors py-4 rounded-xl font-semibold"
         >
           Crear sala
         </button>
-        <button className="bg-gray-700 hover:bg-gray-600 px-8 py-4 rounded-xl">
+        <button className="w-48 bg-gray-700 hover:bg-gray-600 transition-colors py-4 rounded-xl font-semibold">
           Unirse
         </button>
       </div>
