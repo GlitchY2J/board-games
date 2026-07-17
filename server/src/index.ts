@@ -3,9 +3,14 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
+import { loadCards } from './game/CardLoader.ts';
+
 import roomRoutes from './routes/roomRoutes.ts';
 
 const app = express();
+
+const cards = loadCards();
+console.log(cards);
 
 app.use(cors());
 app.use(express.json());
