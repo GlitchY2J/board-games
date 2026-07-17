@@ -1,0 +1,34 @@
+[
+  {
+    "id": "baby_pink",
+    "name": "Baby Unicorn",
+    "type": "baby",
+    "image": "baby_pink.png",
+    "description": "A baby unicorn.",
+    "effects": []
+  },
+  {
+    "id": "basic_white",
+    "name": "Basic Unicorn",
+    "type": "basic",
+    "image": "basic_white.png",
+    "description": "Just a basic unicorn.",
+    "effects": []
+  },
+  {
+    "id": "neigh",
+    "name": "Neigh",
+    "type": "instant",
+    "image": "neigh.png",
+    "description": "Stop another player's card.",
+    "effects": ["cancel_card"]
+  },
+  {
+    "id": "upgrade_rainbow",
+    "name": "Rainbow Aura",
+    "type": "upgrade",
+    "image": "rainbow_aura.png",
+    "description": "Your Unicorns cannot be destroyed.",
+    "effects": ["protect_unicorns"]
+  }
+]
