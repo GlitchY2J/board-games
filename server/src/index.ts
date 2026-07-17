@@ -1,5 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
 import roomRoutes from './routes/roomRoutes.ts';
 
 const app = express();
@@ -9,12 +12,28 @@ app.use(express.json());
 
 app.use('/rooms', roomRoutes);
 
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
   res.send('Servidor funcionando');
+});
+
+const httpServer = createServer(app);
+
+export const io = new Server(httpServer, {
+  cors: {
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log(`Cliente conectado: ${socket.id}`);
+  socket.on('disconnect', () => {
+    console.log(`Cliente desconectado: ${socket.id}`);
+  });
 });
 
 const PORT = 3000;
 
-app.listen(PORT, () => {
-  console.log(`Servidor iniciado en http://localhost:${PORT}`);
+httpServer.listen(PORT, () => {
+  console.log(`Servidor iniciado en puerto ${PORT}`);
 });

@@ -5,8 +5,22 @@ import CreateRoom from './pages/CreateRoom';
 import Lobby from './pages/Lobby';
 import Game from './pages/Game';
 import Settings from './pages/Settings';
+import { useEffect } from 'react';
+import { socket } from './services/socket';
 
 export default function App() {
+  useEffect(() => {
+    socket.connect();
+
+    console.log('Conectando al servidor...');
+
+    return () => {
+      socket.disconnect();
+
+      console.log('Desconectado del servidor.');
+    };
+  }, []);
+
   return (
     <Routes>
       <Route element={<MainLayout />}>

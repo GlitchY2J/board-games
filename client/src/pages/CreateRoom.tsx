@@ -16,7 +16,11 @@ export default function CreateRoom() {
       navigate('/lobby');
     } catch (err) {
       console.error(err);
-      alert('Error creando la sala.');
+      if (err instanceof Error) {
+        alert('Error creando la sala.');
+      } else {
+        alert('Error desconocido');
+      }
     }
   }
 
