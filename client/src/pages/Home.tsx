@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 
@@ -8,7 +7,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate 950">
-      <Card className="w-[700px]">
+      <Card className="w-175">
         <h1 className="text-5xl font-bold text-center mb-4">Board Games</h1>
 
         <p className="text-center text-slate-400 mb-10">

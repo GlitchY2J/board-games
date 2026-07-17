@@ -5,9 +5,9 @@ import roomRoutes from './routes/roomRoutes.ts';
 const app = express();
 
 app.use(cors());
-app.use('/rooms', roomRoutes);
-
 app.use(express.json());
+
+app.use('/rooms', roomRoutes);
 
 app.get('/', (req, res) => {
   res.send('Servidor funcionando');
