@@ -1,15 +1,18 @@
 import Card from './Card';
+import type { Card as GameCard } from '../../types/GameState';
 
-export default function Hand() {
+interface Props {
+  cards: GameCard[];
+}
+
+export default function Hand({ cards }: Props) {
   return (
     <div>
       <h2>Tu mano</h2>
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Card title="Carta 1" />
-        <Card title="Carta 2" />
-        <Card title="Carta 3" />
-        <Card title="Carta 4" />
-        <Card title="Carta 5" />
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        {cards.map((card) => (
+          <Card key={card.id} title={card.name} />
+        ))}
       </div>
     </div>
   );
