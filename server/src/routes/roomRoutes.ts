@@ -1,37 +1,54 @@
 import { Router } from 'express';
-import RoomManager from '../managers/RoomManager.ts';
+import { roomManager } from '../index.ts';
 import type { Room } from '../models/Room.ts';
 
 const router = Router();
 
-function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-}
-
+// Crear una sala
 router.post('/create', (req, res) => {
-  const room: Room = {
-    code: generateCode(),
-    game: req.body.game,
-    hostId: crypto.randomUUID(),
-    players: [
-      {
-        id: crypto.randomUUID(),
-        name: req.body.playerName,
-        ready: false,
-      },
-    ],
-  };
-  RoomManager.createRoom(room);
+  const { playerName, game } = req.body;
+
+  if (!playerName || !game) {
+    return res.status(400).json({
+      message: 'Faltan datos.',
+    });
+  }
+
+  const room = roomManager.creatRoom(playerName, game, '');
+
   res.json(room);
 });
 
-router.get('/', (req, res) => {
-  res.json(RoomManager.getRooms());
+// Buscar sala por código
+router.get('/:code', (req, res) => {
+  const room = roomManager.getRoom(req.params.code);
+
+  if (!room) {
+    return res.status(404).json({
+      message: 'Sala no encontrada.',
+    });
+  }
+  res.json(room);
+});
+
+// Unirse a una sala
+router.post('/join', (req, res) => {
+  const { roomCode, playerName } = req.body;
+
+  if (!roomCode || !playerName) {
+    return res.status(400).json({
+      message: 'Faltan datos.',
+    });
+  }
+
+  const room = roomManager.joinRoom(roomCode, playerName, '');
+
+  if (!room) {
+    return res.status(404).json({
+      message: 'La sala no existe.',
+    });
+  }
+  res.json(room);
 });
 
 export default router;

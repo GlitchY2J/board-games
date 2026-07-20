@@ -1,4 +1,5 @@
 import { CardType } from './enums.ts';
+import { CardEffect } from './Effect.ts';
 
 export interface Card {
   id: string;
@@ -6,5 +7,5 @@ export interface Card {
   type: CardType;
   description: string;
   image: string;
-  effects: string[];
+  effects: CardEffect[];
 }
