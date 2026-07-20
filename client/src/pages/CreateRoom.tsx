@@ -1,26 +1,26 @@
 import { useState } from 'react';
 import { createRoom } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { useGame } from '../context/GameContext';
 
 export default function CreateRoom() {
   const navigate = useNavigate();
-  const { setRoom, setPlayerName } = useGame();
-  const [playerName, setPlayer] = useState('');
+  const [playerName, setPlayerName] = useState('');
+  const [game, setGame] = useState('unstable-unicorns');
 
-  async function handleCreate() {
+  async function handleCreateRoom() {
     try {
-      const room = await createRoom(playerName, 'Poker');
-      setRoom(room);
-      setPlayerName(playerName);
-      navigate('/lobby');
+      const room = await createRoom(playerName, game);
+
+      navigate('/lobby', {
+        state: {
+          room,
+          playerName,
+        },
+      });
     } catch (err) {
       console.error(err);
-      if (err instanceof Error) {
-        alert('Error creando la sala.');
-      } else {
-        alert('Error desconocido');
-      }
+
+      alert('Error creando la sala.');
     }
   }
 
@@ -31,11 +31,11 @@ export default function CreateRoom() {
       <input
         placeholder="Nombre"
         value={playerName}
-        onChange={(e) => setPlayer(e.target.value)}
+        onChange={(e) => setPlayerName(e.target.value)}
       />
       <br />
       <br />
-      <button onClick={handleCreate}>Crear Sala</button>
+      <button onClick={handleCreateRoom}>Crear Sala</button>
     </div>
   );
 }
