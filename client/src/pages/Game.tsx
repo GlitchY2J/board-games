@@ -1,51 +1,79 @@
 import { useLocation } from 'react-router-dom';
-import type { GameState } from '../types/GameState';
-import Deck from '../components/game/Deck';
-import DiscardPile from '../components/game/DiscardPile';
-import Hand from '../components/game/Hand';
-import Stable from '../components/game/Stable';
+
+interface Card {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  image: string;
+}
+
+interface Player {
+  id: string;
+  name: string;
+  hand: Card[];
+  stable: Card[];
+  upgrades: Card[];
+  downgrades: Card[];
+}
+
+interface GameState {
+  players: Player[];
+  currentPlayer: number;
+  turn: number;
+}
 
 export default function Game() {
   const location = useLocation();
-  const game = location.state?.gameState as GameState | undefined;
 
-  if (!game) {
-    return (
-      <div style={{ padding: 40, color: 'white' }}>Esperando partida...</div>
-    );
+  const gameState = location.state?.gameState as GameState;
+
+  if (!gameState) {
+    return <h2>No hay partida cargada.</h2>;
   }
 
-  function playCard(cardId: string) {
-    if (!game) return;
-
-    const me = game.players[0];
-
-    const index = me.hand.findIndex((c) => c.id === cardId);
-
-    if (index === -1) return;
-
-    const card = me.hand.splice(index, 1)[0];
-
-    me.stable.push(card);
-
-    setGame({ ...game });
-  }
-
-  const me = game.players[0];
+  const player = gameState.players[0];
 
   return (
-    <div style={{ padding: 30, color: 'white' }}>
+    <div style={{ padding: 20 }}>
       <h1>Unstable Unicorns</h1>
-      <h2>Turno {game.turn}</h2>
-      <hr />
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Deck remaining={game.deck.drawPile.length} />
-        <DiscardPile count={game.deck.discardPile.length} />
+
+      <h2>Turno {gameState.turn}</h2>
+
+      <h3>Jugador: {player.name}</h3>
+
+      <h3>Tu mano</h3>
+
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        {player.hand.map((card) => (
+          <div
+            key={card.id}
+            style={{
+              width: 140,
+              border: '1px solid white',
+              borderRadius: 8,
+              padding: 10,
+            }}
+          >
+            <h4>{card.name}</h4>
+            <p>{card.type}</p>
+          </div>
+        ))}
       </div>
-      <hr />
-      <Stable cards={me.stable} />
-      <hr />
-      <Hand cards={me.hand} onPlay={playCard} />
+
+      <h3>Establo</h3>
+      <div
+        style={{
+          minHeight: 120,
+          border: '1px dashed gray',
+          marginTop: 20,
+          padding: 10,
+        }}
+      >
+        {player.stable.length === 0
+          ? 'No hay unicornios.'
+          : player.stable.map((card) => <div key={card.id}>{card.name}</div>)}
+      </div>
     </div>
   );
 }
