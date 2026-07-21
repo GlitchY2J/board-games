@@ -21,6 +21,7 @@ export default function CreateRoom() {
         state: {
           room,
           playerName: hostName,
+          isHost: true,
         },
       });
     } catch {

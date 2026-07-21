@@ -41,6 +41,12 @@ export class RoomManager {
 
     if (!room) return null;
 
+    const existingPlayer = room.players.find((p) => p.socketId === socketId);
+
+    if (existingPlayer) {
+      return room;
+    }
+
     const player: Player = {
       id: crypto.randomUUID(),
       socketId,
@@ -51,11 +57,7 @@ export class RoomManager {
       downgrades: [],
     };
 
-    const exists = room.players.some((p) => p.socketId === socketId);
-
-    if (!exists) {
-      room.players.push(player);
-    }
+    room.players.push(player);
 
     return room;
   }

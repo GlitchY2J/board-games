@@ -24,10 +24,12 @@ export default function Lobby() {
 
   useEffect(() => {
     if (!isHost) {
-      socket.emit('join-room', {
-        roomCode: room.code,
-        playerName,
-      });
+      if (!location.state.isHost) {
+        socket.emit('join-room', {
+          roomCode: room.code,
+          playerName: location.state.playerName,
+        });
+      }
     }
 
     function onRoomUpdated(updatedRoom: Room) {

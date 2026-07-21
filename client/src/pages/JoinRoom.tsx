@@ -21,6 +21,7 @@ export default function JoinRoom() {
         state: {
           room,
           playerName,
+          isHost: false,
         },
       });
     } catch {
