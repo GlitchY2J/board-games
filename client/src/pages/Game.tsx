@@ -69,6 +69,10 @@ export default function Game() {
     });
   }
 
+  function endTurn() {
+    socket.emit('end-turn', gameState.roomCode);
+  }
+
   return (
     <div style={{ padding: 20 }}>
       <h1>Unstable Unicorns</h1>
@@ -77,7 +81,7 @@ export default function Game() {
 
       <h3>{player.name}</h3>
 
-      <h3>Mano</h3>
+      <h3>Jugador actual: {gameState.players[gameState.currentPlayer].name}</h3>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {player.hand.map((card) => (
@@ -97,6 +101,12 @@ export default function Game() {
             {card.type}
           </button>
         ))}
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <button disabled={!isMyTurn} onClick={endTurn}>
+          Terminar turno
+        </button>
       </div>
 
       <h2>Establo</h2>

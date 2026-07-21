@@ -16,7 +16,9 @@ export default function Home() {
 
         <div className="flex justify-center gap-6">
           <Button onClick={() => navigate('/create')}>Crear sala</Button>
-          <Button variant="secondary">Unirse</Button>
+          <Button variant="secondary" onClick={() => navigate('/join')}>
+            Unirse
+          </Button>
         </div>
       </Card>
     </div>

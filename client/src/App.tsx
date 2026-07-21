@@ -7,6 +7,7 @@ import Game from './pages/Game';
 import Settings from './pages/Settings';
 import { useEffect } from 'react';
 import { socket } from './services/socket';
+import JoinRoom from './pages/JoinRoom';
 
 export default function App() {
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function App() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/create" element={<CreateRoom />} />
+        <Route path="/join" element={<JoinRoom />} />
         <Route path="/lobby" element={<Lobby />} />
         <Route path="/game" element={<Game />} />
         <Route path="/settings" element={<Settings />} />

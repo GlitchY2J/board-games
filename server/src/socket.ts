@@ -77,6 +77,36 @@ export function initializeSocket(io: Server) {
       io.to(room.code).emit('game-updated', room.gameState);
     });
 
+    // Terminar turno
+    socket.on('end-turn', (roomCode: string) => {
+      const room = roomManager.getRoom(roomCode);
+
+      if (!room || !room.gameState) return;
+
+      const game = room.gameState;
+
+      // Cambiar al siguiente jugador
+      game.currentPlayer++;
+
+      if (game.currentPlayer >= game.players.length) {
+        game.currentPlayer = 0;
+        game.turn++;
+      }
+
+      // Robar una carta
+      const nextPlayer = game.players[game.currentPlayer];
+
+      if (game.deck.length > 0) {
+        const card = game.deck.shift();
+
+        if (card) {
+          nextPlayer.hand.push(card);
+        }
+      }
+
+      io.to(room.code).emit('game-updated', game);
+    });
+
     // Desconexión
     socket.on('disconnect', () => {
       console.log(`Cliente desconectado: ${socket.id}`);
