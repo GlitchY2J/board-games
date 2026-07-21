@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { socket } from '../services/socket';
 
 interface Card {
   id: string;
@@ -18,6 +20,7 @@ interface Player {
 }
 
 interface GameState {
+  roomCode: string;
   players: Player[];
   currentPlayer: number;
   turn: number;
@@ -26,13 +29,37 @@ interface GameState {
 export default function Game() {
   const location = useLocation();
 
-  const gameState = location.state?.gameState as GameState;
+  const [gameState, setGameState] = useState<GameState>(
+    location.state.gameState,
+  );
 
-  if (!gameState) {
-    return <h2>No hay partida cargada.</h2>;
-  }
+  // const gameState = location.state?.gameState as GameState;
+
+  // if (!gameState) {
+  //   return <h2>No hay partida cargada.</h2>;
+  // }
+
+  useEffect(() => {
+    const update = (state: GameState) => {
+      setGameState(state);
+    };
+
+    socket.on('game-updated', update);
+
+    return () => {
+      socket.off('game-updated', update);
+    };
+  }, []);
 
   const player = gameState.players[0];
+
+  function play(cardId: string) {
+    socket.emit('play-card', {
+      roomCode: gameState.roomCode,
+      playerId: player.id,
+      cardId,
+    });
+  }
 
   return (
     <div style={{ padding: 20 }}>
@@ -40,39 +67,43 @@ export default function Game() {
 
       <h2>Turno {gameState.turn}</h2>
 
-      <h3>Jugador: {player.name}</h3>
+      <h3>{player.name}</h3>
 
-      <h3>Tu mano</h3>
+      <h3>Mano</h3>
 
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {player.hand.map((card) => (
-          <div
+          <button
             key={card.id}
+            onClick={() => play(card.id)}
             style={{
               width: 140,
-              border: '1px solid white',
-              borderRadius: 8,
-              padding: 10,
+              height: 180,
             }}
           >
-            <h4>{card.name}</h4>
-            <p>{card.type}</p>
-          </div>
+            <b>{card.name}</b>
+            <br />
+            {card.type}
+          </button>
         ))}
       </div>
 
       <h3>Establo</h3>
       <div
         style={{
-          minHeight: 120,
-          border: '1px dashed gray',
           marginTop: 20,
-          padding: 10,
+          display: 'flex',
+          gap: 10,
         }}
       >
-        {player.stable.length === 0
-          ? 'No hay unicornios.'
-          : player.stable.map((card) => <div key={card.id}>{card.name}</div>)}
+        {player.stable.map((card) => (
+          <div
+            key={card.id}
+            style={{ width: 140, height: 180, border: '1px solid white' }}
+          >
+            {card.name}
+          </div>
+        ))}
       </div>
     </div>
   );

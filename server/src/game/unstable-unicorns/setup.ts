@@ -44,10 +44,12 @@ export function createGameState(room: Room): GameState {
   }
 
   return {
+    roomCode: room.code,
     started: true,
     turn: 1,
     currentPlayer: 0,
     players,
-    deck,
+    deck: [],
+    discardPile: [],
   };
 }

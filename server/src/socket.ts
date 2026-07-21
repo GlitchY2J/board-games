@@ -56,6 +56,27 @@ export function initializeSocket(io: Server) {
       });
     });
 
+    // Jugar carta
+    socket.on('play-card', ({ roomCode, playerId, cardId }) => {
+      const room = roomManager.getRoom(roomCode);
+
+      if (!room || !room.gameState) return;
+
+      const player = room.gameState.players.find((p) => p.id === playerId);
+
+      if (!player) return;
+
+      const index = player.hand.findIndex((c) => c.id === cardId);
+
+      if (index === -1) return;
+
+      const [card] = player.hand.splice(index, 1);
+
+      player.stable.push(card);
+
+      io.to(room.code).emit('game-updated', room.gameState);
+    });
+
     // Desconexión
     socket.on('disconnect', () => {
       console.log(`Cliente desconectado: ${socket.id}`);
