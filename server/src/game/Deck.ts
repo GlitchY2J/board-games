@@ -1,4 +1,4 @@
-import type { Card } from './Card.ts';
+import type { Card } from './models/Card.ts';
 
 export interface Deck {
   drawPile: Card[];

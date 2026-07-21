@@ -1,18 +1,16 @@
 import fs from 'fs';
 import path from 'path';
-import type { Card } from './Card.ts';
+import type { Card } from './models/Card.ts';
 
-export function loadCards(): Card[] {
-  const file = path.join(
-    process.cwd(),
-    '..',
-    'assets',
-    'games',
-    'unstable-unicorns',
-    'cards.json',
-  );
+export class CardLoader {
+  static load(): Card[] {
+    const file = path.resolve(
+      process.cwd(),
+      '../assets/games/unstable-unicorns/cards.json',
+    );
 
-  const data = fs.readFileSync(file, 'utf-8');
+    const json = fs.readFileSync(file, 'utf8');
 
-  return JSON.parse(data);
+    return JSON.parse(json);
+  }
 }

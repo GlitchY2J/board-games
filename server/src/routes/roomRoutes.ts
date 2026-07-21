@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { roomManager } from '../index.ts';
-import type { Room } from '../models/Room.ts';
+import type { Room } from '../game/models/Room.ts';
 
 const router = Router();
 

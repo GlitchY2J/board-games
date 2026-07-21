@@ -1,75 +1,97 @@
-import type { GameState } from './game/GameState.ts';
 import crypto from 'crypto';
 
-export interface Player {
-  id: string;
-  name: string;
-  socketId: string;
-}
+import type { Room } from './game/models/Room.ts';
+import type { Player } from './game/models/Player.ts';
 
-export interface Room {
-  code: string;
-  game: string;
-  hostId: string;
-  players: Player[];
-  gameState?: GameState;
-}
+import { generateRoomCode } from './utils/generateRoomCode.ts';
 
 export class RoomManager {
-  private rooms = new Map<string, Room>();
+  private rooms: Map<string, Room>;
 
-  creatRoom(hostName: string, game: string, socketId: string): Room {
+  constructor() {
+    this.rooms = new Map();
+  }
+
+  // Crear Sala
+  createRoom(hostName: string, game: string, socketId: string): Room {
+    const player: Player = {
+      id: crypto.randomUUID(),
+      socketId,
+      name: hostName,
+      hand: [],
+      stable: [],
+      upgrades: [],
+      downgrades: [],
+    };
+
     const room: Room = {
-      code: this.generateCode(),
+      code: generateRoomCode(),
       game,
-      hostId: socketId,
-      players: [
-        {
-          id: crypto.randomUUID(),
-          socketId,
-          name: hostName,
-        },
-      ],
+      hostId: player.id,
+      players: [player],
     };
     this.rooms.set(room.code, room);
 
     return room;
   }
 
-  getRoom(code: string): Room | undefined {
-    return this.rooms.get(code);
-  }
-
-  joinRoom(code: string, playerName: string, socketId: string): Room | null {
-    const room = this.rooms.get(code);
+  // Unirse a Sala
+  joinRoom(
+    roomCode: string,
+    playerName: string,
+    socketId: string,
+  ): Room | null {
+    const room = this.rooms.get(roomCode);
 
     if (!room) return null;
 
-    room.players.push({
+    const player: Player = {
       id: crypto.randomUUID(),
       socketId,
       name: playerName,
-    });
+      hand: [],
+      stable: [],
+      upgrades: [],
+      downgrades: [],
+    };
+    room.players.push(player);
 
     return room;
   }
 
-  deleteRoom(code: string): void {
-    this.rooms.delete(code);
+  // Obtener sala
+  getRoom(code: string): Room | undefined {
+    return this.rooms.get(code);
   }
 
+  // Verificar si la sala existe
+  roomExists(code: string): boolean {
+    return this.rooms.has(code);
+  }
+
+  // Remover jugador
+  removePlayer(socketId: string): void {
+    for (const room of this.rooms.values()) {
+      room.players = room.players.filter((p) => p.socketId !== socketId);
+
+      if (room.players.length === 0) {
+        this.rooms.delete(room.code);
+        return;
+      }
+
+      if (room.hostId === socketId) {
+        room.hostId = room.players[0].id;
+      }
+    }
+  }
+
+  // Buscar salas
   getRooms(): Room[] {
     return [...this.rooms.values()];
   }
 
-  private generateCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-
-    for (let i = 0; i < 6; i++) {
-      code += chars[Math.floor(Math.random() * chars.length)];
-    }
-
-    return code;
+  // Eliminar sala
+  deleteRoom(code: string): void {
+    this.rooms.delete(code);
   }
 }

@@ -1,4 +1,11 @@
-export default function Stable() {
+import Card from './Card';
+import type { Card as GameCard } from '../../types/GameState';
+
+interface Props {
+  cards: GameCard[];
+}
+
+export default function Stable({ cards }: Props) {
   return (
     <div>
       <h2>Tu establo</h2>
@@ -12,7 +19,9 @@ export default function Stable() {
           alignItems: 'center',
         }}
       >
-        Vacío
+        {cards.length === 0
+          ? 'Vacio'
+          : cards.map((card) => <Card key={card.id} title={card.name} />)}
       </div>
     </div>
   );

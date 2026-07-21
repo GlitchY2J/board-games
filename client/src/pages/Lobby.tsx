@@ -4,10 +4,22 @@ import { socket } from '../services/socket';
 import type { Player } from '../types/Room';
 import { useNavigate } from 'react-router-dom';
 
+interface Player {
+  id: string;
+  name: string;
+}
+
+interface Room {
+  code: string;
+  game: string;
+  hostId: string;
+  players: Player[];
+}
+
 export default function Lobby() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [room, setRoom] = useState(location.state?.room);
+  const [room, setRoom] = useState<Room | null>(location.state?.room ?? null);
 
   useEffect(() => {
     if (!room) return;
@@ -16,12 +28,20 @@ export default function Lobby() {
       roomCode: room.code,
       playerName: location.state.playerName,
     });
-    socket.on('room-updated', (updatedRoom) => {
+    socket.on('room-updated', (updatedRoom: Room) => {
       setRoom(updatedRoom);
+    });
+    socket.on('game-started', (gameState) => {
+      navigate('/game', {
+        state: {
+          gameState,
+        },
+      });
     });
 
     return () => {
       socket.off('room-updated');
+      socket.off('game-started');
     };
   }, []);
 
@@ -36,11 +56,17 @@ export default function Lobby() {
       <h3>Juego: {room.game}</h3>
       <h3>Jugadores</h3>
       <ul>
-        {room.players.map((player: Player) => (
+        {room.players.map((player) => (
           <li key={player.id}>{player.name}</li>
         ))}
       </ul>
-      <button onClick={() => navigate('/game')}>Iniciar partida</button>
+      <button
+        onClick={() => {
+          socket.emit('start-game', room.code);
+        }}
+      >
+        Iniciar partida
+      </button>
     </div>
   );
 }

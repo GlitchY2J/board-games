@@ -2,16 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { RoomManager } from './RoomManager.ts';
-export const roomManager = new RoomManager();
-
-import { loadCards } from './game/CardLoader.ts';
-
+import { RoomManager } from '../RoomManager.ts';
+import { CardLoader } from './CardLoader.ts';
 import roomRoutes from './routes/roomRoutes.ts';
+
+export const roomManager = new RoomManager();
 
 const app = express();
 
-const cards = loadCards();
+const cards = CardLoader.load();
 console.log(cards);
 
 app.use(cors());

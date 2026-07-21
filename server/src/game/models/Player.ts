@@ -1,7 +1,8 @@
-import type { Card } from './Card.ts';
+import { Card } from './Card.ts';
 
-export interface GamePlayer {
+export interface Player {
   id: string;
+  socketId: string;
   name: string;
   hand: Card[];
   stable: Card[];
