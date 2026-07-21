@@ -17,32 +17,37 @@ interface Room {
 export default function Lobby() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [room, setRoom] = useState<Room>(location.state.room);
-  const playerName = location.state.playerName;
-  const isHost =
-    room.players.length > 0 && room.players[0].socketId === socket.id;
+  const [room, setRoom] = useState<Room | null>(location.state?.room ?? null);
+  const playerName = location.state?.playerName;
+  const isHost = location.state?.isHost;
 
   useEffect(() => {
+    if (!room) return;
+
+    socket.emit('join-room', {
+      roomCode: room.code,
+      playerName,
+    });
+
+    // solo invitados
     if (!isHost) {
-      if (!location.state.isHost) {
-        socket.emit('join-room', {
-          roomCode: room.code,
-          playerName: location.state.playerName,
-        });
-      }
+      socket.emit('join-room', {
+        roomCode: room.code,
+        playerName,
+      });
     }
 
-    function onRoomUpdated(updatedRoom: Room) {
+    const onRoomUpdated = (updatedRoom: Room) => {
       setRoom(updatedRoom);
-    }
+    };
 
-    function onGameStarted(gameState: any) {
+    const onGameStarted = (gameState: any) => {
       navigate('/game', {
         state: {
           gameState,
         },
       });
-    }
+    };
 
     socket.on('room-updated', onRoomUpdated);
     socket.on('game-started', onGameStarted);
@@ -51,7 +56,7 @@ export default function Lobby() {
       socket.off('room-updated', onRoomUpdated);
       socket.off('game-started', onGameStarted);
     };
-  }, []);
+  }, [room, isHost, navigate, playerName]);
 
   if (!room) {
     return <h2>Cargando lobby...</h2>;

@@ -24,9 +24,17 @@ export function initializeSocket(io: Server) {
 
     // Iniciar partida
     socket.on('start-game', (roomCode: string) => {
+      console.log('Evento start-game recibido');
+      console.log('Room:', roomCode);
+
       const room = roomManager.getRoom(roomCode);
 
-      if (!room) return;
+      console.log('Sala encontrada:', room);
+
+      if (!room) {
+        console.log('Error: sala no encontrada');
+        return;
+      }
 
       const gameState = createGameState(room);
 
