@@ -50,7 +50,12 @@ export class RoomManager {
       upgrades: [],
       downgrades: [],
     };
-    room.players.push(player);
+
+    const exists = room.players.some((p) => p.socketId === socketId);
+
+    if (!exists) {
+      room.players.push(player);
+    }
 
     return room;
   }

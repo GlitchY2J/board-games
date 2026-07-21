@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
-import type { Player } from '../types/Room';
-import { useNavigate } from 'react-router-dom';
-
 interface Player {
   id: string;
+  socketId: string;
   name: string;
 }
 
@@ -19,29 +17,37 @@ interface Room {
 export default function Lobby() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [room, setRoom] = useState<Room | null>(location.state?.room ?? null);
+  const [room, setRoom] = useState<Room>(location.state.room);
+  const playerName = location.state.playerName;
+  const isHost =
+    room.players.length > 0 && room.players[0].socketId === socket.id;
 
   useEffect(() => {
-    if (!room) return;
+    if (!isHost) {
+      socket.emit('join-room', {
+        roomCode: room.code,
+        playerName,
+      });
+    }
 
-    socket.emit('join-room', {
-      roomCode: room.code,
-      playerName: location.state.playerName,
-    });
-    socket.on('room-updated', (updatedRoom: Room) => {
+    function onRoomUpdated(updatedRoom: Room) {
       setRoom(updatedRoom);
-    });
-    socket.on('game-started', (gameState) => {
+    }
+
+    function onGameStarted(gameState: any) {
       navigate('/game', {
         state: {
           gameState,
         },
       });
-    });
+    }
+
+    socket.on('room-updated', onRoomUpdated);
+    socket.on('game-started', onGameStarted);
 
     return () => {
-      socket.off('room-updated');
-      socket.off('game-started');
+      socket.off('room-updated', onRoomUpdated);
+      socket.off('game-started', onGameStarted);
     };
   }, []);
 
@@ -57,16 +63,20 @@ export default function Lobby() {
       <h3>Jugadores</h3>
       <ul>
         {room.players.map((player) => (
-          <li key={player.id}>{player.name}</li>
+          <li key={player.id}>
+            {player.name} {player.id === room.hostId && ' 👑'}
+          </li>
         ))}
       </ul>
-      <button
-        onClick={() => {
-          socket.emit('start-game', room.code);
-        }}
-      >
-        Iniciar partida
-      </button>
+      {isHost && (
+        <button
+          onClick={() => {
+            socket.emit('start-game', room.code);
+          }}
+        >
+          Iniciar partida
+        </button>
+      )}
     </div>
   );
 }
