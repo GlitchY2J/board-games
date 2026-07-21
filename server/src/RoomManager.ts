@@ -6,15 +6,11 @@ import type { Player } from './game/models/Player.ts';
 import { generateRoomCode } from './utils/generateRoomCode.ts';
 
 export class RoomManager {
-  private rooms: Map<string, Room>;
-
-  constructor() {
-    this.rooms = new Map();
-  }
+  private rooms = new Map<string, Room>();
 
   // Crear Sala
   createRoom(hostName: string, game: string, socketId: string): Room {
-    const player: Player = {
+    const host: Player = {
       id: crypto.randomUUID(),
       socketId,
       name: hostName,
@@ -27,8 +23,8 @@ export class RoomManager {
     const room: Room = {
       code: generateRoomCode(),
       game,
-      hostId: player.id,
-      players: [player],
+      hostId: host.id,
+      players: [host],
     };
     this.rooms.set(room.code, room);
 
@@ -64,13 +60,22 @@ export class RoomManager {
     return this.rooms.get(code);
   }
 
+  // Actualizar estado del juego
+  updateGameState(code: string, gameState: Room['gameState']) {
+    const room = this.rooms.get(code);
+
+    if (!room) return;
+
+    room.gameState = gameState;
+  }
+
   // Verificar si la sala existe
   roomExists(code: string): boolean {
     return this.rooms.has(code);
   }
 
   // Remover jugador
-  removePlayer(socketId: string): void {
+  removePlayer(socketId: string) {
     for (const room of this.rooms.values()) {
       room.players = room.players.filter((p) => p.socketId !== socketId);
 
@@ -79,7 +84,9 @@ export class RoomManager {
         return;
       }
 
-      if (room.hostId === socketId) {
+      const host = room.players.find((p) => p.id === room.hostId);
+
+      if (!host) {
         room.hostId = room.players[0].id;
       }
     }

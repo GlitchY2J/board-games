@@ -1,15 +1,44 @@
-const API_URL = 'http://localhost:3000';
+const API = 'http://localhost:3000';
 
-export async function createRoom(playerName: string, game: string) {
-  const response = await fetch(`${API_URL}/rooms/create`, {
+// Crear sala
+export async function createRoom(data: {
+  hostName: string;
+  game: string;
+  socketId: string;
+}) {
+  const response = await fetch(`${API}/rooms/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ playerName, game }),
+
+    body: JSON.stringify(data),
   });
 
-  if (!response.ok) throw new Error('no fue posible crear la sala.');
+  if (!response.ok) {
+    throw new Error('Error creando sala');
+  }
 
-  return await response.json();
+  return response.json();
+}
+
+// Unirse a salad
+export async function joinRoom(data: {
+  roomCode: string;
+  playerName: string;
+  socketId: string;
+}) {
+  const response = await fetch(`${API}/rooms/join`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al unirse a la sala');
+  }
+
+  return response.json();
 }

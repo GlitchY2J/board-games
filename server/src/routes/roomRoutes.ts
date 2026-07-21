@@ -1,53 +1,39 @@
 import { Router } from 'express';
-import { roomManager } from '../index.ts';
-import type { Room } from '../game/models/Room.ts';
+import { roomManager } from '../socket.ts';
 
 const router = Router();
 
-// Crear una sala
 router.post('/create', (req, res) => {
-  const { playerName, game } = req.body;
+  const { hostName, game, socketId } = req.body;
 
-  if (!playerName || !game) {
+  if (!hostName || !game || !socketId) {
     return res.status(400).json({
-      message: 'Faltan datos.',
+      error: 'Datos incompletos',
     });
   }
 
-  const room = roomManager.creatRoom(playerName, game, '');
+  const room = roomManager.createRoom(hostName, game, socketId);
 
   res.json(room);
 });
 
-// Buscar sala por código
-router.get('/:code', (req, res) => {
-  const room = roomManager.getRoom(req.params.code);
-
-  if (!room) {
-    return res.status(404).json({
-      message: 'Sala no encontrada.',
-    });
-  }
-  res.json(room);
-});
-
-// Unirse a una sala
 router.post('/join', (req, res) => {
-  const { roomCode, playerName } = req.body;
+  const { roomCode, playerName, socketId } = req.body;
 
-  if (!roomCode || !playerName) {
+  if (!roomCode || !playerName || !socketId) {
     return res.status(400).json({
-      message: 'Faltan datos.',
+      error: 'Datos incompletos',
     });
   }
 
-  const room = roomManager.joinRoom(roomCode, playerName, '');
+  const room = roomManager.joinRoom(roomCode, playerName, socketId);
 
   if (!room) {
     return res.status(404).json({
-      message: 'La sala no existe.',
+      error: 'Sala no encontrada',
     });
   }
+
   res.json(room);
 });
 

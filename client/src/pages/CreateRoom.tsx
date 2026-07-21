@@ -1,41 +1,41 @@
 import { useState } from 'react';
-import { createRoom } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { socket } from '../services/socket';
+import { createRoom } from '../services/api';
 
 export default function CreateRoom() {
   const navigate = useNavigate();
-  const [playerName, setPlayerName] = useState('');
+
+  const [hostName, setHostName] = useState('');
   const [game, setGame] = useState('unstable-unicorns');
 
-  async function handleCreateRoom() {
+  async function handleCreate() {
     try {
-      const room = await createRoom(playerName, game);
+      const room = await createRoom({
+        hostName,
+        game,
+        socketId: socket.id!,
+      });
 
       navigate('/lobby', {
         state: {
           room,
-          playerName,
+          playerName: hostName,
         },
       });
-    } catch (err) {
-      console.error(err);
-
-      alert('Error creando la sala.');
+    } catch {
+      alert('Error creando la sala');
     }
   }
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Crear Sala</h1>
-      <br />
+    <div>
       <input
+        value={hostName}
+        onChange={(e) => setHostName(e.target.value)}
         placeholder="Nombre"
-        value={playerName}
-        onChange={(e) => setPlayerName(e.target.value)}
       />
-      <br />
-      <br />
-      <button onClick={handleCreateRoom}>Crear Sala</button>
+      <button onClick={handleCreate}>Crear Sala</button>
     </div>
   );
 }
