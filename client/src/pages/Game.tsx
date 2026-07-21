@@ -12,6 +12,7 @@ interface Card {
 
 interface Player {
   id: string;
+  socketId: string;
   name: string;
   hand: Card[];
   stable: Card[];
@@ -32,6 +33,8 @@ export default function Game() {
   const [gameState, setGameState] = useState<GameState>(
     location.state.gameState,
   );
+  const isMyTurn =
+    gameState.players[gameState.currentPlayer].socketId === socket.id;
 
   // const gameState = location.state?.gameState as GameState;
 
@@ -51,12 +54,17 @@ export default function Game() {
     };
   }, []);
 
-  const player = gameState.players[0];
+  // const player = gameState.players[0];
+  const player = gameState.players.find((p) => p.socketId === socket.id);
+
+  if (!player) {
+    return <h2>Esperando información del jugador...</h2>;
+  }
 
   function play(cardId: string) {
     socket.emit('play-card', {
       roomCode: gameState.roomCode,
-      playerId: player.id,
+      playerId: player?.id,
       cardId,
     });
   }
@@ -75,10 +83,13 @@ export default function Game() {
         {player.hand.map((card) => (
           <button
             key={card.id}
+            disabled={!isMyTurn}
             onClick={() => play(card.id)}
             style={{
               width: 140,
               height: 180,
+              opacity: isMyTurn ? 1 : 0.5,
+              cursor: isMyTurn ? 'pointer' : 'not-allowed',
             }}
           >
             <b>{card.name}</b>
@@ -88,20 +99,38 @@ export default function Game() {
         ))}
       </div>
 
-      <h3>Establo</h3>
+      <h2>Establo</h2>
       <div
         style={{
-          marginTop: 20,
           display: 'flex',
-          gap: 10,
+          flexDirection: 'column',
+          gap: 20,
+          marginTop: 20,
         }}
       >
-        {player.stable.map((card) => (
-          <div
-            key={card.id}
-            style={{ width: 140, height: 180, border: '1px solid white' }}
-          >
-            {card.name}
+        {gameState.players.map((p) => (
+          <div key={p.id} style={{ border: '1px solid gray', padding: 10 }}>
+            <h3>{p.name}</h3>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {p.stable.length === 0 ? (
+                <span>Vacio</span>
+              ) : (
+                p.stable.map((card) => (
+                  <div
+                    key={card.id}
+                    style={{
+                      width: 120,
+                      height: 160,
+                      border: '1px solid white',
+                      padding: 5,
+                    }}
+                  >
+                    {card.name}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         ))}
       </div>
