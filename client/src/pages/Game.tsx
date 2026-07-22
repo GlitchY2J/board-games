@@ -37,31 +37,16 @@ export default function Game() {
   const isMyTurn =
     gameState.players[gameState.currentPlayer].socketId === socket.id;
 
-  // const gameState = location.state?.gameState as GameState;
-
-  // if (!gameState) {
-  //   return <h2>No hay partida cargada.</h2>;
-  // }
-
   useEffect(() => {
-    // const update = (state: GameState) => {
-    //   setGameState(state);
-    // };
-
-    // socket.on('game-updated', update);
     socket.on('game-updated', (gameState) => {
       setGameState(gameState);
     });
 
-    // return () => {
-    //   socket.off('game-updated', update);
-    // };
     return () => {
       socket.off('game-updated');
     };
   }, []);
 
-  // const player = gameState.players[0];
   const player = gameState.players.find((p) => p.socketId === socket.id);
 
   if (!player) {
@@ -79,6 +64,10 @@ export default function Game() {
   function endTurn() {
     socket.emit('end-turn', gameState.roomCode);
   }
+
+  // if (gameState.pendingAction?.type === 'alluring_narwhal') {
+  //   //
+  // }
 
   return (
     <div style={{ padding: 20 }}>

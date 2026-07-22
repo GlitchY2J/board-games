@@ -9,9 +9,11 @@ export class UnicornHandler {
     player.stable.push(card);
 
     // La carta tiene un efecto ?
-    const effect = effects[card.id as keyof typeof effects];
+    if (card.effect) {
+      const effect = effects[card.effect as keyof typeof effects];
 
-    // Ejecutar efecto al entrar al establo
-    effect?.onEnterStable?.(state, player, card);
+      // Ejecutar efecto al entrar al establo
+      effect?.onEnterStable?.(state, player, card);
+    }
   }
 }

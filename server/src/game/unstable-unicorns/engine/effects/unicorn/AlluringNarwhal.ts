@@ -1,4 +1,4 @@
-import type { CardEffect } from './CardEffect.ts';
+import type { CardEffect } from '../CardEffect.ts';
 
 export const AlluringNarwhal: CardEffect = {
   onEnterStable(state, player, card) {
@@ -7,5 +7,7 @@ export const AlluringNarwhal: CardEffect = {
       playerId: player.id,
       sourceCardId: card.id,
     };
+
+    console.log(state.pendingAction);
   },
 };
