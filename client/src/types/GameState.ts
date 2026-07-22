@@ -1,3 +1,5 @@
+import type { PendingAction } from './PendingAction';
+
 export interface Card {
   id: string;
   name: string;
@@ -16,12 +18,10 @@ export interface Player {
 }
 
 export interface GameState {
+  deck: Card[];
+  discard: Card[];
+  nursery: Card[];
   players: Player[];
   currentPlayer: number;
-  turn: number;
-  started: boolean;
-  deck: {
-    drawPile: Card[];
-    discardPile: Card[];
-  };
+  pendingAction: PendingAction;
 }
