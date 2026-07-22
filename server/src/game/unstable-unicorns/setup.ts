@@ -4,11 +4,15 @@ import type { GameState } from '../models/GameState.ts';
 import type { Card } from '../models/Card.ts';
 import { DeckManager } from '../DeckManager.ts';
 import { CardRepository } from './CardRepository.ts';
+import { Player } from '../models/Player.ts';
 
 export function createGameState(room: Room): GameState {
-  const deck = new DeckManager(CardRepository.load());
+  // const deck = new DeckManager(CardRepository.load());
+  const deck = CardRepository.load();
+  const { nursery, deck: gameDeck } = extractNursery(deck);
+  const deckManager = new DeckManager(gameDeck);
 
-  deck.shuffle();
+  deckManager.shuffle();
 
   const players = room.players.map((player) => ({
     ...player,
@@ -18,10 +22,37 @@ export function createGameState(room: Room): GameState {
     downgrades: [] as Card[],
   }));
 
+  function extractNursery(deck: Card[]) {
+    const nursery = deck.filter(
+      (card) => card.cardType === 'unicorn' && card.unicornClass === 'baby',
+    );
+
+    const newDeck = deck.filter(
+      (card) => !(card.cardType === 'unicorn' && card.unicornClass === 'baby'),
+    );
+
+    return {
+      nursery,
+      deck: newDeck,
+    };
+  }
+
+  function giveBabyUnicorn(nursery: Card[], player: Player) {
+    const index = Math.floor(Math.random() * nursery.length);
+
+    const baby = nursery.splice(index, 1)[0];
+
+    player.stable.push(baby);
+  }
+
+  for (const player of players) {
+    giveBabyUnicorn(nursery, player);
+  }
+
   // Repartir 5 cartas
   for (const player of players) {
     for (let i = 0; i < 5; i++) {
-      const card = deck.draw();
+      const card = deckManager.draw();
       if (card) {
         player.hand.push(card);
       }
@@ -35,6 +66,7 @@ export function createGameState(room: Room): GameState {
     currentPlayer: 0,
     players,
     deck: [],
+    nursery: [],
     discardPile: [],
   };
 }

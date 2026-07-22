@@ -8,5 +8,6 @@ export interface GameState {
   currentPlayer: number;
   players: Player[];
   deck: Card[];
+  nursery: Card[];
   discardPile: Card[];
 }
