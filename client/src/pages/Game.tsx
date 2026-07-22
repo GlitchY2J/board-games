@@ -77,11 +77,8 @@ export default function Game() {
   return (
     <div style={{ padding: 20 }}>
       <h1>Unstable Unicorns</h1>
-
       <h2>Turno {gameState.turn}</h2>
-
       <h3>{player.name}</h3>
-
       <h3>Jugador actual: {gameState.players[gameState.currentPlayer].name}</h3>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -95,13 +92,11 @@ export default function Game() {
           />
         ))}
       </div>
-
       <div style={{ marginTop: 20 }}>
         <button disabled={!isMyTurn} onClick={endTurn}>
           Terminar turno
         </button>
       </div>
-
       <h2>Establo</h2>
       <div
         style={{
@@ -120,17 +115,23 @@ export default function Game() {
                 <span>Vacio</span>
               ) : (
                 p.stable.map((card) => (
-                  <div
+                  <Card
                     key={card.id}
-                    style={{
-                      width: 120,
-                      height: 160,
-                      border: '1px solid white',
-                      padding: 5,
-                    }}
-                  >
-                    {card.name}
-                  </div>
+                    name={card.name}
+                    image={card.image}
+                    disabled
+                  />
+                  // <div
+                  //   key={card.id}
+                  //   style={{
+                  //     width: 120,
+                  //     height: 160,
+                  //     border: '1px solid white',
+                  //     padding: 5,
+                  //   }}
+                  // >
+                  //   {card.name}
+                  // </div>
                 ))
               )}
             </div>

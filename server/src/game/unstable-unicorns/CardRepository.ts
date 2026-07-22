@@ -25,7 +25,7 @@ export class CardRepository {
     const cards = JSON.parse(json) as Card[];
 
     cards.forEach((card) => {
-      card.image = `/cards/${card.id}.png`;
+      card.image = `/cards/base/${card.id}.png`;
     });
 
     this.cards = cards;

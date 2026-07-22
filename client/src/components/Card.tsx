@@ -16,18 +16,19 @@ export default function Card({
       onClick={onClick}
       disabled={disabled}
       style={{
-        padding: 0,
+        background: 'transparent',
         border: 'none',
-        background: 'none',
+        padding: 0,
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? 0.6 : 1,
+        transition: 'transform .15s',
       }}
     >
       <img
         src={image}
         alt={name}
         draggable={false}
-        style={{ width: 160, borderRadius: 10, userSelect: 'none' }}
+        style={{ width: 170, borderRadius: 12, display: 'block' }}
       />
     </button>
   );
