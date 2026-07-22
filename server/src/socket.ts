@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { RoomManager } from './RoomManager.ts';
 import { createGameState } from './game/unstable-unicorns/setup.ts';
+import { RulesEngine } from './game/unstable-unicorns/engine/RulesEngine.ts';
 
 const roomManager = new RoomManager();
 
@@ -57,25 +58,47 @@ export function initializeSocket(io: Server) {
     });
 
     // Jugar carta
-    socket.on('play-card', ({ roomCode, playerId, cardId }) => {
-      const room = roomManager.getRoom(roomCode);
+    socket.on(
+      'play-card',
+      ({
+        roomCode,
+        playerId,
+        cardId,
+      }: {
+        roomCode: string;
+        playerId: string;
+        cardId: string;
+      }) => {
+        const room = roomManager.getRoom(roomCode);
 
-      if (!room || !room.gameState) return;
+        if (!room || !room.gameState) {
+          return;
+        }
 
-      const player = room.gameState.players.find((p) => p.id === playerId);
+        room.gameState = RulesEngine.playCard(room.gameState, playerId, cardId);
 
-      if (!player) return;
+        io.to(roomCode).emit('game-updated', room.gameState);
+      },
+    );
+    // socket.on('play-card', ({ roomCode, playerId, cardId }) => {
+    //   const room = roomManager.getRoom(roomCode);
 
-      const index = player.hand.findIndex((c) => c.id === cardId);
+    //   if (!room || !room.gameState) return;
 
-      if (index === -1) return;
+    //   const player = room.gameState.players.find((p) => p.id === playerId);
 
-      const [card] = player.hand.splice(index, 1);
+    //   if (!player) return;
 
-      player.stable.push(card);
+    //   const index = player.hand.findIndex((c) => c.id === cardId);
 
-      io.to(room.code).emit('game-updated', room.gameState);
-    });
+    //   if (index === -1) return;
+
+    //   const [card] = player.hand.splice(index, 1);
+
+    //   player.stable.push(card);
+
+    //   io.to(room.code).emit('game-updated', room.gameState);
+    // });
 
     // Terminar turno
     socket.on('end-turn', (roomCode: string) => {

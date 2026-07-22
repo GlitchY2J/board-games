@@ -48,10 +48,16 @@ export default function Game() {
       setGameState(state);
     };
 
-    socket.on('game-updated', update);
+    // socket.on('game-updated', update);
+    socket.on('game-updated', (gameState) => {
+      setGameState(gameState);
+    });
 
+    // return () => {
+    //   socket.off('game-updated', update);
+    // };
     return () => {
-      socket.off('game-updated', update);
+      socket.off('game-updated');
     };
   }, []);
 
