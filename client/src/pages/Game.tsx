@@ -44,9 +44,9 @@ export default function Game() {
   // }
 
   useEffect(() => {
-    const update = (state: GameState) => {
-      setGameState(state);
-    };
+    // const update = (state: GameState) => {
+    //   setGameState(state);
+    // };
 
     // socket.on('game-updated', update);
     socket.on('game-updated', (gameState) => {

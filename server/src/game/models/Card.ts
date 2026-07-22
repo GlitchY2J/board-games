@@ -5,7 +5,7 @@ export interface Card {
   unicornClass?: 'baby' | 'basic' | 'magical';
   image: string;
   description: string;
-  effects: string | null;
+  effect: string | null;
   copies: number;
   expansiong: string;
 }

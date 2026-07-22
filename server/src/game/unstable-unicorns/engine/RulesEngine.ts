@@ -28,7 +28,7 @@ export class RulesEngine {
 
     switch (card.cardType) {
       case 'unicorn':
-        UnicornHandler.play(player, card);
+        UnicornHandler.play(state, player, card);
         break;
       case 'upgrade':
         UpgradeHandler.play(player, card);
@@ -37,7 +37,7 @@ export class RulesEngine {
         DowngradeHandler.play(player, card);
         break;
       case 'magic':
-        MagicHandler.play(state, card);
+        MagicHandler.play(state, player, card);
         break;
       case 'instant':
         InstantHandler.play(state, card);
