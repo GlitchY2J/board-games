@@ -3,25 +3,10 @@ import type { Room } from '../models/Room.js';
 import type { GameState } from '../models/GameState.ts';
 import type { Card } from '../models/Card.ts';
 import { DeckManager } from '../DeckManager.ts';
-
-function createDeck(): Card[] {
-  const deck: Card[] = [];
-
-  for (let i = 1; i <= 60; i++) {
-    deck.push({
-      id: crypto.randomUUID(),
-      name: `Carta ${i}`,
-      type: 'unicorn',
-      description: '',
-      image: '',
-      effects: [],
-    });
-  }
-  return deck;
-}
+import { CardRepository } from './CardRepository.ts';
 
 export function createGameState(room: Room): GameState {
-  const deck = new DeckManager(createDeck());
+  const deck = new DeckManager(CardRepository.load());
 
   deck.shuffle();
 

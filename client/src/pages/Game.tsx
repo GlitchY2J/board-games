@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { socket } from '../services/socket';
+import Card from '../components/Card';
 
 interface Card {
   id: string;
@@ -85,21 +86,13 @@ export default function Game() {
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {player.hand.map((card) => (
-          <button
+          <Card
             key={card.id}
-            disabled={!isMyTurn}
+            name={card.name}
+            image={card.image}
             onClick={() => play(card.id)}
-            style={{
-              width: 140,
-              height: 180,
-              opacity: isMyTurn ? 1 : 0.5,
-              cursor: isMyTurn ? 'pointer' : 'not-allowed',
-            }}
-          >
-            <b>{card.name}</b>
-            <br />
-            {card.type}
-          </button>
+            disabled={!isMyTurn}
+          />
         ))}
       </div>
 
