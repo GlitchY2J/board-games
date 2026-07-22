@@ -1,5 +1,10 @@
 import type { Card } from '../../models/Card.js';
 import type { GameState } from '../../models/GameState.ts';
+import { DowngradeHandler } from './handlers/DowngradeHandler.ts';
+import { InstantHandler } from './handlers/InstantHandler.ts';
+import { MagicHandler } from './handlers/MagicHandler.ts';
+import { UnicornHandler } from './handlers/UnicornHandler.ts';
+import { UpgradeHandler } from './handlers/UpgradeHandler.ts';
 
 export class RulesEngine {
   static playCard(
@@ -23,19 +28,19 @@ export class RulesEngine {
 
     switch (card.cardType) {
       case 'unicorn':
-        player.stable.push(card);
+        UnicornHandler.play(player, card);
         break;
       case 'upgrade':
-        player.upgrades.push(card);
+        UpgradeHandler.play(player, card);
         break;
       case 'downgrade':
-        player.downgrades.push(card);
+        DowngradeHandler.play(player, card);
         break;
       case 'magic':
-        state.discardPile.push(card);
+        MagicHandler.play(state, card);
         break;
       case 'instant':
-        state.discardPile.push(card);
+        InstantHandler.play(state, card);
         break;
     }
 

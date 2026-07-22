@@ -9,5 +9,5 @@ export interface GameState {
   players: Player[];
   deck: Card[];
   nursery: Card[];
-  discardPile: Card[];
+  discard: Card[];
 }

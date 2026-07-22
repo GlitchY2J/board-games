@@ -67,6 +67,6 @@ export function createGameState(room: Room): GameState {
     players,
     deck: [],
     nursery: [],
-    discardPile: [],
+    discard: [],
   };
 }
