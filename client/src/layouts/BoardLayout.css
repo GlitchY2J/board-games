@@ -13,7 +13,7 @@
 }
 
 .middle {
-  flex: 1;
+  height: 30%;
   display: flex;
 }
 
@@ -39,8 +39,13 @@
 }
 
 .player-bottom {
-  height: 25%;
+  height: 30%;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.player-top,
+.player-bottom {
+  padding: 20px 0;
 }
