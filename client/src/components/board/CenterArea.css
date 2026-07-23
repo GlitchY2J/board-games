@@ -1,0 +1,24 @@
+.center-area {
+  display: flex;
+  gap: 60px;
+  align-items: center;
+  justify-content: center;
+}
+
+.pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-placeholder {
+  width: 90px;
+  height: 126px;
+  border-radius: 12px;
+  border: 2px dashed gray;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+}
