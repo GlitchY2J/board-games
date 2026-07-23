@@ -3,6 +3,17 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 8px;
-  padding-top: 10px;
+  padding-top: 12px;
 }
+
+.local-hand .playing-card {
+  margin-left: -55px;
+}
+
+.local-hand .playing-card:first-child {
+  margin-left: 0;
+}
+
+.local-hand .playing-card:hover(
+  z-index: 100;
+)
