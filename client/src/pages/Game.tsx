@@ -12,9 +12,6 @@ export default function Game() {
     location.state.gameState,
   );
 
-  const isMyTurn =
-    gameState.players[gameState.currentPlayer].socketId === socket.id;
-
   useEffect(() => {
     socket.on('game-updated', (state: GameState) => {
       setGameState(state);
@@ -25,12 +22,20 @@ export default function Game() {
     };
   }, []);
 
-  const currentPlayer = gameState.players[gameState.currentPlayer];
+  const activePlayer = gameState.players[gameState.currentPlayer];
+  const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
+
+  if (!localPlayer) {
+    return <h2>Jugador no encontrado.</h2>;
+  }
+
+  const isMyTurn = activePlayer.socketId === socket.id;
 
   function play(cardId: string) {
+    console.log('click en carta');
     socket.emit('play-card', {
-      roomCode: location.state.room.code,
-      playerId: currentPlayer.id,
+      roomCode: gameState.roomCode,
+      playerId: localPlayer?.id,
       cardId,
     });
   }
@@ -42,7 +47,7 @@ export default function Game() {
   return (
     <div>
       <h1>Partida</h1>
-      <h2>Turno de {currentPlayer.name}</h2>
+      <h2>Turno de {activePlayer.name}</h2>
       <hr />
       <h2>Establos</h2>
       {gameState.players.map((player) => (
@@ -56,23 +61,23 @@ export default function Game() {
 
       <hr />
       <h2>Mi mano</h2>
-      {currentPlayer.hand.map((card) => (
+      {localPlayer.hand.map((card) => (
         <Card
           key={card.id}
           name={card.name}
           image={card.image}
           onClick={() => play(card.id)}
-          // disabled={!isMyTurn}
+          disabled={!isMyTurn}
         />
       ))}
       <br />
       <br />
       <button onClick={endTurn}>Terminar turno</button>
       {gameState.pendingAction?.type === 'alluring_narwhal' &&
-        gameState.pendingAction.playerId === currentPlayer.id && (
+        gameState.pendingAction.playerId === localPlayer.id && (
           <AlluringNarwhalAction
             gameState={gameState}
-            playerId={currentPlayer.id}
+            playerId={localPlayer.id}
           />
         )}
     </div>

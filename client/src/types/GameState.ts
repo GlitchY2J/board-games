@@ -10,6 +10,7 @@ export interface Card {
 
 export interface Player {
   id: string;
+  socketId: string;
   name: string;
   hand: Card[];
   stable: Card[];
@@ -18,6 +19,7 @@ export interface Player {
 }
 
 export interface GameState {
+  roomCode: string;
   deck: Card[];
   discard: Card[];
   nursery: Card[];
