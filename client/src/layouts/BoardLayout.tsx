@@ -29,7 +29,7 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
       <div className="middle">
         <div className="player-left">LEFT</div>
         <div className="center">
-          <CenterArea />
+          <CenterArea gameState={gameState} />
         </div>
         <div className="player-right">RIGHT</div>
       </div>

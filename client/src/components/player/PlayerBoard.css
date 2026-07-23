@@ -15,6 +15,7 @@
 
 .stable {
   flex: 1;
+  min-height: 180px
   flex-direction: column;
   gap: 10px;
   padding: 10px;

@@ -1,19 +1,41 @@
 import './CenterArea.css';
+import PlayingCard from '../card/PlayingCard';
+import type { GameState } from '../../types/GameState';
 
-export default function CenterArea() {
+interface Props {
+  gameState: GameState;
+}
+
+export default function CenterArea({ gameState }: Props) {
+  const discardTop = gameState.discard[gameState.discard.length - 1];
+
   return (
     <div className="center-area">
       <div className="pile">
-        <h3>Nursery</h3>
-        <div className="card-placeholder">🍼</div>
+        <div className="pile-title">Nursery</div>
+
+        <PlayingCard
+          name="Nursery"
+          image="/cards/base/baby_unicorn_black.png"
+          size="medium"
+        />
       </div>
       <div className="pile">
-        <h3>Deck</h3>
-        <div className="card-placeholder">🎴</div>
+        <div className="pile-title">Deck</div>
+
+        <PlayingCard name="Deck" image="" hidden size="medium" />
       </div>
       <div className="pile">
-        <h3>Discard</h3>
-        <div className="card-placeholder">🗑️</div>
+        <div className="pile-title">Discard</div>
+        {discardTop ? (
+          <PlayingCard
+            name={discardTop.name}
+            image={discardTop.image}
+            size="medium"
+          />
+        ) : (
+          <PlayingCard name="Discard" image="" hidden size="medium" />
+        )}
       </div>
     </div>
   );
