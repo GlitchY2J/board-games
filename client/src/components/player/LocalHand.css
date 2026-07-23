@@ -1,0 +1,8 @@
+.local-hand {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 10px;
+}
