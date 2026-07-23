@@ -1,6 +1,8 @@
 import type { GameState } from '../../types/GameState';
+import HiddenHand from './HiddenHand';
 import LocalHand from './LocalHand';
 import './PlayerBoard.css';
+import PlayerInfo from './PlayerInfo';
 import Stable from './Stable';
 
 type Player = GameState['players'][number];
@@ -25,20 +27,20 @@ export default function PlayerBoard({
       {position === 'top' ? (
         <>
           <div className="hand">
-            {isLocalPlayer ? 'MI MANO' : `🀄 ${player.hand.length} cartas`}
+            {isLocalPlayer ? (
+              <LocalHand player={player} isMyTurn={isMyTurn} onPlay={onPlay} />
+            ) : (
+              <HiddenHand cardCount={player.hand.length} />
+            )}
           </div>
           <div className="stable">
             <Stable player={player} />
           </div>
-          <div className="player-header">
-            <h3>{player.name}</h3>
-          </div>
+          <PlayerInfo player={player} />
         </>
       ) : (
         <>
-          <div className="player-header">
-            <h3>{player.name}</h3>
-          </div>
+          <PlayerInfo player={player} />
           <div className="stable">
             <Stable player={player} />
           </div>
@@ -46,7 +48,7 @@ export default function PlayerBoard({
             {isLocalPlayer ? (
               <LocalHand player={player} isMyTurn={isMyTurn} onPlay={onPlay} />
             ) : (
-              `🀄 ${player.hand.length} cartas`
+              <HiddenHand cardCount={player.hand.length} />
             )}
           </div>
         </>
