@@ -1,0 +1,25 @@
+.playing-card {
+  border-radius: 10px;
+  transition: 0.2s;
+  user-select: none;
+}
+
+.playing-card:hover {
+  transform: scale(3.05);
+}
+
+.playing-card.small {
+  width: 65px;
+}
+
+.playing-card.medium {
+  width: 85px;
+}
+
+.playing-card.large {
+  width: 120px;
+}
+
+.playing-card.disabled {
+  opacity: 0.6;
+}

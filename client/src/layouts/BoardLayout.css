@@ -1,0 +1,46 @@
+.board-layout {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.player-top {
+  height: 22%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.middle {
+  flex: 1;
+  display: flex;
+}
+
+.player-left {
+  width: 20%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.player-right {
+  width: 20%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.player-bottom {
+  height: 25%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

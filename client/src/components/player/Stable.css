@@ -1,0 +1,28 @@
+.stable {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.stable-unicorns {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stable-modifiers {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stable-upgrades {
+  display: flex;
+  gap: 8px;
+}
+
+.stable-downgrades {
+  display: flex;
+  gap: 8px;
+}

@@ -4,6 +4,7 @@ import { socket } from '../services/socket';
 import type { GameState } from '../types/GameState';
 import AlluringNarwhalAction from '../components/actions/AlluringNarwhalAction';
 import Card from '../components/Card';
+import BoardLayout from '../layouts/BoardLayout';
 
 export default function Game() {
   const location = useLocation();
@@ -32,7 +33,6 @@ export default function Game() {
   const isMyTurn = activePlayer.socketId === socket.id;
 
   function play(cardId: string) {
-    console.log('click en carta');
     socket.emit('play-card', {
       roomCode: gameState.roomCode,
       playerId: localPlayer?.id,
@@ -45,41 +45,42 @@ export default function Game() {
   }
 
   return (
-    <div>
-      <h1>Partida</h1>
-      <h2>Turno de {activePlayer.name}</h2>
-      <hr />
-      <h2>Establos</h2>
-      {gameState.players.map((player) => (
-        <div key={player.id}>
-          <h3>{player.name}</h3>
-          <p>Unicorns: {player.stable.length}</p>
-          <p>Upgrades: {player.upgrades.length}</p>
-          <p>Downgrades: {player.downgrades.length}</p>
-        </div>
-      ))}
+    <BoardLayout gameState={gameState} />
+    // <div>
+    //   <h1>Partida</h1>
+    //   <h2>Turno de {activePlayer.name}</h2>
+    //   <hr />
+    //   <h2>Establos</h2>
+    //   {gameState.players.map((player) => (
+    //     <div key={player.id}>
+    //       <h3>{player.name}</h3>
+    //       <p>Unicorns: {player.stable.length}</p>
+    //       <p>Upgrades: {player.upgrades.length}</p>
+    //       <p>Downgrades: {player.downgrades.length}</p>
+    //     </div>
+    //   ))}
 
-      <hr />
-      <h2>Mi mano</h2>
-      {localPlayer.hand.map((card) => (
-        <Card
-          key={card.id}
-          name={card.name}
-          image={card.image}
-          onClick={() => play(card.id)}
-          disabled={!isMyTurn}
-        />
-      ))}
-      <br />
-      <br />
-      <button onClick={endTurn}>Terminar turno</button>
-      {gameState.pendingAction?.type === 'alluring_narwhal' &&
-        gameState.pendingAction.playerId === localPlayer.id && (
-          <AlluringNarwhalAction
-            gameState={gameState}
-            playerId={localPlayer.id}
-          />
-        )}
-    </div>
+    //   <hr />
+    //   <h2>Mi mano</h2>
+    //   {localPlayer.hand.map((card) => (
+    //     <Card
+    //       key={card.id}
+    //       name={card.name}
+    //       image={card.image}
+    //       onClick={() => play(card.id)}
+    //       disabled={!isMyTurn}
+    //     />
+    //   ))}
+    //   <br />
+    //   <br />
+    //   <button onClick={endTurn}>Terminar turno</button>
+    //   {gameState.pendingAction?.type === 'alluring_narwhal' &&
+    //     gameState.pendingAction.playerId === localPlayer.id && (
+    //       <AlluringNarwhalAction
+    //         gameState={gameState}
+    //         playerId={localPlayer.id}
+    //       />
+    //     )}
+    // </div>
   );
 }
