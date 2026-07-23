@@ -5,9 +5,11 @@ import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
 interface Props {
   gameState: GameState;
+  isMyTurn: boolean;
+  onPlay(cardId: string): void;
 }
 
-export default function BoardLayout({ gameState }: Props) {
+export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
 
@@ -19,6 +21,8 @@ export default function BoardLayout({ gameState }: Props) {
             player={opponents[0]}
             isLocalPlayer={false}
             position="top"
+            isMyTurn={false}
+            onPlay={() => {}}
           />
         )}
       </div>
@@ -31,7 +35,13 @@ export default function BoardLayout({ gameState }: Props) {
       </div>
       <div className="player-bottom">
         {localPlayer && (
-          <PlayerBoard player={localPlayer} isLocalPlayer position="bottom" />
+          <PlayerBoard
+            player={localPlayer}
+            isLocalPlayer
+            position="bottom"
+            isMyTurn={isMyTurn}
+            onPlay={onPlay}
+          />
         )}
       </div>
     </div>

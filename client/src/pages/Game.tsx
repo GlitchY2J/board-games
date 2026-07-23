@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { socket } from '../services/socket';
 import type { GameState } from '../types/GameState';
-
 import BoardLayout from '../layouts/BoardLayout';
 
 export default function Game() {
