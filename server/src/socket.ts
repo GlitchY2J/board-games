@@ -83,6 +83,17 @@ export function initializeSocket(io: Server) {
       },
     );
 
+    // Siguiente accion
+    socket.on('next-phase', (roomCode: string) => {
+      const room = roomManager.getRoom(roomCode);
+
+      if (!room?.gameState) return;
+
+      TurnManager.nextPhase(room.gameState);
+
+      io.to(room.code).emit('game-updated', room.gameState);
+    });
+
     // Resolver accion
     socket.on(
       'resolve-action',

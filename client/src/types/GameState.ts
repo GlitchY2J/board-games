@@ -26,4 +26,5 @@ export interface GameState {
   players: Player[];
   currentPlayer: number;
   pendingAction: PendingAction;
+  phase: string;
 }

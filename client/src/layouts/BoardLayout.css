@@ -49,3 +49,10 @@
 .player-bottom {
   padding: 20px 0;
 }
+
+.center-column {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 30px;
+}

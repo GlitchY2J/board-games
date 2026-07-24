@@ -3,6 +3,7 @@ import PlayerBoard from '../components/player/PlayerBoard';
 import { socket } from '../services/socket';
 import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
+import PhasePanel from '../components/game/PhasePanel';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -29,7 +30,10 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
       <div className="middle">
         <div className="player-left">LEFT</div>
         <div className="center">
-          <CenterArea gameState={gameState} />
+          <div className="center-column">
+            <CenterArea gameState={gameState} />
+            <PhasePanel gameState={gameState} />
+          </div>
         </div>
         <div className="player-right">RIGHT</div>
       </div>
