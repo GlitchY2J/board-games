@@ -66,7 +66,7 @@ export function createGameState(room: Room): GameState {
     turn: 1,
     currentPlayer: 0,
     players,
-    deck: [],
+    deck: deckManager.drawPile,
     nursery: [],
     discard: [],
     phase: TurnPhase.BEGINNING,
