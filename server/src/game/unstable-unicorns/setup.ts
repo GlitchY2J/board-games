@@ -5,6 +5,7 @@ import type { Card } from '../models/Card.ts';
 import { DeckManager } from '../DeckManager.ts';
 import { CardRepository } from './CardRepository.ts';
 import { Player } from '../models/Player.ts';
+import { TurnPhase } from '../turn/TurnPhase.ts';
 
 export function createGameState(room: Room): GameState {
   // const deck = new DeckManager(CardRepository.load());
@@ -68,5 +69,6 @@ export function createGameState(room: Room): GameState {
     deck: [],
     nursery: [],
     discard: [],
+    phase: TurnPhase.BEGINNING,
   };
 }

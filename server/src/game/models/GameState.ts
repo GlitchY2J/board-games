@@ -1,6 +1,7 @@
 import type { Card } from './Card.ts';
 import { Player } from './Player.ts';
 import type { PendingAction } from './PendingAction.ts';
+import { TurnPhase } from '../turn/TurnPhase.ts';
 
 export interface GameState {
   roomCode: string;
@@ -11,5 +12,6 @@ export interface GameState {
   deck: Card[];
   nursery: Card[];
   discard: Card[];
+  phase: TurnPhase;
   pendingAction?: PendingAction;
 }

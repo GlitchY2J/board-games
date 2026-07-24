@@ -2,6 +2,8 @@ import { Server, Socket } from 'socket.io';
 import { RoomManager } from './RoomManager.ts';
 import { createGameState } from './game/unstable-unicorns/setup.ts';
 import { RulesEngine } from './game/unstable-unicorns/engine/RulesEngine.ts';
+import { TurnManager } from './game/turn/TurnManager.ts';
+import { TurnPhase } from './game/turn/TurnPhase.ts';
 
 const roomManager = new RoomManager();
 
@@ -99,28 +101,13 @@ export function initializeSocket(io: Server) {
     socket.on('end-turn', (roomCode: string) => {
       const room = roomManager.getRoom(roomCode);
 
-      if (!room || !room.gameState) return;
+      if (!room?.gameState) return;
 
       const game = room.gameState;
 
-      // Cambiar al siguiente jugador
-      game.currentPlayer++;
+      if (game.phase !== TurnPhase.ACTION) return;
 
-      if (game.currentPlayer >= game.players.length) {
-        game.currentPlayer = 0;
-        game.turn++;
-      }
-
-      // Robar una carta
-      const nextPlayer = game.players[game.currentPlayer];
-
-      if (game.deck.length > 0) {
-        const card = game.deck.shift();
-
-        if (card) {
-          nextPlayer.hand.push(card);
-        }
-      }
+      TurnManager.endTurn(game);
 
       io.to(room.code).emit('game-updated', game);
     });
