@@ -43,6 +43,8 @@ export class TurnManager {
       case TurnPhase.END:
         game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
 
+        game.actionUsed = false;
+
         if (game.currentPlayer === 0) {
           game.turn++;
         }

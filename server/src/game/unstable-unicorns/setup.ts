@@ -70,5 +70,6 @@ export function createGameState(room: Room): GameState {
     nursery: [],
     discard: [],
     phase: TurnPhase.BEGINNING,
+    actionUsed: false,
   };
 }

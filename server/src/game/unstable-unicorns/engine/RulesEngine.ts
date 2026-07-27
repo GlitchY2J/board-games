@@ -18,6 +18,10 @@ export class RulesEngine {
       return state;
     }
 
+    if (state.actionUsed) {
+      return state;
+    }
+
     const player = state.players.find((p) => p.id === playerId);
 
     if (!player) {
@@ -49,6 +53,8 @@ export class RulesEngine {
         InstantHandler.play(state, card);
         break;
     }
+
+    state.actionUsed = true;
 
     return state;
   }

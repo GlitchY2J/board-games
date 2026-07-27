@@ -14,4 +14,5 @@ export interface GameState {
   discard: Card[];
   phase: TurnPhase;
   pendingAction?: PendingAction;
+  actionUsed: boolean;
 }
