@@ -12,6 +12,7 @@ interface Props {
   isLocalPlayer: boolean;
   position: 'top' | 'bottom' | 'left' | 'right';
   isMyTurn: boolean;
+  gamePhase: string;
   onPlay(cardId: string): void;
 }
 
@@ -20,6 +21,7 @@ export default function PlayerBoard({
   isLocalPlayer,
   position,
   isMyTurn,
+  gamePhase,
   onPlay,
 }: Props) {
   return (
@@ -28,7 +30,12 @@ export default function PlayerBoard({
         <>
           <div className="hand">
             {isLocalPlayer ? (
-              <LocalHand player={player} isMyTurn={isMyTurn} onPlay={onPlay} />
+              <LocalHand
+                player={player}
+                isMyTurn={isMyTurn}
+                gamePhase={gamePhase}
+                onPlay={onPlay}
+              />
             ) : (
               <HiddenHand cardCount={player.hand.length} />
             )}
@@ -46,7 +53,12 @@ export default function PlayerBoard({
           </div>
           <div className="hand">
             {isLocalPlayer ? (
-              <LocalHand player={player} isMyTurn={isMyTurn} onPlay={onPlay} />
+              <LocalHand
+                player={player}
+                isMyTurn={isMyTurn}
+                gamePhase=""
+                onPlay={onPlay}
+              />
             ) : (
               <HiddenHand cardCount={player.hand.length} />
             )}

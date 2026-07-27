@@ -1,5 +1,7 @@
+import { stat } from 'node:fs';
 import type { Card } from '../../models/Card.js';
 import type { GameState } from '../../models/GameState.ts';
+import { TurnPhase } from '../../turn/TurnPhase.ts';
 import { DowngradeHandler } from './handlers/DowngradeHandler.ts';
 import { InstantHandler } from './handlers/InstantHandler.ts';
 import { MagicHandler } from './handlers/MagicHandler.ts';
@@ -12,6 +14,10 @@ export class RulesEngine {
     playerId: string,
     cardId: string,
   ): GameState {
+    if (state.phase !== TurnPhase.ACTION) {
+      return state;
+    }
+
     const player = state.players.find((p) => p.id === playerId);
 
     if (!player) {

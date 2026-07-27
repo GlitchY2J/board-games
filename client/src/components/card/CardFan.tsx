@@ -7,10 +7,11 @@ type CardType = GameState['players'][number]['hand'][number];
 interface Props {
   cards: CardType[];
   isMyTurn: boolean;
+  gamePhase: string;
   onPlay(cardId: string): void;
 }
 
-export default function CardFan({ cards, isMyTurn, onPlay }: Props) {
+export default function CardFan({ cards, isMyTurn, gamePhase, onPlay }: Props) {
   return (
     <div className="card-fan">
       {cards.map((card, index) => {
@@ -27,7 +28,7 @@ export default function CardFan({ cards, isMyTurn, onPlay }: Props) {
               name={card.name}
               image={card.image}
               size="large"
-              disabled={!isMyTurn}
+              disabled={!isMyTurn || gamePhase !== 'ACTION'}
               onClick={() => onPlay(card.id)}
             />
           </div>

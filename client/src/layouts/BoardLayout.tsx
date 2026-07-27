@@ -23,6 +23,7 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
             isLocalPlayer={false}
             position="top"
             isMyTurn={false}
+            gamePhase={gameState.phase}
             onPlay={() => {}}
           />
         )}
