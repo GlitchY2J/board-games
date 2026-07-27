@@ -26,10 +26,10 @@
   width: 140px;
 }
 
-.playing-card.disabled {
+/* .playing-card.disabled {
   opacity: 0.45;
   cursor: not-allowed;
-}
+} */
 
 .playing-card.disabled:hover {
   transform: none;

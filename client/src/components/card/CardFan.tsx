@@ -12,6 +12,7 @@ interface Props {
 }
 
 export default function CardFan({ cards, isMyTurn, gamePhase, onPlay }: Props) {
+  console.log('Fase:', gamePhase);
   return (
     <div className="card-fan">
       {cards.map((card, index) => {

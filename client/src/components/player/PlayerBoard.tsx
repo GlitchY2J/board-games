@@ -56,7 +56,7 @@ export default function PlayerBoard({
               <LocalHand
                 player={player}
                 isMyTurn={isMyTurn}
-                gamePhase=""
+                gamePhase={gamePhase}
                 onPlay={onPlay}
               />
             ) : (

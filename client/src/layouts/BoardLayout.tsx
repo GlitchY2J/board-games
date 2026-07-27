@@ -46,6 +46,7 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
             position="bottom"
             isMyTurn={isMyTurn}
             onPlay={onPlay}
+            gamePhase={gameState.phase}
           />
         )}
       </div>

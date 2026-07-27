@@ -118,7 +118,7 @@ export function initializeSocket(io: Server) {
 
       if (game.phase !== TurnPhase.ACTION) return;
 
-      TurnManager.endTurn(game);
+      // TurnManager.endTurn(game);
 
       io.to(room.code).emit('game-updated', game);
     });

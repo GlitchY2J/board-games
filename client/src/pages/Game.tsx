@@ -38,9 +38,9 @@ export default function Game() {
     });
   }
 
-  function endTurn() {
-    socket.emit('end-turn');
-  }
+  // function endTurn() {
+  //   socket.emit('end-turn');
+  // }
 
   return (
     <BoardLayout gameState={gameState} isMyTurn={isMyTurn} onPlay={play} />
