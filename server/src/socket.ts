@@ -114,6 +114,60 @@ export function initializeSocket(io: Server) {
       },
     );
 
+    // Descartar cartas
+    socket.on(
+      'discard-cards',
+      ({
+        roomCode,
+        playerId,
+        cardIds,
+      }: {
+        roomCode: string;
+        playerId: string;
+        cardIds: string[];
+      }) => {
+        const room = roomManager.getRoom(roomCode);
+
+        if (!room?.gameState) return;
+
+        const game = room.gameState;
+
+        const pending = game.pendingAction;
+
+        if (
+          !pending ||
+          pending.type !== 'discard_to_hand_limit' ||
+          pending.playerId! == playerId
+        ) {
+          return;
+        }
+
+        if (cardIds.length !== pending.cardsToDiscard) {
+          return;
+        }
+
+        const player = game.players.find((p) => p.id === playerId);
+
+        if (!player) return;
+
+        for (const cardId of cardIds) {
+          const index = player.hand.findIndex((c) => c.id === cardId);
+
+          if (index === -1) continue;
+
+          const [card] = player.hand.splice(index, 1);
+
+          game.discard.push(card);
+        }
+
+        game.pendingAction = undefined;
+
+        TurnManager.nextPhase(game);
+
+        io.to(room.code).emit('game-updated', game);
+      },
+    );
+
     // Siguiente accion
     socket.on('next-phase', (roomCode: string) => {
       const room = roomManager.getRoom(roomCode);

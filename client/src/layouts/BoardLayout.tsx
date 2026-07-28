@@ -4,6 +4,7 @@ import { socket } from '../services/socket';
 import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
 import PhasePanel from '../components/game/PhasePanel';
+import DiscardToHandLimit from '../components/actions/DiscardToHandLimit';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -45,7 +46,7 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
         <div className="player-right">RIGHT</div>
       </div>
       <div className="player-bottom">
-        {localPlayer && (
+        <>
           <PlayerBoard
             player={localPlayer}
             isLocalPlayer
@@ -54,7 +55,15 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
             onPlay={onPlay}
             gamePhase={gameState.phase}
           />
-        )}
+
+          {gameState.pendingAction?.type === 'discard_to_hand_limit' &&
+            gameState.pendingAction.playerId === localPlayer.id && (
+              <DiscardToHandLimit
+                gameState={gameState}
+                playerId={localPlayer.id}
+              />
+            )}
+        </>
       </div>
     </div>
   );

@@ -41,7 +41,15 @@ export default function PhasePanel({ gameState }: Props) {
       <div>{gameState.players[gameState.currentPlayer].name}</div>
       <h3>Fase</h3>
       <div className="phase">{gameState.phase}</div>
-      {isActivePlayer && <button onClick={nextPhase}>{getButtonText()}</button>}
+      {isActivePlayer &&
+        gameState.phase === 'ACTION' &&
+        gameState.actionUsed && (
+          <button onClick={nextPhase}>{getButtonText()}</button>
+        )}
+
+      {isActivePlayer && gameState.phase !== 'ACTION' && (
+        <button onClick={nextPhase}>{getButtonText()}</button>
+      )}
     </div>
   );
 }

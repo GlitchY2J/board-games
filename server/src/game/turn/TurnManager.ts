@@ -25,6 +25,7 @@ export class TurnManager {
 
   static nextPhase(game: GameState) {
     switch (game.phase) {
+      // BEGINNING OF TURN
       case TurnPhase.BEGINNING:
         game.phase = TurnPhase.DRAW;
         break;
@@ -37,11 +38,24 @@ export class TurnManager {
         );
         game.phase = TurnPhase.ACTION;
         break;
+
+      // ACTION PHASE
       case TurnPhase.ACTION:
         game.phase = TurnPhase.END;
         break;
+
+      // END OF TURN
       case TurnPhase.END:
         game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
+
+        if (game.players[game.currentPlayer].hand.length > 7) {
+          game.pendingAction = {
+            type: 'discard_to_hand_limit',
+            playerId: game.players[game.currentPlayer].id,
+            cardsToDiscard: game.players[game.currentPlayer].hand.length - 7,
+          };
+          return;
+        }
 
         game.actionUsed = false;
 
