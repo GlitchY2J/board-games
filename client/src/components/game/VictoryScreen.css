@@ -1,0 +1,92 @@
+.victory-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+.victory-window {
+  width: 520px;
+  max-width: 90vw;
+  background: #202636;
+  border-radius: 24px;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadows: 0 25px 80px rgba(0, 0, 0, 0.55);
+  animation: pop 0.35s ease;
+}
+
+.victory-crown {
+  font-size: 72px;
+  animation: float 2s infinite ease-in-out;
+}
+
+.victory-title {
+  margin: 0;
+  color: white;
+  font-size: 42px;
+  font-weight: 700;
+}
+
+.victory-player {
+  font-size: 30px;
+  font-weight: bold;
+  color: #ffd54f;
+  text-shadows: 0 0 12px rgba(255, 213, 79, 0.4);
+}
+
+.victory-text {
+  color: #c5d0e6;
+  font-size: 18px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.victory-button {
+  margin-top: 18px;
+  border: none;
+  background: #4ea8ff;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 14px 34px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.victory-button:hover {
+  transform: translateY(-3px);
+  box-shadows: 0 0 18px rgba(78, 168, 255, 0.5);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale (0.85);
+  }
+  to {
+    opacity: 1;
+    tansform: scale(1);
+  }
+}
+
+@keyframes float {
+  0% {
+    tranform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}

@@ -28,4 +28,5 @@ export interface GameState {
   pendingAction: PendingAction;
   phase: string;
   actionUsed: boolean;
+  winnerId?: string;
 }

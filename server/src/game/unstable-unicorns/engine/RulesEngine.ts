@@ -7,6 +7,7 @@ import { InstantHandler } from './handlers/InstantHandler.ts';
 import { MagicHandler } from './handlers/MagicHandler.ts';
 import { UnicornHandler } from './handlers/UnicornHandler.ts';
 import { UpgradeHandler } from './handlers/UpgradeHandler.ts';
+import { VictoryManager } from '../../VictoryManager.ts';
 
 export class RulesEngine {
   static playCard(

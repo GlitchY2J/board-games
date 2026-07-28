@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { socket } from '../services/socket';
 import type { GameState } from '../types/GameState';
 import BoardLayout from '../layouts/BoardLayout';
+import VictoryScreen from '../components/game/VictoryScreen';
 
 export default function Game() {
   const location = useLocation();
@@ -38,11 +39,21 @@ export default function Game() {
     });
   }
 
+  function restartGame() {
+    console.log('Solicitando reinicio...');
+    socket.emit('restart-game', gameState.roomCode);
+  }
+
   // function endTurn() {
   //   socket.emit('end-turn');
   // }
 
   return (
-    <BoardLayout gameState={gameState} isMyTurn={isMyTurn} onPlay={play} />
+    <>
+      <BoardLayout gameState={gameState} isMyTurn={isMyTurn} onPlay={play} />
+      {gameState.winnerId && (
+        <VictoryScreen gameState={gameState} onRestart={restartGame} />
+      )}
+    </>
   );
 }

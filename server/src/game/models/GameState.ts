@@ -15,4 +15,5 @@ export interface GameState {
   phase: TurnPhase;
   pendingAction?: PendingAction;
   actionUsed: boolean;
+  winnerId?: string;
 }

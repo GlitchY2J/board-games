@@ -1,19 +1,19 @@
 import { GameState } from '../models/GameState.ts';
 import { TurnPhase } from './TurnPhase.ts';
 import { CardRepository } from '../unstable-unicorns/CardRepository.ts';
+import { VictoryManager } from '../VictoryManager.ts';
 
 export class TurnManager {
   private static drawCard(game: GameState) {
-    console.log('Deck antes:', game.deck.length);
     const player = game.players[game.currentPlayer];
 
     const card = game.deck.shift();
-    console.log('Carta robada:', card);
 
     if (!card) return;
 
     player.hand.push(card);
-    console.log('Deck después:', game.deck.length);
+
+    VictoryManager.checkWinner(game);
   }
 
   // static endTurn(game: GameState) {
@@ -67,5 +67,8 @@ export class TurnManager {
         game.phase = TurnPhase.BEGINNING;
         break;
     }
+
+    VictoryManager.checkWinner(game);
+    console.log('Winner:', game.winnerId);
   }
 }

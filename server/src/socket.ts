@@ -218,6 +218,24 @@ export function initializeSocket(io: Server) {
       io.to(room.code).emit('game-updated', game);
     });
 
+    // Reiniciar juego
+    socket.on('restart-game', (roomCode: string) => {
+      console.log('restart-game recibido:', roomCode);
+
+      const room = roomManager.getRoom(roomCode);
+
+      if (!room) return;
+
+      room.gameState = createGameState(room);
+
+      room.gameState.pendingAction = undefined;
+      room.gameState.winnerId = undefined;
+      room.gameState.actionUsed = false;
+
+      io.to(room.code).emit('game-updated', room.gameState);
+      console.log(`partida reiniciada: , ${roomCode}`);
+    });
+
     // Desconexión
     socket.on('disconnect', () => {
       console.log(`Cliente desconectado: ${socket.id}`);
