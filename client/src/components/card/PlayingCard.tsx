@@ -1,3 +1,4 @@
+import { useCardPreview } from '../../context/CardPreviewContext';
 import './PlayingCard.css';
 
 interface Props {
@@ -18,6 +19,20 @@ export default function PlayingCard({
   disabled = false,
   onClick,
 }: Props) {
+  const { showPreview, hidePreview } = useCardPreview();
+
+  function handleMouseEnter(e: React.MouseEvent<HTMLDivElement>) {
+    if (!image || hidden) return;
+
+    showPreview(image, e.clientX, e.clientY);
+  }
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (!image || hidden) return;
+
+    showPreview(image, e.clientX, e.clientY);
+  }
+
   return (
     <img
       className={`playing-card ${size} ${disabled ? 'disabled' : ''} {selected ? "selected" : ""}`}
@@ -25,6 +40,9 @@ export default function PlayingCard({
       alt={name}
       draggable={false}
       onClick={disabled ? undefined : onClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={hidePreview}
     />
   );
 }

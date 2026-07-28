@@ -8,30 +8,31 @@ import Settings from './pages/Settings';
 import { useEffect } from 'react';
 import { socket } from './services/socket';
 import JoinRoom from './pages/JoinRoom';
+import { CardPreviewProvider } from './context/CardPreviewContext';
+import CardPreview from './components/card/CardPreview';
 
 export default function App() {
   useEffect(() => {
     socket.connect();
 
-    console.log('Conectando al servidor...');
-
     return () => {
       socket.disconnect();
-
-      console.log('Desconectado del servidor.');
     };
   }, []);
 
   return (
-    <Routes>
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/create" element={<CreateRoom />} />
-        <Route path="/join" element={<JoinRoom />} />
-        <Route path="/lobby" element={<Lobby />} />
-        <Route path="/game" element={<Game />} />
-        <Route path="/settings" element={<Settings />} />
-      </Route>
-    </Routes>
+    <CardPreviewProvider>
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/create" element={<CreateRoom />} />
+          <Route path="/join" element={<JoinRoom />} />
+          <Route path="/lobby" element={<Lobby />} />
+          <Route path="/game" element={<Game />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Routes>
+      <CardPreview />
+    </CardPreviewProvider>
   );
 }
