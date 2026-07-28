@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { GameState } from '../../types/GameState';
 import CardFan from '../card/CardFan';
 import './LocalHand.css';
@@ -17,6 +18,8 @@ export default function LocalHand({
   gamePhase,
   onPlay,
 }: Props) {
+  // const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+
   return (
     <CardFan
       cards={player.hand}
