@@ -83,6 +83,37 @@ export function initializeSocket(io: Server) {
       },
     );
 
+    // Draw Action Card
+    socket.on(
+      'draw-action-card',
+      ({ roomCode, playerId }: { roomCode: string; playerId: string }) => {
+        console.log('entering draw action card.');
+        const room = roomManager.getRoom(roomCode);
+
+        if (!room?.gameState) return;
+
+        const game = room.gameState;
+
+        if (game.phase !== TurnPhase.ACTION) return;
+
+        if (game.actionUsed) return;
+
+        const player = game.players.find((p) => p.id === playerId);
+
+        if (!player) return;
+
+        const card = game.deck.shift();
+
+        if (!card) return;
+
+        player.hand.push(card);
+
+        game.actionUsed = true;
+
+        io.to(room.code).emit('game-updated', game);
+      },
+    );
+
     // Siguiente accion
     socket.on('next-phase', (roomCode: string) => {
       const room = roomManager.getRoom(roomCode);

@@ -27,4 +27,5 @@ export interface GameState {
   currentPlayer: number;
   pendingAction: PendingAction;
   phase: string;
+  actionUsed: boolean;
 }

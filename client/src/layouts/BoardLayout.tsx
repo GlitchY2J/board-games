@@ -12,6 +12,8 @@ interface Props {
 
 export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
+
+  if (!localPlayer) return;
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
 
   return (
@@ -32,7 +34,11 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
         <div className="player-left">LEFT</div>
         <div className="center">
           <div className="center-column">
-            <CenterArea gameState={gameState} />
+            <CenterArea
+              gameState={gameState}
+              isMyTurn={isMyTurn}
+              localPlayerId={localPlayer.id}
+            />
             <PhasePanel gameState={gameState} />
           </div>
         </div>

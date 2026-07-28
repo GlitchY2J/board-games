@@ -1,12 +1,19 @@
 import './CenterArea.css';
 import PlayingCard from '../card/PlayingCard';
 import type { GameState } from '../../types/GameState';
+import Deck from './Deck';
 
 interface Props {
   gameState: GameState;
+  isMyTurn: boolean;
+  localPlayerId: string;
 }
 
-export default function CenterArea({ gameState }: Props) {
+export default function CenterArea({
+  gameState,
+  isMyTurn,
+  localPlayerId,
+}: Props) {
   const discardTop = gameState.discard[gameState.discard.length - 1];
 
   return (
@@ -23,7 +30,11 @@ export default function CenterArea({ gameState }: Props) {
       <div className="pile">
         <div className="pile-title">Deck</div>
 
-        <PlayingCard name="Deck" image="" hidden size="medium" />
+        <Deck
+          gameState={gameState}
+          isMyTurn={isMyTurn}
+          localPlayerId={localPlayerId}
+        />
       </div>
       <div className="pile">
         <div className="pile-title">Discard</div>
