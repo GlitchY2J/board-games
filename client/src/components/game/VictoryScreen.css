@@ -67,6 +67,13 @@
   box-shadows: 0 0 18px rgba(78, 168, 255, 0.5);
 }
 
+.victory-waiting {
+  color: #c5d0e6;
+  font-size: 18px;
+  font-style: italic;
+  margin-top: 16px;
+}
+
 @keyframes pop {
   from {
     opacity: 0;

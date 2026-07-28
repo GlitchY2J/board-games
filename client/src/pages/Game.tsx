@@ -12,6 +12,9 @@ export default function Game() {
     location.state.gameState,
   );
 
+  const host = gameState.players[0];
+  const isHost = host.socketId === socket.id;
+
   useEffect(() => {
     socket.on('game-updated', (state: GameState) => {
       setGameState(state);
@@ -52,7 +55,11 @@ export default function Game() {
     <>
       <BoardLayout gameState={gameState} isMyTurn={isMyTurn} onPlay={play} />
       {gameState.winnerId && (
-        <VictoryScreen gameState={gameState} onRestart={restartGame} />
+        <VictoryScreen
+          gameState={gameState}
+          onRestart={restartGame}
+          isHost={isHost}
+        />
       )}
     </>
   );
