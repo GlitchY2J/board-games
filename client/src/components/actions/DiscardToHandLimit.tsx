@@ -1,6 +1,8 @@
+import './DiscardToHandLimit.css';
 import { useState } from 'react';
 import { socket } from '../../services/socket';
 import type { GameState } from '../../types/GameState';
+import PlayingCard from '../card/PlayingCard';
 
 interface Props {
   gameState: GameState;
@@ -26,6 +28,7 @@ export default function DiscardToHandLimit({ gameState, playerId }: Props) {
   }
 
   function confirm() {
+    console.log(gameState.roomCode);
     socket.emit('discard-cards', {
       roomCode: gameState.roomCode,
       playerId,
@@ -34,20 +37,31 @@ export default function DiscardToHandLimit({ gameState, playerId }: Props) {
   }
 
   return (
-    <div className="action-overlay">
-      <h2>Descarta {amount} carta(s)</h2>
-
-      <div className="hand">
-        {player?.hand.map((card) => (
-          <button key={card.id} onClick={() => toggle(card.id)}>
-            {selected.includes(card.id) ? '✅' : ''}
-            {card.name}
-          </button>
-        ))}
+    <div className="discard-overlay">
+      <div className="discard-window">
+        <div className="discard-title">Descarta cartas</div>
+        <div className="discard-description">
+          Selecciona {amount} carta(s) para continuar
+        </div>
+        <div className="discard-hand">
+          {player?.hand.map((card) => (
+            <div
+              key={card.id}
+              className={`discard-card ${selected.includes(card.id) ? 'selected' : ''}`}
+              onClick={() => toggle(card.id)}
+            >
+              <PlayingCard name={card.name} image={card.image} size="medium" />
+            </div>
+          ))}
+        </div>
+        <button
+          className="confirm-discard"
+          disabled={selected.length !== amount}
+          onClick={confirm}
+        >
+          Confirm discard({selected.length}/{amount})
+        </button>
       </div>
-      <button disabled={selected.length !== amount} onClick={confirm}>
-        Confirmar descarte
-      </button>
     </div>
   );
 }

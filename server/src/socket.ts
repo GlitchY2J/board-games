@@ -126,21 +126,31 @@ export function initializeSocket(io: Server) {
         playerId: string;
         cardIds: string[];
       }) => {
+        console.log('discard-cards');
+        console.log('roomCode:', roomCode);
+        console.log('playerId', playerId);
+
         const room = roomManager.getRoom(roomCode);
+
+        console.log('room:', room);
 
         if (!room?.gameState) return;
 
         const game = room.gameState;
+        console.log('game:', game);
 
         const pending = game.pendingAction;
+        console.log('pending:', pending);
 
+        console.log(pending);
         if (
           !pending ||
           pending.type !== 'discard_to_hand_limit' ||
-          pending.playerId! == playerId
+          pending.playerId! !== playerId
         ) {
           return;
         }
+        console.log('llega aqui?');
 
         if (cardIds.length !== pending.cardsToDiscard) {
           return;

@@ -46,16 +46,18 @@ export class TurnManager {
 
       // END OF TURN
       case TurnPhase.END:
-        game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
+        const currentPlayer = game.players[game.currentPlayer];
 
-        if (game.players[game.currentPlayer].hand.length > 7) {
+        if (currentPlayer.hand.length > 7) {
           game.pendingAction = {
             type: 'discard_to_hand_limit',
-            playerId: game.players[game.currentPlayer].id,
-            cardsToDiscard: game.players[game.currentPlayer].hand.length - 7,
+            playerId: currentPlayer.id,
+            cardsToDiscard: currentPlayer.hand.length - 7,
           };
           return;
         }
+
+        game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
 
         game.actionUsed = false;
 
