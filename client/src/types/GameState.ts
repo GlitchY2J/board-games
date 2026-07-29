@@ -29,4 +29,5 @@ export interface GameState {
   phase: string;
   actionUsed: boolean;
   winnerId?: string;
+  extraTurn?: boolean;
 }

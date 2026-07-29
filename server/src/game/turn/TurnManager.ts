@@ -50,14 +50,19 @@ export class TurnManager {
 
         if (currentPlayer.hand.length > 7) {
           game.pendingAction = {
-            type: 'discard_to_hand_limit',
+            type: 'discard',
+            reason: 'hand_limit',
             playerId: currentPlayer.id,
             cardsToDiscard: currentPlayer.hand.length - 7,
           };
           return;
         }
 
-        game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
+        if (game.extraTurn) {
+          game.extraTurn = false;
+        } else {
+          game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
+        }
 
         game.actionUsed = false;
 

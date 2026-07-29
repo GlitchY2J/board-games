@@ -586,7 +586,7 @@
     "cardType": "magic",
     "image": "/cards/base/change_of_luck.png",
     "description": "DRAW 2 cards and DISCARD 3 cards, then take another turn.",
-    "effect": "change_of_luck",
+    "effect": "changeOfLuck",
     "copies": 2,
     "expansion": "base"
   },

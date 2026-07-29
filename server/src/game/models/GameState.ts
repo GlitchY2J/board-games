@@ -16,4 +16,5 @@ export interface GameState {
   pendingAction?: PendingAction;
   actionUsed: boolean;
   winnerId?: string;
+  extraTurn?: boolean;
 }

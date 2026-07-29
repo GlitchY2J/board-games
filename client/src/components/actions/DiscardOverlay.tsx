@@ -1,4 +1,4 @@
-import './DiscardToHandLimit.css';
+import './DiscardOverlay.css';
 import { useState } from 'react';
 import { socket } from '../../services/socket';
 import type { GameState } from '../../types/GameState';
@@ -59,7 +59,7 @@ export default function DiscardToHandLimit({ gameState, playerId }: Props) {
           disabled={selected.length !== amount}
           onClick={confirm}
         >
-          Confirm discard({selected.length}/{amount})
+          Confirmar descarte({selected.length}/{amount})
         </button>
       </div>
     </div>

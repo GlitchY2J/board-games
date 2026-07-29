@@ -4,7 +4,7 @@ import { socket } from '../services/socket';
 import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
 import PhasePanel from '../components/game/PhasePanel';
-import DiscardToHandLimit from '../components/actions/DiscardToHandLimit';
+import DiscardToHandLimit from '../components/actions/DiscardOverlay';
 import PlayerHand from '../components/player/PlayerHand';
 interface Props {
   gameState: GameState;
@@ -56,6 +56,16 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
                 localPlayerId={localPlayer.id}
               />
               <PhasePanel gameState={gameState} />
+              {window.location.hostname === 'localhost' && (
+                <button
+                  className="debug-reset"
+                  onClick={() =>
+                    socket.emit('restart-game', gameState.roomCode)
+                  }
+                >
+                  RESTART
+                </button>
+              )}
             </div>
           </div>
           <div className="player-right" />
@@ -71,7 +81,7 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
             gamePhase={gameState.phase}
           />
 
-          {gameState.pendingAction?.type === 'discard_to_hand_limit' &&
+          {gameState.pendingAction?.type === 'discard' &&
             gameState.pendingAction.playerId === localPlayer.id && (
               <DiscardToHandLimit
                 gameState={gameState}
