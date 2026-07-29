@@ -1,6 +1,6 @@
 import type { GameState } from '../../types/GameState';
-import PlayingCard from '../card/PlayingCard';
 import './Stable.css';
+import StableSlot from './StableSlot';
 
 type Player = GameState['players'][number];
 
@@ -12,36 +12,19 @@ export default function Stable({ player }: Props) {
   return (
     <div className="stable">
       <div className="stable-unicorns">
-        {player.stable.map((card) => (
-          <PlayingCard
-            key={card.id}
-            name={card.name}
-            image={card.image}
-            size="small"
-          />
+        {Array.from({ length: 10 }).map((_, index) => (
+          <StableSlot key={index} card={player.stable[index]} />
         ))}
       </div>
-
       <div className="stable-modifiers">
         <div className="stable-upgrades">
-          {player.upgrades.map((card) => (
-            <PlayingCard
-              key={card.id}
-              name={card.name}
-              image={card.image}
-              size="small"
-            />
+          {Array.from({ length: 5 }).map((_, index) => (
+            <StableSlot key={index} card={player.upgrades[index]} />
           ))}
         </div>
-
         <div className="stable-downgrades">
-          {player.downgrades.map((card) => (
-            <PlayingCard
-              key={card.id}
-              name={card.name}
-              image={card.image}
-              size="small"
-            />
+          {Array.from({ length: 5 }).map((_, index) => (
+            <StableSlot key={index} card={player.downgrades[index]} />
           ))}
         </div>
       </div>

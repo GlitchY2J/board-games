@@ -14,7 +14,7 @@ export default function HiddenHand({ cardCount }: Props) {
           name="Hidden Card"
           image=""
           hidden
-          size="small"
+          size="medium"
         />
       ))}
     </div>
