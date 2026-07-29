@@ -1,6 +1,5 @@
 import type { GameState } from '../../types/GameState';
-import HiddenHand from './HiddenHand';
-import LocalHand from './LocalHand';
+
 import './PlayerBoard.css';
 import PlayerInfo from './PlayerInfo';
 import Stable from './Stable';
@@ -16,30 +15,11 @@ interface Props {
   onPlay(cardId: string): void;
 }
 
-export default function PlayerBoard({
-  player,
-  isLocalPlayer,
-  position,
-  isMyTurn,
-  gamePhase,
-  onPlay,
-}: Props) {
+export default function PlayerBoard({ player, position }: Props) {
   return (
     <div className={`player-board ${position}`}>
       {position === 'top' ? (
         <>
-          <div className="hand">
-            {isLocalPlayer ? (
-              <LocalHand
-                player={player}
-                isMyTurn={isMyTurn}
-                gamePhase={gamePhase}
-                onPlay={onPlay}
-              />
-            ) : (
-              <HiddenHand cardCount={player.hand.length} />
-            )}
-          </div>
           <div className="stable">
             <Stable player={player} />
           </div>
@@ -50,18 +30,6 @@ export default function PlayerBoard({
           <PlayerInfo player={player} />
           <div className="stable">
             <Stable player={player} />
-          </div>
-          <div className="hand">
-            {isLocalPlayer ? (
-              <LocalHand
-                player={player}
-                isMyTurn={isMyTurn}
-                gamePhase={gamePhase}
-                onPlay={onPlay}
-              />
-            ) : (
-              <HiddenHand cardCount={player.hand.length} />
-            )}
           </div>
         </>
       )}

@@ -5,6 +5,7 @@ import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
 import PhasePanel from '../components/game/PhasePanel';
 import DiscardToHandLimit from '../components/actions/DiscardToHandLimit';
+import PlayerHand from '../components/player/PlayerHand';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -19,34 +20,48 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
 
   return (
     <div className="board-layout">
-      <div className="player-top">
-        {opponents[0] && (
-          <PlayerBoard
+      {opponents[0] && (
+        <div className="top-hand">
+          <PlayerHand
             player={opponents[0]}
             isLocalPlayer={false}
-            position="top"
             isMyTurn={false}
             gamePhase={gameState.phase}
             onPlay={() => {}}
           />
-        )}
-      </div>
-      <div className="middle">
-        <div className="player-left">LEFT</div>
-        <div className="center">
-          <div className="center-column">
-            <CenterArea
-              gameState={gameState}
-              isMyTurn={isMyTurn}
-              localPlayerId={localPlayer.id}
-            />
-            <PhasePanel gameState={gameState} />
-          </div>
         </div>
-        <div className="player-right">RIGHT</div>
-      </div>
-      <div className="player-bottom">
-        <>
+      )}
+
+      <div className="game-area">
+        <div className="player-top">
+          {opponents[0] && (
+            <PlayerBoard
+              player={opponents[0]}
+              isLocalPlayer={false}
+              position="top"
+              isMyTurn={false}
+              gamePhase={gameState.phase}
+              onPlay={() => {}}
+            />
+          )}
+        </div>
+
+        <div className="middle">
+          <div className="player-left" />
+          <div className="center">
+            <div className="center-column">
+              <CenterArea
+                gameState={gameState}
+                isMyTurn={isMyTurn}
+                localPlayerId={localPlayer.id}
+              />
+              <PhasePanel gameState={gameState} />
+            </div>
+          </div>
+          <div className="player-right" />
+        </div>
+
+        <div className="player-bottom">
           <PlayerBoard
             player={localPlayer}
             isLocalPlayer
@@ -63,7 +78,16 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
                 playerId={localPlayer.id}
               />
             )}
-        </>
+        </div>
+      </div>
+      <div className="bottom-hand">
+        <PlayerHand
+          player={localPlayer}
+          isLocalPlayer
+          isMyTurn={isMyTurn}
+          gamePhase={gameState.phase}
+          onPlay={onPlay}
+        />
       </div>
     </div>
   );

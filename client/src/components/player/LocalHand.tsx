@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { GameState } from '../../types/GameState';
 import CardFan from '../card/CardFan';
 import './LocalHand.css';

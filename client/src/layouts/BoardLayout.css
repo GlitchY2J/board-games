@@ -1,15 +1,17 @@
-.board-layout {
+/* .board-layout {
   width: 100vw;
   height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .player-top {
-  height: 22%;
+  height: 20%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  overflow: hidden;
 }
 
 .middle {
@@ -39,10 +41,11 @@
 }
 
 .player-bottom {
-  height: 30%;
+  height: 20%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
+  overflow: hidden;
 }
 
 .player-top,
@@ -55,4 +58,100 @@
   flex-direction: row;
   align-items: center;
   gap: 30px;
+}
+
+.top-hand,
+.bottom-hand {
+  position: absolute;
+  left: 50%;
+  tranform: translateX(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.top-hand {
+  top: 0;
+}
+
+.bottom-hand {
+  bottom: 0;
+}
+
+.top-hand .player-hand,
+.bottom-hand .player-hand {
+  pointer-events: auto;
+} */
+.board-layout {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #1b2030;
+}
+
+.game-area {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.player-top {
+  height: 25%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin-top: 50px;
+}
+
+.middle {
+  flex: 1;
+  display: flex;
+}
+
+.player-left {
+  width: 18%;
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.player-right {
+  width: 18%;
+}
+
+.player-bottom {
+  height: 25%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-bottom: 80px;
+}
+
+.top-hand {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+
+.bottom-hand {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+
+.center-column {
+  display: flex;
+  gap: 40px;
+  align-items: center;
 }

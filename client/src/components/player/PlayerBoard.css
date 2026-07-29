@@ -13,6 +13,7 @@
   text-align: center;
 }
 
+
 .stable {
   flex: 1;
   min-height: 180px
@@ -29,4 +30,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: visible;
+
+}
+
+.player-board.top .hand {
+  transform: translateY(-70px);
+}
+
+.player-board.bottom .hand {
+  transform: translateY(70px);
 }
