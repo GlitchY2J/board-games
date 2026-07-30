@@ -1,33 +1,4 @@
-import type { PendingAction } from './PendingAction';
-
-export interface Card {
-  id: string;
-  name: string;
-  type: string;
-  description: string;
-  image: string;
-}
-
-export interface Player {
-  id: string;
-  socketId: string;
-  name: string;
-  hand: Card[];
-  stable: Card[];
-  upgrades: Card[];
-  downgrades: Card[];
-}
-
-export interface GameState {
-  roomCode: string;
-  deck: Card[];
-  discard: Card[];
-  nursery: Card[];
-  players: Player[];
-  currentPlayer: number;
-  pendingAction: PendingAction;
-  phase: string;
-  actionUsed: boolean;
-  winnerId?: string;
-  extraTurn?: boolean;
-}
+export type { Card, CardType, UnicornClass } from '../../../shared/types/Card.ts';
+export type { Player } from '../../../shared/types/Player.ts';
+export type { GameState } from '../../../shared/types/Game.ts';
+export { TurnPhase } from '../../../shared/types/Game.ts';

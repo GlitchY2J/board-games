@@ -8,7 +8,6 @@ import { Player } from '../models/Player.ts';
 import { TurnPhase } from '../turn/TurnPhase.ts';
 
 export function createGameState(room: Room): GameState {
-  // const deck = new DeckManager(CardRepository.load());
   const deck = CardRepository.load();
   const { nursery, deck: gameDeck } = extractNursery(deck);
   const deckManager = new DeckManager(gameDeck);
@@ -40,10 +39,10 @@ export function createGameState(room: Room): GameState {
 
   function giveBabyUnicorn(nursery: Card[], player: Player) {
     const index = Math.floor(Math.random() * nursery.length);
-
     const baby = nursery.splice(index, 1)[0];
-
-    player.stable.push(baby);
+    if (baby) {
+      player.stable.push(baby);
+    }
   }
 
   for (const player of players) {
@@ -67,7 +66,7 @@ export function createGameState(room: Room): GameState {
     currentPlayer: 0,
     players,
     deck: deckManager.drawPile,
-    nursery: [],
+    nursery,
     discard: [],
     phase: TurnPhase.BEGINNING,
     actionUsed: false,

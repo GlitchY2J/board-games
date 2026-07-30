@@ -4,6 +4,7 @@ import { createGameState } from './game/unstable-unicorns/setup.ts';
 import { RulesEngine } from './game/unstable-unicorns/engine/RulesEngine.ts';
 import { TurnManager } from './game/turn/TurnManager.ts';
 import { TurnPhase } from './game/turn/TurnPhase.ts';
+import { ActionResolver } from './game/unstable-unicorns/engine/ActionResolver.ts';
 
 const roomManager = new RoomManager();
 
@@ -21,36 +22,26 @@ export function initializeSocket(io: Server) {
       }
 
       socket.join(room.code);
-
       io.to(roomCode).emit('room-updated', room);
     });
 
     // Iniciar partida
     socket.on('start-game', (roomCode: string) => {
-      console.log('Evento start-game recibido');
-      console.log('Room:', roomCode);
-
       const room = roomManager.getRoom(roomCode);
 
-      console.log('Sala encontrada:', room);
-
       if (!room) {
-        console.log('Error: sala no encontrada');
         return;
       }
 
       const gameState = createGameState(room);
-
       room.gameState = gameState;
 
       io.to(room.code).emit('game-started', gameState);
-
       console.log(`Partida iniciada: ${room.code}`);
     });
 
     socket.on('room:create', ({ hostName, game }, callback) => {
       const room = roomManager.createRoom(hostName, game, socket.id);
-
       socket.join(room.code);
 
       callback({
@@ -72,13 +63,9 @@ export function initializeSocket(io: Server) {
         cardId: string;
       }) => {
         const room = roomManager.getRoom(roomCode);
-
-        if (!room || !room.gameState) {
-          return;
-        }
+        if (!room || !room.gameState) return;
 
         room.gameState = RulesEngine.playCard(room.gameState, playerId, cardId);
-
         io.to(roomCode).emit('game-updated', room.gameState);
       },
     );
@@ -87,27 +74,19 @@ export function initializeSocket(io: Server) {
     socket.on(
       'draw-action-card',
       ({ roomCode, playerId }: { roomCode: string; playerId: string }) => {
-        console.log('entering draw action card.');
         const room = roomManager.getRoom(roomCode);
-
         if (!room?.gameState) return;
 
         const game = room.gameState;
-
-        if (game.phase !== TurnPhase.ACTION) return;
-
-        if (game.actionUsed) return;
+        if (game.phase !== TurnPhase.ACTION || game.actionUsed) return;
 
         const player = game.players.find((p) => p.id === playerId);
-
         if (!player) return;
 
         const card = game.deck.shift();
-
         if (!card) return;
 
         player.hand.push(card);
-
         game.actionUsed = true;
 
         io.to(room.code).emit('game-updated', game);
@@ -127,104 +106,131 @@ export function initializeSocket(io: Server) {
         cardIds: string[];
       }) => {
         const room = roomManager.getRoom(roomCode);
-
         if (!room?.gameState) return;
 
-        const game = room.gameState;
+        const resolved = ActionResolver.handleDiscard(
+          room.gameState,
+          playerId,
+          cardIds,
+        );
 
-        const pending = game.pendingAction;
-
-        console.log(pending);
-        if (
-          !pending ||
-          pending.type !== 'discard' ||
-          pending.playerId! !== playerId
-        ) {
-          return;
+        if (resolved) {
+          io.to(room.code).emit('game-updated', room.gameState);
         }
-
-        if (cardIds.length !== pending.cardsToDiscard) {
-          return;
-        }
-
-        const player = game.players.find((p) => p.id === playerId);
-
-        if (!player) return;
-
-        for (const cardId of cardIds) {
-          const index = player.hand.findIndex((c) => c.id === cardId);
-
-          if (index === -1) continue;
-
-          const [card] = player.hand.splice(index, 1);
-
-          game.discard.push(card);
-        }
-
-        game.pendingAction = undefined;
-
-        TurnManager.nextPhase(game);
-
-        io.to(room.code).emit('game-updated', game);
       },
     );
 
-    // Siguiente accion
+    // Seleccionar jugador objetivo
+    socket.on(
+      'select-player',
+      ({
+        roomCode,
+        targetPlayerId,
+      }: {
+        roomCode: string;
+        targetPlayerId: string;
+      }) => {
+        const room = roomManager.getRoom(roomCode);
+        if (!room?.gameState) return;
+
+        const sourcePlayer = room.gameState.players.find(
+          (p) => p.socketId === socket.id,
+        );
+        if (!sourcePlayer) return;
+
+        const resolved = ActionResolver.handleSelectPlayer(
+          room.gameState,
+          sourcePlayer.id,
+          targetPlayerId,
+        );
+
+        if (resolved) {
+          io.to(room.code).emit('game-updated', room.gameState);
+        }
+      },
+    );
+
+    // Seleccionar carta del establo
+    socket.on(
+      'select-stable-card',
+      ({ roomCode, cardId }: { roomCode: string; cardId: string }) => {
+        const room = roomManager.getRoom(roomCode);
+        if (!room?.gameState) return;
+
+        const sourcePlayer = room.gameState.players.find(
+          (p) => p.socketId === socket.id,
+        );
+        if (!sourcePlayer) return;
+
+        const resolved = ActionResolver.handleSelectStableCard(
+          room.gameState,
+          sourcePlayer.id,
+          cardId,
+        );
+
+        if (resolved) {
+          io.to(room.code).emit('game-updated', room.gameState);
+        }
+      },
+    );
+
+    // Seleccionar carta de la mano de un rival
+    socket.on(
+      'select-hand-card',
+      ({ roomCode, cardId }: { roomCode: string; cardId: string }) => {
+        const room = roomManager.getRoom(roomCode);
+        if (!room?.gameState) return;
+
+        const sourcePlayer = room.gameState.players.find(
+          (p) => p.socketId === socket.id,
+        );
+        if (!sourcePlayer) return;
+
+        const resolved = ActionResolver.handleSelectHandCard(
+          room.gameState,
+          sourcePlayer.id,
+          cardId,
+        );
+
+        if (resolved) {
+          io.to(room.code).emit('game-updated', room.gameState);
+        }
+      },
+    );
+
+    // Siguiente fase
     socket.on('next-phase', (roomCode: string) => {
       const room = roomManager.getRoom(roomCode);
-
       if (!room?.gameState) return;
 
       TurnManager.nextPhase(room.gameState);
-
       io.to(room.code).emit('game-updated', room.gameState);
     });
-
-    // Resolver accion
-    socket.on(
-      'resolve-action',
-      ({ roomCode, targetPlayerId, targetCardId }) => {
-        const room = roomManager.getRoom(roomCode);
-
-        if (!room?.gameState?.pendingAction) {
-          return;
-        }
-
-        // Aqui todavia no se ejecuta nada
-      },
-    );
 
     // Terminar turno
     socket.on('end-turn', (roomCode: string) => {
       const room = roomManager.getRoom(roomCode);
-
       if (!room?.gameState) return;
 
       const game = room.gameState;
-
       if (game.phase !== TurnPhase.ACTION) return;
 
-      // TurnManager.endTurn(game);
-
+      TurnManager.nextPhase(game); // Pasa a END
       io.to(room.code).emit('game-updated', game);
     });
 
     // Reiniciar juego
     socket.on('restart-game', (roomCode: string) => {
-      console.log('restart-game recibido:', roomCode);
-
       const room = roomManager.getRoom(roomCode);
-
       if (!room) return;
 
       room.gameState = createGameState(room);
-
       room.gameState.pendingAction = undefined;
       room.gameState.winnerId = undefined;
       room.gameState.actionUsed = false;
 
       io.to(room.code).emit('game-updated', room.gameState);
-      console.log(`partida reiniciada: , ${roomCode}`);
+      console.log(`Partida reiniciada: ${roomCode}`);
     });
 
     // Desconexión

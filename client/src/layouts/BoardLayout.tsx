@@ -4,8 +4,8 @@ import { socket } from '../services/socket';
 import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
 import PhasePanel from '../components/game/PhasePanel';
-import DiscardToHandLimit from '../components/actions/DiscardOverlay';
 import PlayerHand from '../components/player/PlayerHand';
+import GameOverlay from '../components/overlay/GameOverlay';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -81,15 +81,16 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
             gamePhase={gameState.phase}
           />
 
-          {gameState.pendingAction?.type === 'discard' &&
+          {/* {gameState.pendingAction?.type === 'discard' &&
             gameState.pendingAction.playerId === localPlayer.id && (
               <DiscardToHandLimit
                 gameState={gameState}
                 playerId={localPlayer.id}
               />
-            )}
+            )} */}
         </div>
       </div>
+      <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} />
       <div className="bottom-hand">
         <PlayerHand
           player={localPlayer}

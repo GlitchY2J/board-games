@@ -1,11 +1,1 @@
-export interface Card {
-  id: string;
-  name: string;
-  cardType: 'unicorn' | 'magic' | 'upgrade' | 'downgrade' | 'instant';
-  unicornClass?: 'baby' | 'basic' | 'magical';
-  image: string;
-  description: string;
-  effect: string | null;
-  copies: number;
-  expansiong: string;
-}
+export type { Card, CardType, UnicornClass } from '../../../../shared/types/Card.ts';

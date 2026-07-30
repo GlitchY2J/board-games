@@ -566,7 +566,7 @@
     "cardType": "magic",
     "image": "/cards/base/back_kick.png",
     "description": "Choose any player. Return a card in that player's Stable to their hand. That player must DISCARD a card.",
-    "effect": "back_kick",
+    "effect": "backKick",
     "copies": 3,
     "expansion": "base"
   },

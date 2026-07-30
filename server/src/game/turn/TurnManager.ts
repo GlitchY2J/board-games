@@ -29,13 +29,10 @@ export class TurnManager {
       case TurnPhase.BEGINNING:
         game.phase = TurnPhase.DRAW;
         break;
+
+      // DRAW PHASE
       case TurnPhase.DRAW:
-        console.log('Entra a DRAW');
         this.drawCard(game);
-        console.log(
-          'Cartas en mano:',
-          game.players[game.currentPlayer].hand.length,
-        );
         game.phase = TurnPhase.ACTION;
         break;
 
@@ -74,6 +71,5 @@ export class TurnManager {
     }
 
     VictoryManager.checkWinner(game);
-    console.log('Winner:', game.winnerId);
   }
 }
