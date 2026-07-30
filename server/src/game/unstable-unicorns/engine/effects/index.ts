@@ -8,6 +8,5 @@ export const effects: Record<string, CardEffect> = {
   alluring_narwhal: AlluringNarwhal,
   changeOfLuck,
   backKick,
-  blatantThievery,
   blatant_thievery: blatantThievery,
 };

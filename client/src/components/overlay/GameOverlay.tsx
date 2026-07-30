@@ -15,6 +15,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
   }
 
   switch (action.type) {
+    // ───────────────────────────────────
+    // DESCARTE DE CARTAS
+    // ───────────────────────────────────
     case 'discard': {
       const player = gameState.players.find((p) => p.id === localPlayerId);
       if (!player || action.playerId !== localPlayerId) return null;
@@ -28,8 +31,8 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
-          title={titleMap[action.reason] || 'Descarta cartas'}
-          subtitle={`Debes descartar ${action.cardsToDiscard} carta(s).`}
+          title={titleMap[action.reason] ?? 'Descarta cartas'}
+          subtitle={`Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`}
           items={player.hand.map((card) => ({
             id: card.id,
             title: card.name,
@@ -48,34 +51,82 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       );
     }
 
+    // ───────────────────────────────────
+    // SELECCIONAR JUGADOR OBJETIVO
+    // ───────────────────────────────────
     case 'select_player': {
       if (action.sourcePlayerId !== localPlayerId) return null;
 
-      const players = gameState.players
-        .filter((p) => p.id !== localPlayerId && (p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0))
-        .map((player) => ({
-          id: player.id,
-          title: player.name,
-          subtitle: `${player.stable.length} unicornios, ${player.upgrades.length} mejoras`,
-        }));
+      const isBlatantThievery = action.reason === 'blatant_thievery';
+
+      const eligiblePlayers = gameState.players.filter((p) => {
+        if (p.id === localPlayerId) return false;
+        if (isBlatantThievery) return p.hand.length > 0;
+        return p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0;
+      });
+
+      const items = eligiblePlayers.map((p) => ({
+        id: p.id,
+        title: p.name,
+        subtitle: isBlatantThievery
+          ? `${p.hand.length} carta(s) en mano`
+          : `${p.stable.length} unicornio(s) en establo`,
+      }));
 
       return (
         <CardSelectionOverlay
-          title="Seleccionar Objetivo"
-          subtitle="Elige a un jugador como objetivo de tu acción"
-          items={players}
+          title={isBlatantThievery ? '🃏 Blatant Thievery' : 'Seleccionar Objetivo'}
+          subtitle={
+            isBlatantThievery
+              ? 'Elige al jugador cuya mano quieres ver y robar una carta'
+              : 'Elige a un jugador como objetivo de tu acción'
+          }
+          items={items}
           maxSelection={1}
           confirmText="Seleccionar"
-          onConfirm={(selected) => {
+          onConfirm={([targetPlayerId]) => {
             socket.emit('select-player', {
               roomCode: gameState.roomCode,
-              targetPlayerId: selected[0],
+              targetPlayerId,
             });
           }}
         />
       );
     }
 
+    // ───────────────────────────────────
+    // ROBAR CARTA DE LA MANO DE UN RIVAL (Blatant Thievery)
+    // ───────────────────────────────────
+    case 'select_hand_card': {
+      if (action.sourcePlayerId !== localPlayerId) return null;
+
+      const target = gameState.players.find((p) => p.id === action.targetPlayerId);
+      if (!target) return null;
+
+      return (
+        <CardSelectionOverlay
+          title="🃏 Blatant Thievery"
+          subtitle={`Elige una carta de la mano de ${target.name} para robarla`}
+          items={target.hand.map((card) => ({
+            id: card.id,
+            title: card.name,
+            image: card.image,
+          }))}
+          maxSelection={1}
+          confirmText="Robar carta"
+          onConfirm={([cardId]) => {
+            socket.emit('select-hand-card', {
+              roomCode: gameState.roomCode,
+              cardId,
+            });
+          }}
+        />
+      );
+    }
+
+    // ───────────────────────────────────
+    // SELECCIONAR CARTA DEL ESTABLO (Back Kick, etc.)
+    // ───────────────────────────────────
     case 'select_stable_card': {
       if (action.sourcePlayerId !== localPlayerId) return null;
 
@@ -86,7 +137,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
-          title="Seleccionar Carta"
+          title="Seleccionar Carta del Establo"
           subtitle={`Selecciona una carta del establo de ${target.name}`}
           items={allCards.map((card) => ({
             id: card.id,
@@ -95,27 +146,33 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           }))}
           maxSelection={1}
           confirmText="Aceptar"
-          onConfirm={(selected) => {
+          onConfirm={([cardId]) => {
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
-              cardId: selected[0],
+              cardId,
             });
           }}
         />
       );
     }
 
+    // ───────────────────────────────────
+    // ALLURING NARWHAL — Robar Mejora del establo
+    // ───────────────────────────────────
     case 'alluring_narwhal': {
       if (action.playerId !== localPlayerId) return null;
 
       const opponentsWithUpgrades = gameState.players.filter(
-        (p) => p.id !== localPlayerId && (p.upgrades.length > 0 || p.stable.some((c) => c.cardType === 'upgrade')),
+        (p) =>
+          p.id !== localPlayerId &&
+          (p.upgrades.length > 0 || p.stable.some((c) => c.cardType === 'upgrade')),
       );
 
       const upgradeCards = opponentsWithUpgrades.flatMap((p) =>
         [...p.upgrades, ...p.stable.filter((c) => c.cardType === 'upgrade')].map((card) => ({
           id: card.id,
-          title: `${card.name} (${p.name})`,
+          title: card.name,
+          subtitle: `Establo de ${p.name}`,
           image: card.image,
         })),
       );
@@ -124,15 +181,15 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
-          title="Alluring Narwhal"
-          subtitle="Robas una carta de Mejora del establo de otro jugador"
+          title="✨ Alluring Narwhal"
+          subtitle="Roba una carta de Mejora del establo de otro jugador"
           items={upgradeCards}
           maxSelection={1}
           confirmText="Robar Mejora"
-          onConfirm={(selected) => {
+          onConfirm={([cardId]) => {
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
-              cardId: selected[0],
+              cardId,
             });
           }}
         />
