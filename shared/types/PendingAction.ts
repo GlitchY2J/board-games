@@ -26,4 +26,10 @@ export type PendingAction =
       type: 'alluring_narwhal';
       playerId: string;
       sourceCardId: string;
+    }
+  | {
+      // glitter_tornado: el jugador que jugó la carta elige una por cada establo
+      type: 'glitter_tornado';
+      sourcePlayerId: string;       // quien elige todas las cartas
+      remainingPlayerIds: string[]; // cola de jugadores cuyo establo aún falta elegir
     };
