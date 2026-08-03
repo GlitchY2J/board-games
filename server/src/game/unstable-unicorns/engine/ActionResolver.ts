@@ -90,15 +90,21 @@ export class ActionResolver {
     const pending = state.pendingAction;
     if (!pending) return false;
 
-    // Solo procesar acciones que tengan sourcePlayerId y que correspondan al jugador correcto
+    // Solo procesar acciones que correspondan al jugador correcto
     if (
       pending.type !== 'select_stable_card' &&
-      pending.type !== 'glitter_tornado'
+      pending.type !== 'glitter_tornado' &&
+      pending.type !== 'alluring_narwhal'
     ) {
       return false;
     }
 
-    if (pending.sourcePlayerId !== sourcePlayerId) {
+    const expectedPlayerId =
+      pending.type === 'alluring_narwhal'
+        ? pending.playerId
+        : pending.sourcePlayerId;
+
+    if (expectedPlayerId !== sourcePlayerId) {
       return false;
     }
 
@@ -137,6 +143,42 @@ export class ActionResolver {
         playerId: targetPlayer.id,
         cardsToDiscard: 1,
       };
+      return true;
+    }
+
+    // ──────────────────────────────────────────
+    // Alluring Narwhal: robar una carta de Mejora de otro jugador a tu establo
+    // ──────────────────────────────────────────
+    if (pending.type === 'alluring_narwhal') {
+      let targetPlayer = null;
+      let cardIdx = -1;
+      let stolenCard;
+
+      for (const p of state.players) {
+        if (p.id === sourcePlayerId) continue;
+        
+        cardIdx = p.upgrades.findIndex((c) => c.id === cardId);
+        if (cardIdx !== -1) {
+          targetPlayer = p;
+          [stolenCard] = p.upgrades.splice(cardIdx, 1);
+          break;
+        }
+
+        cardIdx = p.stable.findIndex((c) => c.id === cardId);
+        if (cardIdx !== -1) {
+          targetPlayer = p;
+          [stolenCard] = p.stable.splice(cardIdx, 1);
+          break;
+        }
+      }
+
+      if (!stolenCard) return false;
+
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!sourcePlayer) return false;
+
+      sourcePlayer.upgrades.push(stolenCard);
+      state.pendingAction = undefined;
       return true;
     }
 
@@ -200,6 +242,66 @@ export class ActionResolver {
     sourcePlayer.hand.push(stolenCard);
 
     state.pendingAction = undefined;
+    return true;
+  }
+
+  static advanceMysticalVortex(state: GameState, remaining: string[]) {
+    while (remaining.length > 0) {
+      const nextPlayerId = remaining[0];
+      const player = state.players.find((p) => p.id === nextPlayerId);
+      if (player && player.hand.length > 0) {
+        state.pendingAction = {
+          type: 'mystical_vortex',
+          remainingPlayerIds: remaining,
+        };
+        return;
+      }
+      remaining.shift();
+    }
+
+    // Si nadie queda en la cola, revuelve el descarte con el deck
+    state.deck.push(...state.discard);
+    state.discard = [];
+
+    // Shuffle (Fisher-Yates)
+    for (let i = state.deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
+    }
+
+    state.pendingAction = undefined;
+  }
+
+  static handleMysticalVortexDiscard(
+    state: GameState,
+    playerId: string,
+    cardIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'mystical_vortex' ||
+      pending.remainingPlayerIds[0] !== playerId
+    ) {
+      return false;
+    }
+
+    if (cardIds.length !== 1) {
+      return false;
+    }
+
+    const player = state.players.find((p) => p.id === playerId);
+    if (!player) return false;
+
+    const cardId = cardIds[0];
+    const idx = player.hand.findIndex((c) => c.id === cardId);
+    if (idx === -1) return false;
+
+    const [discarded] = player.hand.splice(idx, 1);
+    state.discard.push(discarded);
+
+    const [_, ...rest] = pending.remainingPlayerIds;
+    this.advanceMysticalVortex(state, rest);
     return true;
   }
 }

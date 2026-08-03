@@ -831,12 +831,12 @@
     "expansion": "base"
   },
   {
-    "id": "",
-    "name": "",
+    "id": "blinding_light",
+    "name": "Blinding Light",
     "cardType": "downgrade",
-    "image": "/cards/base/.png",
-    "description": "",
-    "effect": "",
+    "image": "/cards/base/blinding_light.png",
+    "description": "Your hand must be visible to all players. All of your Unicorn cards are considered Basic Unicorns with no effects.",
+    "effect": "blinding_light",
     "copies": 1,
     "expansion": "base"
   },

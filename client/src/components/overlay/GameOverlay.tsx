@@ -193,6 +193,11 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
               cardId,
             });
           }}
+          onCancel={() => {
+            socket.emit('cancel-action', {
+              roomCode: gameState.roomCode,
+            });
+          }}
         />
       );
     }
@@ -228,6 +233,39 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
               cardId,
+            });
+          }}
+        />
+      );
+    }
+
+    // ───────────────────────────────────
+    // MYSTICAL VORTEX — cada jugador debe descartar una carta de forma secuencial
+    // ───────────────────────────────────
+    case 'mystical_vortex': {
+      const currentTargetId = action.remainingPlayerIds[0];
+      if (currentTargetId !== localPlayerId) return null;
+
+      const player = gameState.players.find((p) => p.id === localPlayerId);
+      if (!player) return null;
+
+      return (
+        <CardSelectionOverlay
+          key={localPlayerId}
+          title="🌪️ Mystical Vortex"
+          subtitle="Debes descartar 1 carta de tu mano. El descarte se barajará en el mazo principal."
+          items={player.hand.map((card) => ({
+            id: card.id,
+            title: card.name,
+            image: card.image,
+          }))}
+          maxSelection={1}
+          confirmText="Descartar"
+          onConfirm={(cardIds) => {
+            socket.emit('discard-cards', {
+              roomCode: gameState.roomCode,
+              playerId: localPlayerId,
+              cardIds,
             });
           }}
         />

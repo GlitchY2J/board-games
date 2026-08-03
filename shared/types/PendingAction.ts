@@ -32,4 +32,8 @@ export type PendingAction =
       type: 'glitter_tornado';
       sourcePlayerId: string;       // quien elige todas las cartas
       remainingPlayerIds: string[]; // cola de jugadores cuyo establo aún falta elegir
+    }
+  | {
+      type: 'mystical_vortex';
+      remainingPlayerIds: string[]; // cola de jugadores que deben descartar
     };

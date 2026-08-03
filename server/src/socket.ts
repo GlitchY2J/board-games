@@ -108,11 +108,20 @@ export function initializeSocket(io: Server) {
         const room = roomManager.getRoom(roomCode);
         if (!room?.gameState) return;
 
-        const resolved = ActionResolver.handleDiscard(
-          room.gameState,
-          playerId,
-          cardIds,
-        );
+        let resolved = false;
+        if (room.gameState.pendingAction?.type === 'mystical_vortex') {
+          resolved = ActionResolver.handleMysticalVortexDiscard(
+            room.gameState,
+            playerId,
+            cardIds,
+          );
+        } else {
+          resolved = ActionResolver.handleDiscard(
+            room.gameState,
+            playerId,
+            cardIds,
+          );
+        }
 
         if (resolved) {
           io.to(room.code).emit('game-updated', room.gameState);
@@ -231,6 +240,15 @@ export function initializeSocket(io: Server) {
 
       io.to(room.code).emit('game-updated', room.gameState);
       console.log(`Partida reiniciada: ${roomCode}`);
+    });
+
+    // Cancelar acción pendiente (para efectos opcionales)
+    socket.on('cancel-action', ({ roomCode }: { roomCode: string }) => {
+      const room = roomManager.getRoom(roomCode);
+      if (!room?.gameState) return;
+
+      room.gameState.pendingAction = undefined;
+      io.to(room.code).emit('game-updated', room.gameState);
     });
 
     // Desconexión

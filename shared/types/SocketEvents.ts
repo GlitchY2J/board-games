@@ -21,4 +21,5 @@ export interface ClientToServerEvents {
   'next-phase': (roomCode: string) => void;
   'end-turn': (roomCode: string) => void;
   'restart-game': (roomCode: string) => void;
+  'cancel-action': (payload: { roomCode: string }) => void;
 }
