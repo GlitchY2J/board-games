@@ -2,6 +2,7 @@ import { backKick } from '../../../cards/effects/backKick.ts';
 import { changeOfLuck } from '../../../cards/effects/changeOfLuck.ts';
 import { blatantThievery } from '../../../cards/effects/blatantThievery.ts';
 import { glitterTornado } from '../../../cards/effects/glitterTornado.ts';
+import { goodDeal } from '../../../cards/effects/goodDeal.ts';
 import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import type { CardEffect } from './CardEffect.ts';
 
@@ -11,4 +12,5 @@ export const effects: Record<string, CardEffect> = {
   backKick,
   blatant_thievery: blatantThievery,
   glitter_tornado: glitterTornado,
+  good_deal: goodDeal,
 };

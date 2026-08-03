@@ -88,40 +88,47 @@ export class ActionResolver {
     cardId: string,
   ): boolean {
     const pending = state.pendingAction;
+    if (!pending) return false;
+
+    // Solo procesar acciones que tengan sourcePlayerId y que correspondan al jugador correcto
     if (
-      !pending ||
-      pending.type !== 'select_stable_card' ||
-      pending.sourcePlayerId !== sourcePlayerId
+      pending.type !== 'select_stable_card' &&
+      pending.type !== 'glitter_tornado'
     ) {
       return false;
     }
 
-    const targetPlayer = state.players.find(
-      (p) => p.id === pending.targetPlayerId,
-    );
-    if (!targetPlayer) return false;
+    if (pending.sourcePlayerId !== sourcePlayerId) {
+      return false;
+    }
 
-    if (pending.reason === 'back_kick') {
-      let cardIdx = targetPlayer.stable.findIndex((c) => c.id === cardId);
+    // ──────────────────────────────────────────
+    // Back Kick: regresa una carta del establo al rival (incluyendo mejoras/desmejoras)
+    // ──────────────────────────────────────────
+    if (pending.type === 'select_stable_card' && pending.reason === 'back_kick') {
+      const targetPlayer = state.players.find((p) => p.id === pending.targetPlayerId);
+      if (!targetPlayer) return false;
+
       let removedCard;
 
-      if (cardIdx !== -1) {
-        [removedCard] = targetPlayer.stable.splice(cardIdx, 1);
+      let idx = targetPlayer.stable.findIndex((c) => c.id === cardId);
+      if (idx !== -1) {
+        [removedCard] = targetPlayer.stable.splice(idx, 1);
       } else {
-        cardIdx = targetPlayer.upgrades.findIndex((c) => c.id === cardId);
-        if (cardIdx !== -1) {
-          [removedCard] = targetPlayer.upgrades.splice(cardIdx, 1);
+        idx = targetPlayer.upgrades.findIndex((c) => c.id === cardId);
+        if (idx !== -1) {
+          [removedCard] = targetPlayer.upgrades.splice(idx, 1);
         } else {
-          cardIdx = targetPlayer.downgrades.findIndex((c) => c.id === cardId);
-          if (cardIdx !== -1) {
-            [removedCard] = targetPlayer.downgrades.splice(cardIdx, 1);
+          idx = targetPlayer.downgrades.findIndex((c) => c.id === cardId);
+          if (idx !== -1) {
+            [removedCard] = targetPlayer.downgrades.splice(idx, 1);
           }
         }
       }
 
       if (!removedCard) return false;
 
-      // Usar CardMovement.returnToHand: si es Baby Unicorn se desvía a la Nursery
+      // Si es Baby Unicorn se desvía a la Nursery
       CardMovement.returnToHand(state, targetPlayer, removedCard);
 
       state.pendingAction = {
@@ -130,7 +137,37 @@ export class ActionResolver {
         playerId: targetPlayer.id,
         cardsToDiscard: 1,
       };
+      return true;
+    }
 
+    // ──────────────────────────────────────────
+    // Glitter Tornado: el jugador activo elige una carta por cada establo en la cola
+    // ──────────────────────────────────────────
+    if (pending.type === 'glitter_tornado') {
+      const [currentTargetId, ...rest] = pending.remainingPlayerIds;
+
+      const targetPlayer = state.players.find((p) => p.id === currentTargetId);
+      if (!targetPlayer) return false;
+
+      const cardIdx = targetPlayer.stable.findIndex((c) => c.id === cardId);
+      if (cardIdx === -1) return false;
+
+      const [card] = targetPlayer.stable.splice(cardIdx, 1);
+
+      // Baby Unicorns van a la Nursery; las demás cartas vuelven a la mano
+      CardMovement.returnToHand(state, targetPlayer, card);
+
+      if (rest.length === 0) {
+        // Todos los establos procesados → limpiar acción pendiente
+        state.pendingAction = undefined;
+      } else {
+        // Avanzar a la siguiente persona en la cola
+        state.pendingAction = {
+          type: 'glitter_tornado',
+          sourcePlayerId,
+          remainingPlayerIds: rest,
+        };
+      }
       return true;
     }
 
@@ -151,9 +188,7 @@ export class ActionResolver {
       return false;
     }
 
-    const targetPlayer = state.players.find(
-      (p) => p.id === pending.targetPlayerId,
-    );
+    const targetPlayer = state.players.find((p) => p.id === pending.targetPlayerId);
     const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
 
     if (!targetPlayer || !sourcePlayer) return false;

@@ -1,7 +1,7 @@
 export type PendingAction =
   | {
       type: 'discard';
-      reason: 'hand_limit' | 'change_of_luck' | 'back_kick' | 'annoying_flying_unicorn';
+      reason: 'hand_limit' | 'change_of_luck' | 'back_kick' | 'annoying_flying_unicorn' | 'good_deal';
       playerId: string;
       cardsToDiscard: number;
     }

@@ -27,6 +27,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         change_of_luck: 'Change of Luck',
         back_kick: 'Back Kick',
         annoying_flying_unicorn: 'Annoying Flying Unicorn',
+        good_deal: '🤝 Good Deal',
       };
 
       return (
@@ -186,6 +187,43 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           items={upgradeCards}
           maxSelection={1}
           confirmText="Robar Mejora"
+          onConfirm={([cardId]) => {
+            socket.emit('select-stable-card', {
+              roomCode: gameState.roomCode,
+              cardId,
+            });
+          }}
+        />
+      );
+    }
+
+    // ───────────────────────────────────
+    // GLITTER TORNADO — el jugador activo elige una carta por cada establo
+    // ───────────────────────────────────
+    case 'glitter_tornado': {
+      // Solo muestra el overlay al jugador que jugó la carta
+      if (action.sourcePlayerId !== localPlayerId) return null;
+
+      const currentTargetId = action.remainingPlayerIds[0];
+      const target = gameState.players.find((p) => p.id === currentTargetId);
+      if (!target || target.stable.length === 0) return null;
+
+      const totalPlayers = gameState.players.filter((p) => p.stable.length > 0).length;
+      const remaining = action.remainingPlayerIds.length;
+      const stepLabel = `Paso ${totalPlayers - remaining + 1} de ${totalPlayers}`;
+
+      return (
+        <CardSelectionOverlay
+          key={currentTargetId}
+          title="🌪️ Glitter Tornado"
+          subtitle={`${stepLabel} — Elige una carta del establo de ${target.name} para regresar a su mano`}
+          items={target.stable.map((card) => ({
+            id: card.id,
+            title: card.name,
+            image: card.image,
+          }))}
+          maxSelection={1}
+          confirmText={remaining === 1 ? 'Confirmar' : 'Siguiente →'}
           onConfirm={([cardId]) => {
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
