@@ -26,9 +26,29 @@ export class TurnManager {
   static nextPhase(game: GameState) {
     switch (game.phase) {
       // BEGINNING OF TURN
-      case TurnPhase.BEGINNING:
+      case TurnPhase.BEGINNING: {
+        const activePlayer = game.players[game.currentPlayer];
+        const hasAngel = activePlayer.stable.some((c) => c.id === 'angel_unicorn');
+        const discardHasUnicorns = game.discard.some((c) => c.cardType === 'unicorn');
+
+        if (hasAngel && discardHasUnicorns) {
+          game.pendingAction = {
+            type: 'select_choice',
+            reason: 'angel_unicorn',
+            playerId: activePlayer.id,
+            title: '👼 Angel Unicorn',
+            description: '¿Deseas sacrificar a Angel Unicorn para traer un unicornio del descarte a tu establo?',
+            options: [
+              { value: 'yes', text: 'Sí, sacrificar y traer' },
+              { value: 'no', text: 'No, omitir efecto' },
+            ],
+          };
+          return;
+        }
+
         game.phase = TurnPhase.DRAW;
         break;
+      }
 
       // DRAW PHASE
       case TurnPhase.DRAW:

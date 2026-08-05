@@ -297,6 +297,17 @@
     "expansion": "base"
   },
   {
+    "id": "angel_unicorn",
+    "name": "Angel Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/angel_unicorn.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE this card. If you do, bring a Unicorn card from the discard pile into your Stable.",
+    "effect": "angel_unicorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "dark_angel_unicorn",
     "name": "Dark Angel Unicorn",
     "cardType": "unicorn",

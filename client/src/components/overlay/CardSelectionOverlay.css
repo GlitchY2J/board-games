@@ -204,3 +204,23 @@
 .cancel-button:hover {
   background: rgba(255, 255, 255, 0.16);
 }
+
+.choice-window {
+  max-width: 480px;
+  text-align: center;
+  align-items: center;
+}
+
+.choice-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.choice-button {
+  width: 100%;
+  padding: 16px;
+  font-size: 16px;
+}

@@ -36,4 +36,18 @@ export type PendingAction =
   | {
       type: 'mystical_vortex';
       remainingPlayerIds: string[]; // cola de jugadores que deben descartar
+    }
+  | {
+      type: 'select_choice';
+      reason: 'angel_unicorn';
+      playerId: string;
+      title: string;
+      description: string;
+      options: { value: string; text: string }[];
+    }
+  | {
+      type: 'select_discard_card';
+      reason: 'angel_unicorn';
+      playerId: string;
+      cardType?: 'unicorn' | 'magic' | 'upgrade' | 'downgrade' | 'instant';
     };

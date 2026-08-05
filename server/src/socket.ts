@@ -251,6 +251,80 @@ export function initializeSocket(io: Server) {
       io.to(room.code).emit('game-updated', room.gameState);
     });
 
+    // Seleccionar opción (para decisiones)
+    socket.on(
+      'select-choice',
+      ({ roomCode, choice }: { roomCode: string; choice: string }) => {
+        const room = roomManager.getRoom(roomCode);
+        if (!room?.gameState) return;
+
+        const player = room.gameState.players.find((p) => p.socketId === socket.id);
+        if (!player) return;
+
+        const pending = room.gameState.pendingAction;
+        if (!pending || pending.type !== 'select_choice' || pending.playerId !== player.id) {
+          return;
+        }
+
+        if (pending.reason === 'angel_unicorn') {
+          if (choice === 'yes') {
+            // Sacrificar a Angel Unicorn
+            const idx = player.stable.findIndex((c) => c.id === 'angel_unicorn');
+            if (idx !== -1) {
+              const [angelCard] = player.stable.splice(idx, 1);
+              room.gameState.discard.push(angelCard);
+
+              // Configurar acción pendiente: elegir unicornio del descarte
+              room.gameState.pendingAction = {
+                type: 'select_discard_card',
+                reason: 'angel_unicorn',
+                playerId: player.id,
+                cardType: 'unicorn',
+              };
+            } else {
+              room.gameState.pendingAction = undefined;
+              room.gameState.phase = TurnPhase.DRAW;
+            }
+          } else {
+            room.gameState.pendingAction = undefined;
+            room.gameState.phase = TurnPhase.DRAW;
+          }
+
+          io.to(room.code).emit('game-updated', room.gameState);
+        }
+      },
+    );
+
+    // Seleccionar carta del descarte
+    socket.on(
+      'select-discard-card',
+      ({ roomCode, cardId }: { roomCode: string; cardId: string }) => {
+        const room = roomManager.getRoom(roomCode);
+        if (!room?.gameState) return;
+
+        const player = room.gameState.players.find((p) => p.socketId === socket.id);
+        if (!player) return;
+
+        const pending = room.gameState.pendingAction;
+        if (!pending || pending.type !== 'select_discard_card' || pending.playerId !== player.id) {
+          return;
+        }
+
+        if (pending.reason === 'angel_unicorn') {
+          const cardIdx = room.gameState.discard.findIndex((c) => c.id === cardId);
+          if (cardIdx !== -1) {
+            const [selectedCard] = room.gameState.discard.splice(cardIdx, 1);
+            player.stable.push(selectedCard);
+          }
+
+          room.gameState.pendingAction = undefined;
+          room.gameState.phase = TurnPhase.DRAW;
+
+          io.to(room.code).emit('game-updated', room.gameState);
+        }
+      },
+    );
+
     // Desconexión
     socket.on('disconnect', () => {
       console.log(`Cliente desconectado: ${socket.id}`);

@@ -321,6 +321,71 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       );
     }
 
+    // ───────────────────────────────────
+    // DECISIÓN OPCIONAL (select_choice)
+    // ───────────────────────────────────
+    case 'select_choice': {
+      if (action.playerId !== localPlayerId) return null;
+
+      return (
+        <div className="overlay-backdrop">
+          <div className="card-selection-window choice-window">
+            <h2>{action.title}</h2>
+            <p>{action.description}</p>
+            <div className="choice-options-grid">
+              {action.options.map((option) => (
+                <button
+                  key={option.value}
+                  className="confirm-button choice-button"
+                  onClick={() => {
+                    socket.emit('select-choice', {
+                      roomCode: gameState.roomCode,
+                      choice: option.value,
+                    });
+                  }}
+                >
+                  {option.text}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ───────────────────────────────────
+    // SELECCIONAR CARTA DE LA PILA DE DESCARTE
+    // ───────────────────────────────────
+    case 'select_discard_card': {
+      if (action.playerId !== localPlayerId) return null;
+
+      const eligibleCards = gameState.discard.filter((card) => {
+        if (action.cardType && card.cardType !== action.cardType) return false;
+        return true;
+      });
+
+      return (
+        <CardSelectionOverlay
+          title="Seleccionar del Descarte"
+          subtitle="Elige un unicornio de la pila de descarte para traerlo a tu establo"
+          items={eligibleCards.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.id,
+            title: card.name,
+            image: card.image,
+          }))}
+          maxSelection={1}
+          confirmText="Traer al Establo"
+          onConfirm={([cardId]) => {
+            socket.emit('select-discard-card', {
+              roomCode: gameState.roomCode,
+              cardId,
+            });
+          }}
+        />
+      );
+    }
+
     default:
       return null;
   }

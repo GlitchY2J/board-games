@@ -22,4 +22,6 @@ export interface ClientToServerEvents {
   'end-turn': (roomCode: string) => void;
   'restart-game': (roomCode: string) => void;
   'cancel-action': (payload: { roomCode: string }) => void;
+  'select-choice': (payload: { roomCode: string; choice: string }) => void;
+  'select-discard-card': (payload: { roomCode: string; cardId: string }) => void;
 }
