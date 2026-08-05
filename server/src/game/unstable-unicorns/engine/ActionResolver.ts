@@ -89,6 +89,16 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'unicorn_poison') {
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 'unicorn_poison',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
     return false;
   }
 
@@ -116,6 +126,23 @@ export class ActionResolver {
 
     if (expectedPlayerId !== sourcePlayerId) {
       return false;
+    }
+
+    // ──────────────────────────────────────────
+    // Unicorn Poison: destruye una carta de Unicornio del establo rival
+    // ──────────────────────────────────────────
+    if (pending.type === 'select_stable_card' && pending.reason === 'unicorn_poison') {
+      const targetPlayer = state.players.find((p) => p.id === pending.targetPlayerId);
+      if (!targetPlayer) return false;
+
+      const idx = targetPlayer.stable.findIndex((c) => c.id === cardId);
+      if (idx === -1) return false;
+
+      const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
+      CardMovement.destroyOrSacrifice(state, targetPlayer, destroyedCard);
+
+      state.pendingAction = undefined;
+      return true;
     }
 
     // ──────────────────────────────────────────

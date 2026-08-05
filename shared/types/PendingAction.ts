@@ -7,12 +7,12 @@ export type PendingAction =
     }
   | {
       type: 'select_player';
-      reason: 'back_kick' | 'americorn' | 'blatant_thievery';
+      reason: 'back_kick' | 'americorn' | 'blatant_thievery' | 'unicorn_poison';
       sourcePlayerId: string;
     }
   | {
       type: 'select_stable_card';
-      reason: 'back_kick' | 'sacrifice_destroy';
+      reason: 'back_kick' | 'sacrifice_destroy' | 'unicorn_poison';
       sourcePlayerId: string;
       targetPlayerId: string;
     }

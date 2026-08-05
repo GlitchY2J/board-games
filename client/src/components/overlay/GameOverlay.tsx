@@ -61,11 +61,13 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       const isBlatantThievery = action.reason === 'blatant_thievery';
       const isAmericorn = action.reason === 'americorn';
+      const isUnicornPoison = action.reason === 'unicorn_poison';
       const needsHand = isBlatantThievery || isAmericorn;
 
       const eligiblePlayers = gameState.players.filter((p) => {
         if (p.id === localPlayerId) return false;
         if (needsHand) return p.hand.length > 0;
+        if (isUnicornPoison) return p.stable.length > 0;
         return p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0;
       });
 
@@ -80,12 +82,14 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       const getTitle = () => {
         if (isBlatantThievery) return '🃏 Blatant Thievery';
         if (isAmericorn) return '🇺🇸 Americorn';
+        if (isUnicornPoison) return '🧪 Unicorn Poison';
         return 'Seleccionar Objetivo';
       };
 
       const getSubtitle = () => {
         if (isBlatantThievery) return 'Elige al jugador cuya mano quieres ver y robar una carta';
         if (isAmericorn) return 'Elige a un jugador para tomar una carta de su mano al azar';
+        if (isUnicornPoison) return 'Elige a un jugador para destruir uno de sus unicornios';
         return 'Elige a un jugador como objetivo de tu acción';
       };
 
@@ -103,7 +107,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             });
           }}
           onCancel={
-            isAmericorn
+            isAmericorn || isUnicornPoison
               ? () => {
                   socket.emit('cancel-action', {
                     roomCode: gameState.roomCode,
@@ -159,7 +163,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
     }
 
     // ───────────────────────────────────
-    // SELECCIONAR CARTA DEL ESTABLO (Back Kick, etc.)
+    // SELECCIONAR CARTA DEL ESTABLO (Back Kick, Unicorn Poison, etc.)
     // ───────────────────────────────────
     case 'select_stable_card': {
       if (action.sourcePlayerId !== localPlayerId) return null;
@@ -167,20 +171,28 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       const target = gameState.players.find((p) => p.id === action.targetPlayerId);
       if (!target) return null;
 
-      const allCards = [...target.stable, ...target.upgrades, ...target.downgrades];
+      const isUnicornPoison = action.reason === 'unicorn_poison';
+
+      const cardsToSelect = isUnicornPoison
+        ? target.stable
+        : [...target.stable, ...target.upgrades, ...target.downgrades];
 
       return (
         <CardSelectionOverlay
-          title="Seleccionar Carta del Establo"
-          subtitle={`Selecciona una carta del establo de ${target.name}`}
-          items={allCards.map((card, idx) => ({
+          title={isUnicornPoison ? '🧪 Unicorn Poison' : 'Seleccionar Carta del Establo'}
+          subtitle={
+            isUnicornPoison
+              ? `Selecciona un unicornio del establo de ${target.name} para destruirlo`
+              : `Selecciona una carta del establo de ${target.name}`
+          }
+          items={cardsToSelect.map((card, idx) => ({
             id: `${card.id}_${idx}`,
             value: card.id,
             title: card.name,
             image: card.image,
           }))}
           maxSelection={1}
-          confirmText="Aceptar"
+          confirmText={isUnicornPoison ? 'Destruir' : 'Aceptar'}
           onConfirm={([cardId]) => {
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
