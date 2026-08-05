@@ -14,6 +14,6 @@
   margin-left: 0;
 }
 
-.local-hand .playing-card:hover(
+.local-hand .playing-card:hover {
   z-index: 100;
-)
+}

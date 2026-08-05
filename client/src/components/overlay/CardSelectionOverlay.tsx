@@ -4,6 +4,7 @@ import PlayingCard from '../card/PlayingCard';
 
 export interface SelectionItem {
   id: string;
+  value?: string;
   title: string;
   subtitle?: string;
   image?: string;
@@ -30,21 +31,33 @@ export default function CardSelectionOverlay({
 }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
 
-  function toggle(cardId: string) {
-    if (selected.includes(cardId)) {
-      setSelected(selected.filter((id) => id !== cardId));
+  function toggle(itemId: string) {
+    if (selected.includes(itemId)) {
+      setSelected(selected.filter((id) => id !== itemId));
+      return;
+    }
+
+    if (maxSelection === 1) {
+      setSelected([itemId]);
       return;
     }
 
     if (selected.length >= maxSelection) return;
 
-    setSelected([...selected, cardId]);
+    setSelected([...selected, itemId]);
   }
 
   const canConfirm = useMemo(
     () => selected.length === maxSelection,
     [selected, maxSelection],
   );
+
+  const selectedValues = useMemo(() => {
+    return selected.map((selectedId) => {
+      const item = items.find((i) => i.id === selectedId);
+      return item?.value ?? selectedId;
+    });
+  }, [selected, items]);
 
   return (
     <div className="overlay-backdrop">
@@ -63,12 +76,21 @@ export default function CardSelectionOverlay({
                 className={`selection-card ${active ? 'selected' : ''}`}
                 onClick={() => toggle(item.id)}
               >
+                {active && <div className="selection-badge">✓</div>}
                 {item.image ? (
-                  <PlayingCard
-                    name={item.title}
-                    image={item.image}
-                    size="large"
-                  />
+                  <div className="selection-card-content">
+                    <PlayingCard
+                      name={item.title}
+                      image={item.image}
+                      size="large"
+                      selected={active}
+                      preview={!item.image.includes('card_back')}
+                    />
+                    <div className="selection-card-title">{item.title}</div>
+                    {item.subtitle && (
+                      <div className="selection-subtitle">{item.subtitle}</div>
+                    )}
+                  </div>
                 ) : (
                   <div className="selection-list-item">
                     <div className="selection-title">{item.title}</div>
@@ -91,7 +113,7 @@ export default function CardSelectionOverlay({
           <button
             className="confirm-button"
             disabled={!canConfirm}
-            onClick={() => onConfirm(selected)}
+            onClick={() => onConfirm(selectedValues)}
           >
             {confirmText}
           </button>

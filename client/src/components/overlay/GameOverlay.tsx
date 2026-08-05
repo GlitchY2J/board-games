@@ -34,8 +34,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         <CardSelectionOverlay
           title={titleMap[action.reason] ?? 'Descarta cartas'}
           subtitle={`Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`}
-          items={player.hand.map((card) => ({
-            id: card.id,
+          items={player.hand.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.id,
             title: card.name,
             image: card.image,
           }))}
@@ -59,29 +60,39 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       if (action.sourcePlayerId !== localPlayerId) return null;
 
       const isBlatantThievery = action.reason === 'blatant_thievery';
+      const isAmericorn = action.reason === 'americorn';
+      const needsHand = isBlatantThievery || isAmericorn;
 
       const eligiblePlayers = gameState.players.filter((p) => {
         if (p.id === localPlayerId) return false;
-        if (isBlatantThievery) return p.hand.length > 0;
+        if (needsHand) return p.hand.length > 0;
         return p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0;
       });
 
       const items = eligiblePlayers.map((p) => ({
         id: p.id,
         title: p.name,
-        subtitle: isBlatantThievery
+        subtitle: needsHand
           ? `${p.hand.length} carta(s) en mano`
           : `${p.stable.length} unicornio(s) en establo`,
       }));
 
+      const getTitle = () => {
+        if (isBlatantThievery) return '🃏 Blatant Thievery';
+        if (isAmericorn) return '🇺🇸 Americorn';
+        return 'Seleccionar Objetivo';
+      };
+
+      const getSubtitle = () => {
+        if (isBlatantThievery) return 'Elige al jugador cuya mano quieres ver y robar una carta';
+        if (isAmericorn) return 'Elige a un jugador para tomar una carta de su mano al azar';
+        return 'Elige a un jugador como objetivo de tu acción';
+      };
+
       return (
         <CardSelectionOverlay
-          title={isBlatantThievery ? '🃏 Blatant Thievery' : 'Seleccionar Objetivo'}
-          subtitle={
-            isBlatantThievery
-              ? 'Elige al jugador cuya mano quieres ver y robar una carta'
-              : 'Elige a un jugador como objetivo de tu acción'
-          }
+          title={getTitle()}
+          subtitle={getSubtitle()}
           items={items}
           maxSelection={1}
           confirmText="Seleccionar"
@@ -91,36 +102,58 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
               targetPlayerId,
             });
           }}
+          onCancel={
+            isAmericorn
+              ? () => {
+                  socket.emit('cancel-action', {
+                    roomCode: gameState.roomCode,
+                  });
+                }
+              : undefined
+          }
         />
       );
     }
 
-    // ───────────────────────────────────
-    // ROBAR CARTA DE LA MANO DE UN RIVAL (Blatant Thievery)
-    // ───────────────────────────────────
     case 'select_hand_card': {
       if (action.sourcePlayerId !== localPlayerId) return null;
 
       const target = gameState.players.find((p) => p.id === action.targetPlayerId);
       if (!target) return null;
 
+      const isAmericorn = action.reason === 'americorn';
+
       return (
         <CardSelectionOverlay
-          title="🃏 Blatant Thievery"
-          subtitle={`Elige una carta de la mano de ${target.name} para robarla`}
-          items={target.hand.map((card) => ({
-            id: card.id,
-            title: card.name,
-            image: card.image,
+          title={isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
+          subtitle={
+            isAmericorn
+              ? `Elige una carta boca abajo de la mano de ${target.name}`
+              : `Elige una carta de la mano de ${target.name} para robarla`
+          }
+          items={target.hand.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.id,
+            title: isAmericorn ? `Carta ${idx + 1}` : card.name,
+            image: isAmericorn ? '/cards/base/card_back.png' : card.image,
           }))}
           maxSelection={1}
-          confirmText="Robar carta"
+          confirmText="Robar"
           onConfirm={([cardId]) => {
             socket.emit('select-hand-card', {
               roomCode: gameState.roomCode,
               cardId,
             });
           }}
+          onCancel={
+            isAmericorn
+              ? () => {
+                  socket.emit('cancel-action', {
+                    roomCode: gameState.roomCode,
+                  });
+                }
+              : undefined
+          }
         />
       );
     }
@@ -140,8 +173,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         <CardSelectionOverlay
           title="Seleccionar Carta del Establo"
           subtitle={`Selecciona una carta del establo de ${target.name}`}
-          items={allCards.map((card) => ({
-            id: card.id,
+          items={allCards.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.id,
             title: card.name,
             image: card.image,
           }))}
@@ -170,8 +204,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       );
 
       const upgradeCards = opponentsWithUpgrades.flatMap((p) =>
-        [...p.upgrades, ...p.stable.filter((c) => c.cardType === 'upgrade')].map((card) => ({
-          id: card.id,
+        [...p.upgrades, ...p.stable.filter((c) => c.cardType === 'upgrade')].map((card, idx) => ({
+          id: `${card.id}_${idx}`,
+          value: card.id,
           title: card.name,
           subtitle: `Establo de ${p.name}`,
           image: card.image,
@@ -222,8 +257,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           key={currentTargetId}
           title="🌪️ Glitter Tornado"
           subtitle={`${stepLabel} — Elige una carta del establo de ${target.name} para regresar a su mano`}
-          items={target.stable.map((card) => ({
-            id: card.id,
+          items={target.stable.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.id,
             title: card.name,
             image: card.image,
           }))}
@@ -254,8 +290,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           key={localPlayerId}
           title="🌪️ Mystical Vortex"
           subtitle="Debes descartar 1 carta de tu mano. El descarte se barajará en el mazo principal."
-          items={player.hand.map((card) => ({
-            id: card.id,
+          items={player.hand.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.id,
             title: card.name,
             image: card.image,
           }))}

@@ -51,14 +51,17 @@
   justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
-  padding: 12px;
+  padding: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .selection-card {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 16px;
   cursor: pointer;
   position: relative;
+  user-select: none;
 }
 
 .selection-card:hover {
@@ -68,6 +71,65 @@
 .selection-card.selected {
   outline: 4px solid #6366f1;
   box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+}
+
+/* Prevent double transform on inner PlayingCard inside selection overlay */
+.card-selection-grid .playing-card {
+  pointer-events: none;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.selection-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.selection-card.selected .selection-card-content {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.selection-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+  text-align: center;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selection-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 16px;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.8);
+  z-index: 10;
+  animation: badgePop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes badgePop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
 }
 
 .selection-list-item {

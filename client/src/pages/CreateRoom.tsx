@@ -7,7 +7,7 @@ export default function CreateRoom() {
   const navigate = useNavigate();
 
   const [hostName, setHostName] = useState('');
-  const [game, setGame] = useState('unstable-unicorns');
+  const [game] = useState('unstable-unicorns');
 
   async function handleCreate() {
     try {

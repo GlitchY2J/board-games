@@ -2,12 +2,14 @@ import type { Card } from './Card.ts';
 import type { Player } from './Player.ts';
 import type { PendingAction } from './PendingAction.ts';
 
-export enum TurnPhase {
-  BEGINNING = 'BEGINNING',
-  DRAW = 'DRAW',
-  ACTION = 'ACTION',
-  END = 'END',
-}
+export type TurnPhase = 'BEGINNING' | 'DRAW' | 'ACTION' | 'END';
+
+export const TurnPhase = {
+  BEGINNING: 'BEGINNING',
+  DRAW: 'DRAW',
+  ACTION: 'ACTION',
+  END: 'END',
+} as const;
 
 export interface GameState {
   roomCode: string;

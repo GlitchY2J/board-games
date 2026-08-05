@@ -8,6 +8,7 @@ interface Props {
   hidden?: boolean;
   disabled?: boolean;
   selected?: boolean;
+  preview?: boolean;
   onClick?: () => void;
 }
 
@@ -17,26 +18,29 @@ export default function PlayingCard({
   size = 'medium',
   hidden = false,
   disabled = false,
+  selected = false,
+  preview = true,
   onClick,
 }: Props) {
   const { showPreview, hidePreview } = useCardPreview();
 
-  function handleMouseEnter(e: React.MouseEvent<HTMLDivElement>) {
-    if (!image || hidden) return;
+  const isCardBack = hidden || (image && image.includes('card_back'));
+  const shouldShowPreview = preview && !isCardBack && !!image;
 
+  function handleMouseEnter(e: React.MouseEvent<HTMLDivElement>) {
+    if (!shouldShowPreview) return;
     showPreview(image, e.clientX, e.clientY);
   }
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (!image || hidden) return;
-
+    if (!shouldShowPreview) return;
     showPreview(image, e.clientX, e.clientY);
   }
 
   return (
     <img
-      className={`playing-card ${size} ${disabled ? 'disabled' : ''} {selected ? "selected" : ""}`}
-      src={hidden ? 'cards/base/card_back.png' : image}
+      className={`playing-card ${size} ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''}`}
+      src={isCardBack ? '/cards/base/card_back.png' : image}
       alt={name}
       draggable={false}
       onClick={disabled ? undefined : onClick}
@@ -46,3 +50,4 @@ export default function PlayingCard({
     />
   );
 }
+

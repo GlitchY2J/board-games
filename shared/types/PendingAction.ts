@@ -18,7 +18,7 @@ export type PendingAction =
     }
   | {
       type: 'select_hand_card';
-      reason: 'blatant_thievery';
+      reason: 'blatant_thievery' | 'americorn';
       sourcePlayerId: string;
       targetPlayerId: string;
     }

@@ -79,6 +79,16 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'americorn') {
+      state.pendingAction = {
+        type: 'select_hand_card',
+        reason: 'americorn',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
     return false;
   }
 
