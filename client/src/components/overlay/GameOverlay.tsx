@@ -62,7 +62,8 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       const isBlatantThievery = action.reason === 'blatant_thievery';
       const isAmericorn = action.reason === 'americorn';
       const isUnicornPoison = action.reason === 'unicorn_poison';
-      const needsHand = isBlatantThievery || isAmericorn;
+      const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
+      const needsHand = isBlatantThievery || isAmericorn || isAnnoyingFlying;
 
       const eligiblePlayers = gameState.players.filter((p) => {
         if (p.id === localPlayerId) return false;
@@ -83,6 +84,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         if (isBlatantThievery) return '🃏 Blatant Thievery';
         if (isAmericorn) return '🇺🇸 Americorn';
         if (isUnicornPoison) return '🧪 Unicorn Poison';
+        if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
         return 'Seleccionar Objetivo';
       };
 
@@ -90,6 +92,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         if (isBlatantThievery) return 'Elige al jugador cuya mano quieres ver y robar una carta';
         if (isAmericorn) return 'Elige a un jugador para tomar una carta de su mano al azar';
         if (isUnicornPoison) return 'Elige a un jugador para destruir uno de sus unicornios';
+        if (isAnnoyingFlying) return 'Elige a un jugador para forzarlo a descartar una carta';
         return 'Elige a un jugador como objetivo de tu acción';
       };
 
@@ -107,7 +110,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             });
           }}
           onCancel={
-            isAmericorn || isUnicornPoison
+            isAmericorn || isUnicornPoison || isAnnoyingFlying
               ? () => {
                   socket.emit('cancel-action', {
                     roomCode: gameState.roomCode,

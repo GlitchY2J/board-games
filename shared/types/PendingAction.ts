@@ -7,7 +7,7 @@ export type PendingAction =
     }
   | {
       type: 'select_player';
-      reason: 'back_kick' | 'americorn' | 'blatant_thievery' | 'unicorn_poison';
+      reason: 'back_kick' | 'americorn' | 'blatant_thievery' | 'unicorn_poison' | 'annoying_flying_unicorn';
       sourcePlayerId: string;
     }
   | {
@@ -39,7 +39,7 @@ export type PendingAction =
     }
   | {
       type: 'select_choice';
-      reason: 'angel_unicorn';
+      reason: 'angel_unicorn' | 'annoying_flying_unicorn';
       playerId: string;
       title: string;
       description: string;

@@ -31,12 +31,19 @@ export class CardMovement {
   /**
    * Destruye o sacrifica una carta del establo mandándola al descarte.
    * Regla Especial: Si la carta es un Baby Unicorn, regresa a la Nursery en lugar del montón de descarte.
+   * Regla Especial: Si es un Flying Unicorn, regresa a la mano del jugador.
    */
-  static destroyOrSacrifice(state: GameState, _player: Player, card: Card): void {
+  static destroyOrSacrifice(state: GameState, player: Player, card: Card): void {
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
       state.nursery.push(card);
-    } else {
-      state.discard.push(card);
+      return;
     }
+
+    if (card.id.includes('flying_unicorn')) {
+      player.hand.push(card);
+      return;
+    }
+
+    state.discard.push(card);
   }
 }

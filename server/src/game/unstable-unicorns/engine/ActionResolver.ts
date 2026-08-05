@@ -99,6 +99,16 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'annoying_flying_unicorn') {
+      state.pendingAction = {
+        type: 'discard',
+        reason: 'annoying_flying_unicorn',
+        playerId: targetPlayerId,
+        cardsToDiscard: 1,
+      };
+      return true;
+    }
+
     return false;
   }
 

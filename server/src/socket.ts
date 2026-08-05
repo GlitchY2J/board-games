@@ -304,6 +304,21 @@ export function initializeSocket(io: Server) {
           }
 
           io.to(room.code).emit('game-updated', room.gameState);
+        } else if (pending.reason === 'annoying_flying_unicorn') {
+          if (choice === 'yes') {
+            room.gameState.pendingAction = {
+              type: 'select_player',
+              reason: 'annoying_flying_unicorn',
+              sourcePlayerId: player.id,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+
+          io.to(room.code).emit('game-updated', room.gameState);
         }
       },
     );

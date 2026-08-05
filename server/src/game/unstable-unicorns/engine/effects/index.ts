@@ -6,6 +6,7 @@ import { goodDeal } from '../../../cards/effects/goodDeal.ts';
 import { mysticalVortex } from '../../../cards/effects/mysticalVortex.ts';
 import { americorn } from '../../../cards/effects/americorn.ts';
 import { unicornPoison } from '../../../cards/effects/unicornPoison.ts';
+import { annoyingFlyingUnicorn } from '../../../cards/effects/annoyingFlyingUnicorn.ts';
 import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import type { CardEffect } from './CardEffect.ts';
 
@@ -19,4 +20,5 @@ export const effects: Record<string, CardEffect> = {
   mystical_vortex: mysticalVortex,
   americorn: americorn,
   unicorn_poison: unicornPoison,
+  annoying_flying_unicorn: annoyingFlyingUnicorn,
 };
