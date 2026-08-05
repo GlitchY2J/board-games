@@ -5,6 +5,7 @@ import { RulesEngine } from './game/unstable-unicorns/engine/RulesEngine.ts';
 import { TurnManager } from './game/turn/TurnManager.ts';
 import { TurnPhase } from './game/turn/TurnPhase.ts';
 import { ActionResolver } from './game/unstable-unicorns/engine/ActionResolver.ts';
+import { CardMovement } from './game/unstable-unicorns/engine/CardMovement.ts';
 
 const roomManager = new RoomManager();
 
@@ -124,6 +125,9 @@ export function initializeSocket(io: Server) {
         }
 
         if (resolved) {
+          if (!room.gameState.pendingAction && room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
           io.to(room.code).emit('game-updated', room.gameState);
         }
       },
@@ -154,6 +158,9 @@ export function initializeSocket(io: Server) {
         );
 
         if (resolved) {
+          if (!room.gameState.pendingAction && room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
           io.to(room.code).emit('game-updated', room.gameState);
         }
       },
@@ -178,6 +185,9 @@ export function initializeSocket(io: Server) {
         );
 
         if (resolved) {
+          if (!room.gameState.pendingAction && room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
           io.to(room.code).emit('game-updated', room.gameState);
         }
       },
@@ -202,6 +212,9 @@ export function initializeSocket(io: Server) {
         );
 
         if (resolved) {
+          if (!room.gameState.pendingAction && room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
           io.to(room.code).emit('game-updated', room.gameState);
         }
       },
@@ -311,14 +324,18 @@ export function initializeSocket(io: Server) {
         }
 
         if (pending.reason === 'angel_unicorn') {
+          if (cardId === 'angel_unicorn') return;
+
           const cardIdx = room.gameState.discard.findIndex((c) => c.id === cardId);
           if (cardIdx !== -1) {
             const [selectedCard] = room.gameState.discard.splice(cardIdx, 1);
-            player.stable.push(selectedCard);
+            room.gameState.pendingAction = undefined;
+            CardMovement.enterStable(room.gameState, player, selectedCard);
           }
 
-          room.gameState.pendingAction = undefined;
-          room.gameState.phase = TurnPhase.DRAW;
+          if (!room.gameState.pendingAction) {
+            room.gameState.phase = TurnPhase.DRAW;
+          }
 
           io.to(room.code).emit('game-updated', room.gameState);
         }

@@ -1,8 +1,21 @@
 import type { Card } from '../../models/Card.ts';
 import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
+import { effects } from './effects/index.ts';
 
 export class CardMovement {
+  /**
+   * Coloca una carta de Unicornio en el establo de un jugador y dispara sus efectos de entrada.
+   */
+  static enterStable(state: GameState, player: Player, card: Card): void {
+    player.stable.push(card);
+
+    if (card.effect) {
+      const effect = effects[card.effect];
+      effect?.onEnterStable?.(state, player, card);
+    }
+  }
+
   /**
    * Regresa una carta del establo a la mano del jugador.
    * Regla Especial: Si la carta es un Baby Unicorn, regresa a la Nursery en lugar de a la mano.

@@ -361,6 +361,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       const eligibleCards = gameState.discard.filter((card) => {
         if (action.cardType && card.cardType !== action.cardType) return false;
+        if (action.reason === 'angel_unicorn' && card.id === 'angel_unicorn') return false;
         return true;
       });
 
