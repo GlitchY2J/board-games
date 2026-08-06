@@ -9,8 +9,24 @@ import { CardMovement } from './game/unstable-unicorns/engine/CardMovement.ts';
 import { Room } from './game/models/Room.ts';
 import { Player } from './game/models/Player.ts';
 import { GameState } from './game/models/GameState.ts';
+import type { Card } from './game/models/Card.ts';
 
 const roomManager = new RoomManager();
+
+const CARD_BACK_IMAGE = '/cards/base/card_back.png';
+
+function createHiddenCard(id: string): Card {
+  return {
+    id,
+    name: 'Hidden Card',
+    cardType: 'instant',
+    image: CARD_BACK_IMAGE,
+    description: '',
+    effect: null,
+    copies: 0,
+    expansion: '',
+  };
+}
 
 type SocketPlayerContext = {
   room: Room;
@@ -81,6 +97,90 @@ function requireActivePlayer(
   return true;
 }
 
+function canViewerSeeTargetHand(
+  game: GameState,
+  viewerId: string,
+  targetPlayerId: string,
+): boolean {
+  const pending = game.pendingAction;
+
+  if (!pending || pending.type !== 'select_hand_card') {
+    return false;
+  }
+
+  return (
+    pending.reason === 'blatant_thievery' &&
+    pending.sourcePlayerId === viewerId &&
+    pending.targetPlayerId === targetPlayerId
+  );
+}
+
+function createGameStateForPlayer(
+  game: GameState,
+  viewerId: string,
+): GameState {
+  return {
+    ...game,
+
+    // Nadie necesita conocer el orden ni el contenido del mazo.
+
+    deck: game.deck.map((_, index) => createHiddenCard(`hidden-deck-${index}`)),
+    players: game.players.map((player) => {
+      const isViewer = player.id === viewerId;
+      const canSeeHand = canViewerSeeTargetHand(game, viewerId, player.id);
+
+      if (isViewer || canSeeHand) {
+        return {
+          ...player,
+          hand: player.hand.map((card) => ({ ...card })), // Copia profunda de las cartas
+          stable: player.stable.map((card) => ({ ...card })), // Copia profunda de las cartas
+          upgagrades: player.upgrades.map((card) => ({ ...card })), // Copia profunda de las cartas
+          downgrades: player.downgrades.map((card) => ({ ...card })), // Copia profunda de las cartas
+        };
+      }
+      return {
+        ...player,
+
+        // Conservamos la cantidad, pero no enviamos las cartas reales.
+        hand: player.hand.map((_, index) =>
+          createHiddenCard(`hidden-hand-${player.id}-${index}`),
+        ),
+        stable: player.stable.map((card) => ({ ...card })), // Copia profunda de las cartas
+        upgrades: player.upgrades.map((card) => ({ ...card })), // Copia profunda de las cartas
+        downgrades: player.downgrades.map((card) => ({ ...card })), // Copia profunda de las cartas
+      };
+    }),
+
+    nursery: game.nursery.map((card) => ({ ...card })), // Copia profunda de las cartas
+    discard: game.discard.map((card) => ({ ...card })), // Copia profunda de las cartas
+  };
+}
+
+function emitGameState(
+  io: Server,
+  room: Room,
+  eventName: 'game-started' | 'game-updated',
+): void {
+  const game = room.gameState;
+
+  if (!game) {
+    return;
+  }
+
+  for (const roomPlayer of room.players) {
+    const gamePlayer = game.players.find(
+      (player) => player.id === roomPlayer.id,
+    );
+
+    if (!gamePlayer) {
+      continue;
+    }
+
+    const visibleState = createGameStateForPlayer(game, gamePlayer.id);
+    io.to(roomPlayer.socketId).emit(eventName, visibleState);
+  }
+}
+
 export function initializeSocket(io: Server) {
   // Conexión de cliente
   io.on('connection', (socket: Socket) => {
@@ -120,7 +220,7 @@ export function initializeSocket(io: Server) {
       }
 
       room.gameState = createGameState(room);
-      io.to(roomCode).emit('game-started', room.gameState);
+      emitGameState(io, room, 'game-started');
     });
 
     // Crear sala
@@ -166,7 +266,7 @@ export function initializeSocket(io: Server) {
           cardId,
         );
 
-        io.to(roomCode).emit('game-updated', context.room.gameState);
+        emitGameState(io, context.room, 'game-updated');
       },
     );
 
@@ -229,7 +329,7 @@ export function initializeSocket(io: Server) {
         gamePlayer.hand.push(card);
         game.actionUsed = true;
 
-        io.to(room.code).emit('game-updated', game);
+        emitGameState(io, room, 'game-updated');
       },
     );
 
@@ -287,7 +387,7 @@ export function initializeSocket(io: Server) {
           TurnManager.nextPhase(game);
         }
 
-        io.to(room.code).emit('game-updated', game);
+        emitGameState(io, room, 'game-updated');
       },
     );
 
@@ -322,7 +422,7 @@ export function initializeSocket(io: Server) {
           ) {
             TurnManager.nextPhase(room.gameState);
           }
-          io.to(room.code).emit('game-updated', room.gameState);
+          emitGameState(io, room, 'game-updated');
         }
       },
     );
@@ -352,7 +452,7 @@ export function initializeSocket(io: Server) {
           ) {
             TurnManager.nextPhase(room.gameState);
           }
-          io.to(room.code).emit('game-updated', room.gameState);
+          emitGameState(io, room, 'game-updated');
         }
       },
     );
@@ -361,29 +461,82 @@ export function initializeSocket(io: Server) {
     socket.on(
       'select-hand-card',
       ({ roomCode, cardId }: { roomCode: string; cardId: string }) => {
-        const room = roomManager.getRoom(roomCode);
-        if (!room?.gameState) return;
+        const context = getSocketGameContext(socket, roomCode);
 
-        const sourcePlayer = room.gameState.players.find(
-          (p) => p.socketId === socket.id,
-        );
-        if (!sourcePlayer) return;
-
-        const resolved = ActionResolver.handleSelectHandCard(
-          room.gameState,
-          sourcePlayer.id,
-          cardId,
-        );
-
-        if (resolved) {
-          if (
-            !room.gameState.pendingAction &&
-            room.gameState.phase === TurnPhase.BEGINNING
-          ) {
-            TurnManager.nextPhase(room.gameState);
-          }
-          io.to(room.code).emit('game-updated', room.gameState);
+        if (!context) {
+          return;
         }
+
+        const { room, game, player } = context;
+
+        const pending = game.pendingAction;
+
+        if (!pending || pending.type !== 'select_hand_card') {
+          emitGameError(socket, 'No hay una selección de mano pendiente.');
+          return;
+        }
+
+        if (pending.sourcePlayerId !== player.id) {
+          emitGameError(
+            socket,
+            'No puedes resolver la acción de otro jugador.',
+          );
+          return;
+        }
+
+        let resolvedCardId = cardId;
+
+        if (pending.reason === 'americorn') {
+          const targetPlayer = game.players.find(
+            (candidate) => candidate.id === pending.targetPlayerId,
+          );
+
+          if (!targetPlayer) {
+            emitGameError(socket, 'No se encontró el jugador objetivo.');
+            return;
+          }
+
+          const expectedPrefix = `hidden-hand-${targetPlayer.id}-`;
+
+          if (!cardId.startsWith(expectedPrefix)) {
+            emitGameError(socket, 'La carta seleccionada no es válida.');
+            return;
+          }
+
+          const indexText = cardId.slice(expectedPrefix.length);
+
+          const selectedIndex = Number(indexText);
+
+          if (
+            !Number.isInteger(selectedIndex) ||
+            selectedIndex < 0 ||
+            selectedIndex >= targetPlayer.hand.length
+          ) {
+            emitGameError(
+              socket,
+              'La posición de la carta seleccionada no es válida.',
+            );
+            return;
+          }
+
+          resolvedCardId = targetPlayer.hand[selectedIndex].id;
+        }
+        const resolved = ActionResolver.handleSelectHandCard(
+          game,
+          player.id,
+          resolvedCardId,
+        );
+
+        if (!resolved) {
+          emitGameError(socket, 'No se pudo seleccionar esa carta.');
+          return;
+        }
+
+        if (!game.pendingAction && game.phase === TurnPhase.BEGINNING) {
+          TurnManager.nextPhase(game);
+        }
+
+        emitGameState(io, room, 'game-updated');
       },
     );
 
@@ -404,7 +557,7 @@ export function initializeSocket(io: Server) {
 
       TurnManager.nextPhase(game);
 
-      io.to(room.code).emit('game-updated', game);
+      emitGameState(io, room, 'game-updated');
     });
 
     // Terminar turno
@@ -428,7 +581,7 @@ export function initializeSocket(io: Server) {
       }
 
       TurnManager.nextPhase(game);
-      io.to(room.code).emit('game-updated', game);
+      emitGameState(io, room, 'game-updated');
     });
 
     // Reiniciar juego
@@ -449,7 +602,7 @@ export function initializeSocket(io: Server) {
       room.gameState = createGameState(room);
       room.gameState.pendingAction = undefined;
 
-      io.to(room.code).emit('game-updated', room.gameState);
+      emitGameState(io, room, 'game-updated');
     });
 
     // Cancelar acción pendiente (para efectos opcionales)
@@ -481,7 +634,7 @@ export function initializeSocket(io: Server) {
       }
 
       game.pendingAction = undefined;
-      io.to(room.code).emit('game-updated', game);
+      emitGameState(io, room, 'game-updated');
     });
 
     // Seleccionar opción (para decisiones)
@@ -531,7 +684,7 @@ export function initializeSocket(io: Server) {
             room.gameState.phase = TurnPhase.DRAW;
           }
 
-          io.to(room.code).emit('game-updated', room.gameState);
+          emitGameState(io, room, 'game-updated');
         } else if (pending.reason === 'annoying_flying_unicorn') {
           if (choice === 'yes') {
             room.gameState.pendingAction = {
@@ -546,7 +699,7 @@ export function initializeSocket(io: Server) {
             }
           }
 
-          io.to(room.code).emit('game-updated', room.gameState);
+          emitGameState(io, room, 'game-updated');
         } else if (pending.reason === 'black_knight_unicorn') {
           const targetCardId = pending.targetCardId;
           const originalTargetPlayerId = pending.originalTargetPlayerId;
@@ -592,7 +745,7 @@ export function initializeSocket(io: Server) {
             TurnManager.nextPhase(room.gameState);
           }
 
-          io.to(room.code).emit('game-updated', room.gameState);
+          emitGameState(io, room, 'game-updated');
         } else if (pending.reason === 'chainsaw_unicorn') {
           if (choice === 'yes') {
             room.gameState.pendingAction = {
@@ -607,7 +760,7 @@ export function initializeSocket(io: Server) {
             }
           }
 
-          io.to(room.code).emit('game-updated', room.gameState);
+          emitGameState(io, room, 'game-updated');
         } else if (pending.reason === 'classy_narwhal') {
           if (choice === 'yes') {
             room.gameState.pendingAction = {
@@ -623,7 +776,7 @@ export function initializeSocket(io: Server) {
             }
           }
 
-          io.to(room.code).emit('game-updated', room.gameState);
+          emitGameState(io, room, 'game-updated');
         }
       },
     );
@@ -665,7 +818,7 @@ export function initializeSocket(io: Server) {
             room.gameState.phase = TurnPhase.DRAW;
           }
 
-          io.to(room.code).emit('game-updated', room.gameState);
+          emitGameState(io, room, 'game-updated');
         }
       },
     );
