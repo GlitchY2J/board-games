@@ -319,6 +319,53 @@ export function initializeSocket(io: Server) {
           }
 
           io.to(room.code).emit('game-updated', room.gameState);
+        } else if (pending.reason === 'black_knight_unicorn') {
+          const targetCardId = pending.targetCardId;
+          const originalTargetPlayerId = pending.originalTargetPlayerId;
+
+          if (choice === 'yes') {
+            // Sacrificar a Black Knight Unicorn
+            const idx = player.stable.findIndex((c) => c.id === 'black_knight_unicorn');
+            if (idx !== -1) {
+              const [blackKnight] = player.stable.splice(idx, 1);
+              CardMovement.destroyOrSacrifice(room.gameState, player, blackKnight);
+            }
+          } else {
+            // Destruir la carta original
+            if (targetCardId && originalTargetPlayerId) {
+              const targetPlayer = room.gameState.players.find((p) => p.id === originalTargetPlayerId);
+              if (targetPlayer) {
+                const idx = targetPlayer.stable.findIndex((c) => c.id === targetCardId);
+                if (idx !== -1) {
+                  const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
+                  CardMovement.destroyOrSacrifice(room.gameState, targetPlayer, destroyedCard);
+                }
+              }
+            }
+          }
+
+          room.gameState.pendingAction = undefined;
+
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+
+          io.to(room.code).emit('game-updated', room.gameState);
+        } else if (pending.reason === 'chainsaw_unicorn') {
+          if (choice === 'yes') {
+            room.gameState.pendingAction = {
+              type: 'select_stable_card',
+              reason: 'chainsaw_unicorn',
+              sourcePlayerId: player.id,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+
+          io.to(room.code).emit('game-updated', room.gameState);
         }
       },
     );

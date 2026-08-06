@@ -12,9 +12,9 @@ export type PendingAction =
     }
   | {
       type: 'select_stable_card';
-      reason: 'back_kick' | 'sacrifice_destroy' | 'unicorn_poison';
+      reason: 'back_kick' | 'sacrifice_destroy' | 'unicorn_poison' | 'chainsaw_unicorn';
       sourcePlayerId: string;
-      targetPlayerId: string;
+      targetPlayerId?: string;
     }
   | {
       type: 'select_hand_card';
@@ -39,11 +39,13 @@ export type PendingAction =
     }
   | {
       type: 'select_choice';
-      reason: 'angel_unicorn' | 'annoying_flying_unicorn';
+      reason: 'angel_unicorn' | 'annoying_flying_unicorn' | 'black_knight_unicorn' | 'chainsaw_unicorn';
       playerId: string;
       title: string;
       description: string;
       options: { value: string; text: string }[];
+      targetCardId?: string;
+      originalTargetPlayerId?: string;
     }
   | {
       type: 'select_discard_card';

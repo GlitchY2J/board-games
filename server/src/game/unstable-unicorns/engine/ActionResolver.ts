@@ -141,12 +141,39 @@ export class ActionResolver {
     // ──────────────────────────────────────────
     // Unicorn Poison: destruye una carta de Unicornio del establo rival
     // ──────────────────────────────────────────
-    if (pending.type === 'select_stable_card' && pending.reason === 'unicorn_poison') {
-      const targetPlayer = state.players.find((p) => p.id === pending.targetPlayerId);
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_poison'
+    ) {
+      const targetPlayer = state.players.find(
+        (p) => p.id === pending.targetPlayerId,
+      );
       if (!targetPlayer) return false;
 
       const idx = targetPlayer.stable.findIndex((c) => c.id === cardId);
       if (idx === -1) return false;
+
+      // Si el oponente tiene Black Knight Unicorn en su establo y la carta elegida no es Black Knight Unicorn
+      const hasBlackKnight = targetPlayer.stable.some(
+        (c) => c.id === 'black_knight_unicorn',
+      );
+      if (hasBlackKnight && cardId !== 'black_knight_unicorn') {
+        const targetCard = targetPlayer.stable[idx];
+        state.pendingAction = {
+          type: 'select_choice',
+          reason: 'black_knight_unicorn',
+          playerId: targetPlayer.id,
+          title: '🛡️ Black Knight Unicorn',
+          description: `¿Deseas sacrificar a Black Knight Unicorn para evitar que ${targetCard.name} sea destruido?`,
+          options: [
+            { value: 'yes', text: 'Sí, sacrificar Black Knight' },
+            { value: 'no', text: `No, destruir ${targetCard.name}` },
+          ],
+          targetCardId: cardId,
+          originalTargetPlayerId: targetPlayer.id,
+        };
+        return true;
+      }
 
       const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
       CardMovement.destroyOrSacrifice(state, targetPlayer, destroyedCard);
@@ -156,10 +183,56 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
+    // Chainsaw Unicorn: destruye un Upgrade o sacrifica un Downgrade
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'chainsaw_unicorn'
+    ) {
+      try {
+        const {
+          cardId: actualCardId,
+          targetPlayerId,
+          type,
+        } = JSON.parse(cardId);
+        const targetPlayer = state.players.find((p) => p.id === targetPlayerId);
+        if (!targetPlayer) return false;
+
+        if (type === 'upgrade') {
+          const idx = targetPlayer.upgrades.findIndex(
+            (c) => c.id === actualCardId,
+          );
+          if (idx !== -1) {
+            const [card] = targetPlayer.upgrades.splice(idx, 1);
+            CardMovement.destroyOrSacrifice(state, targetPlayer, card);
+          }
+        } else if (type === 'downgrade') {
+          const idx = targetPlayer.downgrades.findIndex(
+            (c) => c.id === actualCardId,
+          );
+          if (idx !== -1) {
+            const [card] = targetPlayer.downgrades.splice(idx, 1);
+            CardMovement.destroyOrSacrifice(state, targetPlayer, card);
+          }
+        }
+
+        state.pendingAction = undefined;
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // ──────────────────────────────────────────
     // Back Kick: regresa una carta del establo al rival (incluyendo mejoras/desmejoras)
     // ──────────────────────────────────────────
-    if (pending.type === 'select_stable_card' && pending.reason === 'back_kick') {
-      const targetPlayer = state.players.find((p) => p.id === pending.targetPlayerId);
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'back_kick'
+    ) {
+      const targetPlayer = state.players.find(
+        (p) => p.id === pending.targetPlayerId,
+      );
       if (!targetPlayer) return false;
 
       let removedCard;
@@ -203,7 +276,7 @@ export class ActionResolver {
 
       for (const p of state.players) {
         if (p.id === sourcePlayerId) continue;
-        
+
         cardIdx = p.upgrades.findIndex((c) => c.id === cardId);
         if (cardIdx !== -1) {
           targetPlayer = p;
@@ -277,7 +350,9 @@ export class ActionResolver {
       return false;
     }
 
-    const targetPlayer = state.players.find((p) => p.id === pending.targetPlayerId);
+    const targetPlayer = state.players.find(
+      (p) => p.id === pending.targetPlayerId,
+    );
     const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
 
     if (!targetPlayer || !sourcePlayer) return false;

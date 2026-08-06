@@ -69,7 +69,11 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         if (p.id === localPlayerId) return false;
         if (needsHand) return p.hand.length > 0;
         if (isUnicornPoison) return p.stable.length > 0;
-        return p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0;
+        return (
+          p.stable.length > 0 ||
+          p.upgrades.length > 0 ||
+          p.downgrades.length > 0
+        );
       });
 
       const items = eligiblePlayers.map((p) => ({
@@ -89,10 +93,14 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       };
 
       const getSubtitle = () => {
-        if (isBlatantThievery) return 'Elige al jugador cuya mano quieres ver y robar una carta';
-        if (isAmericorn) return 'Elige a un jugador para tomar una carta de su mano al azar';
-        if (isUnicornPoison) return 'Elige a un jugador para destruir uno de sus unicornios';
-        if (isAnnoyingFlying) return 'Elige a un jugador para forzarlo a descartar una carta';
+        if (isBlatantThievery)
+          return 'Elige al jugador cuya mano quieres ver y robar una carta';
+        if (isAmericorn)
+          return 'Elige a un jugador para tomar una carta de su mano al azar';
+        if (isUnicornPoison)
+          return 'Elige a un jugador para destruir uno de sus unicornios';
+        if (isAnnoyingFlying)
+          return 'Elige a un jugador para forzarlo a descartar una carta';
         return 'Elige a un jugador como objetivo de tu acción';
       };
 
@@ -125,7 +133,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
     case 'select_hand_card': {
       if (action.sourcePlayerId !== localPlayerId) return null;
 
-      const target = gameState.players.find((p) => p.id === action.targetPlayerId);
+      const target = gameState.players.find(
+        (p) => p.id === action.targetPlayerId,
+      );
       if (!target) return null;
 
       const isAmericorn = action.reason === 'americorn';
@@ -171,7 +181,66 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
     case 'select_stable_card': {
       if (action.sourcePlayerId !== localPlayerId) return null;
 
-      const target = gameState.players.find((p) => p.id === action.targetPlayerId);
+      if (action.reason === 'chainsaw_unicorn') {
+        const items: any[] = [];
+        gameState.players.forEach((p) => {
+          p.upgrades.forEach((card, idx) => {
+            items.push({
+              id: `${card.id}_upgrade_${p.id}_${idx}`,
+              value: JSON.stringify({
+                cardId: card.id,
+                targetPlayerId: p.id,
+                type: 'upgrade',
+              }),
+              title: `${card.name} (Mejora - ${p.name})`,
+              image: card.image,
+            });
+          });
+        });
+
+        const localPlayer = gameState.players.find(
+          (p) => p.id === localPlayerId,
+        );
+        if (localPlayer) {
+          localPlayer.downgrades.forEach((card, idx) => {
+            items.push({
+              id: `${card.id}_downgrade_${localPlayerId}_${idx}`,
+              value: JSON.stringify({
+                cardId: card.id,
+                targetPlayerId: localPlayerId,
+                type: 'downgrade',
+              }),
+              title: `${card.name} (Downgrade - Propia)`,
+              image: card.image,
+            });
+          });
+        }
+
+        return (
+          <CardSelectionOverlay
+            title="🪚 Chainsaw Unicorn"
+            subtitle="Selecciona un Upgrade de cualquier jugador para DESTRUIR, o un Downgrade de tu establo para SACRIFICAR"
+            items={items}
+            maxSelection={1}
+            confirmText="Confirmar"
+            onConfirm={([cardValue]) => {
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId: cardValue,
+              });
+            }}
+            onCancel={() => {
+              socket.emit('cancel-action', {
+                roomCode: gameState.roomCode,
+              });
+            }}
+          />
+        );
+      }
+
+      const target = gameState.players.find(
+        (p) => p.id === action.targetPlayerId,
+      );
       if (!target) return null;
 
       const isUnicornPoison = action.reason === 'unicorn_poison';
@@ -182,7 +251,11 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
-          title={isUnicornPoison ? '🧪 Unicorn Poison' : 'Seleccionar Carta del Establo'}
+          title={
+            isUnicornPoison
+              ? '🧪 Unicorn Poison'
+              : 'Seleccionar Carta del Establo'
+          }
           subtitle={
             isUnicornPoison
               ? `Selecciona un unicornio del establo de ${target.name} para destruirlo`
@@ -215,11 +288,15 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       const opponentsWithUpgrades = gameState.players.filter(
         (p) =>
           p.id !== localPlayerId &&
-          (p.upgrades.length > 0 || p.stable.some((c) => c.cardType === 'upgrade')),
+          (p.upgrades.length > 0 ||
+            p.stable.some((c) => c.cardType === 'upgrade')),
       );
 
       const upgradeCards = opponentsWithUpgrades.flatMap((p) =>
-        [...p.upgrades, ...p.stable.filter((c) => c.cardType === 'upgrade')].map((card, idx) => ({
+        [
+          ...p.upgrades,
+          ...p.stable.filter((c) => c.cardType === 'upgrade'),
+        ].map((card, idx) => ({
           id: `${card.id}_${idx}`,
           value: card.id,
           title: card.name,
@@ -263,7 +340,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       const target = gameState.players.find((p) => p.id === currentTargetId);
       if (!target || target.stable.length === 0) return null;
 
-      const totalPlayers = gameState.players.filter((p) => p.stable.length > 0).length;
+      const totalPlayers = gameState.players.filter(
+        (p) => p.stable.length > 0,
+      ).length;
       const remaining = action.remainingPlayerIds.length;
       const stepLabel = `Paso ${totalPlayers - remaining + 1} de ${totalPlayers}`;
 
@@ -364,7 +443,8 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       const eligibleCards = gameState.discard.filter((card) => {
         if (action.cardType && card.cardType !== action.cardType) return false;
-        if (action.reason === 'angel_unicorn' && card.id === 'angel_unicorn') return false;
+        if (action.reason === 'angel_unicorn' && card.id === 'angel_unicorn')
+          return false;
         return true;
       });
 
