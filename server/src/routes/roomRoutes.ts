@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { roomManager } from '../socket.ts';
+import { roomManager } from '../roomManagerInstance.ts';
 
 const router = Router();
 
