@@ -10,6 +10,11 @@ import { Room } from './game/models/Room.ts';
 import { Player } from './game/models/Player.ts';
 import { GameState } from './game/models/GameState.ts';
 import type { Card } from './game/models/Card.ts';
+import {
+  GameActionName,
+  GameError,
+  GameErrorCode,
+} from '../../shared/types/GameError.ts';
 
 const roomManager = new RoomManager();
 
@@ -37,8 +42,18 @@ type SocketGameContext = SocketPlayerContext & {
   game: GameState;
 };
 
-function emitGameError(socket: Socket, message: string): void {
-  socket.emit('error-message', message);
+function emitGameError(
+  socket: Socket,
+  code: GameErrorCode,
+  message: string,
+  action: GameActionName = 'unknown',
+): void {
+  const error: GameError = {
+    code,
+    message,
+    action,
+  };
+  socket.emit('error-message', error);
 }
 
 function getSocketPlayerContext(
@@ -48,7 +63,7 @@ function getSocketPlayerContext(
   const room = roomManager.getRoom(roomCode);
 
   if (!room) {
-    emitGameError(socket, 'Sala no encontrada');
+    emitGameError(socket, 'ROOM_NOT_FOUND', 'Sala no encontrada');
     return null;
   }
 
@@ -57,7 +72,7 @@ function getSocketPlayerContext(
   );
 
   if (!player) {
-    emitGameError(socket, 'No perteneces a esta sala.');
+    emitGameError(socket, 'PLAYER_NOT_IN_ROOM', 'No perteneces a esta sala.');
     return null;
   }
 
@@ -75,7 +90,11 @@ function getSocketGameContext(
   }
 
   if (!context.room.gameState) {
-    emitGameError(socket, 'La partida todavía no ha comenzado.');
+    emitGameError(
+      socket,
+      'GAME_NOT_STARTED',
+      'La partida todavía no ha comenzado.',
+    );
     return null;
   }
 
@@ -89,9 +108,10 @@ function isActivePlayer(game: GameState, playerId: string): boolean {
 function requireActivePlayer(
   socket: Socket,
   context: SocketGameContext,
+  action: GameActionName,
 ): boolean {
   if (!isActivePlayer(context.game, context.player.id)) {
-    emitGameError(socket, 'No es tu turno.');
+    emitGameError(socket, 'NOT_YOUR_TURN', 'No es tu turno.', action);
     return false;
   }
   return true;
@@ -210,12 +230,20 @@ export function initializeSocket(io: Server) {
       const { room, player } = context;
 
       if (room.hostId !== player.id) {
-        emitGameError(socket, 'Solo el anfitrión puede iniciar la partida.');
+        emitGameError(
+          socket,
+          'NOT_HOST',
+          'Solo el anfitrión puede iniciar la partida.',
+        );
         return;
       }
 
       if (room.gameState?.started) {
-        emitGameError(socket, 'La partida ya está iniciada.');
+        emitGameError(
+          socket,
+          'GAME_ALREADY_STARTED',
+          'La partida ya está iniciada.',
+        );
         return;
       }
 
@@ -248,23 +276,32 @@ export function initializeSocket(io: Server) {
       }) => {
         const context = getSocketGameContext(socket, roomCode);
 
-        if (!context || !requireActivePlayer(socket, context)) {
+        if (!context) {
           return;
         }
 
         if (playerId !== context.player.id) {
           emitGameError(
             socket,
+            'INVALID_PLAYER',
             'El jugador enviado no coincide con tu sesión.',
+            'play-card',
           );
           return;
         }
 
-        context.room.gameState = RulesEngine.playCard(
+        const result = RulesEngine.playCard(
           context.game,
           context.player.id,
           cardId,
         );
+
+        if (!result.success) {
+          socket.emit('game-error', result.error);
+          return;
+        }
+
+        context.room.gameState = result.data;
 
         emitGameState(io, context.room, 'game-updated');
       },
@@ -276,7 +313,10 @@ export function initializeSocket(io: Server) {
       ({ roomCode, playerId }: { roomCode: string; playerId: string }) => {
         const context = getSocketGameContext(socket, roomCode);
 
-        if (!context || !requireActivePlayer(socket, context)) {
+        if (
+          !context ||
+          !requireActivePlayer(socket, context, 'draw-action-card')
+        ) {
           return;
         }
 
@@ -285,7 +325,9 @@ export function initializeSocket(io: Server) {
         if (playerId !== player.id) {
           emitGameError(
             socket,
+            'INVALID_PLAYER',
             'El jugador enviado no coincide con tu sesión.',
+            'draw-action-card',
           );
           return;
         }
@@ -293,17 +335,29 @@ export function initializeSocket(io: Server) {
         if (game.phase !== TurnPhase.ACTION) {
           emitGameError(
             socket,
+            'INVALID_PHASE',
             'Solo puedes robar como acción durante la fase de acción.',
+            'draw-action-card',
           );
           return;
         }
 
         if (game.actionUsed) {
-          emitGameError(socket, 'Ya has usado tu acción este turno.');
+          emitGameError(
+            socket,
+            'ACTION_ALREADY_USED',
+            'Ya utilizaste tu acción de este turno.',
+            'draw-action-card',
+          );
         }
 
         if (game.pendingAction) {
-          emitGameError(socket, 'Debes resolver la acción pendiente primero.');
+          emitGameError(
+            socket,
+            'PENDING_ACTION',
+            'Debes resolver la acción pendiente primero.',
+            'draw-action-card',
+          );
           return;
         }
 
@@ -314,7 +368,9 @@ export function initializeSocket(io: Server) {
         if (!gamePlayer) {
           emitGameError(
             socket,
+            'PLAYER_NOT_FOUND',
             'No se encontró el jugador dentro de la partida.',
+            'draw-action-card',
           );
           return;
         }
@@ -322,7 +378,12 @@ export function initializeSocket(io: Server) {
         const card = game.deck.shift();
 
         if (!card) {
-          emitGameError(socket, 'El mazo está vacío.');
+          emitGameError(
+            socket,
+            'DECK_EMPTY',
+            'El mazo está vacío.',
+            'draw-action-card',
+          );
           return;
         }
 
@@ -356,13 +417,20 @@ export function initializeSocket(io: Server) {
         if (playerId !== player.id) {
           emitGameError(
             socket,
+            'INVALID_PLAYER',
             'El jugador enviado no coincide con tu sesión.',
+            'discard-card',
           );
           return;
         }
 
         if (!game.pendingAction) {
-          emitGameError(socket, 'No hay una acción de descarte pendiente.');
+          emitGameError(
+            socket,
+            'NO_PENDING_ACTION',
+            'No hay una acción de descarte pendiente.',
+            'discard-card',
+          );
           return;
         }
 
@@ -379,7 +447,12 @@ export function initializeSocket(io: Server) {
         }
 
         if (!resolved) {
-          emitGameError(socket, 'La selección de descarte no es válida.');
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'La selección de descarte no es válida.',
+            'discard-card',
+          );
           return;
         }
 
@@ -472,14 +545,21 @@ export function initializeSocket(io: Server) {
         const pending = game.pendingAction;
 
         if (!pending || pending.type !== 'select_hand_card') {
-          emitGameError(socket, 'No hay una selección de mano pendiente.');
+          emitGameError(
+            socket,
+            'NO_PENDING_ACTION',
+            'No hay una selección de mano pendiente.',
+            'select-hand-card',
+          );
           return;
         }
 
         if (pending.sourcePlayerId !== player.id) {
           emitGameError(
             socket,
+            'NOT_YOUR_TURN',
             'No puedes resolver la acción de otro jugador.',
+            'select-hand-card',
           );
           return;
         }
@@ -492,14 +572,24 @@ export function initializeSocket(io: Server) {
           );
 
           if (!targetPlayer) {
-            emitGameError(socket, 'No se encontró el jugador objetivo.');
+            emitGameError(
+              socket,
+              'PLAYER_NOT_FOUND',
+              'No se encontró el jugador objetivo.',
+              'select-hand-card',
+            );
             return;
           }
 
           const expectedPrefix = `hidden-hand-${targetPlayer.id}-`;
 
           if (!cardId.startsWith(expectedPrefix)) {
-            emitGameError(socket, 'La carta seleccionada no es válida.');
+            emitGameError(
+              socket,
+              'INVALID_SELECTION',
+              'La carta seleccionada no es válida.',
+              'select-hand-card',
+            );
             return;
           }
 
@@ -514,7 +604,9 @@ export function initializeSocket(io: Server) {
           ) {
             emitGameError(
               socket,
+              'INVALID_SELECTION',
               'La posición de la carta seleccionada no es válida.',
+              'select-hand-card',
             );
             return;
           }
@@ -528,7 +620,12 @@ export function initializeSocket(io: Server) {
         );
 
         if (!resolved) {
-          emitGameError(socket, 'No se pudo seleccionar esa carta.');
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'No se pudo seleccionar esa carta.',
+            'select-hand-card',
+          );
           return;
         }
 
@@ -544,14 +641,19 @@ export function initializeSocket(io: Server) {
     socket.on('next-phase', (roomCode: string) => {
       const context = getSocketGameContext(socket, roomCode);
 
-      if (!context || !requireActivePlayer(socket, context)) {
+      if (!context || !requireActivePlayer(socket, context, 'next-phase')) {
         return;
       }
 
       const { game, room } = context;
 
       if (game.pendingAction) {
-        emitGameError(socket, 'Debes resolver la acción pendiente primero.');
+        emitGameError(
+          socket,
+          'PENDING_ACTION',
+          'Debes resolver la acción pendiente primero.',
+          'next-phase',
+        );
         return;
       }
 
@@ -564,19 +666,29 @@ export function initializeSocket(io: Server) {
     socket.on('end-turn', (roomCode: string) => {
       const context = getSocketGameContext(socket, roomCode);
 
-      if (!context || !requireActivePlayer(socket, context)) {
+      if (!context || !requireActivePlayer(socket, context, 'end-turn')) {
         return;
       }
 
       const { game, room } = context;
 
       if (game.phase !== TurnPhase.ACTION) {
-        emitGameError(socket, 'No puedes terminar el turno en esta fase.');
+        emitGameError(
+          socket,
+          'INVALID_PHASE',
+          'No puedes terminar el turno en esta fase.',
+          'end-turn',
+        );
         return;
       }
 
       if (game.pendingAction) {
-        emitGameError(socket, 'Debes resolver la acción pendiente primero.');
+        emitGameError(
+          socket,
+          'PENDING_ACTION',
+          'Debes resolver la acción pendiente primero.',
+          'end-turn',
+        );
         return;
       }
 
@@ -595,7 +707,12 @@ export function initializeSocket(io: Server) {
       const { room, player } = context;
 
       if (room.hostId !== player.id) {
-        emitGameError(socket, 'Solo el anfitrión puede reiniciar la partida.');
+        emitGameError(
+          socket,
+          'NOT_HOST',
+          'Solo el anfitrión puede reiniciar la partida.',
+          'restart-game',
+        );
         return;
       }
 
@@ -617,7 +734,12 @@ export function initializeSocket(io: Server) {
       const pending = game.pendingAction;
 
       if (!pending) {
-        emitGameError(socket, 'No hay una acción pendiente para cancelar.');
+        emitGameError(
+          socket,
+          'NO_PENDING_ACTION',
+          'No hay una acción pendiente para cancelar.',
+          'cancel-action',
+        );
         return;
       }
 
@@ -629,7 +751,12 @@ export function initializeSocket(io: Server) {
             : undefined;
 
       if (!pendingPlayerId || pendingPlayerId !== player.id) {
-        emitGameError(socket, 'No puedes cancelar la acción de otro jugador.');
+        emitGameError(
+          socket,
+          'NOT_YOUR_TURN',
+          'No puedes cancelar la acción de otro jugador.',
+          'cancel-action',
+        );
         return;
       }
 

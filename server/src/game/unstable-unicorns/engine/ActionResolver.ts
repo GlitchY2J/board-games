@@ -109,6 +109,15 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'play_downgrade') {
+      const card = (pending as any).card;
+      if (card) {
+        targetPlayer.downgrades.push(card);
+      }
+      state.pendingAction = undefined;
+      return true;
+    }
+
     return false;
   }
 

@@ -10,6 +10,7 @@ import { socket } from './services/socket';
 import JoinRoom from './pages/JoinRoom';
 import { CardPreviewProvider } from './context/CardPreviewContext';
 import CardPreview from './components/card/CardPreview';
+import GameErrorToast from './components/game/GameErrorToast';
 
 export default function App() {
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function App() {
         </Route>
       </Routes>
       <CardPreview />
+      <GameErrorToast />
     </CardPreviewProvider>
   );
 }

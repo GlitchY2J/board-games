@@ -1,3 +1,5 @@
+import type { Card } from './Card.ts';
+
 export type PendingAction =
   | {
       type: 'discard';
@@ -7,8 +9,9 @@ export type PendingAction =
     }
   | {
       type: 'select_player';
-      reason: 'back_kick' | 'americorn' | 'blatant_thievery' | 'unicorn_poison' | 'annoying_flying_unicorn';
+      reason: 'back_kick' | 'americorn' | 'blatant_thievery' | 'unicorn_poison' | 'annoying_flying_unicorn' | 'play_downgrade';
       sourcePlayerId: string;
+      card?: Card;
     }
   | {
       type: 'select_stable_card';
@@ -39,7 +42,7 @@ export type PendingAction =
     }
   | {
       type: 'select_choice';
-      reason: 'angel_unicorn' | 'annoying_flying_unicorn' | 'black_knight_unicorn' | 'chainsaw_unicorn';
+      reason: 'angel_unicorn' | 'annoying_flying_unicorn' | 'black_knight_unicorn' | 'chainsaw_unicorn' | 'classy_narwhal';
       playerId: string;
       title: string;
       description: string;
@@ -50,6 +53,12 @@ export type PendingAction =
   | {
       type: 'select_discard_card';
       reason: 'angel_unicorn';
+      playerId: string;
+      cardType?: 'unicorn' | 'magic' | 'upgrade' | 'downgrade' | 'instant';
+    }
+  | {
+      type: 'select_deck_card';
+      reason: 'classy_narwhal';
       playerId: string;
       cardType?: 'unicorn' | 'magic' | 'upgrade' | 'downgrade' | 'instant';
     };

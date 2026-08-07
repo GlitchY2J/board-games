@@ -13,6 +13,6 @@ socket.on('connect', () => {
 //   console.log('Socket desconectado');
 // });
 
-socket.on('connect_error', (error) => {
-  console.error('Error de conexión:', error.message);
-});
+// socket.on('connect_error', (error) => {
+//   console.error('Error de conexión:', error.message);
+// });

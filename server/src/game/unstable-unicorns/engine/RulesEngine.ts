@@ -8,55 +8,110 @@ import { MagicHandler } from './handlers/MagicHandler.ts';
 import { UnicornHandler } from './handlers/UnicornHandler.ts';
 import { UpgradeHandler } from './handlers/UpgradeHandler.ts';
 import { VictoryManager } from '../../VictoryManager.ts';
+import {
+  actionFailure,
+  actionSuccess,
+  GameActionResult,
+} from '../../../../../shared/types/GameActionResult.ts';
 
 export class RulesEngine {
   static playCard(
     state: GameState,
     playerId: string,
     cardId: string,
-  ): GameState {
+  ): GameActionResult<GameState> {
     if (state.phase !== TurnPhase.ACTION) {
-      return state;
+      return actionFailure(
+        'INVALID_PHASE',
+        'Solo puedes jugar una carta durante la fase de acción.',
+        'play-card',
+      );
     }
 
     if (state.actionUsed) {
-      return state;
+      return actionFailure(
+        'ACTION_ALREADY_USED',
+        'Ya utilizaste tu acción de este turno.',
+        'play-card',
+      );
     }
 
-    const player = state.players.find((p) => p.id === playerId);
+    if (state.pendingAction) {
+      return actionFailure(
+        'PENDING_ACTION',
+        'Debes resolver la acción pendiente antes de jugar otra carta.',
+        'play-card',
+      );
+    }
+
+    const activePlayer = state.players[state.currentPlayer];
+
+    if (!activePlayer || activePlayer.id !== playerId) {
+      return actionFailure('NOT_YOUR_TURN', 'No es tu turno.', 'play-card');
+    }
+
+    const player = state.players.find((candidate) => candidate.id === playerId);
 
     if (!player) {
-      return state;
+      return actionFailure(
+        'PLAYER_NOT_FOUND',
+        'No se encontró al jugador dentro de la partida.',
+        'play-card',
+      );
     }
 
-    const handIndex = player.hand.findIndex((c) => c.id === cardId);
+    const handIndex = player.hand.findIndex((card) => card.id === cardId);
 
     if (handIndex === -1) {
-      return state;
+      return actionFailure(
+        'CARD_NOT_FOUND',
+        'La carta seleccionada no está en tu mano.',
+        'play-card',
+      );
     }
 
-    const card = player.hand.splice(handIndex, 1)[0];
+    const card = player.hand[handIndex];
 
-    switch (card.cardType) {
-      case 'unicorn':
-        UnicornHandler.play(state, player, card);
-        break;
-      case 'upgrade':
-        UpgradeHandler.play(player, card);
-        break;
-      case 'downgrade':
-        DowngradeHandler.play(player, card);
-        break;
-      case 'magic':
-        MagicHandler.play(state, player, card);
-        break;
-      case 'instant':
-        InstantHandler.play(state, card);
-        break;
+    try {
+      switch (card.cardType) {
+        case 'unicorn':
+          UnicornHandler.play(state, player, card);
+          break;
+        case 'upgrade':
+          UpgradeHandler.play(player, card);
+          break;
+        case 'downgrade':
+          DowngradeHandler.play(player, card);
+          break;
+        case 'magic':
+          MagicHandler.play(state, player, card);
+          break;
+        case 'instant':
+          InstantHandler.play(state, card);
+          break;
+        default:
+          return actionFailure(
+            'ACTION_NOT_ALLOWED',
+            'Este tipo de carta no se puede jugar.',
+            'play-card',
+          );
+      }
+
+      // Retiramos la carta después de comprobar su tipo
+      // Los handlers reciben la misma referencia del objeto
+      player.hand.splice(handIndex, 1);
+
+      state.actionUsed = true;
+
+      return actionSuccess(state);
+    } catch (error) {
+      console.error('Error ejecutando el efecto de la carta.', error);
     }
 
-    state.actionUsed = true;
-
-    return state;
+    return actionFailure(
+      'INTERNAL_ERROR',
+      'Ocurrió un error al ejecutar el efecto de la carta.',
+      'play-card',
+    );
   }
 }

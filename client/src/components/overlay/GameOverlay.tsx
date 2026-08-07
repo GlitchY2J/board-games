@@ -63,9 +63,11 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       const isAmericorn = action.reason === 'americorn';
       const isUnicornPoison = action.reason === 'unicorn_poison';
       const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
+      const isPlayDowngrade = action.reason === 'play_downgrade';
       const needsHand = isBlatantThievery || isAmericorn || isAnnoyingFlying;
 
       const eligiblePlayers = gameState.players.filter((p) => {
+        if (isPlayDowngrade) return true;
         if (p.id === localPlayerId) return false;
         if (needsHand) return p.hand.length > 0;
         if (isUnicornPoison) return p.stable.length > 0;
@@ -78,10 +80,12 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       const items = eligiblePlayers.map((p) => ({
         id: p.id,
-        title: p.name,
-        subtitle: needsHand
-          ? `${p.hand.length} carta(s) en mano`
-          : `${p.stable.length} unicornio(s) en establo`,
+        title: p.id === localPlayerId ? `${p.name} (Tú)` : p.name,
+        subtitle: isPlayDowngrade
+          ? `Desmejoras actuales: ${p.downgrades.length}`
+          : needsHand
+            ? `${p.hand.length} carta(s) en mano`
+            : `${p.stable.length} unicornio(s) en establo`,
       }));
 
       const getTitle = () => {
@@ -89,6 +93,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         if (isAmericorn) return '🇺🇸 Americorn';
         if (isUnicornPoison) return '🧪 Unicorn Poison';
         if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
+        if (isPlayDowngrade) return '⏬ Jugar Desmejora';
         return 'Seleccionar Objetivo';
       };
 
@@ -101,6 +106,8 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           return 'Elige a un jugador para destruir uno de sus unicornios';
         if (isAnnoyingFlying)
           return 'Elige a un jugador para forzarlo a descartar una carta';
+        if (isPlayDowngrade)
+          return 'Elige en qué establo deseas colocar esta carta de Desmejora';
         return 'Elige a un jugador como objetivo de tu acción';
       };
 
