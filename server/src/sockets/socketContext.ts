@@ -1,4 +1,4 @@
-import { Socket } from 'socket.io';
+import { GameSocket } from './socketTypes.ts';
 import {
   GameActionName,
   GameError,
@@ -19,7 +19,7 @@ export type SocketGameContext = SocketPlayerContext & {
 };
 
 export function emitGameError(
-  socket: Socket,
+  socket: GameSocket,
   code: GameErrorCode,
   message: string,
   action: GameActionName = 'unknown',
@@ -34,7 +34,7 @@ export function emitGameError(
 }
 
 export function getSocketPlayerContext(
-  socket: Socket,
+  socket: GameSocket,
   roomCode: string,
 ): SocketPlayerContext | null {
   const room = roomManager.getRoom(roomCode);
@@ -60,7 +60,7 @@ export function getSocketPlayerContext(
 }
 
 export function getSocketGameContext(
-  socket: Socket,
+  socket: GameSocket,
   roomCode: string,
 ): SocketGameContext | null {
   const context = getSocketPlayerContext(socket, roomCode);
@@ -89,7 +89,7 @@ export function isActivePlayer(game: GameState, playerId: string): boolean {
 }
 
 export function requireActivePlayer(
-  socket: Socket,
+  socket: GameSocket,
   context: SocketGameContext,
   action: GameActionName,
 ): boolean {

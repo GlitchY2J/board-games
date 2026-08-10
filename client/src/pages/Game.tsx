@@ -35,9 +35,16 @@ export default function Game() {
   const isMyTurn = activePlayer.socketId === socket.id;
 
   function play(cardId: string) {
+    if (!localPlayer) {
+      console.error(
+        'No se puede jugar una carta: jugador local no encontrado.',
+      );
+      return;
+    }
+
     socket.emit('play-card', {
       roomCode: gameState.roomCode,
-      playerId: localPlayer?.id,
+      playerId: localPlayer.id,
       cardId,
     });
   }

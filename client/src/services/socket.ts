@@ -1,18 +1,17 @@
-import { io } from 'socket.io-client';
+import { io, type Socket } from 'socket.io-client';
+import type {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from '../../../shared/types/SocketEvents.ts';
 
-export const socket = io('http://localhost:3000', {
-  autoConnect: false,
-  transports: ['websocket'],
-});
+export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
+  'http://localhost:3000',
+  {
+    autoConnect: false,
+    transports: ['websocket'],
+  },
+);
 
 socket.on('connect', () => {
   console.log('Socket conectado:', socket.id);
 });
-
-// socket.on('disconnect', () => {
-//   console.log('Socket desconectado');
-// });
-
-// socket.on('connect_error', (error) => {
-//   console.error('Error de conexión:', error.message);
-// });

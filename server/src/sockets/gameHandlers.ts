@@ -1,5 +1,4 @@
-import type { Server, Socket } from 'socket.io';
-
+import type { GameServer, GameSocket } from './socketTypes.ts';
 import { createGameState } from '../game/unstable-unicorns/setup.ts';
 import { RulesEngine } from '../game/unstable-unicorns/engine/RulesEngine.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
@@ -14,7 +13,7 @@ import {
 
 import { emitGameState } from './gameStateEmitter.ts';
 
-export function registerGameHandlers(io: Server, socket: Socket): void {
+export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerStartGame(io, socket);
   registerPlayCard(io, socket);
   registerDrawActionCard(io, socket);
@@ -23,7 +22,7 @@ export function registerGameHandlers(io: Server, socket: Socket): void {
   registerRestartGame(io, socket);
 }
 
-function registerStartGame(io: Server, socket: Socket): void {
+function registerStartGame(io: GameServer, socket: GameSocket): void {
   socket.on('start-game', (roomCode: string) => {
     const context = getSocketPlayerContext(socket, roomCode);
 
@@ -61,134 +60,117 @@ function registerStartGame(io: Server, socket: Socket): void {
   });
 }
 
-function registerPlayCard(io: Server, socket: Socket): void {
-  socket.on(
-    'play-card',
-    ({
-      roomCode,
-      playerId,
+function registerPlayCard(io: GameServer, socket: GameSocket): void {
+  socket.on('play-card', ({ roomCode, playerId, cardId }) => {
+    const context = getSocketGameContext(socket, roomCode);
+
+    if (!context) {
+      return;
+    }
+
+    if (playerId !== context.player.id) {
+      emitGameError(
+        socket,
+        'INVALID_PLAYER',
+        'El jugador enviado no coincide con tu sesión.',
+        'play-card',
+      );
+      return;
+    }
+
+    const result = RulesEngine.playCard(
+      context.game,
+      context.player.id,
       cardId,
-    }: {
-      roomCode: string;
-      playerId: string;
-      cardId: string;
-    }) => {
-      const context = getSocketGameContext(socket, roomCode);
+    );
 
-      if (!context) {
-        return;
-      }
+    if (!result.success) {
+      socket.emit('game-error', result.error);
+      return;
+    }
 
-      if (playerId !== context.player.id) {
-        emitGameError(
-          socket,
-          'INVALID_PLAYER',
-          'El jugador enviado no coincide con tu sesión.',
-          'play-card',
-        );
-        return;
-      }
+    context.room.gameState = result.data;
 
-      const result = RulesEngine.playCard(
-        context.game,
-        context.player.id,
-        cardId,
-      );
-
-      if (!result.success) {
-        socket.emit('game-error', result.error);
-        return;
-      }
-
-      context.room.gameState = result.data;
-
-      emitGameState(io, context.room, 'game-updated');
-    },
-  );
+    emitGameState(io, context.room, 'game-updated');
+  });
 }
 
-function registerDrawActionCard(io: Server, socket: Socket): void {
-  socket.on(
-    'draw-action-card',
-    ({ roomCode, playerId }: { roomCode: string; playerId: string }) => {
-      console.log('DRAW ACTION CARD EVENT');
-      const context = getSocketGameContext(socket, roomCode);
+function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
+  socket.on('draw-action-card', ({ roomCode, playerId }) => {
+    console.log('DRAW ACTION CARD EVENT');
+    const context = getSocketGameContext(socket, roomCode);
 
-      if (
-        !context ||
-        !requireActivePlayer(socket, context, 'draw-action-card')
-      ) {
-        return;
-      }
+    if (!context || !requireActivePlayer(socket, context, 'draw-action-card')) {
+      return;
+    }
 
-      const { game, player, room } = context;
+    const { game, player, room } = context;
 
-      if (playerId !== player.id) {
-        emitGameError(
-          socket,
-          'INVALID_PLAYER',
-          'El jugador enviado no coincide con tu sentido.',
-          'draw-action-card',
-        );
-        return;
-      }
-
-      if (game.actionUsed) {
-        emitGameError(
-          socket,
-          'ACTION_ALREADY_USED',
-          'Ya utilizaste tu acción de este turno.',
-          'draw-action-card',
-        );
-        return;
-      }
-
-      if (game.pendingAction) {
-        emitGameError(
-          socket,
-          'PENDING_ACTION',
-          'Debes resolver la acción pendiente primero.',
-          'draw-action-card',
-        );
-        return;
-      }
-
-      const gamePlayer = game.players.find(
-        (candidate) => candidate.id === player.id,
+    if (playerId !== player.id) {
+      emitGameError(
+        socket,
+        'INVALID_PLAYER',
+        'El jugador enviado no coincide con tu sentido.',
+        'draw-action-card',
       );
+      return;
+    }
 
-      if (!gamePlayer) {
-        emitGameError(
-          socket,
-          'PLAYER_NOT_FOUND',
-          'No se encontró al jugador.',
-          'draw-action-card',
-        );
-        return;
-      }
+    if (game.actionUsed) {
+      emitGameError(
+        socket,
+        'ACTION_ALREADY_USED',
+        'Ya utilizaste tu acción de este turno.',
+        'draw-action-card',
+      );
+      return;
+    }
 
-      const card = game.deck.shift();
+    if (game.pendingAction) {
+      emitGameError(
+        socket,
+        'PENDING_ACTION',
+        'Debes resolver la acción pendiente primero.',
+        'draw-action-card',
+      );
+      return;
+    }
 
-      if (!card) {
-        emitGameError(
-          socket,
-          'DECK_EMPTY',
-          'El mazo está vacío',
-          'draw-action-card',
-        );
-        return;
-      }
+    const gamePlayer = game.players.find(
+      (candidate) => candidate.id === player.id,
+    );
 
-      gamePlayer.hand.push(card);
+    if (!gamePlayer) {
+      emitGameError(
+        socket,
+        'PLAYER_NOT_FOUND',
+        'No se encontró al jugador.',
+        'draw-action-card',
+      );
+      return;
+    }
 
-      game.actionUsed = true;
+    const card = game.deck.shift();
 
-      emitGameState(io, room, 'game-updated');
-    },
-  );
+    if (!card) {
+      emitGameError(
+        socket,
+        'DECK_EMPTY',
+        'El mazo está vacío',
+        'draw-action-card',
+      );
+      return;
+    }
+
+    gamePlayer.hand.push(card);
+
+    game.actionUsed = true;
+
+    emitGameState(io, room, 'game-updated');
+  });
 }
 
-function registerNextPhase(io: Server, socket: Socket): void {
+function registerNextPhase(io: GameServer, socket: GameSocket): void {
   socket.on('next-phase', (roomCode: string) => {
     const context = getSocketGameContext(socket, roomCode);
 
@@ -212,7 +194,7 @@ function registerNextPhase(io: Server, socket: Socket): void {
   });
 }
 
-function registerEndTurn(io: Server, socket: Socket): void {
+function registerEndTurn(io: GameServer, socket: GameSocket): void {
   socket.on('end-turn', (roomCode: string) => {
     const context = getSocketGameContext(socket, roomCode);
 
@@ -246,7 +228,7 @@ function registerEndTurn(io: Server, socket: Socket): void {
   });
 }
 
-function registerRestartGame(io: Server, socket: Socket): void {
+function registerRestartGame(io: GameServer, socket: GameSocket): void {
   socket.on('restart-game', (roomCode: string) => {
     const context = getSocketPlayerContext(socket, roomCode);
 

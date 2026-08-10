@@ -4,6 +4,10 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import roomRoutes from './routes/roomRoutes.ts';
 import { initializeSocket } from './socket.ts';
+import type {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from '../../shared/types/SocketEvents.ts';
 
 const app = express();
 
@@ -13,7 +17,7 @@ app.use('/rooms', roomRoutes);
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
+const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],

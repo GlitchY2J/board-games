@@ -118,10 +118,10 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           items={items}
           maxSelection={1}
           confirmText="Seleccionar"
-          onConfirm={([targetPlayerId]) => {
+          onConfirm={([playerId]) => {
             socket.emit('select-player', {
               roomCode: gameState.roomCode,
-              targetPlayerId,
+              playerId,
             });
           }}
           onCancel={

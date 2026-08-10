@@ -1,12 +1,12 @@
-import { Server, Socket } from 'socket.io';
+import type { GameServer, GameSocket } from './sockets/socketTypes.ts';
 import { roomManager } from './roomManagerInstance.ts';
 import { registerRoomHandlers } from './sockets/roomHandlers.ts';
 import { registerGameHandlers } from './sockets/gameHandlers.ts';
 import { registerActionHandlers } from './sockets/actionHandlers.ts';
 
-export function initializeSocket(io: Server) {
+export function initializeSocket(io: GameServer): void {
   // Conexión de cliente
-  io.on('connection', (socket: Socket) => {
+  io.on('connection', (socket: GameSocket) => {
     console.log(`Cliente conectado: ${socket.id}`);
 
     registerRoomHandlers(io, socket);

@@ -1,5 +1,4 @@
-import type { Server } from 'socket.io';
-
+import type { GameServer } from './socketTypes.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { GameState } from '../game/models/GameState.ts';
 import type { Card } from '../game/models/Card.ts';
@@ -70,7 +69,7 @@ export function createGameStateForPlayer(
 }
 
 export function emitGameState(
-  io: Server,
+  io: GameServer,
   room: Room,
   eventName: 'game-started' | 'game-updated',
 ): void {

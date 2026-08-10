@@ -1,47 +1,122 @@
 import type { GameState } from './Game.ts';
-import { GameError } from './GameError.ts';
+import type { GameError } from './GameError.ts';
 import type { Room } from './Room.ts';
+
+export interface JoinRoomPayload {
+  roomCode: string;
+  playerName: string;
+}
+
+export interface CreateRoomPayload {
+  hostName: string;
+  game: string;
+}
+
+export interface PlayCardPayload {
+  roomCode: string;
+  playerId: string;
+  cardId: string;
+}
+
+export interface DrawActionCardPayload {
+  roomCode: string;
+  playerId: string;
+}
+
+export interface DiscardCardsPayload {
+  roomCode: string;
+  playerId: string;
+  cardIds: string[];
+}
+
+export interface SelectPlayerPayload {
+  roomCode: string;
+  playerId: string;
+}
+
+export interface SelectStableCardPayload {
+  roomCode: string;
+  cardId: string;
+}
+
+export interface SelectHandCardPayload {
+  roomCode: string;
+  cardId: string;
+}
+
+export interface CancelActionPayload {
+  roomCode: string;
+}
+
+export interface SelectChoicePayload {
+  roomCode: string;
+  choice: string;
+}
+
+export interface SelectDiscardCardPayload {
+  roomCode: string;
+  cardId: string;
+}
+
+export interface RoomCreateResponse {
+  success: boolean;
+  room?: Room;
+  error?: string;
+}
 
 export interface ServerToClientEvents {
   'room-updated': (room: Room) => void;
   'game-started': (gameState: GameState) => void;
   'game-updated': (gameState: GameState) => void;
-  'error-message': (error: GameError) => void;
+  'game-error': (error: GameError) => void;
 }
 
 export interface ClientToServerEvents {
-  'join-room': (payload: { roomCode: string; playerName: string }) => void;
+  // Join Room
+  'join-room': (payload: JoinRoomPayload) => void;
+
+  // Create Room
+  'room:create': (
+    payload: CreateRoomPayload,
+    callback: (response: RoomCreateResponse) => void,
+  ) => void;
+
+  // Start Game
   'start-game': (roomCode: string) => void;
-  'play-card': (payload: {
-    roomCode: string;
-    playerId: string;
-    cardId: string;
-  }) => void;
-  'draw-action-card': (payload: { roomCode: string; playerId: string }) => void;
-  'discard-cards': (payload: {
-    roomCode: string;
-    playerId: string;
-    cardIds: string[];
-  }) => void;
-  'select-player': (payload: {
-    roomCode: string;
-    targetPlayerId: string;
-  }) => void;
-  'select-stable-card': (payload: { roomCode: string; cardId: string }) => void;
-  'select-hand-card': (payload: { roomCode: string; cardId: string }) => void;
-  'resolve-action': (payload: {
-    roomCode: string;
-    targetPlayerId?: string;
-    targetCardId?: string;
-  }) => void;
+
+  // Play Card
+  'play-card': (payload: PlayCardPayload) => void;
+
+  // Draw Action Card
+  'draw-action-card': (payload: DrawActionCardPayload) => void;
+
+  // Discard Cards
+  'discard-cards': (payload: DiscardCardsPayload) => void;
+
+  // Select Player
+  'select-player': (payload: SelectPlayerPayload) => void;
+
+  // Select Stable Card
+  'select-stable-card': (payload: SelectStableCardPayload) => void;
+
+  // Select Hand Card
+  'select-hand-card': (payload: SelectHandCardPayload) => void;
+
+  // Next Phase
   'next-phase': (roomCode: string) => void;
+
+  // End Turn
   'end-turn': (roomCode: string) => void;
+
+  // Restart Game
   'restart-game': (roomCode: string) => void;
-  'cancel-action': (payload: { roomCode: string }) => void;
-  'select-choice': (payload: { roomCode: string; choice: string }) => void;
-  'select-discard-card': (payload: {
-    roomCode: string;
-    cardId: string;
-  }) => void;
-  'select-deck-card': (payload: { roomCode: string; cardId: string }) => void;
+
+  // Cancel Action
+  'cancel-action': (payload: CancelActionPayload) => void;
+
+  // Select Choice
+  'select-choice': (payload: SelectChoicePayload) => void;
+
+  // Select Discard Card
+  'select-discard-card': (payload: SelectDiscardCardPayload) => void;
 }
