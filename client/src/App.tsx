@@ -19,9 +19,16 @@ export default function App() {
   const location = useLocation();
 
   useEffect(() => {
-    if (status !== 'active') return;
+    if (status === 'loading') return;
 
     const path = location.pathname;
+
+    if (status === 'none') {
+      if (path === '/game' || path === '/lobby') {
+        navigate('/', { replace: true });
+      }
+      return;
+    }
 
     if (gameState?.started) {
       if (path !== '/game') {
@@ -31,6 +38,8 @@ export default function App() {
       if (path !== '/lobby' && path !== '/game') {
         navigate('/lobby', { replace: true });
       }
+    } else if (path === '/game' || path === '/lobby') {
+      navigate('/', { replace: true });
     }
   }, [status, gameState, room, location.pathname, navigate]);
 

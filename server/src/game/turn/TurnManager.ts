@@ -78,7 +78,15 @@ export class TurnManager {
 
     const activePlayer = game.players[game.currentPlayer];
 
-    if (activePlayer.hand.length > 7) return;
+    if (activePlayer.hand.length > 7) {
+      game.pendingAction = {
+        type: 'discard',
+        reason: 'hand_limit',
+        playerId: activePlayer.id,
+        cardsToDiscard: activePlayer.hand.length - 7,
+      };
+      return;
+    }
 
     if (this.hasEndOfTurnTrigger(game)) return;
 

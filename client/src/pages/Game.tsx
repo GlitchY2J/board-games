@@ -24,7 +24,7 @@ interface TurnAnnounce {
 
 export default function Game() {
   const location = useLocation();
-  const { gameState: contextGameState, isHost: contextIsHost } = useGame();
+  const { gameState: contextGameState, isHost: contextIsHost, deactivate } = useGame();
 
   const [gameState, setGameState] = useState<GameState | null>(
     contextGameState ?? location.state?.gameState ?? null,
@@ -106,6 +106,14 @@ export default function Game() {
       </div>
     );
   }
+
+  useEffect(() => {
+    if (!gameState) return;
+    const local = gameState.players.find((p) => p.socketId === socket.id);
+    if (!local) {
+      deactivate();
+    }
+  }, [gameState, deactivate]);
 
   const activePlayer = gameState.players[gameState.currentPlayer];
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
