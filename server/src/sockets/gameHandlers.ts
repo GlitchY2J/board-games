@@ -102,7 +102,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
     addLog(
       game,
-      `${original.playerName} juega carta "${original.card.name}"`,
+      `${original.playerName} jugó carta "${original.card.name}"`,
       { playerId: original.playerId },
     );
   }
@@ -215,7 +215,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
 
     addLog(
       context.game,
-      `${context.player.name} intenta jugar carta "${card.name}"`,
+      `${context.player.name} intentó jugar carta "${card.name}"`,
       { playerId: context.player.id },
     );
 
@@ -310,7 +310,7 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
       game.actionUsed = true;
     }
 
-    addLog(game, `${player.name} roba una carta`, { playerId: player.id });
+    addLog(game, `${player.name} robó una carta`, { playerId: player.id });
 
     emitGameState(io, room, 'game-updated');
   });
@@ -454,7 +454,7 @@ function registerNeighAccept(io: GameServer, socket: GameSocket): void {
       pending.acceptedIds.push(player.id);
     }
 
-    addLog(game, `${player.name} acepta carta "${pending.card.name}"`, {
+    addLog(game, `${player.name} aceptó la carta "${pending.card.name}"`, {
       playerId: player.id,
     });
 
@@ -526,8 +526,8 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
     addLog(
       game,
       neighCard.effect === 'super_neigh'
-        ? `${player.name} juega un Super Neigh`
-        : `${player.name} juega un Neigh`,
+        ? `${player.name} jugó un Super Neigh`
+        : `${player.name} jugó un Neigh`,
       { playerId: player.id },
     );
 

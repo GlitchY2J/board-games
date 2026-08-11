@@ -84,7 +84,7 @@ export function registerActionHandlers(
 
       addLog(
         game,
-        `${player.name} descarta ${cardIds.length} carta${cardIds.length > 1 ? 's' : ''}`,
+        `${player.name} descartó ${cardIds.length} carta${cardIds.length > 1 ? 's' : ''}`,
         { playerId: player.id },
       );
 
@@ -123,7 +123,7 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           targetPlayer
-            ? `${sourcePlayer.name} elige a ${targetPlayer.name}`
+            ? `${sourcePlayer.name} eligió a ${targetPlayer.name}`
             : `${sourcePlayer.name} elige un jugador`,
           { playerId: sourcePlayer.id },
         );
@@ -159,7 +159,7 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          `${sourcePlayer.name} elige una carta de su establo`,
+          `${sourcePlayer.name} eligió una carta de su establo`,
           { playerId: sourcePlayer.id },
         );
 
@@ -275,12 +275,12 @@ export function registerActionHandlers(
         addLog(
           game,
           targetPlayer
-            ? `${player.name} roba una carta de la mano de ${targetPlayer.name}`
-            : `${player.name} roba una carta de una mano`,
+            ? `${player.name} robó una carta de la mano de ${targetPlayer.name}`
+            : `${player.name} robó una carta de una mano`,
           { playerId: player.id },
         );
       } else {
-        addLog(game, `${player.name} elige una carta de una mano`, {
+        addLog(game, `${player.name} eligió una carta de una mano`, {
           playerId: player.id,
         });
       }
@@ -329,7 +329,7 @@ export function registerActionHandlers(
 
       game.pendingAction = undefined;
 
-      addLog(game, `${player.name} cancela la acción`, { playerId: player.id });
+      addLog(game, `${player.name} canceló la acción`, { playerId: player.id });
 
       emitGameState(io, room, 'game-updated');
     });
@@ -381,8 +381,8 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           choice === 'yes'
-            ? `${player.name} sacrifica a Angel Unicorn`
-            : `${player.name} omite el efecto de Angel Unicorn`,
+            ? `${player.name} sacrificó a Angel Unicorn`
+            : `${player.name} omitió el efecto de Angel Unicorn`,
           { playerId: player.id },
         );
 
@@ -404,8 +404,8 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           choice === 'yes'
-            ? `${player.name} usa el efecto de Molesto Unicornio Volador`
-            : `${player.name} omite el efecto de Molesto Unicornio Volador`,
+            ? `${player.name} usó el efecto de Molesto Unicornio Volador`
+            : `${player.name} omitió el efecto de Molesto Unicornio Volador`,
           { playerId: player.id },
         );
 
@@ -458,8 +458,8 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           choice === 'yes'
-            ? `${player.name} sacrifica a Black Knight Unicorn`
-            : `${player.name} destruye la carta objetivo`,
+            ? `${player.name} sacrificó a Black Knight Unicorn`
+            : `${player.name} destruyó la carta objetivo`,
           { playerId: player.id },
         );
 
@@ -481,8 +481,8 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           choice === 'yes'
-            ? `${player.name} usa el efecto de Chainsaw Unicorn`
-            : `${player.name} omite el efecto de Chainsaw Unicorn`,
+            ? `${player.name} usó el efecto de Chainsaw Unicorn`
+            : `${player.name} omitió el efecto de Chainsaw Unicorn`,
           { playerId: player.id },
         );
 
@@ -505,8 +505,8 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           choice === 'yes'
-            ? `${player.name} usa el efecto de Classy Narwhal`
-            : `${player.name} omite el efecto de Classy Narwhal`,
+            ? `${player.name} usó el efecto de Classy Narwhal`
+            : `${player.name} omitió el efecto de Classy Narwhal`,
           { playerId: player.id },
         );
 
@@ -548,7 +548,7 @@ export function registerActionHandlers(
 
           addLog(
             room.gameState,
-            `${player.name} recupera ${removed.name} del descarte`,
+            `${player.name} recuperó ${removed.name} del descarte`,
             { playerId: player.id },
           );
         }
