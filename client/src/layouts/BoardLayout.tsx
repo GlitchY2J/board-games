@@ -8,6 +8,7 @@ import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
 import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
+import { getPlayerStatus } from '../lib/playerStatus';
 import { RotateCcw } from 'lucide-react';
 interface Props {
   gameState: GameState;
@@ -33,6 +34,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Pro
               position="top"
               isMyTurn={false}
               gamePhase={gameState.phase}
+              status={getPlayerStatus(gameState, opponents[0].id)}
               onPlay={() => {}}
             />
           )}
@@ -71,6 +73,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Pro
             isMyTurn={isMyTurn}
             onPlay={onPlay}
             gamePhase={gameState.phase}
+            status={getPlayerStatus(gameState, localPlayer.id)}
           />
 
           {/* {gameState.pendingAction?.type === 'discard' &&

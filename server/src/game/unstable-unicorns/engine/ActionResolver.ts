@@ -209,6 +209,7 @@ export class ActionResolver {
         if (!targetPlayer) return false;
 
         if (type === 'upgrade') {
+          if (targetPlayerId === sourcePlayerId) return false;
           const idx = targetPlayer.upgrades.findIndex(
             (c) => c.uid === actualCardId,
           );
@@ -217,6 +218,7 @@ export class ActionResolver {
             CardMovement.destroyOrSacrifice(state, targetPlayer, card);
           }
         } else if (type === 'downgrade') {
+          if (targetPlayerId !== sourcePlayerId) return false;
           const idx = targetPlayer.downgrades.findIndex(
             (c) => c.uid === actualCardId,
           );

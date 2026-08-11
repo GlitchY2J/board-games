@@ -61,4 +61,5 @@ export type PendingAction =
       reason: 'classy_narwhal';
       playerId: string;
       cardType?: 'unicorn' | 'magic' | 'upgrade' | 'downgrade' | 'instant';
+      candidates: Card[];
     };

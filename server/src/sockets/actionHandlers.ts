@@ -21,6 +21,7 @@ export function registerActionHandlers(
   registerCancelAction(io, socket);
   registerSelectChoice(io, socket);
   registerSelectDiscardCard(io, socket);
+  registerSelectDeckCard(io, socket);
 
   function continueBeginningPhaseIfReady(game: GameState): void {
     if (!game.pendingAction && game.phase === TurnPhase.BEGINNING) {
@@ -389,11 +390,24 @@ export function registerActionHandlers(
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'annoying_flying_unicorn') {
         if (choice === 'yes') {
-          room.gameState.pendingAction = {
-            type: 'select_player',
-            reason: 'annoying_flying_unicorn',
-            sourcePlayerId: player.id,
-          };
+          const rivals = room.gameState.players.filter(
+            (p) => p.id !== player.id && p.hand.length > 0,
+          );
+
+          if (rivals.length === 1) {
+            room.gameState.pendingAction = {
+              type: 'discard',
+              reason: 'annoying_flying_unicorn',
+              playerId: rivals[0].id,
+              cardsToDiscard: 1,
+            };
+          } else {
+            room.gameState.pendingAction = {
+              type: 'select_player',
+              reason: 'annoying_flying_unicorn',
+              sourcePlayerId: player.id,
+            };
+          }
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
@@ -494,6 +508,9 @@ export function registerActionHandlers(
             reason: 'classy_narwhal',
             playerId: player.id,
             cardType: 'upgrade',
+            candidates: room.gameState.deck.filter(
+              (c) => c.cardType === 'upgrade',
+            ),
           };
         } else {
           room.gameState.pendingAction = undefined;
@@ -559,6 +576,55 @@ export function registerActionHandlers(
 
         emitGameState(io, room, 'game-updated');
       }
+    });
+  }
+
+  function registerSelectDeckCard(io: GameServer, socket: GameSocket): void {
+    socket.on('select-deck-card', ({ roomCode, cardId }) => {
+      const room = roomManager.getRoom(roomCode);
+      if (!room?.gameState) return;
+
+      const player = room.gameState.players.find(
+        (p) => p.socketId === socket.id,
+      );
+      if (!player) return;
+
+      const pending = room.gameState.pendingAction;
+      if (
+        !pending ||
+        pending.type !== 'select_deck_card' ||
+        pending.playerId !== player.id
+      ) {
+        return;
+      }
+
+      const cardIdx = room.gameState.deck.findIndex((c) => c.uid === cardId);
+      if (cardIdx === -1) return;
+
+      const [upgrade] = room.gameState.deck.splice(cardIdx, 1);
+      player.hand.push(upgrade);
+
+      for (let i = room.gameState.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [room.gameState.deck[i], room.gameState.deck[j]] = [
+          room.gameState.deck[j],
+          room.gameState.deck[i],
+        ];
+      }
+
+      room.gameState.pendingAction = undefined;
+
+      if (room.gameState.phase === TurnPhase.BEGINNING) {
+        TurnManager.nextPhase(room.gameState);
+      }
+
+      addLog(
+        room.gameState,
+        `${player.name} buscó ${upgrade.name} en el mazo y lo añadió a su mano`,
+        { playerId: player.id },
+      );
+
+      emitGameState(io, room, 'game-updated');
     });
   }
 }

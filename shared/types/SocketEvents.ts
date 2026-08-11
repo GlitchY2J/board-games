@@ -142,6 +142,9 @@ export interface ClientToServerEvents {
   // Select Discard Card
   'select-discard-card': (payload: SelectDiscardCardPayload) => void;
 
+  // Select Deck Card
+  'select-deck-card': (payload: SelectDiscardCardPayload) => void;
+
   // Neigh Accept
   'neigh-accept': (payload: NeighAcceptPayload) => void;
 

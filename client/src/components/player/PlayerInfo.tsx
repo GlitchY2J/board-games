@@ -7,9 +7,14 @@ type Player = GameState['players'][number];
 interface Props {
   player: Player;
   isActive?: boolean;
+  status?: string;
 }
 
-export default function PlayerInfo({ player, isActive = false }: Props) {
+export default function PlayerInfo({
+  player,
+  isActive = false,
+  status,
+}: Props) {
   return (
     <div
       className={cn(
@@ -41,15 +46,15 @@ export default function PlayerInfo({ player, isActive = false }: Props) {
             {player.name}
           </span>
           <span className="text-[9px] text-slate-500 flex items-center gap-1.5 font-semibold uppercase tracking-wider">
-            {isActive ? (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
-                Tu Turno
-              </>
-            ) : (
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
-            )}
-            {!isActive && 'Esperando'}
+            <span
+              className={cn(
+                'w-1.5 h-1.5 rounded-full',
+                isActive
+                  ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]'
+                  : 'bg-slate-600'
+              )}
+            ></span>
+            {status ?? (isActive ? 'Tu Turno' : 'Esperando')}
           </span>
         </div>
       </div>

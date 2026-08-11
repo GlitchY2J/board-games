@@ -10,10 +10,16 @@ interface Props {
   position: 'top' | 'bottom' | 'left' | 'right';
   isMyTurn: boolean;
   gamePhase: string;
+  status?: string;
   onPlay(cardId: string): void;
 }
 
-export default function PlayerBoard({ player, position, isMyTurn }: Props) {
+export default function PlayerBoard({
+  player,
+  position,
+  isMyTurn,
+  status,
+}: Props) {
   const isTopOrLeft = position === 'top' || position === 'left';
 
   return (
@@ -39,11 +45,11 @@ export default function PlayerBoard({ player, position, isMyTurn }: Props) {
           <div className="w-full flex justify-center">
             <Stable player={player} />
           </div>
-          <PlayerInfo player={player} isActive={isMyTurn} />
+          <PlayerInfo player={player} isActive={isMyTurn} status={status} />
         </>
       ) : (
         <>
-          <PlayerInfo player={player} isActive={isMyTurn} />
+          <PlayerInfo player={player} isActive={isMyTurn} status={status} />
           <div className="w-full flex justify-center">
             <Stable player={player} />
           </div>

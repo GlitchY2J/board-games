@@ -125,7 +125,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             });
           }}
           onCancel={
-            isAmericorn || isUnicornPoison || isAnnoyingFlying
+            isUnicornPoison || isAnnoyingFlying
               ? () => {
                   socket.emit('cancel-action', {
                     roomCode: gameState.roomCode,
@@ -169,15 +169,6 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
               cardId,
             });
           }}
-          onCancel={
-            isAmericorn
-              ? () => {
-                  socket.emit('cancel-action', {
-                    roomCode: gameState.roomCode,
-                  });
-                }
-              : undefined
-          }
         />
       );
     }
@@ -196,6 +187,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           image: string;
         }[] = [];
         gameState.players.forEach((p) => {
+          if (p.id === localPlayerId) return;
           p.upgrades.forEach((card, idx) => {
             items.push({
               id: `${card.id}_upgrade_${p.id}_${idx}`,
@@ -204,7 +196,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
                 targetPlayerId: p.id,
                 type: 'upgrade',
               }),
-              title: `${card.name} (Mejora - ${p.name})`,
+              title: `Upgrade de ${p.name}`,
               image: card.image,
             });
           });
@@ -222,7 +214,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
                 targetPlayerId: localPlayerId,
                 type: 'downgrade',
               }),
-              title: `${card.name} (Downgrade - Propia)`,
+              title: `Downgrade de ${localPlayer.name}`,
               image: card.image,
             });
           });
@@ -474,6 +466,34 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           confirmText="Traer al Establo"
           onConfirm={([cardId]) => {
             socket.emit('select-discard-card', {
+              roomCode: gameState.roomCode,
+              cardId,
+            });
+          }}
+        />
+      );
+    }
+
+    // ───────────────────────────────────
+    // SELECCIONAR CARTA DEL MAZO
+    // ───────────────────────────────────
+    case 'select_deck_card': {
+      if (action.playerId !== localPlayerId) return null;
+
+      return (
+        <CardSelectionOverlay
+          title="🐳 Classy Narwhal"
+          subtitle="Elige una carta de Mejora del mazo para agregarla a tu mano (luego se barajará el mazo)"
+          items={action.candidates.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }))}
+          maxSelection={1}
+          confirmText="Tomar"
+          onConfirm={([cardId]) => {
+            socket.emit('select-deck-card', {
               roomCode: gameState.roomCode,
               cardId,
             });
