@@ -8,6 +8,7 @@ import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
 import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
+import { RotateCcw } from 'lucide-react';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -92,9 +93,10 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Pro
       {isHost && (
         <button
           className="debug-reset"
+          title="Reiniciar partida"
           onClick={() => socket.emit('restart-game', gameState.roomCode)}
         >
-          Reiniciar partida
+          <RotateCcw size={16} />
         </button>
       )}
       <div className="bottom-hand" data-hand>
