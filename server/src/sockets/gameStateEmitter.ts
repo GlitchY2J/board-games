@@ -90,6 +90,10 @@ export function emitGameState(
 
     const state = createGameStateForPlayer(game, gamePlayer.id);
 
+    if (!roomPlayer.socketId) {
+      continue;
+    }
+
     io.to(roomPlayer.socketId).emit(eventName, state);
   }
 }

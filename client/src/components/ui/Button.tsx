@@ -16,24 +16,26 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const variants = {
-    primary: 'bg-blue-600 hover:bg-blue-500',
-    secondary: 'bg-gray-700 hover:bg-slate-600',
-    danger: 'bg-red-600 hover:bg-red-500',
+    primary: 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold glow-btn-emerald border border-emerald-400/20 shadow-emerald-500/20',
+    secondary: 'bg-slate-900/50 backdrop-blur-md hover:bg-slate-800/80 text-slate-200 border border-slate-700/50 hover:border-slate-600 shadow-lg shadow-black/10',
+    danger: 'bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white font-bold border border-rose-500/20 shadow-lg shadow-red-500/10 hover:shadow-red-500/20',
   };
 
   return (
     <button
       {...props}
       className={cn(
-        'rounded-xl',
-        'font-semibold',
-        'py-3',
-        'px-6',
-        'shadow-md',
+        'rounded-2xl',
+        'tracking-wide',
+        'text-sm',
+        'py-3.5',
+        'px-8',
         'transition-all',
-        'duration-200',
-        'hover:scale-105',
-        'active:scale-95',
+        'duration-300',
+        'ease-out',
+        'hover:scale-[1.02]',
+        'active:scale-[0.98]',
+        'cursor-pointer',
         fullWidth ? 'w-full' : 'w-48',
         variants[variant],
         className,

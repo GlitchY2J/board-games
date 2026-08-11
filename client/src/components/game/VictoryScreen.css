@@ -1,99 +1,121 @@
 .victory-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(10px);
+  background: rgba(8, 12, 22, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 99999;
+  animation: victoryFadeIn 0.3s ease-out;
 }
 
 .victory-window {
   width: 520px;
   max-width: 90vw;
-  background: #202636;
-  border-radius: 24px;
-  padding: 50px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 32px;
+  padding: 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  box-shadows: 0 25px 80px rgba(0, 0, 0, 0.55);
-  animation: pop 0.35s ease;
+  gap: 16px;
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(16, 185, 129, 0.12);
+  animation: victoryPop 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .victory-crown {
-  font-size: 72px;
-  animation: float 2s infinite ease-in-out;
+  font-size: 64px;
+  line-height: 1;
+  animation: float 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.35));
 }
 
 .victory-title {
   margin: 0;
-  color: white;
-  font-size: 42px;
-  font-weight: 700;
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, #a7f3d0 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .victory-player {
-  font-size: 30px;
-  font-weight: bold;
-  color: #ffd54f;
-  text-shadows: 0 0 12px rgba(255, 213, 79, 0.4);
+  font-size: 32px;
+  font-weight: 900;
+  color: #34d399;
+  text-shadow: 0 0 24px rgba(16, 185, 129, 0.5);
+  text-align: center;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .victory-text {
-  color: #c5d0e6;
-  font-size: 18px;
+  color: #94a3b8;
+  font-size: 16px;
+  font-weight: 600;
   text-align: center;
-  line-height: 1.6;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .victory-button {
-  margin-top: 18px;
-  border: none;
-  background: #4ea8ff;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  padding: 14px 34px;
-  border-radius: 14px;
+  margin-top: 20px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, #10b981, #06b6d4);
+  color: #0b0f19;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 14px 38px;
+  border-radius: 16px;
   cursor: pointer;
-  transition: 0.2s;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
 }
 
 .victory-button:hover {
   transform: translateY(-3px);
-  box-shadows: 0 0 18px rgba(78, 168, 255, 0.5);
+  box-shadow: 0 6px 30px rgba(16, 185, 129, 0.5);
+  filter: brightness(1.1);
 }
 
 .victory-waiting {
-  color: #c5d0e6;
-  font-size: 18px;
+  color: #94a3b8;
+  font-size: 15px;
   font-style: italic;
   margin-top: 16px;
+  text-align: center;
+  line-height: 1.6;
+  max-width: 320px;
 }
 
-@keyframes pop {
-  from {
+@keyframes victoryFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes victoryPop {
+  0% {
     opacity: 0;
-    transform: scale (0.85);
+    transform: scale(0.85) translateY(20px);
   }
-  to {
+  100% {
     opacity: 1;
-    tansform: scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 
 @keyframes float {
-  0% {
-    tranform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-
-  100% {
-    transform: translateY(0px);
-  }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }

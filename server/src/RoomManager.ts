@@ -8,11 +8,48 @@ import { generateRoomCode } from './utils/generateRoomCode.ts';
 export class RoomManager {
   private rooms = new Map<string, Room>();
 
+  resumePlayerSession(
+    roomCode: string,
+    sessionToken: string,
+    socketId: string,
+  ): Player | null {
+    const room = this.getRoom(roomCode);
+
+    if (!room) {
+      return null;
+    }
+
+    const player = room.players.find(
+      (candidate) => candidate.sessionToken === sessionToken,
+    );
+
+    if (!player) {
+      return null;
+    }
+
+    player.socketId = socketId;
+    player.connected = true;
+
+    // Actualizamos el socketId de la copia del jugador en GameState
+    const gamePlayer = room.gameState?.players.find(
+      (candidate) => candidate.id === player.id,
+    );
+
+    if (gamePlayer) {
+      gamePlayer.socketId = socketId;
+      gamePlayer.connected = true;
+    }
+
+    return player;
+  }
+
   // Crear Sala
   createRoom(hostName: string, game: string, socketId: string): Room {
     const host: Player = {
       id: crypto.randomUUID(),
+      sessionToken: crypto.randomUUID(),
       socketId,
+      connected: true,
       name: hostName,
       hand: [],
       stable: [],
@@ -49,7 +86,9 @@ export class RoomManager {
 
     const player: Player = {
       id: crypto.randomUUID(),
+      sessionToken: crypto.randomUUID(),
       socketId,
+      connected: true,
       name: playerName,
       hand: [],
       stable: [],
@@ -97,6 +136,40 @@ export class RoomManager {
         room.hostId = room.players[0].id;
       }
     }
+  }
+
+  // Desconectar jugador
+  disconnectPlayer(socketId: string): {
+    room: Room;
+    player: Player;
+  } | null {
+    for (const room of this.rooms.values()) {
+      const player = room.players.find(
+        (candidate) => candidate.socketId === socketId,
+      );
+
+      if (!player) {
+        continue;
+      }
+
+      player.socketId = null;
+      player.connected = false;
+
+      const gamePlayer = room.gameState?.players.find(
+        (candidate) => candidate.id === player.id,
+      );
+
+      if (gamePlayer) {
+        gamePlayer.socketId = null;
+        gamePlayer.connected = false;
+      }
+
+      return {
+        room,
+        player,
+      };
+    }
+    return null;
   }
 
   // Buscar salas

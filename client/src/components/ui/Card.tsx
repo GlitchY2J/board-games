@@ -8,13 +8,11 @@ export default function Card({ children, className, ...props }: CardProps) {
     <div
       {...props}
       className={cn(
-        'rounded-2xl',
-        'border',
-        'border-slate-700',
-        'bg-slate-800/70',
-        'backdrop-blur-md',
-        'shadow-xl',
-        'p-6',
+        'rounded-3xl',
+        'glass-panel',
+        'p-8',
+        'transition-all',
+        'duration-500',
         className,
       )}
     >

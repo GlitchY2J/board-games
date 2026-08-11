@@ -9,13 +9,19 @@ export const changeOfLuck: CardEffect = {
       }
     }
 
-    state.pendingAction = {
-      type: 'discard',
-      reason: 'change_of_luck',
-      playerId: player.id,
-      cardsToDiscard: 3,
-    };
-
+    // Siempre otorgar el turno extra al resolver la carta
     state.extraTurn = true;
+
+    // Descartar el mínimo entre 3 y las cartas disponibles en mano
+    const cardsToDiscard = Math.min(3, player.hand.length);
+
+    if (cardsToDiscard > 0) {
+      state.pendingAction = {
+        type: 'discard',
+        reason: 'change_of_luck',
+        playerId: player.id,
+        cardsToDiscard,
+      };
+    }
   },
 };

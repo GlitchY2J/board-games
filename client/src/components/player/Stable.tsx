@@ -1,6 +1,5 @@
 import type { GameState } from '../../types/GameState';
-import './Stable.css';
-import StableSlot from './StableSlot';
+import PlayingCard from '../card/PlayingCard';
 
 type Player = GameState['players'][number];
 
@@ -9,25 +8,63 @@ interface Props {
 }
 
 export default function Stable({ player }: Props) {
+  const hasUnicorns = player.stable.length > 0;
+  const hasUpgrades = player.upgrades.length > 0;
+  const hasDowngrades = player.downgrades.length > 0;
+
   return (
-    <div className="stable">
-      <div className="stable-unicorns">
-        {Array.from({ length: 10 }).map((_, index) => (
-          <StableSlot key={index} card={player.stable[index]} />
-        ))}
+    <div className="flex flex-col gap-2 w-full max-w-3xl">
+      {/* Fila 1: Unicornios */}
+      <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-x-auto">
+        {hasUnicorns ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            {player.stable.map((card) => (
+              <div
+                key={card.id}
+                className="relative group transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+              >
+                <div className="absolute inset-0 bg-amber-500/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <PlayingCard name={card.name} image={card.image} size="small" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider select-none whitespace-nowrap">
+            Sin unicornios
+          </span>
+        )}
       </div>
-      <div className="stable-modifiers">
-        <div className="stable-upgrades">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <StableSlot key={index} card={player.upgrades[index]} />
-          ))}
+
+      {/* Fila 2: Modificadores (Upgrades + Downgrades) */}
+      {(hasUpgrades || hasDowngrades) && (
+        <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-x-auto">
+          {hasUpgrades && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {player.upgrades.map((card) => (
+                <PlayingCard
+                  key={card.id}
+                  name={card.name}
+                  image={card.image}
+                  size="small"
+                />
+              ))}
+            </div>
+          )}
+
+          {hasDowngrades && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {player.downgrades.map((card) => (
+                <PlayingCard
+                  key={card.id}
+                  name={card.name}
+                  image={card.image}
+                  size="small"
+                />
+              ))}
+            </div>
+          )}
         </div>
-        <div className="stable-downgrades">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <StableSlot key={index} card={player.downgrades[index]} />
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,17 +1,25 @@
 .playing-card {
-  border-radius: 8px;
+  position: relative;
   cursor: pointer;
   transition:
     transform 0.2s,
     box-shadow 0.2s,
     filter 0.2s;
   user-select: none;
+}
+
+.playing-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
   object-fit: cover;
+  pointer-events: none;
 }
 
 .playing-card:hover {
-  transform: translateY(-12px) scale(1.08);
-  box-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+  transform: translateY(-15px) scale(1.12);
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.45);
 }
 
 .playing-card.small {
@@ -19,17 +27,12 @@
 }
 
 .playing-card.medium {
-  width: 95px;
+  width: 110px;
 }
 
 .playing-card.large {
-  width: 140px;
+  width: 160px;
 }
-
-/* .playing-card.disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-} */
 
 .playing-card.disabled:hover {
   transform: none;
@@ -37,6 +40,6 @@
 }
 
 .playing-card.selected {
-  transform: translateY(-20px);
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.9);
+  transform: translateY(-25px);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.9);
 }

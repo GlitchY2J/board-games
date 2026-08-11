@@ -35,7 +35,7 @@ export class ActionResolver {
     const reason = pending.reason;
     state.pendingAction = undefined;
 
-    if (reason === 'hand_limit') {
+    if (reason === 'hand_limit' || reason === 'good_deal' || reason === 'change_of_luck') {
       TurnManager.nextPhase(state);
     }
 

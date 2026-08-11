@@ -8,6 +8,7 @@ interface Props {
   player: Player;
   isMyTurn: boolean;
   gamePhase: string;
+  actionUsed: boolean;
   onPlay(cardId: string): void;
 }
 
@@ -15,6 +16,7 @@ export default function LocalHand({
   player,
   isMyTurn,
   gamePhase,
+  actionUsed,
   onPlay,
 }: Props) {
   // const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -24,6 +26,7 @@ export default function LocalHand({
       cards={player.hand}
       isMyTurn={isMyTurn}
       gamePhase={gamePhase}
+      actionUsed={actionUsed}
       onPlay={onPlay}
     />
   );

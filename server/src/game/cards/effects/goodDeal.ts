@@ -10,12 +10,14 @@ export const goodDeal: CardEffect = {
       }
     }
 
-    // El jugador debe descartar 1 carta
-    state.pendingAction = {
-      type: 'discard',
-      reason: 'good_deal',
-      playerId: player.id,
-      cardsToDiscard: 1,
-    };
+    // El jugador debe descartar 1 carta (solo si tiene cartas)
+    if (player.hand.length > 0) {
+      state.pendingAction = {
+        type: 'discard',
+        reason: 'good_deal',
+        playerId: player.id,
+        cardsToDiscard: 1,
+      };
+    }
   },
 };

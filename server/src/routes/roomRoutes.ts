@@ -14,7 +14,9 @@ router.post('/create', (req, res) => {
 
   const room = roomManager.createRoom(hostName, game, socketId);
 
-  res.json(room);
+  const host = room.players.find((player) => player.id === room.hostId);
+
+  res.json({ room, playerId: host?.id, sessionToken: host?.sessionToken });
 });
 
 router.post('/join', (req, res) => {
@@ -28,13 +30,17 @@ router.post('/join', (req, res) => {
 
   const room = roomManager.joinRoom(roomCode, playerName, socketId);
 
+  const player = room?.players.find(
+    (candidate) => candidate.socketId === socketId,
+  );
+
   if (!room) {
     return res.status(404).json({
       error: 'Sala no encontrada',
     });
   }
 
-  res.json(room);
+  res.json({ room, playerId: player?.id, sessionToken: player?.sessionToken });
 });
 
 export default router;

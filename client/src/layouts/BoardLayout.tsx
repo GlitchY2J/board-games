@@ -4,15 +4,17 @@ import { socket } from '../services/socket';
 import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
 import PhasePanel from '../components/game/PhasePanel';
+import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
 import GameOverlay from '../components/overlay/GameOverlay';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
+  isHost: boolean;
   onPlay(cardId: string): void;
 }
 
-export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
+export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Props) {
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
 
   if (!localPlayer) return;
@@ -20,18 +22,6 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
 
   return (
     <div className="board-layout">
-      {opponents[0] && (
-        <div className="top-hand">
-          <PlayerHand
-            player={opponents[0]}
-            isLocalPlayer={false}
-            isMyTurn={false}
-            gamePhase={gameState.phase}
-            onPlay={() => {}}
-          />
-        </div>
-      )}
-
       <div className="game-area">
         <div className="player-top">
           {opponents[0] && (
@@ -55,17 +45,6 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
                 isMyTurn={isMyTurn}
                 localPlayerId={localPlayer.id}
               />
-              <PhasePanel gameState={gameState} />
-              {window.location.hostname === 'localhost' && (
-                <button
-                  className="debug-reset"
-                  onClick={() =>
-                    socket.emit('restart-game', gameState.roomCode)
-                  }
-                >
-                  RESTART
-                </button>
-              )}
             </div>
           </div>
           <div className="player-right" />
@@ -91,12 +70,27 @@ export default function BoardLayout({ gameState, isMyTurn, onPlay }: Props) {
         </div>
       </div>
       <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} />
-      <div className="bottom-hand">
+      <div className="phase-panel-anchor">
+        <PhasePanel gameState={gameState} />
+      </div>
+      <div className="phase-action-anchor">
+        <PhaseActionButton gameState={gameState} />
+      </div>
+      {isHost && (
+        <button
+          className="debug-reset"
+          onClick={() => socket.emit('restart-game', gameState.roomCode)}
+        >
+          Reiniciar partida
+        </button>
+      )}
+      <div className="bottom-hand" data-hand>
         <PlayerHand
           player={localPlayer}
           isLocalPlayer
           isMyTurn={isMyTurn}
           gamePhase={gameState.phase}
+          actionUsed={gameState.actionUsed}
           onPlay={onPlay}
         />
       </div>

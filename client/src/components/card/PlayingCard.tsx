@@ -38,16 +38,19 @@ export default function PlayingCard({
   }
 
   return (
-    <img
+    <div
       className={`playing-card ${size} ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''}`}
-      src={isCardBack ? '/cards/base/card_back.png' : image}
-      alt={name}
-      draggable={false}
-      onClick={disabled ? undefined : onClick}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={hidePreview}
-    />
+      onClick={disabled ? undefined : onClick}
+    >
+      <img
+        src={isCardBack ? '/cards/base/card_back.png' : image}
+        alt={name}
+        draggable={false}
+      />
+    </div>
   );
 }
 

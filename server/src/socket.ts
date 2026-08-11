@@ -3,6 +3,7 @@ import { roomManager } from './roomManagerInstance.ts';
 import { registerRoomHandlers } from './sockets/roomHandlers.ts';
 import { registerGameHandlers } from './sockets/gameHandlers.ts';
 import { registerActionHandlers } from './sockets/actionHandlers.ts';
+import { emitGameState } from './sockets/gameStateEmitter.ts';
 
 export function initializeSocket(io: GameServer): void {
   // Conexión de cliente
@@ -16,7 +17,22 @@ export function initializeSocket(io: GameServer): void {
     // Desconexión
     socket.on('disconnect', () => {
       console.log(`Cliente desconectado: ${socket.id}`);
-      roomManager.removePlayer(socket.id);
+
+      const result = roomManager.disconnectPlayer(socket.id);
+
+      if (!result) {
+        return;
+      }
+
+      const { room, player } = result;
+
+      console.log(`Jugador desconectado: ${player.name}`);
+
+      io.to(room.code).emit('room-updated', room);
+
+      if (room.gameState) {
+        emitGameState(io, room, 'game-updated');
+      }
     });
   });
 }

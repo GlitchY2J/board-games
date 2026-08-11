@@ -64,6 +64,19 @@ export interface RoomCreateResponse {
   error?: string;
 }
 
+export interface ResumeSessionPayload {
+  roomCode: string;
+  sessionToken: string;
+}
+
+export interface ResumeSessionResponse {
+  success: boolean;
+  playerId?: string;
+  room?: Room;
+  gameState?: GameState;
+  error?: string;
+}
+
 export interface ServerToClientEvents {
   'room-updated': (room: Room) => void;
   'game-started': (gameState: GameState) => void;
@@ -119,4 +132,10 @@ export interface ClientToServerEvents {
 
   // Select Discard Card
   'select-discard-card': (payload: SelectDiscardCardPayload) => void;
+
+  // Resume Session
+  'resume-session': (
+    payload: ResumeSessionPayload,
+    callback: (response: ResumeSessionResponse) => void,
+  ) => void;
 }

@@ -3,11 +3,12 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding-top: 12px;
+  padding-top: 16px;
 }
 
 .local-hand .playing-card {
-  margin-left: -55px;
+  margin-left: -60px;
+  z-index: 1;
 }
 
 .local-hand .playing-card:first-child {

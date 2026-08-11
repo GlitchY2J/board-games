@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import type { Room } from '../models/Room.js';
 import type { GameState } from '../models/GameState.ts';
 import type { Card } from '../models/Card.ts';

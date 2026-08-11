@@ -16,7 +16,7 @@ export default function VictoryScreen({ gameState, onRestart, isHost }: Props) {
     <div className="victory-overlay">
       <div className="victory-window">
         <div className="victory-crown">👑</div>
-        <h1 className="victory-title">Victory!</h1>
+        <h1 className="victory-title">¡Victoria!</h1>
         <div className="victory-player">{winner.name}</div>
         <div className="victory-text">ha ganado!</div>
         {isHost ? (
