@@ -3,6 +3,22 @@ import { TurnPhase } from './TurnPhase.ts';
 import { CardRepository } from '../unstable-unicorns/CardRepository.ts';
 import { VictoryManager } from '../VictoryManager.ts';
 
+const BEGINNING_OF_TURN_EFFECTS = new Set([
+  'angel_unicorn',
+  'rhinocorn',
+  'caffeine_overload',
+  'claw_machine',
+  'double_dutch',
+  'glitter_bomb',
+  'rainbow_lasso',
+  'stable_artillery',
+  'sadistic_ritual',
+]);
+
+const END_OF_TURN_EFFECTS = new Set<string>([
+  // Add here any card whose effect triggers at the end of your turn
+]);
+
 export class TurnManager {
   private static drawCard(game: GameState) {
     const player = game.players[game.currentPlayer];
@@ -14,6 +30,59 @@ export class TurnManager {
     player.hand.push(card);
 
     VictoryManager.checkWinner(game);
+  }
+
+  private static hasBeginningOfTurnTrigger(game: GameState): boolean {
+    const activePlayer = game.players[game.currentPlayer];
+
+    return activePlayer.stable.some(
+      (c) => c.effect !== null && BEGINNING_OF_TURN_EFFECTS.has(c.effect),
+    );
+  }
+
+  private static hasEndOfTurnTrigger(game: GameState): boolean {
+    const activePlayer = game.players[game.currentPlayer];
+
+    return activePlayer.stable.some(
+      (c) => c.effect !== null && END_OF_TURN_EFFECTS.has(c.effect),
+    );
+  }
+
+  static skipBeginningIfNoTriggers(game: GameState): void {
+    if (
+      game.phase === TurnPhase.BEGINNING &&
+      !this.hasBeginningOfTurnTrigger(game)
+    ) {
+      game.phase = TurnPhase.DRAW;
+    }
+  }
+
+  private static passTurn(game: GameState): void {
+    if (game.extraTurn) {
+      game.extraTurn = false;
+    } else {
+      game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
+    }
+
+    game.actionUsed = false;
+
+    if (game.currentPlayer === 0) {
+      game.turn++;
+    }
+    game.phase = TurnPhase.BEGINNING;
+    this.skipBeginningIfNoTriggers(game);
+  }
+
+  static skipEndIfNoTriggers(game: GameState): void {
+    if (game.phase !== TurnPhase.END) return;
+
+    const activePlayer = game.players[game.currentPlayer];
+
+    if (activePlayer.hand.length > 7) return;
+
+    if (this.hasEndOfTurnTrigger(game)) return;
+
+    this.passTurn(game);
   }
 
   // static endTurn(game: GameState) {
@@ -59,6 +128,7 @@ export class TurnManager {
       // ACTION PHASE
       case TurnPhase.ACTION:
         game.phase = TurnPhase.END;
+        this.skipEndIfNoTriggers(game);
         break;
 
       // END OF TURN
@@ -75,18 +145,7 @@ export class TurnManager {
           return;
         }
 
-        if (game.extraTurn) {
-          game.extraTurn = false;
-        } else {
-          game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
-        }
-
-        game.actionUsed = false;
-
-        if (game.currentPlayer === 0) {
-          game.turn++;
-        }
-        game.phase = TurnPhase.BEGINNING;
+        this.passTurn(game);
         break;
     }
 

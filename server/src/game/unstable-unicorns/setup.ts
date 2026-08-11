@@ -69,5 +69,6 @@ export function createGameState(room: Room): GameState {
     discard: [],
     phase: TurnPhase.BEGINNING,
     actionUsed: false,
+    log: [],
   };
 }

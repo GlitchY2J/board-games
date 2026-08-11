@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
 import { createRoom } from '../services/api';
 import { saveSession } from '../services/session';
+import { useGame } from '../context/GameContext';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { ArrowLeft } from 'lucide-react';
 
 export default function CreateRoom() {
   const navigate = useNavigate();
+  const { activate } = useGame();
   const [hostName, setHostName] = useState('');
   const [game] = useState('unstable-unicorns');
   const [loading, setLoading] = useState(false);
@@ -37,6 +39,13 @@ export default function CreateRoom() {
       }
 
       saveSession({ roomCode: room.code, playerId, sessionToken });
+
+      activate({
+        room,
+        playerId,
+        isHost: true,
+        playerName: hostName.trim(),
+      });
 
       navigate('/lobby', {
         state: {

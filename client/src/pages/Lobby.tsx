@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
+import { useGame } from '../context/GameContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { Copy, Check, Users, Crown, Loader2, ArrowLeft } from 'lucide-react';
@@ -22,10 +23,26 @@ export default function Lobby() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [room, setRoom] = useState<Room | null>(location.state?.room ?? null);
-  const playerName: string = location.state?.playerName ?? '';
-  const playerId: string = location.state?.playerId ?? '';
-  const isHost: boolean = location.state?.isHost ?? false;
+  const {
+    room: contextRoom,
+    playerId: contextPlayerId,
+    playerName: contextPlayerName,
+    isHost: contextIsHost,
+    deactivate,
+  } = useGame();
+
+  const [room, setRoom] = useState<Room | null>(
+    contextRoom ?? location.state?.room ?? null,
+  );
+  const playerName: string = contextPlayerName || (location.state?.playerName ?? '');
+  const playerId: string = contextPlayerId || (location.state?.playerId ?? '');
+  const isHost: boolean = contextIsHost || (location.state?.isHost ?? false);
+
+  useEffect(() => {
+    if (contextRoom) {
+      setRoom(contextRoom);
+    }
+  }, [contextRoom]);
 
   const [copied, setCopied] = useState(false);
 
@@ -109,7 +126,10 @@ export default function Lobby() {
 
       <Card className="w-full max-w-xl relative z-10">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => {
+            deactivate();
+            navigate('/');
+          }}
           className="absolute top-8 left-8 text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 text-sm font-medium"
         >
           <ArrowLeft size={16} />

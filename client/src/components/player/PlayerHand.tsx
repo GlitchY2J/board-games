@@ -11,6 +11,7 @@ interface Props {
   isMyTurn: boolean;
   gamePhase: string;
   actionUsed: boolean;
+  pendingPlay: boolean;
   onPlay(cardId: string): void;
 }
 
@@ -20,6 +21,7 @@ export default function PlayerHand({
   isMyTurn,
   gamePhase,
   actionUsed,
+  pendingPlay,
   onPlay,
 }: Props) {
   return (
@@ -30,6 +32,7 @@ export default function PlayerHand({
           isMyTurn={isMyTurn}
           gamePhase={gamePhase}
           actionUsed={actionUsed}
+          pendingPlay={pendingPlay}
           onPlay={onPlay}
         />
       ) : (

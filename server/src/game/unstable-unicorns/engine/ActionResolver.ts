@@ -25,7 +25,7 @@ export class ActionResolver {
     if (!player) return false;
 
     for (const cardId of cardIds) {
-      const idx = player.hand.findIndex((c) => c.id === cardId);
+      const idx = player.hand.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
         const [discarded] = player.hand.splice(idx, 1);
         state.discard.push(discarded);
@@ -159,15 +159,16 @@ export class ActionResolver {
       );
       if (!targetPlayer) return false;
 
-      const idx = targetPlayer.stable.findIndex((c) => c.id === cardId);
+      const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx === -1) return false;
+
+      const targetCard = targetPlayer.stable[idx];
 
       // Si el oponente tiene Black Knight Unicorn en su establo y la carta elegida no es Black Knight Unicorn
       const hasBlackKnight = targetPlayer.stable.some(
         (c) => c.id === 'black_knight_unicorn',
       );
-      if (hasBlackKnight && cardId !== 'black_knight_unicorn') {
-        const targetCard = targetPlayer.stable[idx];
+      if (hasBlackKnight && targetCard.id !== 'black_knight_unicorn') {
         state.pendingAction = {
           type: 'select_choice',
           reason: 'black_knight_unicorn',
@@ -209,7 +210,7 @@ export class ActionResolver {
 
         if (type === 'upgrade') {
           const idx = targetPlayer.upgrades.findIndex(
-            (c) => c.id === actualCardId,
+            (c) => c.uid === actualCardId,
           );
           if (idx !== -1) {
             const [card] = targetPlayer.upgrades.splice(idx, 1);
@@ -217,7 +218,7 @@ export class ActionResolver {
           }
         } else if (type === 'downgrade') {
           const idx = targetPlayer.downgrades.findIndex(
-            (c) => c.id === actualCardId,
+            (c) => c.uid === actualCardId,
           );
           if (idx !== -1) {
             const [card] = targetPlayer.downgrades.splice(idx, 1);
@@ -246,15 +247,15 @@ export class ActionResolver {
 
       let removedCard;
 
-      let idx = targetPlayer.stable.findIndex((c) => c.id === cardId);
+      let idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
         [removedCard] = targetPlayer.stable.splice(idx, 1);
       } else {
-        idx = targetPlayer.upgrades.findIndex((c) => c.id === cardId);
+        idx = targetPlayer.upgrades.findIndex((c) => c.uid === cardId);
         if (idx !== -1) {
           [removedCard] = targetPlayer.upgrades.splice(idx, 1);
         } else {
-          idx = targetPlayer.downgrades.findIndex((c) => c.id === cardId);
+          idx = targetPlayer.downgrades.findIndex((c) => c.uid === cardId);
           if (idx !== -1) {
             [removedCard] = targetPlayer.downgrades.splice(idx, 1);
           }
@@ -286,14 +287,14 @@ export class ActionResolver {
       for (const p of state.players) {
         if (p.id === sourcePlayerId) continue;
 
-        cardIdx = p.upgrades.findIndex((c) => c.id === cardId);
+        cardIdx = p.upgrades.findIndex((c) => c.uid === cardId);
         if (cardIdx !== -1) {
           targetPlayer = p;
           [stolenCard] = p.upgrades.splice(cardIdx, 1);
           break;
         }
 
-        cardIdx = p.stable.findIndex((c) => c.id === cardId);
+        cardIdx = p.stable.findIndex((c) => c.uid === cardId);
         if (cardIdx !== -1) {
           targetPlayer = p;
           [stolenCard] = p.stable.splice(cardIdx, 1);
@@ -320,7 +321,7 @@ export class ActionResolver {
       const targetPlayer = state.players.find((p) => p.id === currentTargetId);
       if (!targetPlayer) return false;
 
-      const cardIdx = targetPlayer.stable.findIndex((c) => c.id === cardId);
+      const cardIdx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (cardIdx === -1) return false;
 
       const [card] = targetPlayer.stable.splice(cardIdx, 1);
@@ -366,7 +367,7 @@ export class ActionResolver {
 
     if (!targetPlayer || !sourcePlayer) return false;
 
-    const cardIdx = targetPlayer.hand.findIndex((c) => c.id === cardId);
+    const cardIdx = targetPlayer.hand.findIndex((c) => c.uid === cardId);
     if (cardIdx === -1) return false;
 
     const [stolenCard] = targetPlayer.hand.splice(cardIdx, 1);
@@ -425,7 +426,7 @@ export class ActionResolver {
     if (!player) return false;
 
     const cardId = cardIds[0];
-    const idx = player.hand.findIndex((c) => c.id === cardId);
+    const idx = player.hand.findIndex((c) => c.uid === cardId);
     if (idx === -1) return false;
 
     const [discarded] = player.hand.splice(idx, 1);

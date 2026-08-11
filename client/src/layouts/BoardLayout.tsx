@@ -7,6 +7,7 @@ import PhasePanel from '../components/game/PhasePanel';
 import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
 import GameOverlay from '../components/overlay/GameOverlay';
+import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -40,11 +41,22 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Pro
           <div className="player-left" />
           <div className="center">
             <div className="center-column">
-              <CenterArea
-                gameState={gameState}
-                isMyTurn={isMyTurn}
-                localPlayerId={localPlayer.id}
-              />
+              <div className="center-stack">
+                <CenterArea
+                  gameState={gameState}
+                  isMyTurn={isMyTurn}
+                  localPlayerId={localPlayer.id}
+                />
+                {isMyTurn && gameState.phase === 'DRAW' && (
+                  <span className="draw-hint">Roba una carta</span>
+                )}
+                {isMyTurn &&
+                  gameState.phase === 'ACTION' &&
+                  !gameState.actionUsed &&
+                  !gameState.pendingPlay && (
+                    <span className="draw-hint">Juega o roba una carta</span>
+                  )}
+              </div>
             </div>
           </div>
           <div className="player-right" />
@@ -70,6 +82,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Pro
         </div>
       </div>
       <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} />
+      <PendingPlayOverlay gameState={gameState} localPlayerId={localPlayer.id} />
       <div className="phase-panel-anchor">
         <PhasePanel gameState={gameState} />
       </div>
@@ -91,6 +104,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Pro
           isMyTurn={isMyTurn}
           gamePhase={gameState.phase}
           actionUsed={gameState.actionUsed}
+          pendingPlay={!!gameState.pendingPlay}
           onPlay={onPlay}
         />
       </div>

@@ -20,7 +20,7 @@ export default function Stable({ player }: Props) {
           <div className="flex items-center gap-2 flex-wrap">
             {player.stable.map((card) => (
               <div
-                key={card.id}
+                key={card.uid}
                 className="relative group transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <div className="absolute inset-0 bg-amber-500/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -42,7 +42,7 @@ export default function Stable({ player }: Props) {
             <div className="flex items-center gap-2 flex-wrap">
               {player.upgrades.map((card) => (
                 <PlayingCard
-                  key={card.id}
+                  key={card.uid}
                   name={card.name}
                   image={card.image}
                   size="small"
@@ -55,7 +55,7 @@ export default function Stable({ player }: Props) {
             <div className="flex items-center gap-2 flex-wrap">
               {player.downgrades.map((card) => (
                 <PlayingCard
-                  key={card.id}
+                  key={card.uid}
                   name={card.name}
                   image={card.image}
                   size="small"

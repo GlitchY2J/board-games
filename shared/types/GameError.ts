@@ -32,6 +32,8 @@ export type GameActionName =
   | 'cancel-action'
   | 'select-choice'
   | 'select-discard-card'
+  | 'neigh-accept'
+  | 'play-neigh'
   | 'unknown';
 
 export interface GameError {

@@ -13,14 +13,15 @@ interface Props {
   isMyTurn: boolean;
   gamePhase: string;
   actionUsed: boolean;
+  pendingPlay: boolean;
   onPlay(cardId: string): void;
 }
 
-export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, onPlay }: Props) {
+export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendingPlay, onPlay }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const { hidePreview } = useCardPreview();
 
-  const selectedCard = cards.find((card) => card.id === selectedCardId);
+  const selectedCard = cards.find((card) => card.uid === selectedCardId);
 
   function selectCard(cardId: string) {
     hidePreview();
@@ -36,7 +37,7 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, onPlay
           const rotation = (index - middle) * 5;
           return (
             <div
-              key={card.id}
+              key={card.uid}
               className="fan-card"
               style={{ transform: `rotate(${rotation}deg)`, zIndex: index }}
             >
@@ -45,7 +46,7 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, onPlay
                 image={card.image}
                 size="large"
                 disabled={!isMyTurn || gamePhase !== 'ACTION'}
-                selected={selectedCardId === card.id}
+                selected={selectedCardId === card.uid}
                 onClick={() => {
                   if (!isMyTurn) return;
 
@@ -53,7 +54,9 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, onPlay
 
                   if (actionUsed) return;
 
-                  selectCard(card.id);
+                  if (pendingPlay) return;
+
+                  selectCard(card.uid);
                 }}
               />
             </div>

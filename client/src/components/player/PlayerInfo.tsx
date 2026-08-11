@@ -14,7 +14,7 @@ export default function PlayerInfo({ player, isActive = false }: Props) {
     <div
       className={cn(
         'flex items-center justify-between gap-3 px-4 py-2 rounded-2xl transition-all duration-300',
-        'glass-panel border w-full max-w-[380px]',
+        'glass-panel border w-full',
         isActive
           ? 'border-emerald-500/40 ring-1 ring-emerald-500/20 shadow-lg shadow-emerald-500/10 bg-slate-950/40'
           : 'border-slate-800/40 bg-slate-950/20'

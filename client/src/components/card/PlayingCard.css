@@ -34,6 +34,10 @@
   width: 160px;
 }
 
+.playing-card.xlarge {
+  width: 240px;
+}
+
 .playing-card.disabled:hover {
   transform: none;
   box-shadow: none;

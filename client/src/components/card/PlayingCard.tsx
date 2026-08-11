@@ -4,7 +4,7 @@ import './PlayingCard.css';
 interface Props {
   name: string;
   image: string;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
   hidden?: boolean;
   disabled?: boolean;
   selected?: boolean;

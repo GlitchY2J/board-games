@@ -19,10 +19,8 @@ export default function PhaseActionButton({ gameState }: Props) {
     switch (gameState.phase) {
       case 'BEGINNING':
         return 'Comenzar Turno';
-      case 'DRAW':
-        return 'Robar Carta';
       case 'ACTION':
-        return 'Terminar Acción';
+        return 'Terminar Turno';
       case 'END':
         return 'Finalizar Turno';
       default:
@@ -31,7 +29,9 @@ export default function PhaseActionButton({ gameState }: Props) {
   }
 
   const showButton =
-    (isActivePlayer && gameState.phase !== 'ACTION') ||
+    (isActivePlayer &&
+      gameState.phase !== 'ACTION' &&
+      gameState.phase !== 'DRAW') ||
     (isActivePlayer && gameState.phase === 'ACTION' && gameState.actionUsed);
 
   if (!showButton) return null;

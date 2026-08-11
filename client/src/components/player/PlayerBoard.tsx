@@ -19,7 +19,7 @@ export default function PlayerBoard({ player, position, isMyTurn }: Props) {
   return (
     <div
       className={`player-board relative rounded-2xl glass-panel bg-slate-950/30 border p-3 transition-all duration-300 ${
-        isTopOrLeft ? 'flex-col items-center gap-2.5' : 'flex-col items-center gap-2.5'
+        isTopOrLeft ? 'flex-col items-center gap-4' : 'flex-col items-center gap-4'
       }`}
       style={{
         width: '100%',

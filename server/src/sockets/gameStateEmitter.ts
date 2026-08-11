@@ -7,6 +7,7 @@ const CARD_BACK_IMAGE = '/cards/base/card_back.png';
 
 function createHiddenCard(id: string): Card {
   return {
+    uid: id,
     id,
     name: 'Hidden Card',
     cardType: 'instant',

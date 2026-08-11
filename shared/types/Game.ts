@@ -11,6 +11,31 @@ export const TurnPhase = {
   END: 'END',
 } as const;
 
+export interface PendingPlayLink {
+  playerId: string;
+  playerName: string;
+  card: Card;
+}
+
+export interface PendingPlay {
+  playerId: string;
+  playerName: string;
+  card: Card;
+  startedAt: number;
+  durationMs: number;
+  acceptedIds: string[];
+  chain: PendingPlayLink[];
+}
+
+export interface GameLogEntry {
+  id: string;
+  text: string;
+  playerId?: string;
+  playerName?: string;
+  turn: number;
+  timestamp: number;
+}
+
 export interface GameState {
   roomCode: string;
   started: boolean;
@@ -22,7 +47,9 @@ export interface GameState {
   discard: Card[];
   phase: TurnPhase;
   pendingAction?: PendingAction;
+  pendingPlay?: PendingPlay;
   actionUsed: boolean;
   winnerId?: string;
   extraTurn?: boolean;
+  log: GameLogEntry[];
 }

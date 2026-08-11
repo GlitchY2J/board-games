@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
 import { joinRoom } from '../services/api';
 import { saveSession } from '../services/session';
+import { useGame } from '../context/GameContext';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { ArrowLeft } from 'lucide-react';
 
 export default function JoinRoom() {
   const navigate = useNavigate();
+  const { activate } = useGame();
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,6 +48,13 @@ export default function JoinRoom() {
       }
 
       saveSession({ roomCode: room.code, playerId, sessionToken });
+
+      activate({
+        room,
+        playerId,
+        isHost: false,
+        playerName: playerName.trim(),
+      });
 
       navigate('/lobby', {
         state: {

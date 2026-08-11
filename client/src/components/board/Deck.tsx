@@ -9,13 +9,15 @@ interface Props {
 }
 
 export default function Deck({ gameState, isMyTurn, localPlayerId }: Props) {
+  const canDraw =
+    isMyTurn &&
+    (gameState.phase === 'DRAW' || gameState.phase === 'ACTION') &&
+    !gameState.actionUsed &&
+    !gameState.pendingPlay;
+
   // Draw Card
   function drawActionCard() {
-    if (!isMyTurn) return;
-
-    if (gameState.phase !== 'ACTION') return;
-
-    if (gameState.actionUsed) return;
+    if (!canDraw) return;
 
     socket.emit('draw-action-card', {
       roomCode: gameState.roomCode,
@@ -26,9 +28,13 @@ export default function Deck({ gameState, isMyTurn, localPlayerId }: Props) {
   return (
     <div
       onClick={drawActionCard}
-      style={{ cursor: isMyTurn ? 'pointer' : 'default' }}
+      style={{ cursor: canDraw ? 'pointer' : 'default' }}
+      className="relative"
     >
       <PlayingCard name="Deck" image="" hidden size="medium" />
+      <span className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500 text-slate-950 text-xs font-black shadow-lg border-2 border-slate-900 select-none">
+        <span className="px-0.5">{gameState.deck.length}</span>
+      </span>
     </div>
   );
 }

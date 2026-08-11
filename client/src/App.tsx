@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import CreateRoom from './pages/CreateRoom';
@@ -6,20 +6,44 @@ import Lobby from './pages/Lobby';
 import Game from './pages/Game';
 import Settings from './pages/Settings';
 import { useEffect } from 'react';
-import { socket } from './services/socket';
 import JoinRoom from './pages/JoinRoom';
 import { CardPreviewProvider } from './context/CardPreviewContext';
+import { useGame } from './context/GameContext';
 import CardPreview from './components/card/CardPreview';
 import GameErrorToast from './components/game/GameErrorToast';
+import { Loader2 } from 'lucide-react';
 
 export default function App() {
-  useEffect(() => {
-    socket.connect();
+  const { status, room, gameState } = useGame();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
+  useEffect(() => {
+    if (status !== 'active') return;
+
+    const path = location.pathname;
+
+    if (gameState?.started) {
+      if (path !== '/game') {
+        navigate('/game', { replace: true });
+      }
+    } else if (room) {
+      if (path !== '/lobby' && path !== '/game') {
+        navigate('/lobby', { replace: true });
+      }
+    }
+  }, [status, gameState, room, location.pathname, navigate]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-emerald-400" size={40} />
+        <p className="text-sm text-slate-400 font-medium">
+          Recuperando sesión...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <CardPreviewProvider>

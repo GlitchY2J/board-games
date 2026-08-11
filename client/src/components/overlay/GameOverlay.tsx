@@ -36,7 +36,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           subtitle={`Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`}
           items={player.hand.map((card, idx) => ({
             id: `${card.id}_${idx}`,
-            value: card.id,
+            value: card.uid,
             title: card.name,
             image: card.image,
           }))}
@@ -157,7 +157,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           }
           items={target.hand.map((card, idx) => ({
             id: `${card.id}_${idx}`,
-            value: card.id,
+            value: card.uid,
             title: isAmericorn ? `Carta ${idx + 1}` : card.name,
             image: isAmericorn ? '/cards/base/card_back.png' : card.image,
           }))}
@@ -189,13 +189,18 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       if (action.sourcePlayerId !== localPlayerId) return null;
 
       if (action.reason === 'chainsaw_unicorn') {
-        const items: any[] = [];
+        const items: {
+          id: string;
+          value: string;
+          title: string;
+          image: string;
+        }[] = [];
         gameState.players.forEach((p) => {
           p.upgrades.forEach((card, idx) => {
             items.push({
               id: `${card.id}_upgrade_${p.id}_${idx}`,
               value: JSON.stringify({
-                cardId: card.id,
+                cardId: card.uid,
                 targetPlayerId: p.id,
                 type: 'upgrade',
               }),
@@ -213,7 +218,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             items.push({
               id: `${card.id}_downgrade_${localPlayerId}_${idx}`,
               value: JSON.stringify({
-                cardId: card.id,
+                cardId: card.uid,
                 targetPlayerId: localPlayerId,
                 type: 'downgrade',
               }),
@@ -270,7 +275,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           }
           items={cardsToSelect.map((card, idx) => ({
             id: `${card.id}_${idx}`,
-            value: card.id,
+            value: card.uid,
             title: card.name,
             image: card.image,
           }))}
@@ -305,7 +310,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           ...p.stable.filter((c) => c.cardType === 'upgrade'),
         ].map((card, idx) => ({
           id: `${card.id}_${idx}`,
-          value: card.id,
+          value: card.uid,
           title: card.name,
           subtitle: `Establo de ${p.name}`,
           image: card.image,
@@ -360,7 +365,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           subtitle={`${stepLabel} — Elige una carta del establo de ${target.name} para regresar a su mano`}
           items={target.stable.map((card, idx) => ({
             id: `${card.id}_${idx}`,
-            value: card.id,
+            value: card.uid,
             title: card.name,
             image: card.image,
           }))}
@@ -393,7 +398,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           subtitle="Debes descartar 1 carta de tu mano. El descarte se barajará en el mazo principal."
           items={player.hand.map((card, idx) => ({
             id: `${card.id}_${idx}`,
-            value: card.id,
+            value: card.uid,
             title: card.name,
             image: card.image,
           }))}
@@ -461,7 +466,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           subtitle="Elige un unicornio de la pila de descarte para traerlo a tu establo"
           items={eligibleCards.map((card, idx) => ({
             id: `${card.id}_${idx}`,
-            value: card.id,
+            value: card.uid,
             title: card.name,
             image: card.image,
           }))}

@@ -58,6 +58,15 @@ export interface SelectDiscardCardPayload {
   cardId: string;
 }
 
+export interface NeighAcceptPayload {
+  roomCode: string;
+}
+
+export interface PlayNeighPayload {
+  roomCode: string;
+  cardId: string;
+}
+
 export interface RoomCreateResponse {
   success: boolean;
   room?: Room;
@@ -132,6 +141,12 @@ export interface ClientToServerEvents {
 
   // Select Discard Card
   'select-discard-card': (payload: SelectDiscardCardPayload) => void;
+
+  // Neigh Accept
+  'neigh-accept': (payload: NeighAcceptPayload) => void;
+
+  // Play Neigh
+  'play-neigh': (payload: PlayNeighPayload) => void;
 
   // Resume Session
   'resume-session': (

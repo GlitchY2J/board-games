@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { socket } from '../services/socket';
+import { useGame } from '../context/GameContext';
 import type { GameState } from '../types/GameState';
 import BoardLayout from '../layouts/BoardLayout';
 import VictoryScreen from '../components/game/VictoryScreen';
 import TurnAnnouncement from '../components/game/TurnAnnouncement';
 import CardMoveEffect from '../components/effects/CardMoveEffect';
+import { Loader2 } from 'lucide-react';
 
 interface DrawnCard {
   id: string;
@@ -22,26 +24,31 @@ interface TurnAnnounce {
 
 export default function Game() {
   const location = useLocation();
+  const { gameState: contextGameState, isHost: contextIsHost } = useGame();
 
-  const [gameState, setGameState] = useState<GameState>(
-    location.state.gameState,
+  const [gameState, setGameState] = useState<GameState | null>(
+    contextGameState ?? location.state?.gameState ?? null,
   );
-
-  const host = gameState.players[0];
-  const isHost = host.socketId === socket.id;
-
-  const activePlayer = gameState.players[gameState.currentPlayer];
-  const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
 
   const [drawnCard, setDrawnCard] = useState<DrawnCard | null>(null);
-  const prevHandRef = useRef<string[]>(
-    localPlayer ? localPlayer.hand.map((card) => card.id) : [],
-  );
-
   const [turnAnnounce, setTurnAnnounce] = useState<TurnAnnounce | null>(null);
+
+  const initialGameState =
+    contextGameState ?? (location.state?.gameState as GameState | undefined) ?? null;
+  const prevHandRef = useRef<string[]>(
+    initialGameState?.players
+      .find((p) => p.socketId === socket.id)
+      ?.hand.map((card) => card.uid) ?? [],
+  );
   const prevTurnRef = useRef<{ turn: number; currentPlayer: number } | null>(
     null,
   );
+
+  useEffect(() => {
+    if (contextGameState) {
+      setGameState(contextGameState);
+    }
+  }, [contextGameState]);
 
   useEffect(() => {
     if (!turnAnnounce) return;
@@ -56,15 +63,15 @@ export default function Game() {
       const local = state.players.find((p) => p.socketId === socket.id);
       if (!local) return;
 
-      const newIds = local.hand.map((card) => card.id);
+      const newIds = local.hand.map((card) => card.uid);
       const prevIds = prevHandRef.current;
       const gained = newIds.filter((id) => !prevIds.includes(id));
       prevHandRef.current = newIds;
 
       if (gained.length >= 1 && gained.length <= 3) {
-        const card = local.hand.find((c) => c.id === gained[0]);
+        const card = local.hand.find((c) => c.uid === gained[0]);
         if (card) {
-          setDrawnCard({ id: card.id, name: card.name, image: card.image });
+          setDrawnCard({ id: card.uid, name: card.name, image: card.image });
         }
       }
 
@@ -91,10 +98,25 @@ export default function Game() {
     };
   }, []);
 
+  if (!gameState) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-emerald-400" size={40} />
+        <p className="text-sm text-slate-400 font-medium">Cargando partida...</p>
+      </div>
+    );
+  }
+
+  const activePlayer = gameState.players[gameState.currentPlayer];
+  const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
+
   if (!localPlayer) {
     return <h2>Jugador no encontrado.</h2>;
   }
 
+  const isHost = contextIsHost || localPlayer.id === gameState.players[0].id;
+
+  const gs: GameState = gameState;
   const isMyTurn = activePlayer.socketId === socket.id;
 
   function play(cardId: string) {
@@ -106,7 +128,7 @@ export default function Game() {
     }
 
     socket.emit('play-card', {
-      roomCode: gameState.roomCode,
+      roomCode: gs.roomCode,
       playerId: localPlayer.id,
       cardId,
     });
@@ -114,7 +136,7 @@ export default function Game() {
 
   function restartGame() {
     console.log('Solicitando reinicio...');
-    socket.emit('restart-game', gameState.roomCode);
+    socket.emit('restart-game', gs.roomCode);
   }
 
   // function endTurn() {

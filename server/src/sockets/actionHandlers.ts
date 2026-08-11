@@ -6,6 +6,7 @@ import { TurnManager } from '../game/turn/TurnManager.ts';
 import { TurnPhase } from '../game/turn/TurnPhase.ts';
 import { emitGameError, getSocketGameContext } from './socketContext.ts';
 import { emitGameState } from './gameStateEmitter.ts';
+import { addLog } from './gameLog.ts';
 import { roomManager } from '../roomManagerInstance.ts';
 import { GameState } from '../game/models/GameState.ts';
 
@@ -81,6 +82,12 @@ export function registerActionHandlers(
 
       continueBeginningPhaseIfReady(game);
 
+      addLog(
+        game,
+        `${player.name} descarta ${cardIds.length} carta${cardIds.length > 1 ? 's' : ''}`,
+        { playerId: player.id },
+      );
+
       emitGameState(io, room, 'game-updated');
     });
   }
@@ -108,6 +115,19 @@ export function registerActionHandlers(
         ) {
           TurnManager.nextPhase(room.gameState);
         }
+
+        const targetPlayer = room.gameState.players.find(
+          (p) => p.id === playerId,
+        );
+
+        addLog(
+          room.gameState,
+          targetPlayer
+            ? `${sourcePlayer.name} elige a ${targetPlayer.name}`
+            : `${sourcePlayer.name} elige un jugador`,
+          { playerId: sourcePlayer.id },
+        );
+
         emitGameState(io, room, 'game-updated');
       }
     });
@@ -136,6 +156,13 @@ export function registerActionHandlers(
         ) {
           TurnManager.nextPhase(room.gameState);
         }
+
+        addLog(
+          room.gameState,
+          `${sourcePlayer.name} elige una carta de su establo`,
+          { playerId: sourcePlayer.id },
+        );
+
         emitGameState(io, room, 'game-updated');
       }
     });
@@ -220,7 +247,7 @@ export function registerActionHandlers(
           return;
         }
 
-        resolvedCardId = targetPlayer.hand[selectedIndex].id;
+        resolvedCardId = targetPlayer.hand[selectedIndex].uid;
       }
       const resolved = ActionResolver.handleSelectHandCard(
         game,
@@ -239,6 +266,24 @@ export function registerActionHandlers(
       }
 
       continueBeginningPhaseIfReady(game);
+
+      if (pending.reason === 'americorn') {
+        const targetPlayer = game.players.find(
+          (candidate) => candidate.id === pending.targetPlayerId,
+        );
+
+        addLog(
+          game,
+          targetPlayer
+            ? `${player.name} roba una carta de la mano de ${targetPlayer.name}`
+            : `${player.name} roba una carta de una mano`,
+          { playerId: player.id },
+        );
+      } else {
+        addLog(game, `${player.name} elige una carta de una mano`, {
+          playerId: player.id,
+        });
+      }
 
       emitGameState(io, room, 'game-updated');
     });
@@ -283,6 +328,9 @@ export function registerActionHandlers(
       }
 
       game.pendingAction = undefined;
+
+      addLog(game, `${player.name} cancela la acción`, { playerId: player.id });
+
       emitGameState(io, room, 'game-updated');
     });
   }
@@ -330,6 +378,14 @@ export function registerActionHandlers(
           room.gameState.phase = TurnPhase.DRAW;
         }
 
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} sacrifica a Angel Unicorn`
+            : `${player.name} omite el efecto de Angel Unicorn`,
+          { playerId: player.id },
+        );
+
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'annoying_flying_unicorn') {
         if (choice === 'yes') {
@@ -344,6 +400,14 @@ export function registerActionHandlers(
             TurnManager.nextPhase(room.gameState);
           }
         }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usa el efecto de Molesto Unicornio Volador`
+            : `${player.name} omite el efecto de Molesto Unicornio Volador`,
+          { playerId: player.id },
+        );
 
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'black_knight_unicorn') {
@@ -371,7 +435,7 @@ export function registerActionHandlers(
             );
             if (targetPlayer) {
               const idx = targetPlayer.stable.findIndex(
-                (c) => c.id === targetCardId,
+                (c) => c.uid === targetCardId,
               );
               if (idx !== -1) {
                 const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
@@ -391,6 +455,14 @@ export function registerActionHandlers(
           TurnManager.nextPhase(room.gameState);
         }
 
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} sacrifica a Black Knight Unicorn`
+            : `${player.name} destruye la carta objetivo`,
+          { playerId: player.id },
+        );
+
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'chainsaw_unicorn') {
         if (choice === 'yes') {
@@ -405,6 +477,14 @@ export function registerActionHandlers(
             TurnManager.nextPhase(room.gameState);
           }
         }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usa el efecto de Chainsaw Unicorn`
+            : `${player.name} omite el efecto de Chainsaw Unicorn`,
+          { playerId: player.id },
+        );
 
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'classy_narwhal') {
@@ -421,6 +501,14 @@ export function registerActionHandlers(
             TurnManager.nextPhase(room.gameState);
           }
         }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usa el efecto de Classy Narwhal`
+            : `${player.name} omite el efecto de Classy Narwhal`,
+          { playerId: player.id },
+        );
 
         emitGameState(io, room, 'game-updated');
       }
@@ -447,15 +535,22 @@ export function registerActionHandlers(
       }
 
       if (pending.reason === 'angel_unicorn') {
-        if (cardId === 'angel_unicorn') return;
-
         const cardIdx = room.gameState.discard.findIndex(
-          (c) => c.id === cardId,
+          (c) => c.uid === cardId,
         );
         if (cardIdx !== -1) {
-          const [selectedCard] = room.gameState.discard.splice(cardIdx, 1);
+          const selectedCard = room.gameState.discard[cardIdx];
+          if (selectedCard.id === 'angel_unicorn') return;
+
+          const [removed] = room.gameState.discard.splice(cardIdx, 1);
           room.gameState.pendingAction = undefined;
-          CardMovement.enterStable(room.gameState, player, selectedCard);
+          CardMovement.enterStable(room.gameState, player, removed);
+
+          addLog(
+            room.gameState,
+            `${player.name} recupera ${removed.name} del descarte`,
+            { playerId: player.id },
+          );
         }
 
         if (!room.gameState.pendingAction) {

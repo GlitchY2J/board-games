@@ -29,7 +29,7 @@ export default function DiscardViewer({ gameState, onClose }: Props) {
 
         <div className="card-selection-grid">
           {cards.map((card) => (
-            <div key={card.id} className="selection-card">
+            <div key={card.uid} className="selection-card">
               <div className="selection-card-content">
                 <PlayingCard name={card.name} image={card.image} size="large" />
                 <div className="selection-card-title">{card.name}</div>

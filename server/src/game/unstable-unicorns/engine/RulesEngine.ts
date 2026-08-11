@@ -14,11 +14,11 @@ import {
 } from '../../../../../shared/types/GameActionResult.ts';
 
 export class RulesEngine {
-  static playCard(
+  static stagePlay(
     state: GameState,
     playerId: string,
     cardId: string,
-  ): GameActionResult<GameState> {
+  ): GameActionResult<{ card: Card }> {
     if (state.phase !== TurnPhase.ACTION) {
       return actionFailure(
         'INVALID_PHASE',
@@ -43,6 +43,14 @@ export class RulesEngine {
       );
     }
 
+    if (state.pendingPlay) {
+      return actionFailure(
+        'PENDING_ACTION',
+        'Hay una carta en juego que aún no se ha resuelto.',
+        'play-card',
+      );
+    }
+
     const activePlayer = state.players[state.currentPlayer];
 
     if (!activePlayer || activePlayer.id !== playerId) {
@@ -59,7 +67,7 @@ export class RulesEngine {
       );
     }
 
-    const handIndex = player.hand.findIndex((card) => card.id === cardId);
+    const handIndex = player.hand.findIndex((card) => card.uid === cardId);
 
     if (handIndex === -1) {
       return actionFailure(
@@ -69,7 +77,33 @@ export class RulesEngine {
       );
     }
 
-    const card = player.hand[handIndex];
+    return actionSuccess({ card: player.hand[handIndex] });
+  }
+
+  static resolvePlay(
+    state: GameState,
+    playerId: string,
+    card: Card,
+  ): GameActionResult<GameState> {
+    const player = state.players.find((candidate) => candidate.id === playerId);
+
+    if (!player) {
+      return actionFailure(
+        'PLAYER_NOT_FOUND',
+        'No se encontró al jugador dentro de la partida.',
+        'play-card',
+      );
+    }
+
+    const handIndex = player.hand.findIndex((c) => c.uid === card.uid);
+
+    if (handIndex === -1) {
+      return actionFailure(
+        'CARD_NOT_FOUND',
+        'La carta seleccionada no está en tu mano.',
+        'play-card',
+      );
+    }
 
     try {
       switch (card.cardType) {

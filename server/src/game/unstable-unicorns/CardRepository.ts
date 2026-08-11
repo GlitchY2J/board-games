@@ -22,11 +22,23 @@ export class CardRepository {
 
     const json = fs.readFileSync(file, 'utf8');
 
-    const cards = JSON.parse(json) as Card[];
+    const definitions = JSON.parse(json) as Card[];
 
-    cards.forEach((card) => {
-      card.image = `/cards/base/${card.id}.png`;
-    });
+    const cards: Card[] = [];
+
+    for (const def of definitions) {
+      const count = def.copies > 0 ? def.copies : 1;
+
+      for (let copy = 0; copy < count; copy++) {
+        cards.push({
+          ...def,
+          id: def.id,
+          uid: `${def.id}__${copy}`,
+          image: `/cards/base/${def.id}.png`,
+          copies: 1,
+        });
+      }
+    }
 
     this.cards = cards;
 
