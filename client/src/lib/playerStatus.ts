@@ -26,7 +26,7 @@ export function getPlayerStatus(
         case 'select_choice':
           return 'Eligiendo opción...';
         case 'select_discard_card':
-          return 'Descartando carta...';
+          return 'Seleccionando carta del descarte...';
         case 'select_deck_card':
           return 'Buscando carta...';
         case 'discard':

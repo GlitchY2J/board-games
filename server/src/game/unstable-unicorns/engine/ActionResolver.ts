@@ -279,6 +279,30 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
+    // Dark Angel Unicorn: sacrifica un Unicornio propio, luego trae uno del descarte
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'dark_angel_unicorn'
+    ) {
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!sourcePlayer) return false;
+
+      const idx = sourcePlayer.stable.findIndex((c) => c.uid === cardId);
+      if (idx === -1) return false;
+
+      const [sacrificedCard] = sourcePlayer.stable.splice(idx, 1);
+      CardMovement.destroyOrSacrifice(state, sourcePlayer, sacrificedCard);
+
+      state.pendingAction = {
+        type: 'select_discard_card',
+        reason: 'dark_angel_unicorn',
+        playerId: sourcePlayerId,
+      };
+      return true;
+    }
+
+    // ──────────────────────────────────────────
     // Alluring Narwhal: robar una carta de Mejora de otro jugador a tu establo
     // ──────────────────────────────────────────
     if (pending.type === 'alluring_narwhal') {

@@ -355,40 +355,7 @@ export function registerActionHandlers(
         return;
       }
 
-      if (pending.reason === 'angel_unicorn') {
-        if (choice === 'yes') {
-          // Sacrificar a Angel Unicorn
-          const idx = player.stable.findIndex((c) => c.id === 'angel_unicorn');
-          if (idx !== -1) {
-            const [angelCard] = player.stable.splice(idx, 1);
-            room.gameState.discard.push(angelCard);
-
-            // Configurar acción pendiente: elegir unicornio del descarte
-            room.gameState.pendingAction = {
-              type: 'select_discard_card',
-              reason: 'angel_unicorn',
-              playerId: player.id,
-              cardType: 'unicorn',
-            };
-          } else {
-            room.gameState.pendingAction = undefined;
-            room.gameState.phase = TurnPhase.DRAW;
-          }
-        } else {
-          room.gameState.pendingAction = undefined;
-          room.gameState.phase = TurnPhase.DRAW;
-        }
-
-        addLog(
-          room.gameState,
-          choice === 'yes'
-            ? `${player.name} sacrificó a Angel Unicorn`
-            : `${player.name} omitió el efecto de Angel Unicorn`,
-          { playerId: player.id },
-        );
-
-        emitGameState(io, room, 'game-updated');
-      } else if (pending.reason === 'annoying_flying_unicorn') {
+      if (pending.reason === 'annoying_flying_unicorn') {
         if (choice === 'yes') {
           const rivals = room.gameState.players.filter(
             (p) => p.id !== player.id && p.hand.length > 0,
@@ -501,16 +468,13 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
-      } else if (pending.reason === 'classy_narwhal') {
+      } else if (pending.reason === 'dark_angel_unicorn') {
         if (choice === 'yes') {
           room.gameState.pendingAction = {
-            type: 'select_deck_card',
-            reason: 'classy_narwhal',
-            playerId: player.id,
-            cardType: 'upgrade',
-            candidates: room.gameState.deck.filter(
-              (c) => c.cardType === 'upgrade',
-            ),
+            type: 'select_stable_card',
+            reason: 'dark_angel_unicorn',
+            sourcePlayerId: player.id,
+            targetPlayerId: player.id,
           };
         } else {
           room.gameState.pendingAction = undefined;
@@ -522,13 +486,13 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           choice === 'yes'
-            ? `${player.name} usó el efecto de Classy Narwhal`
-            : `${player.name} omitió el efecto de Classy Narwhal`,
+            ? `${player.name} usó el efecto de Dark Angel Unicorn`
+            : `${player.name} omitió el efecto de Dark Angel Unicorn`,
           { playerId: player.id },
         );
 
         emitGameState(io, room, 'game-updated');
-      }
+      } else if (pending.reason === 'classy_narwhal') {
     });
   }
 
@@ -551,31 +515,36 @@ export function registerActionHandlers(
         return;
       }
 
-      if (pending.reason === 'angel_unicorn') {
-        const cardIdx = room.gameState.discard.findIndex(
-          (c) => c.uid === cardId,
-        );
-        if (cardIdx !== -1) {
-          const selectedCard = room.gameState.discard[cardIdx];
-          if (selectedCard.id === 'angel_unicorn') return;
+      if (pending.reason !== 'dark_angel_unicorn') return;
 
-          const [removed] = room.gameState.discard.splice(cardIdx, 1);
-          room.gameState.pendingAction = undefined;
-          CardMovement.enterStable(room.gameState, player, removed);
+      const cardIdx = room.gameState.discard.findIndex(
+        (c) => c.uid === cardId,
+      );
+      if (cardIdx === -1) return;
 
-          addLog(
-            room.gameState,
-            `${player.name} recuperó ${removed.name} del descarte`,
-            { playerId: player.id },
-          );
-        }
+      const selectedCard = room.gameState.discard[cardIdx];
+      if (selectedCard.id === 'dark_angel_unicorn') return;
 
-        if (!room.gameState.pendingAction) {
-          room.gameState.phase = TurnPhase.DRAW;
-        }
+      const [removed] = room.gameState.discard.splice(cardIdx, 1);
+      room.gameState.pendingAction = undefined;
 
-        emitGameState(io, room, 'game-updated');
+      const broughtFromDiscard = removed;
+      CardMovement.enterStable(room.gameState, player, removed);
+
+      if (
+        room.gameState.phase === TurnPhase.BEGINNING &&
+        !room.gameState.pendingAction
+      ) {
+        TurnManager.nextPhase(room.gameState);
       }
+
+      addLog(
+        room.gameState,
+        `${player.name} trajo ${broughtFromDiscard.name} del descarte a su establo`,
+        { playerId: player.id },
+      );
+
+      emitGameState(io, room, 'game-updated');
     });
   }
 

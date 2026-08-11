@@ -4,7 +4,6 @@ import { CardRepository } from '../unstable-unicorns/CardRepository.ts';
 import { VictoryManager } from '../VictoryManager.ts';
 
 const BEGINNING_OF_TURN_EFFECTS = new Set([
-  'angel_unicorn',
   'rhinocorn',
   'caffeine_overload',
   'claw_machine',
@@ -104,25 +103,6 @@ export class TurnManager {
     switch (game.phase) {
       // BEGINNING OF TURN
       case TurnPhase.BEGINNING: {
-        const activePlayer = game.players[game.currentPlayer];
-        const hasAngel = activePlayer.stable.some((c) => c.id === 'angel_unicorn');
-        const discardHasUnicorns = game.discard.some((c) => c.cardType === 'unicorn');
-
-        if (hasAngel && discardHasUnicorns) {
-          game.pendingAction = {
-            type: 'select_choice',
-            reason: 'angel_unicorn',
-            playerId: activePlayer.id,
-            title: '👼 Angel Unicorn',
-            description: '¿Deseas sacrificar a Angel Unicorn para traer un unicornio del descarte a tu establo?',
-            options: [
-              { value: 'yes', text: 'Sí, sacrificar y traer' },
-              { value: 'no', text: 'No, omitir efecto' },
-            ],
-          };
-          return;
-        }
-
         game.phase = TurnPhase.DRAW;
         break;
       }

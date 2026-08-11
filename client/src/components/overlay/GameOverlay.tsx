@@ -242,6 +242,36 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         );
       }
 
+      if (action.reason === 'dark_angel_unicorn') {
+        const localPlayer = gameState.players.find(
+          (p) => p.id === localPlayerId,
+        );
+        if (!localPlayer) return null;
+
+        return (
+          <CardSelectionOverlay
+            title="😈 Dark Angel Unicorn"
+            subtitle="Elige un unicornio de TU establo para sacrificar"
+            items={localPlayer.stable
+              .filter((c) => c.cardType === 'unicorn')
+              .map((card, idx) => ({
+                id: `${card.id}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                image: card.image,
+              }))}
+            maxSelection={1}
+            confirmText="Sacrificar"
+            onConfirm={([cardId]) => {
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
       const target = gameState.players.find(
         (p) => p.id === action.targetPlayerId,
       );
@@ -440,22 +470,21 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
     }
 
     // ───────────────────────────────────
-    // SELECCIONAR CARTA DE LA PILA DE DESCARTE
+    // SELECCIONAR CARTA DEL DESCARTE
     // ───────────────────────────────────
     case 'select_discard_card': {
       if (action.playerId !== localPlayerId) return null;
 
-      const eligibleCards = gameState.discard.filter((card) => {
-        if (action.cardType && card.cardType !== action.cardType) return false;
-        if (action.reason === 'angel_unicorn' && card.id === 'angel_unicorn')
-          return false;
-        return true;
-      });
+      const eligibleCards = gameState.discard.filter(
+        (card) =>
+          (!action.cardType || card.cardType === action.cardType) &&
+          card.id !== 'dark_angel_unicorn',
+      );
 
       return (
         <CardSelectionOverlay
-          title="Seleccionar del Descarte"
-          subtitle="Elige un unicornio de la pila de descarte para traerlo a tu establo"
+          title="😈 Dark Angel Unicorn"
+          subtitle="Elige un unicornio del descarte para traerlo a tu establo"
           items={eligibleCards.map((card, idx) => ({
             id: `${card.id}_${idx}`,
             value: card.uid,

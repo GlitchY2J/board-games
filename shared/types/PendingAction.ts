@@ -15,7 +15,7 @@ export type PendingAction =
     }
   | {
       type: 'select_stable_card';
-      reason: 'back_kick' | 'sacrifice_destroy' | 'unicorn_poison' | 'chainsaw_unicorn';
+      reason: 'back_kick' | 'sacrifice_destroy' | 'unicorn_poison' | 'chainsaw_unicorn' | 'dark_angel_unicorn';
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -42,7 +42,7 @@ export type PendingAction =
     }
   | {
       type: 'select_choice';
-      reason: 'angel_unicorn' | 'annoying_flying_unicorn' | 'black_knight_unicorn' | 'chainsaw_unicorn' | 'classy_narwhal';
+      reason: 'annoying_flying_unicorn' | 'black_knight_unicorn' | 'chainsaw_unicorn' | 'classy_narwhal';
       playerId: string;
       title: string;
       description: string;
@@ -52,7 +52,7 @@ export type PendingAction =
     }
   | {
       type: 'select_discard_card';
-      reason: 'angel_unicorn';
+      reason: 'dark_angel_unicorn';
       playerId: string;
       cardType?: 'unicorn' | 'magic' | 'upgrade' | 'downgrade' | 'instant';
     }
