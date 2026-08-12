@@ -16,7 +16,7 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/base/shark_with_a_horn.png",
-    "description": "When this card enters your Stable, you may SACRIFICE this card. If you do, DESTROY a Unicorn card.",
+    "description": "When this card enters your Stable, you may SACRIFICE this card, then DESTROY a Unicorn card.",
     "effect": "shark_with_a_horn",
     "copies": 1,
     "expansion": "base"

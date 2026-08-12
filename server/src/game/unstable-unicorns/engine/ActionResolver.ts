@@ -559,6 +559,36 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
+    // Shark With A Horn: destruye un unicornio (el propio se sacrificó antes)
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'shark_with_a_horn'
+    ) {
+      for (const targetPlayer of state.players) {
+        const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+        if (idx === -1) continue;
+
+        const card = targetPlayer.stable[idx];
+        if (card.cardType !== 'unicorn') return false;
+
+        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
+
+        state.pendingAction = undefined;
+
+        if (state.phase === TurnPhase.BEGINNING) {
+          state.phase = TurnPhase.ACTION;
+          state.actionUsed = true;
+        }
+
+        return true;
+      }
+
+      return false;
+    }
+
+    // ──────────────────────────────────────────
     // Seductive Unicorn: roba un unicornio de otro jugador a tu establo
     // ──────────────────────────────────────────
     if (

@@ -37,7 +37,8 @@ export type PendingAction =
         | "dark_angel_unicorn"
         | "mermaid_unicorn"
         | "rhinocorn"
-        | "seductive_unicorn";
+        | "seductive_unicorn"
+        | "shark_with_a_horn";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -85,8 +86,9 @@ export type PendingAction =
         | "mother_goose_unicorn"
         | "necromancer_unicorn"
         | "rainbow_unicorn"
-        | "rhinocorn"
-        | "seductive_unicorn";
+| "rhinocorn"
+        | "seductive_unicorn"
+        | "shark_with_a_horn";
       playerId: string;
       title: string;
       description: string;

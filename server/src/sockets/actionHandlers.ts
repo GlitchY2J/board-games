@@ -736,6 +736,42 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "shark_with_a_horn") {
+        if (choice === "yes") {
+          const sharkIdx = player.stable.findIndex(
+            (c) => c.id === "shark_with_a_horn",
+          );
+          if (sharkIdx !== -1) {
+            const [shark] = player.stable.splice(sharkIdx, 1);
+            CardMovement.destroyOrSacrifice(
+              room.gameState,
+              player,
+              shark,
+              "sacrifice",
+            );
+          }
+
+          room.gameState.pendingAction = {
+            type: "select_stable_card",
+            reason: "shark_with_a_horn",
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} sacrificó a Shark With A Horn para destruir un unicornio`
+            : `${player.name} omitió el efecto de Shark With A Horn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       }
     });
   }
