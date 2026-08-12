@@ -641,6 +641,30 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "necromancer_unicorn") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "discard",
+            reason: "necromancer_unicorn",
+            playerId: player.id,
+            cardsToDiscard: 2,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Necromancer Unicorn`
+            : `${player.name} omitió el efecto de Necromancer Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       }
     });
   }
@@ -728,7 +752,8 @@ export function registerActionHandlers(
       if (
         pending.reason !== "dark_angel_unicorn" &&
         pending.reason !== "magical_flying_unicorn" &&
-        pending.reason !== "majestic_flying_unicorn"
+        pending.reason !== "majestic_flying_unicorn" &&
+        pending.reason !== "necromancer_unicorn"
       )
         return;
 

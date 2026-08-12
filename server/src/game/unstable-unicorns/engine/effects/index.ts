@@ -20,6 +20,7 @@ import { majesticFlyingUnicorn } from '../../../cards/effects/majesticFlyingUnic
 import { mermaidUnicorn } from '../../../cards/effects/mermaidUnicorn.ts';
 import { motherGooseUnicorn } from '../../../cards/effects/motherGooseUnicorn.ts';
 import { narwhalTorpedo } from '../../../cards/effects/narwhalTorpedo.ts';
+import { necromancerUnicorn } from '../../../cards/effects/necromancerUnicorn.ts';
 import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import type { CardEffect } from './CardEffect.ts';
 
@@ -47,4 +48,5 @@ export const effects: Record<string, CardEffect> = {
   mermaid_unicorn: mermaidUnicorn,
   mother_goose_unicorn: motherGooseUnicorn,
   narwhal_torpedo: narwhalTorpedo,
+  necromancer_unicorn: necromancerUnicorn,
 };

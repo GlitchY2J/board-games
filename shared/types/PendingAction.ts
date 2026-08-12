@@ -8,7 +8,8 @@ export type PendingAction =
         | "change_of_luck"
         | "back_kick"
         | "annoying_flying_unicorn"
-        | "good_deal";
+        | "good_deal"
+        | "necromancer_unicorn";
       playerId: string;
       cardsToDiscard: number;
     }
@@ -78,7 +79,8 @@ export type PendingAction =
         | "dark_angel_unicorn"
 | "magical_flying_unicorn"
         | "majestic_flying_unicorn"
-        | "mother_goose_unicorn";
+        | "mother_goose_unicorn"
+        | "necromancer_unicorn";
       playerId: string;
       title: string;
       description: string;
@@ -88,7 +90,7 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn";
+      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
     }

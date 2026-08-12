@@ -26,19 +26,37 @@ export class ActionResolver {
     const player = state.players.find((p) => p.id === playerId);
     if (!player) return false;
 
+    const reason = pending.reason;
+    const isNecromancer = reason === 'necromancer_unicorn';
+
     for (const cardId of cardIds) {
       const idx = player.hand.findIndex((c) => c.uid === cardId);
-      if (idx !== -1) {
-        const [discarded] = player.hand.splice(idx, 1);
-        enqueueDiscardAnimation(state.roomCode, player.id, discarded);
-        state.discard.push(discarded);
+      if (idx === -1) return false;
+      if (isNecromancer && player.hand[idx].cardType !== 'unicorn') {
+        return false;
       }
+      const [discarded] = player.hand.splice(idx, 1);
+      enqueueDiscardAnimation(state.roomCode, player.id, discarded);
+      state.discard.push(discarded);
     }
 
-    const reason = pending.reason;
     state.pendingAction = undefined;
 
-    if (reason === 'hand_limit' || reason === 'good_deal' || reason === 'change_of_luck') {
+    if (isNecromancer) {
+      state.pendingAction = {
+        type: 'select_discard_card',
+        reason: 'necromancer_unicorn',
+        playerId,
+        cardType: 'unicorn',
+      };
+      return true;
+    }
+
+    if (
+      reason === 'hand_limit' ||
+      reason === 'good_deal' ||
+      reason === 'change_of_luck'
+    ) {
       TurnManager.nextPhase(state);
     }
 
@@ -252,7 +270,12 @@ export class ActionResolver {
           );
           if (idx !== -1) {
             const [card] = targetPlayer.downgrades.splice(idx, 1);
-            CardMovement.destroyOrSacrifice(state, targetPlayer, card, 'sacrifice');
+            CardMovement.destroyOrSacrifice(
+              state,
+              targetPlayer,
+              card,
+              'sacrifice',
+            );
           }
         }
 
@@ -357,7 +380,12 @@ export class ActionResolver {
       if (idx === -1) return false;
 
       const [sacrificedCard] = sourcePlayer.stable.splice(idx, 1);
-      CardMovement.destroyOrSacrifice(state, sourcePlayer, sacrificedCard, 'sacrifice');
+      CardMovement.destroyOrSacrifice(
+        state,
+        sourcePlayer,
+        sacrificedCard,
+        'sacrifice',
+      );
 
       state.pendingAction = {
         type: 'select_discard_card',
@@ -457,7 +485,12 @@ export class ActionResolver {
       if (card.cardType !== 'unicorn') return false;
 
       const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
-      CardMovement.destroyOrSacrifice(state, targetPlayer, sacrificed, 'sacrifice');
+      CardMovement.destroyOrSacrifice(
+        state,
+        targetPlayer,
+        sacrificed,
+        'sacrifice',
+      );
 
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
 
@@ -609,14 +642,6 @@ export class ActionResolver {
         resolvedPlayerIds: [...pending.resolvedPlayerIds, playerId],
       };
     } else {
-      state.deck.push(...state.discard);
-      state.discard = [];
-
-      for (let i = state.deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
-      }
-
       state.pendingAction = undefined;
     }
 

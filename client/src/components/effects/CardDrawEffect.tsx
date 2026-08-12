@@ -64,6 +64,9 @@ export default function CardDrawEffect({ animation, localPlayerId, onDone }: Pro
       }
     }
 
+    const DURATION = 600;
+    const ARRIVE_AT = 0.82; // fraction at which card reaches destination
+
     const anim = el.animate(
       [
         {
@@ -73,27 +76,35 @@ export default function CardDrawEffect({ animation, localPlayerId, onDone }: Pro
         {
           transform: `translate(${start.x}px, ${start.y}px) scale(1) rotate(0deg)`,
           opacity: 1,
-          offset: 0.15,
+          offset: 0.1,
         },
         {
           transform: `translate(${end.x}px, ${end.y}px) scale(${isMe ? 1 : 0.5}) rotate(${isMe ? 0 : -10}deg)`,
           opacity: 1,
-          offset: 0.85,
+          offset: ARRIVE_AT,
         },
         {
-          transform: `translate(${end.x}px, ${end.y}px) scale(${isMe ? 0.8 : 0.4}) rotate(${isMe ? 0 : -10}deg)`,
+          transform: `translate(${end.x}px, ${end.y}px) scale(${isMe ? 0.75 : 0.35}) rotate(${isMe ? 0 : -10}deg)`,
           opacity: 0,
         },
       ],
       {
-        duration: 850,
-        easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+        duration: DURATION,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
         fill: 'forwards',
       }
     );
 
-    anim.onfinish = () => onDoneRef.current();
-    return () => anim.cancel();
+    // Release state lock when card visually arrives — don't wait for full fade-out
+    const releaseTimer = setTimeout(() => {
+      onDoneRef.current();
+    }, DURATION * ARRIVE_AT);
+
+    anim.onfinish = () => el.remove();
+    return () => {
+      anim.cancel();
+      clearTimeout(releaseTimer);
+    };
   }, [animation, localPlayerId]);
 
   const isMe = animation.playerId === localPlayerId;

@@ -1,4 +1,5 @@
 import { socket } from '../../services/socket';
+import { useEffect, useState } from 'react';
 import type { GameState } from '../../types/GameState';
 import CardSelectionOverlay from './CardSelectionOverlay';
 
@@ -11,7 +12,29 @@ interface Props {
 export default function GameOverlay({ gameState, localPlayerId, hide = false }: Props) {
   const action = gameState.pendingAction;
 
+  const actionKey = (() => {
+    if (!action) return null;
+    const parts = [action.type, 'reason' in action ? action.reason : ''];
+    if ('playerId' in action) parts.push(`player:${action.playerId}`);
+    if ('sourcePlayerId' in action) parts.push(`source:${action.sourcePlayerId}`);
+    if ('targetPlayerId' in action) parts.push(`target:${action.targetPlayerId}`);
+    if ('remainingPlayerIds' in action) parts.push(`first:${action.remainingPlayerIds[0]}`);
+    return parts.join(':');
+  })();
+
+  const [dismissedKey, setDismissedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDismissedKey((prev) => (prev && prev !== actionKey ? null : prev));
+  }, [actionKey]);
+
+  const dismiss = () => setDismissedKey(actionKey);
+
   if (!action) {
+    return null;
+  }
+
+  if (dismissedKey === actionKey) {
     return null;
   }
 
@@ -29,14 +52,24 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         back_kick: 'Back Kick',
         annoying_flying_unicorn: 'Annoying Flying Unicorn',
         good_deal: '🤝 Good Deal',
+        necromancer_unicorn: '🧙 Necromancer Unicorn',
       };
+
+      const isNecromancer = action.reason === 'necromancer_unicorn';
+      const discardableCards = isNecromancer
+        ? player.hand.filter((c) => c.cardType === 'unicorn')
+        : player.hand;
 
       return (
         <CardSelectionOverlay
           hide={hide}
           title={titleMap[action.reason] ?? 'Descarta cartas'}
-          subtitle={`Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`}
-          items={player.hand.map((card, idx) => ({
+          subtitle={
+            isNecromancer
+              ? `Debes descartar ${action.cardsToDiscard} unicornio(s) de tu mano.`
+              : `Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`
+          }
+          items={discardableCards.map((card, idx) => ({
             id: `${card.id}_${idx}`,
             value: card.uid,
             title: card.name,
@@ -45,6 +78,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={action.cardsToDiscard}
           confirmText="Descartar"
           onConfirm={(cardIds) => {
+            dismiss();
             socket.emit('discard-cards', {
               roomCode: gameState.roomCode,
               playerId: localPlayerId,
@@ -126,6 +160,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText="Seleccionar"
           onConfirm={([playerId]) => {
+            dismiss();
             socket.emit('select-player', {
               roomCode: gameState.roomCode,
               playerId,
@@ -134,6 +169,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           onCancel={
             isUnicornPoison || isAnnoyingFlying || isMermaid
               ? () => {
+                  dismiss();
                   socket.emit('cancel-action', {
                     roomCode: gameState.roomCode,
                   });
@@ -172,6 +208,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText="Robar"
           onConfirm={([cardId]) => {
+            dismiss();
             socket.emit('select-hand-card', {
               roomCode: gameState.roomCode,
               cardId,
@@ -237,12 +274,14 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
             maxSelection={1}
             confirmText="Confirmar"
             onConfirm={([cardValue]) => {
+              dismiss();
               socket.emit('select-stable-card', {
                 roomCode: gameState.roomCode,
                 cardId: cardValue,
               });
             }}
             onCancel={() => {
+              dismiss();
               socket.emit('cancel-action', {
                 roomCode: gameState.roomCode,
               });
@@ -273,6 +312,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
             maxSelection={1}
             confirmText="Sacrificar"
             onConfirm={([cardId]) => {
+              dismiss();
               socket.emit('select-stable-card', {
                 roomCode: gameState.roomCode,
                 cardId,
@@ -320,6 +360,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText={isUnicornPoison ? 'Destruir' : isMermaid ? 'Devolver' : 'Aceptar'}
           onConfirm={([cardId]) => {
+            dismiss();
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
               cardId,
@@ -366,12 +407,14 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText="Robar Mejora"
           onConfirm={([cardId]) => {
+            dismiss();
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
               cardId,
             });
           }}
           onCancel={() => {
+            dismiss();
             socket.emit('cancel-action', {
               roomCode: gameState.roomCode,
             });
@@ -412,6 +455,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText={remaining === 1 ? 'Confirmar' : 'Siguiente →'}
           onConfirm={([cardId]) => {
+            dismiss();
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
               cardId,
@@ -446,6 +490,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText="Descartar"
           onConfirm={(cardIds) => {
+            dismiss();
             socket.emit('discard-cards', {
               roomCode: gameState.roomCode,
               playerId: localPlayerId,
@@ -494,6 +539,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText="Descartar"
           onConfirm={(cardIds) => {
+            dismiss();
             socket.emit('discard-cards', {
               roomCode: gameState.roomCode,
               playerId: localPlayerId,
@@ -548,6 +594,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText="Sacrificar"
           onConfirm={([cardId]) => {
+            dismiss();
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
               cardId,
@@ -574,6 +621,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
                   key={option.value}
                   className="confirm-button choice-button"
                   onClick={() => {
+                    dismiss();
                     socket.emit('select-choice', {
                       roomCode: gameState.roomCode,
                       choice: option.value,
@@ -603,6 +651,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         action.reason === 'magical_flying_unicorn';
       const isMajesticFlyingUnicorn =
         action.reason === 'majestic_flying_unicorn';
+      const isNecromancer = action.reason === 'necromancer_unicorn';
 
       const eligibleCards = gameState.discard.filter(
         (card) =>
@@ -618,7 +667,9 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
               ? '🦄 Magical Flying Unicorn'
               : isMajesticFlyingUnicorn
                 ? '🦄 Majestic Flying Unicorn'
-                : '😈 Dark Angel Unicorn'
+                : isNecromancer
+                  ? '🧙 Necromancer Unicorn'
+                  : '😈 Dark Angel Unicorn'
           }
           subtitle={
             isMagicalFlyingUnicorn
@@ -636,6 +687,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText={addsToHand ? 'Añadir a la Mano' : 'Traer al Establo'}
           onConfirm={([cardId]) => {
+            dismiss();
             socket.emit('select-discard-card', {
               roomCode: gameState.roomCode,
               cardId,
@@ -665,6 +717,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText="Tomar"
           onConfirm={([cardId]) => {
+            dismiss();
             socket.emit('select-deck-card', {
               roomCode: gameState.roomCode,
               cardId,
@@ -698,6 +751,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           maxSelection={1}
           confirmText="Traer al Establo"
           onConfirm={([cardId]) => {
+            dismiss();
             socket.emit('select-nursery-card', {
               roomCode: gameState.roomCode,
               cardId,
