@@ -689,6 +689,29 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "rhinocorn") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "select_stable_card",
+            reason: "rhinocorn",
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usará Rhinocorn para destruir un unicornio`
+            : `${player.name} omitió el efecto de Rhinocorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       }
     });
   }

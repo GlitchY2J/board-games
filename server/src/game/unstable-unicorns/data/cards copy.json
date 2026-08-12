@@ -1,16 +1,5 @@
 [
   {
-    "id": "rhinocorn",
-    "name": "Rhinocorn",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/rhinocorn.png",
-    "description": "If this card is in your Stable at the beginning of your turn, you may DESTROY a Unicorn card. If you do, immediately skip to your End of Turn phase.",
-    "effect": "rhinocorn",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
     "id": "seductive_unicorn",
     "name": "Seductive Unicorn",
     "cardType": "unicorn",

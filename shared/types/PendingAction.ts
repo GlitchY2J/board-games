@@ -34,7 +34,8 @@ export type PendingAction =
         | "unicorn_poison"
         | "chainsaw_unicorn"
         | "dark_angel_unicorn"
-        | "mermaid_unicorn";
+        | "mermaid_unicorn"
+        | "rhinocorn";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -81,7 +82,8 @@ export type PendingAction =
         | "majestic_flying_unicorn"
         | "mother_goose_unicorn"
         | "necromancer_unicorn"
-        | "rainbow_unicorn";
+        | "rainbow_unicorn"
+        | "rhinocorn";
       playerId: string;
       title: string;
       description: string;

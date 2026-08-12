@@ -362,6 +362,14 @@ function registerNextPhase(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    if (context.game.phase === TurnPhase.BEGINNING) {
+      const presented = TurnManager.activateBeginningTriggers(context.game);
+      if (presented) {
+        emitGameState(io, context.room, 'game-updated');
+        return;
+      }
+    }
+
     TurnManager.nextPhase(context.game);
 
     emitGameState(io, context.room, 'game-updated');

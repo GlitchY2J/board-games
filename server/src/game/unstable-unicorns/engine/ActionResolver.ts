@@ -1,5 +1,6 @@
 import type { GameState } from '../../models/GameState.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
+import { TurnPhase } from '../../turn/TurnPhase.ts';
 import { CardMovement } from './CardMovement.ts';
 import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
 import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
@@ -505,6 +506,39 @@ export class ActionResolver {
       }
 
       return true;
+    }
+
+    // ──────────────────────────────────────────
+    // Rhinocorn: destruye un unicornio de otro jugador y pasa a ACTION sin acciones
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'rhinocorn'
+    ) {
+      for (const targetPlayer of state.players) {
+        if (targetPlayer.id === sourcePlayerId) continue;
+
+        const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+        if (idx === -1) continue;
+
+        const card = targetPlayer.stable[idx];
+        if (card.cardType !== 'unicorn') return false;
+
+        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
+
+        state.pendingAction = undefined;
+
+        // Pasa a la fase de acción pero sin acciones, obligando a "Terminar Turno"
+        if (state.phase === TurnPhase.BEGINNING) {
+          state.phase = TurnPhase.ACTION;
+          state.actionUsed = true;
+        }
+
+        return true;
+      }
+
+      return false;
     }
 
     return false;

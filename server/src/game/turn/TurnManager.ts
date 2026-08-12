@@ -58,6 +58,31 @@ export class TurnManager {
     }
   }
 
+  static activateBeginningTriggers(game: GameState): boolean {
+    if (game.phase !== TurnPhase.BEGINNING || game.pendingAction) return false;
+
+    const activePlayer = game.players[game.currentPlayer];
+    if (!activePlayer) return false;
+
+    if (activePlayer.stable.some((c) => c.id === 'rhinocorn')) {
+      game.pendingAction = {
+        type: 'select_choice',
+        reason: 'rhinocorn',
+        playerId: activePlayer.id,
+        title: '🦏 Rhinocorn',
+        description:
+          '¿Deseas DESTRUIR un unicornio de otro jugador y saltarte el resto de tu turno?',
+        options: [
+          { value: 'yes', text: 'Sí, destruir y saltar el turno' },
+          { value: 'no', text: 'No, continuar mi turno' },
+        ],
+      };
+      return true;
+    }
+
+    return false;
+  }
+
   private static passTurn(game: GameState): void {
     if (game.extraTurn) {
       game.extraTurn = false;

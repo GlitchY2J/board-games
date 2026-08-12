@@ -290,6 +290,40 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         );
       }
 
+      if (action.reason === 'rhinocorn') {
+        const items = gameState.players
+          .filter((p) => p.id !== localPlayerId)
+          .flatMap((p) =>
+            p.stable
+              .filter((c) => c.cardType === 'unicorn')
+              .map((card, idx) => ({
+                id: `${card.id}_${p.id}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                subtitle: `Establo de ${p.name}`,
+                image: card.image,
+              })),
+          );
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="🦏 Rhinocorn"
+            subtitle="Elige un unicornio de OTRO jugador para DESTRUIR. Pasarás a la fase de acción sin acciones."
+            items={items}
+            maxSelection={1}
+            confirmText="Destruir"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
       if (action.reason === 'dark_angel_unicorn') {
         const localPlayer = gameState.players.find(
           (p) => p.id === localPlayerId,
