@@ -418,6 +418,149 @@
     "expansion": "base"
   },
   {
+    "id": "necromancer_unicorn",
+    "name": "Necromancer Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/necromancer_unicorn.png",
+    "description": "When this card enters your Stable, you may DISCARD 2 Unicorn cards, then bring a Unicorn card from the discard pile into your Stable.",
+    "effect": "necromancer_unicorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "queen_bee_unicorn",
+    "name": "Queen Bee Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/queen_bee_unicorn.png",
+    "description": "Basic Unicorn cards cannot enter any other player's Stable.",
+    "effect": "queen_bee_unicorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "rainbow_unicorn",
+    "name": "Rainbow Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/rainbow_unicorn.png",
+    "description": "When this card enters your Stable, you may bring a Basic Unicorn card from your hand directly into your Stable.",
+    "effect": "rainbow_unicorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "rhinocorn",
+    "name": "Rhinocorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/rhinocorn.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DESTROY a Unicorn card. If you do, immediately skip to your End of Turn phase.",
+    "effect": "rhinocorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "seductive_unicorn",
+    "name": "Seductive Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/seductive_unicorn.png",
+    "description": "When this card enters your Stable, you may DISCARD a card, then STEAL a Unicorn card.",
+    "effect": "seductive_unicorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "shabby_the_narwhal",
+    "name": "Shabby The Narwhal",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/shabby_the_narwhal.png",
+    "description": "When this card enters your Stable, you may search the deck for a Downgrade card and add it to your hand. Shuffle the deck.",
+    "effect": "shabby_the_narwhal",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "shark_with_a_horn",
+    "name": "Shark With A Horn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/shark_with_a_horn.png",
+    "description": "When this card enters your Stable, you may SACRIFICE this card. If you do, DESTROY a Unicorn card.",
+    "effect": "shark_with_a_horn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "stabby_the_unicorn",
+    "name": "Stabby The Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/stabby_the_unicorn.png",
+    "description": "If this card is sacrificed or destroyed, you may DESTROY a Unicorn card.",
+    "effect": "stabby_the_unicorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "swift_flying_unicorn",
+    "name": "Swifty Flying Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/swift_flying_unicorn.png",
+    "description": "When this card enters your Stable, you may choose an Instant card from the discard pile and add it to your hand. If this card would be sacrificed or destroyed, return it to your hand instead.",
+    "effect": "swift_flying_unicorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "the_great_narwhal",
+    "name": "The Great Narwhal",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/the_great_narwhal.png",
+    "description": "When this card enters your Stable, you may search the deck for a card with \"Narwhal\" in its name and add it to yoru hand. Shuffle the deck.",
+    "effect": "the_great_narwhal",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "unicorn_on_the_cob",
+    "name": "Unicorn On The Cob",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/unicorn_on_the_cob.png",
+    "description": "When this card enters your Stable, DRAW 2 cards and DISCARD a card.",
+    "effect": "unicorn_on_the_cob",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "unicorn_oracle",
+    "name": "Unicorn Oracle",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/unicorn_oracle.png",
+    "description": "When this card enters your Stable, look at the top 3 cards of the deck and add on of them to your hand, then return the other two to the top of the deck in any order.",
+    "effect": "unicorn_oracle",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "unicorn_phoenix",
+    "name": "Unicorn Phoenix",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/unicorn_phoenix.png",
+    "description": "If this card would be sacrificed or destroyed, you may DISCARD a card instead.",
+    "effect": "unicorn_phoenix",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "back_kick",
     "name": "Back Kick",
     "cardType": "magic",
@@ -468,6 +611,16 @@
     "expansion": "base"
   },
   {
+    "id": "kiss_of_life",
+    "name": "Kiss Of Life",
+    "cardType": "magic",
+    "image": "/cards/base/kiss_of_life.png",
+    "description": "Bring a Unicorn card from the discard pile into your Stable.",
+    "effect": "kiss_of_life",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "mystical_vortex",
     "name": "Mystical Vortex",
     "cardType": "magic",
@@ -478,6 +631,66 @@
     "expansion": "base"
   },
   {
+    "id": "re_target",
+    "name": "Re-Target",
+    "cardType": "magic",
+    "image": "/cards/base/re_target.png",
+    "description": "Move and Upgrade or Downgrade card from any player's Stable to any other player's Stable.",
+    "effect": "re_target",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
+    "id": "reset_button",
+    "name": "Reset Button",
+    "cardType": "magic",
+    "image": "/cards/base/reset_button.png",
+    "description": "Each player must SACRIFICE all Upgrade and Downgrade cards. Shuffle the discard pile into the deck.",
+    "effect": "reset_button",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "shake_up",
+    "name": "Shake Up",
+    "cardType": "magic",
+    "image": "/cards/base/shake_up.png",
+    "description": "Shuffle this card, your hand, and the discard pile into the deck. DRAW 5 cards.",
+    "effect": "shake_up",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "targeted_destruction",
+    "name": "Targeted Destruction",
+    "cardType": "magic",
+    "image": "/cards/base/targeted_destruction.png",
+    "description": "SACRIFICE or DESTROY an Upgrade or Downgrade card.",
+    "effect": "targeted_destruction",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "two_for_one",
+    "name": "Two For One",
+    "cardType": "magic",
+    "image": "/cards/base/two_for_one.png",
+    "description": "SACRIFICE a card, then DESTROY 2 cards.",
+    "effect": "two_for_one",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
+    "id": "unfair_bargain",
+    "name": "Unfair Bargain",
+    "cardType": "magic",
+    "image": "/cards/base/unfair_bargain.png",
+    "description": "Trade hands with any other player.",
+    "effect": "unfair_bargain",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
     "id": "unicorn_poison",
     "name": "Unicorn Poison",
     "cardType": "magic",
@@ -485,6 +698,176 @@
     "description": "DESTROY a Unicorn card.",
     "effect": "unicorn_poison",
     "copies": 3,
+    "expansion": "base"
+  },
+  {
+    "id": "unicorn_swap",
+    "name": "Unicorn Swap",
+    "cardType": "magic",
+    "image": "/cards/base/unicorn_swap.png",
+    "description": "Move a Unicorn card in your Stable to any other player's Stable, then STEAL a Unicorn card from that player's Stable.",
+    "effect": "unicorn_swap",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
+    "id": "caffeine_overload",
+    "name": "Caffeine Overload",
+    "cardType": "upgrade",
+    "image": "/cards/base/caffeine_overload.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card, then DRAW 2 cards.",
+    "effect": "caffeine_overload",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "claw_machine",
+    "name": "Claw Machine",
+    "cardType": "upgrade",
+    "image": "/cards/base/claw_machine.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD card, then DRAW a card.",
+    "effect": "claw_machine",
+    "copies": 3,
+    "expansion": "base"
+  },
+  {
+    "id": "double_dutch",
+    "name": "Double Dutch",
+    "cardType": "upgrade",
+    "image": "/cards/base/double_dutch.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may play 2 cards during your Action phase.",
+    "effect": "double_dutch",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "glitter_bomb",
+    "name": "Glitter Bomb",
+    "cardType": "upgrade",
+    "image": "/cards/base/glitter_bomb.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card. If you do, DESTROY a card.",
+    "effect": "glitter_bomb",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
+    "id": "rainbow_aura",
+    "name": "Rainbow Aura",
+    "cardType": "upgrade",
+    "image": "/cards/base/rainbow_aura.png",
+    "description": "Your Unicorn cards cannot be destroyed.",
+    "effect": "rainbow_aura",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "rainbow_lasso",
+    "name": "Rainbow Lasso",
+    "cardType": "upgrade",
+    "image": "/cards/base/rainbow_lasso.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD 3 cards, then STEAL a Unicorn card.",
+    "effect": "rainbow_lasso",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "stable_artillery",
+    "name": "Stable Artillery",
+    "cardType": "upgrade",
+    "image": "/cards/base/stable_artillery.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD 2 cards, then DESTROY a Unicorn card.",
+    "effect": "stable_artillery",
+    "copies": 3,
+    "expansion": "base"
+  },
+  {
+    "id": "yay",
+    "name": "Yay",
+    "cardType": "upgrade",
+    "image": "/cards/base/yay.png",
+    "description": "Cards you play cannot be Neigh'd",
+    "effect": "yay",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
+    "id": "barbed_wire",
+    "name": "Barbed Wire",
+    "cardType": "downgrade",
+    "image": "/cards/base/barbed_wire.png",
+    "description": "Each time a Unicorn card enters or leaves your Stable, DISCARD a card.",
+    "effect": "barbed_wire",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "pandamonium",
+    "name": "Pandamonium",
+    "cardType": "downgrade",
+    "image": "/cards/base/pandamonium.png",
+    "description": "All of your Unicorns are considered Pandas. Cards that affect Unicorn cards do not affect your Pandas.",
+    "effect": "pandamonium",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "sadistic_ritual",
+    "name": "Sadistic Ritual",
+    "cardType": "downgrade",
+    "image": "/cards/base/sadistic_ritual.png",
+    "description": "If this card is in yoru Stable at the beginning of yoru turn, SACRIFICE a Unicorn card, then DRAW a card.",
+    "effect": "sadistic_ritual",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "slowdown",
+    "name": "Slowdown",
+    "cardType": "downgrade",
+    "image": "/cards/base/slowdown.png",
+    "description": "You cannot play Instant cards.",
+    "effect": "slowdown",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "nanny_cam",
+    "name": "Nanny Cam",
+    "cardType": "downgrade",
+    "image": "/cards/base/nanny_cam.png",
+    "description": "Your hand must be visible to all players at all times.",
+    "effect": "nanny_cam",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "broken_stable",
+    "name": "Broken Stable",
+    "cardType": "downgrade",
+    "image": "/cards/base/broken_stable.png",
+    "description": "You cannot play Upgrade cards.",
+    "effect": "broken_stable",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "blinding_light",
+    "name": "Blinding Light",
+    "cardType": "downgrade",
+    "image": "/cards/base/blinding_light.png",
+    "description": "Triggered effects of your Unicorn cards do not activate.",
+    "effect": "blinding_light",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "tiny_stable",
+    "name": "Tiny Stable",
+    "cardType": "downgrade",
+    "image": "/cards/base/tiny_stable.png",
+    "description": "If at any time you have mor than 5 Unicorns in your Stable, SACRIFICE a Unicorn card.",
+    "effect": "tiny_stable",
+    "copies": 1,
     "expansion": "base"
   },
   {

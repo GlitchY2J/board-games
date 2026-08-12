@@ -3,23 +3,24 @@
   height: 100%;
   object-fit: contain;
   border-radius: 12px;
-  animation: cardAnimSacrifice 0.7s ease forwards;
+  animation: cardAnimSacrifice 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes cardAnimSacrifice {
   0% {
     opacity: 1;
-    transform: scale(1);
-    filter: none;
+    transform: scale(1) translateY(0) rotate(0deg);
+    filter: drop-shadow(0 0 0px rgba(168, 85, 247, 0));
   }
-  55% {
-    opacity: 0.85;
-    transform: scale(1.06);
+  30% {
+    opacity: 1;
+    transform: scale(1.08) translateY(-10px) rotate(-3deg);
+    filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.9)) saturate(1.5);
   }
   100% {
     opacity: 0;
-    transform: scale(0.6) translateY(18px);
-    filter: blur(2px);
+    transform: scale(0.4) translateY(-40px) rotate(8deg);
+    filter: drop-shadow(0 0 35px rgba(236, 72, 153, 0)) blur(4px) saturate(0.5);
   }
 }
 
@@ -31,20 +32,28 @@
   position: absolute;
   background-repeat: no-repeat;
   will-change: transform, opacity;
-  animation: cardAnimBreakShard 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+  animation: cardAnimBreakShard 0.72s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 8px rgba(239, 68, 68, 0.6));
 }
 
 @keyframes cardAnimBreakShard {
   0% {
     opacity: 1;
-    transform: translate(0, 0) rotate(0deg);
+    transform: translate(0, 0) scale(1) rotate(0deg);
   }
-  70% {
-    opacity: 1;
+  20% {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 15px rgba(239, 68, 68, 0.9)) saturate(1.8);
   }
   100% {
     opacity: 0;
-    transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+    transform: translate(var(--dx), var(--dy)) scale(0.65) rotate(var(--rot));
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0)) drop-shadow(0 0 25px rgba(249, 115, 22, 0)) blur(3px);
   }
+}
+
+.card-animating-out {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
 }

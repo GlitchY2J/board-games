@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000';
+const API = 'http://10.30.11.88:3000';
 
 // Crear sala
 export async function createRoom(data: {

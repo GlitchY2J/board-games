@@ -7,7 +7,7 @@ export const narwhalTorpedo: CardEffect = {
       const downgrades = [...player.downgrades];
 
       for (const downgrade of downgrades) {
-        CardMovement.destroyOrSacrifice(state, player, downgrade);
+        CardMovement.destroyOrSacrifice(state, player, downgrade, 'sacrifice');
       }
 
       player.downgrades = [];

@@ -1,4 +1,4 @@
-import type { Card } from '../models/Card.ts';
+import type { Card } from './models/Card.ts';
 
 export type CardAnimType = 'sacrifice' | 'destroy';
 

@@ -33,7 +33,10 @@ function pick(id: string, suffix: string): Card {
 
 function plainUnicorn(suffix: string): Card {
   const def = allCards.find(
-    (c) => c.cardType === 'unicorn' && c.unicornClass === 'basic' && c.effect === null,
+    (c) =>
+      c.cardType === 'unicorn' &&
+      c.unicornClass === 'basic' &&
+      c.effect === null,
   );
   if (!def) throw new Error('No plain basic unicorn found');
   return { ...def, uid: `unicorn__${suffix}` };
@@ -48,7 +51,7 @@ async function main() {
 
   const connect = (): Promise<ClientSocket> =>
     new Promise((resolve) => {
-      const c = ioc(`http://localhost:${PORT}`);
+      const c = ioc(`http://10.30.11.88:${PORT}`);
       c.on('connect', () => resolve(c));
     });
 
@@ -72,7 +75,11 @@ async function main() {
   g.players[1].hand = [neigh];
 
   // P1 juega una carta y P2 mete un neigh en la cadena (estado a mitad de acción)
-  c1.emit('play-card', { roomCode: room.code, playerId: p1.id, cardId: uni.uid });
+  c1.emit('play-card', {
+    roomCode: room.code,
+    playerId: p1.id,
+    cardId: uni.uid,
+  });
   await sleep(150);
   c2.emit('play-neigh', { roomCode: room.code, cardId: neigh.uid });
   await sleep(150);
@@ -82,14 +89,21 @@ async function main() {
   // Simula refresh de P1: nuevo socket con su sessionToken
   const c1b = await connect();
   let resume: any;
-  c1b.emit('resume-session', { roomCode: room.code, sessionToken: token }, (resp) => {
-    resume = resp;
-  });
+  c1b.emit(
+    'resume-session',
+    { roomCode: room.code, sessionToken: token },
+    (resp) => {
+      resume = resp;
+    },
+  );
   await sleep(200);
 
   assert(resume?.success === true, 'resume-session exitoso');
   assert(resume?.playerId === p1.id, 'playerId recuperado coincide');
-  assert(resume?.gameState?.pendingPlay !== undefined, 'gameState recupera la cadena en curso');
+  assert(
+    resume?.gameState?.pendingPlay !== undefined,
+    'gameState recupera la cadena en curso',
+  );
   assert(
     resume?.gameState?.pendingPlay?.chain.length === chainLenBefore,
     'la cadena se conservó intacta',
@@ -109,7 +123,10 @@ async function main() {
   await sleep(150);
   // P1 aceptó, pero P2 es el tope y no puede responder... (2 jugadores: P1 acepta -> P2 no)
   // othersCount = 1, acceptedIds=[P1] -> se resuelve
-  assert(g.pendingPlay === undefined, 'P1 pudo seguir jugando tras el refresh (aceptó)');
+  assert(
+    g.pendingPlay === undefined,
+    'P1 pudo seguir jugando tras el refresh (aceptó)',
+  );
 
   c1.disconnect();
   c2.disconnect();
@@ -117,7 +134,9 @@ async function main() {
   io.close();
   server.close();
 
-  console.log(failures === 0 ? '\nTODOS LOS ESCENARIOS PASARON' : `\n${failures} FALLOS`);
+  console.log(
+    failures === 0 ? '\nTODOS LOS ESCENARIOS PASARON' : `\n${failures} FALLOS`,
+  );
   process.exit(failures === 0 ? 0 : 1);
 }
 

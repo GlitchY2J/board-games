@@ -8,7 +8,7 @@ import VictoryScreen from '../components/game/VictoryScreen';
 import TurnAnnouncement from '../components/game/TurnAnnouncement';
 import CardMoveEffect from '../components/effects/CardMoveEffect';
 import CardRemovalAnimation from '../components/effects/CardRemovalAnimation';
-import type { CardAnimation } from '../../shared/types/SocketEvents.ts';
+import type { CardAnimation } from '../../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface DrawnCard {
@@ -39,6 +39,9 @@ export default function Game() {
     { animation: CardAnimation; rect: { left: number; top: number; width: number; height: number } }[]
   >([]);
 
+  const pendingGameStateRef = useRef<GameState | null>(null);
+  const activeAnimationsCountRef = useRef(0);
+
   const initialGameState =
     contextGameState ?? (location.state?.gameState as GameState | undefined) ?? null;
   const prevHandRef = useRef<string[]>(
@@ -50,9 +53,49 @@ export default function Game() {
     null,
   );
 
+  const applyGameState = (state: GameState) => {
+    setGameState(state);
+
+    const local = state.players.find((p) => p.socketId === socket.id);
+    if (!local) return;
+
+    const newIds = local.hand.map((card) => card.uid);
+    const prevIds = prevHandRef.current;
+    const gained = newIds.filter((id) => !prevIds.includes(id));
+    prevHandRef.current = newIds;
+
+    if (gained.length >= 1 && gained.length <= 3) {
+      const card = local.hand.find((c) => c.uid === gained[0]);
+      if (card) {
+        setDrawnCard({ id: card.uid, name: card.name, image: card.image });
+      }
+    }
+
+    const prev = prevTurnRef.current;
+    const active = state.players[state.currentPlayer];
+    if (
+      prev &&
+      (state.turn !== prev.turn ||
+        state.currentPlayer !== prev.currentPlayer) &&
+      active
+    ) {
+      setTurnAnnounce({
+        name: active.name,
+        isActivePlayer: active.socketId === socket.id,
+        turn: state.turn,
+        currentPlayer: state.currentPlayer,
+      });
+    }
+    prevTurnRef.current = { turn: state.turn, currentPlayer: state.currentPlayer };
+  };
+
   useEffect(() => {
     if (contextGameState) {
-      setGameState(contextGameState);
+      if (activeAnimationsCountRef.current > 0) {
+        pendingGameStateRef.current = contextGameState;
+      } else {
+        setGameState(contextGameState);
+      }
     }
   }, [contextGameState]);
 
@@ -64,39 +107,11 @@ export default function Game() {
 
   useEffect(() => {
     socket.on('game-updated', (state: GameState) => {
-      setGameState(state);
-
-      const local = state.players.find((p) => p.socketId === socket.id);
-      if (!local) return;
-
-      const newIds = local.hand.map((card) => card.uid);
-      const prevIds = prevHandRef.current;
-      const gained = newIds.filter((id) => !prevIds.includes(id));
-      prevHandRef.current = newIds;
-
-      if (gained.length >= 1 && gained.length <= 3) {
-        const card = local.hand.find((c) => c.uid === gained[0]);
-        if (card) {
-          setDrawnCard({ id: card.uid, name: card.name, image: card.image });
-        }
+      if (activeAnimationsCountRef.current > 0) {
+        pendingGameStateRef.current = state;
+      } else {
+        applyGameState(state);
       }
-
-      const prev = prevTurnRef.current;
-      const active = state.players[state.currentPlayer];
-      if (
-        prev &&
-        (state.turn !== prev.turn ||
-          state.currentPlayer !== prev.currentPlayer) &&
-        active
-      ) {
-        setTurnAnnounce({
-          name: active.name,
-          isActivePlayer: active.socketId === socket.id,
-          turn: state.turn,
-          currentPlayer: state.currentPlayer,
-        });
-      }
-      prevTurnRef.current = { turn: state.turn, currentPlayer: state.currentPlayer };
     });
 
     const onCardAnimations = (animations: CardAnimation[]) => {
@@ -106,13 +121,15 @@ export default function Game() {
             `[data-card-uid="${animation.card.uid}"]`,
           );
           if (!el) return null;
+          el.classList.add('card-animating-out');
           const rect = el.getBoundingClientRect();
           return { animation, rect };
         })
         .filter((x): x is NonNullable<typeof x> => x !== null);
 
       if (found.length > 0) {
-        setRemovalAnims((prev) => [...prev, ...found]);
+        activeAnimationsCountRef.current = found.length;
+        setRemovalAnims(found);
       }
     };
 
@@ -174,7 +191,18 @@ export default function Game() {
   }
 
   function removeRemovalAnim(animId: string) {
-    setRemovalAnims((prev) => prev.filter((a) => a.animation.animId !== animId));
+    setRemovalAnims((prev) => {
+      const next = prev.filter((a) => a.animation.animId !== animId);
+      activeAnimationsCountRef.current = next.length;
+
+      if (next.length === 0 && pendingGameStateRef.current) {
+        const pendingState = pendingGameStateRef.current;
+        pendingGameStateRef.current = null;
+        applyGameState(pendingState);
+      }
+
+      return next;
+    });
   }
 
   return (

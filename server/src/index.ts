@@ -29,5 +29,5 @@ initializeSocket(io);
 const PORT = 3000;
 
 server.listen(PORT, () => {
-  console.log(`Servidor iniciado en http://localhost:${PORT}`);
+  console.log(`Servidor iniciado en http://10.30.11.88:${PORT}`);
 });

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { CardAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { CardAnimation } from '../../../../shared/types/SocketEvents.ts';
 import './CardRemovalAnimation.css';
 
 interface Rect {
@@ -64,7 +64,7 @@ export default function CardRemovalAnimation({ animation, rect, onDone }: Props)
   useEffect(() => {
     const timer = setTimeout(
       () => onDoneRef.current(),
-      animation.type === 'destroy' ? 820 : 700,
+      animation.type === 'destroy' ? 720 : 700,
     );
     return () => clearTimeout(timer);
   }, [animation.type]);
