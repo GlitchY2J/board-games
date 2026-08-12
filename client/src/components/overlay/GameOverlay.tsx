@@ -54,6 +54,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         good_deal: '🤝 Good Deal',
         necromancer_unicorn: '🧙 Necromancer Unicorn',
         seductive_unicorn: '💋 Seductive Unicorn',
+        unicorn_on_the_cob: '🌽 Unicorn On The Cob',
       };
 
       const isNecromancer = action.reason === 'necromancer_unicorn';

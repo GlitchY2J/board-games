@@ -10,7 +10,8 @@ export type PendingAction =
         | "annoying_flying_unicorn"
         | "good_deal"
         | "necromancer_unicorn"
-        | "seductive_unicorn";
+        | "seductive_unicorn"
+        | "unicorn_on_the_cob";
       playerId: string;
       cardsToDiscard: number;
     }
