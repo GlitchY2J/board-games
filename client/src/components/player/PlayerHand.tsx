@@ -12,6 +12,7 @@ interface Props {
   gamePhase: string;
   actionUsed: boolean;
   pendingPlay: boolean;
+  blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
 }
 
@@ -22,6 +23,7 @@ export default function PlayerHand({
   gamePhase,
   actionUsed,
   pendingPlay,
+  blockedCardIds,
   onPlay,
 }: Props) {
   return (
@@ -33,6 +35,7 @@ export default function PlayerHand({
           gamePhase={gamePhase}
           actionUsed={actionUsed}
           pendingPlay={pendingPlay}
+          blockedCardIds={blockedCardIds}
           onPlay={onPlay}
         />
       ) : (

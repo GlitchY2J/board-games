@@ -2,6 +2,7 @@ import type { Card } from '../../models/Card.ts';
 import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
 import { effects } from './effects/index.ts';
+import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.ts';
 import {
   enqueueCardAnimation,
   type CardAnimType,
@@ -10,14 +11,25 @@ import {
 export class CardMovement {
   /**
    * Coloca una carta de Unicornio en el establo de un jugador y dispara sus efectos de entrada.
+   * Retorna `false` si no puede entrar (p. ej. bloqueado por Queen Bee Unicorn).
    */
-  static enterStable(state: GameState, player: Player, card: Card): void {
+  static enterStable(state: GameState, player: Player, card: Card): boolean {
+    if (
+      card.cardType === 'unicorn' &&
+      card.unicornClass === 'basic' &&
+      isBasicUnicornEntryBlocked(state, player.id)
+    ) {
+      return false;
+    }
+
     player.stable.push(card);
 
     if (card.effect) {
       const effect = effects[card.effect];
       effect?.onEnterStable?.(state, player, card);
     }
+
+    return true;
   }
 
   /**

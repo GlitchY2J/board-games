@@ -7,6 +7,7 @@ import { MagicHandler } from './handlers/MagicHandler.ts';
 import { UnicornHandler } from './handlers/UnicornHandler.ts';
 import { UpgradeHandler } from './handlers/UpgradeHandler.ts';
 import { VictoryManager } from '../../VictoryManager.ts';
+import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.ts';
 import {
   actionFailure,
   actionSuccess,
@@ -77,7 +78,21 @@ export class RulesEngine {
       );
     }
 
-    return actionSuccess({ card: player.hand[handIndex] });
+    const playedCard = player.hand[handIndex];
+
+    if (
+      playedCard.cardType === 'unicorn' &&
+      playedCard.unicornClass === 'basic' &&
+      isBasicUnicornEntryBlocked(state, player.id)
+    ) {
+      return actionFailure(
+        'ACTION_NOT_ALLOWED',
+        'Queen Bee Unicorn impide que los unicornios básicos entren a tu establo.',
+        'play-card',
+      );
+    }
+
+    return actionSuccess({ card: playedCard });
   }
 
   static resolvePlay(

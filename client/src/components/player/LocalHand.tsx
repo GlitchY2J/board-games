@@ -10,6 +10,7 @@ interface Props {
   gamePhase: string;
   actionUsed: boolean;
   pendingPlay: boolean;
+  blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
 }
 
@@ -19,6 +20,7 @@ export default function LocalHand({
   gamePhase,
   actionUsed,
   pendingPlay,
+  blockedCardIds,
   onPlay,
 }: Props) {
   // const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -30,6 +32,7 @@ export default function LocalHand({
       gamePhase={gamePhase}
       actionUsed={actionUsed}
       pendingPlay={pendingPlay}
+      blockedCardIds={blockedCardIds}
       onPlay={onPlay}
     />
   );

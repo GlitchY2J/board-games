@@ -24,6 +24,21 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
   if (!localPlayer) return;
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
 
+  const queenBeeOwnerId = gameState.players.find((p) =>
+    p.stable.some((c) => c.id === 'queen_bee_unicorn'),
+  )?.id;
+
+  const blockedBasicUnicornIds = new Set(
+    queenBeeOwnerId !== undefined && queenBeeOwnerId !== localPlayer.id
+      ? localPlayer.hand
+          .filter(
+            (c) =>
+              c.cardType === 'unicorn' && c.unicornClass === 'basic',
+          )
+          .map((c) => c.uid)
+      : [],
+  );
+
   return (
     <div className="board-layout">
       <div className="game-area">
@@ -111,6 +126,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           gamePhase={gameState.phase}
           actionUsed={gameState.actionUsed}
           pendingPlay={!!gameState.pendingPlay}
+          blockedCardIds={blockedBasicUnicornIds}
           onPlay={onPlay}
         />
       </div>

@@ -14,14 +14,16 @@ interface Props {
   gamePhase: string;
   actionUsed: boolean;
   pendingPlay: boolean;
+  blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
 }
 
-export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendingPlay, onPlay }: Props) {
+export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendingPlay, blockedCardIds, onPlay }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const { hidePreview } = useCardPreview();
 
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
+  const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
 
   function selectCard(cardId: string) {
     hidePreview();
@@ -45,7 +47,11 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                 name={card.name}
                 image={card.image}
                 size="large"
-                disabled={!isMyTurn || gamePhase !== 'ACTION'}
+                disabled={
+                  !isMyTurn ||
+                  gamePhase !== 'ACTION' ||
+                  isBlocked(card.uid)
+                }
                 selected={selectedCardId === card.uid}
                 onClick={() => {
                   if (!isMyTurn) return;
@@ -55,6 +61,8 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                   if (actionUsed) return;
 
                   if (pendingPlay) return;
+
+                  if (isBlocked(card.uid)) return;
 
                   selectCard(card.uid);
                 }}
@@ -90,16 +98,23 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                   <X size={14} />
                   Cancelar
                 </button>
-                <button
-                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10"
-                  onClick={() => {
-                    onPlay(selectedCardId);
-                    setSelectedCardId(null);
-                  }}
-                >
-                  <Play size={14} fill="currentColor" />
-                  Jugar Carta
-                </button>
+                {isBlocked(selectedCardId) ? (
+                  <p className="text-xs text-slate-400 font-medium max-w-[200px] text-center">
+                    No se puede jugar: Queen Bee Unicorn impide que los
+                    unicornios básicos entren a tu establo.
+                  </p>
+                ) : (
+                  <button
+                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10"
+                    onClick={() => {
+                      onPlay(selectedCardId);
+                      setSelectedCardId(null);
+                    }}
+                  >
+                    <Play size={14} fill="currentColor" />
+                    Jugar Carta
+                  </button>
+                )}
               </div>
             </div>
           </div>,

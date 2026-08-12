@@ -793,7 +793,27 @@ export function registerActionHandlers(
       }
 
       const broughtFromDiscard = removed;
-      CardMovement.enterStable(room.gameState, player, removed);
+      const entered = CardMovement.enterStable(room.gameState, player, removed);
+
+      if (!entered) {
+        room.gameState.discard.push(removed);
+
+        addLog(
+          room.gameState,
+          `${player.name} no pudo traer ${broughtFromDiscard.name} del descarte: bloqueado por Queen Bee Unicorn`,
+          { playerId: player.id },
+        );
+
+        if (
+          room.gameState.phase === TurnPhase.BEGINNING &&
+          !room.gameState.pendingAction
+        ) {
+          TurnManager.nextPhase(room.gameState);
+        }
+
+        emitGameState(io, room, "game-updated");
+        return;
+      }
 
       if (
         room.gameState.phase === TurnPhase.BEGINNING &&
