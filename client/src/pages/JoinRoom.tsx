@@ -86,7 +86,9 @@ export default function JoinRoom() {
         </button>
 
         <div className="text-center mt-6 mb-8">
-          <h2 className="text-3xl font-extrabold tracking-tight">Unirse a Sala</h2>
+          <h2 className="text-3xl font-extrabold tracking-tight">
+            Unirse a Sala
+          </h2>
           <p className="text-slate-400 text-sm mt-2">
             Introduce el código de la sala de tu amigo
           </p>
@@ -113,7 +115,7 @@ export default function JoinRoom() {
             </label>
             <input
               type="text"
-              placeholder="Ej: Sofía"
+              placeholder="Ej: Raccoon"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               maxLength={15}

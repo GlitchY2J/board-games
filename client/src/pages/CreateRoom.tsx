@@ -29,7 +29,11 @@ export default function CreateRoom() {
         return;
       }
 
-      const response = await createRoom({ hostName: hostName.trim(), game, socketId: socket.id });
+      const response = await createRoom({
+        hostName: hostName.trim(),
+        game,
+        socketId: socket.id,
+      });
       const { room, playerId, sessionToken } = response;
 
       if (!playerId || !sessionToken) {
@@ -92,7 +96,7 @@ export default function CreateRoom() {
               type="text"
               value={hostName}
               onChange={(e) => setHostName(e.target.value)}
-              placeholder="Ej: Alejandro"
+              placeholder="Ej: Panda"
               maxLength={15}
               className="w-full px-4 py-3.5 rounded-2xl bg-slate-950/50 border border-slate-800 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-400/50 focus:ring-1 focus:ring-emerald-400/30 transition-all text-sm"
             />

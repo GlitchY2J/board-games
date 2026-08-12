@@ -96,6 +96,36 @@ export interface CardAnimation {
   };
 }
 
+export interface NeighAnimation {
+  animId: string;
+  playerId: string;
+  playerName: string;
+  cardName: string;
+  type: 'neigh' | 'super_neigh';
+}
+
+export interface DrawAnimation {
+  animId: string;
+  playerId: string;
+  card: {
+    uid: string;
+    id: string;
+    name: string;
+    image: string;
+  };
+}
+
+export interface DiscardAnimation {
+  animId: string;
+  playerId: string;
+  card: {
+    uid: string;
+    id: string;
+    name: string;
+    image: string;
+  };
+}
+
 export interface ResumeSessionResponse {
   success: boolean;
   playerId?: string;
@@ -110,6 +140,9 @@ export interface ServerToClientEvents {
   'game-updated': (gameState: GameState) => void;
   'game-error': (error: GameError) => void;
   'card-animations': (animations: CardAnimation[]) => void;
+  'neigh-animations': (animations: NeighAnimation[]) => void;
+  'draw-animations': (animations: DrawAnimation[]) => void;
+  'discard-animations': (animations: DiscardAnimation[]) => void;
 }
 
 export interface ClientToServerEvents {

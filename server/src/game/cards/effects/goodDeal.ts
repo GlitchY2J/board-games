@@ -1,4 +1,5 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 
 export const goodDeal: CardEffect = {
   onPlay(state, player) {
@@ -6,6 +7,7 @@ export const goodDeal: CardEffect = {
     for (let i = 0; i < 3; i++) {
       const drawn = state.deck.shift();
       if (drawn) {
+        enqueueDrawAnimation(state.roomCode, player.id, drawn);
         player.hand.push(drawn);
       }
     }

@@ -147,3 +147,16 @@
 .debug-reset:active {
   transform: translateY(0);
 }
+
+.overlay-wrapper {
+  transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.overlay-wrapper.animating-out {
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+  pointer-events: none;
+}

@@ -8,12 +8,12 @@
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  animation: overlayFadeIn 0.25s ease-out;
+  animation: backdropFadeIn 0.3s ease-out forwards;
 }
 
-@keyframes overlayFadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .card-selection-window {
@@ -32,6 +32,18 @@
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  animation: windowScaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes windowScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .card-selection-window h2 {

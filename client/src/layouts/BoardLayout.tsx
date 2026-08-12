@@ -15,9 +15,10 @@ interface Props {
   isMyTurn: boolean;
   isHost: boolean;
   onPlay(cardId: string): void;
+  hidePendingPlay?: boolean;
 }
 
-export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Props) {
+export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hidePendingPlay = false }: Props) {
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
 
   if (!localPlayer) return;
@@ -85,8 +86,12 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay }: Pro
             )} */}
         </div>
       </div>
-      <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} />
-      <PendingPlayOverlay gameState={gameState} localPlayerId={localPlayer.id} />
+      <div className={`overlay-wrapper ${hidePendingPlay ? 'animating-out' : ''}`}>
+        <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} />
+      </div>
+      <div className={`overlay-wrapper ${hidePendingPlay ? 'animating-out' : ''}`}>
+        <PendingPlayOverlay gameState={gameState} localPlayerId={localPlayer.id} />
+      </div>
       <div className="phase-panel-anchor">
         <PhasePanel gameState={gameState} />
       </div>

@@ -60,6 +60,7 @@ export default function CenterArea({
             Discard
           </span>
           <div
+            data-discard
             className="relative group transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
             onClick={discardTop ? () => setShowDiscard(true) : undefined}
           >

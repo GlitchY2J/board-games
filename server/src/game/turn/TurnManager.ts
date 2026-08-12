@@ -2,6 +2,7 @@ import type { GameState } from '../models/GameState.ts';
 import { TurnPhase } from './TurnPhase.ts';
 import { CardRepository } from '../unstable-unicorns/CardRepository.ts';
 import { VictoryManager } from '../VictoryManager.ts';
+import { enqueueDrawAnimation } from '../cardAnimations.ts';
 
 const BEGINNING_OF_TURN_EFFECTS = new Set([
   'rhinocorn',
@@ -26,6 +27,7 @@ export class TurnManager {
 
     if (!card) return;
 
+    enqueueDrawAnimation(game.roomCode, player.id, card);
     player.hand.push(card);
 
     VictoryManager.checkWinner(game);

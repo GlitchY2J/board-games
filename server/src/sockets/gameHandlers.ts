@@ -15,6 +15,7 @@ import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { roomManager } from '../roomManagerInstance.ts';
 import type { Room } from '../game/models/Room.ts';
+import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation } from '../game/cardAnimations.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 
@@ -71,6 +72,20 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
     }
   }
 
+  // Registrar animaciones para las cartas canceladas en la cadena
+  for (let i = 0; i < n - 1; i++) {
+    if (canceled[i]) {
+      const type = chain[i + 1].card.effect === 'super_neigh' ? 'super_neigh' : 'neigh';
+      enqueueNeighAnimation(
+        room.code,
+        chain[i].playerId,
+        chain[i].playerName,
+        chain[i].card.name,
+        type,
+      );
+    }
+  }
+
   // Los Neighs ya salieron de las manos al jugarse; ahora van al descarte.
   for (let i = 1; i < n; i++) {
     game.discard.push(chain[i].card);
@@ -87,6 +102,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
       if (idx !== -1) {
         const [removed] = activePlayer.hand.splice(idx, 1);
+        enqueueDiscardAnimation(room.code, activePlayer.id, removed);
         game.discard.push(removed);
       }
     }
@@ -303,6 +319,7 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    enqueueDrawAnimation(game.roomCode, gamePlayer.id, card);
     gamePlayer.hand.push(card);
 
     if (game.phase === TurnPhase.DRAW) {

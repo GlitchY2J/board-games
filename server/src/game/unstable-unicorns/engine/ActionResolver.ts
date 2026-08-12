@@ -1,6 +1,7 @@
 import type { GameState } from '../../models/GameState.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
 import { CardMovement } from './CardMovement.ts';
+import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
 import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
 
 export class ActionResolver {
@@ -29,6 +30,7 @@ export class ActionResolver {
       const idx = player.hand.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
         const [discarded] = player.hand.splice(idx, 1);
+        enqueueDiscardAnimation(state.roomCode, player.id, discarded);
         state.discard.push(discarded);
       }
     }
@@ -559,6 +561,7 @@ export class ActionResolver {
     if (idx === -1) return false;
 
     const [discarded] = player.hand.splice(idx, 1);
+    enqueueDiscardAnimation(state.roomCode, player.id, discarded);
     state.discard.push(discarded);
 
     const [_, ...rest] = pending.remainingPlayerIds;
@@ -592,6 +595,7 @@ export class ActionResolver {
     if (idx === -1) return false;
 
     const [discarded] = player.hand.splice(idx, 1);
+    enqueueDiscardAnimation(state.roomCode, player.id, discarded);
     state.discard.push(discarded);
 
     const remainingPlayerIds = pending.remainingPlayerIds.filter(

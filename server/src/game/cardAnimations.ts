@@ -1,4 +1,5 @@
 import type { Card } from './models/Card.ts';
+import type { NeighAnimation, DrawAnimation, DiscardAnimation } from '../../../shared/types/SocketEvents.ts';
 
 export type CardAnimType = 'sacrifice' | 'destroy';
 
@@ -52,4 +53,110 @@ export function drainCardAnimations(roomCode: string): CardAnimation[] {
   }
 
   return drained;
+}
+
+interface QueuedNeighAnimation extends NeighAnimation {
+  roomCode: string;
+}
+
+const neighBuffer: QueuedNeighAnimation[] = [];
+
+export function enqueueNeighAnimation(
+  roomCode: string,
+  playerId: string,
+  playerName: string,
+  cardName: string,
+  type: 'neigh' | 'super_neigh',
+): void {
+  neighBuffer.push({
+    animId: `neigh-${type}-${Math.random().toString(36).slice(2, 8)}`,
+    roomCode,
+    playerId,
+    playerName,
+    cardName,
+    type,
+  });
+}
+
+export function drainNeighAnimations(roomCode: string): NeighAnimation[] {
+  const drained: NeighAnimation[] = [];
+
+  for (let i = neighBuffer.length - 1; i >= 0; i--) {
+    if (neighBuffer[i].roomCode === roomCode) {
+      const [item] = neighBuffer.splice(i, 1);
+      drained.push(item);
+    }
+  }
+
+  return drained.reverse();
+}
+
+interface QueuedDrawAnimation extends DrawAnimation {
+  roomCode: string;
+}
+
+const drawBuffer: QueuedDrawAnimation[] = [];
+
+export function enqueueDrawAnimation(
+  roomCode: string,
+  playerId: string,
+  card: Card,
+): void {
+  drawBuffer.push({
+    animId: `draw-${Math.random().toString(36).slice(2, 8)}`,
+    roomCode,
+    playerId,
+    card: {
+      uid: card.uid,
+      id: card.id,
+      name: card.name,
+      image: card.image,
+    },
+  });
+}
+
+export function drainDrawAnimations(roomCode: string): DrawAnimation[] {
+  const drained: DrawAnimation[] = [];
+  for (let i = drawBuffer.length - 1; i >= 0; i--) {
+    if (drawBuffer[i].roomCode === roomCode) {
+      const [item] = drawBuffer.splice(i, 1);
+      drained.push(item);
+    }
+  }
+  return drained.reverse();
+}
+
+interface QueuedDiscardAnimation extends DiscardAnimation {
+  roomCode: string;
+}
+
+const discardBuffer: QueuedDiscardAnimation[] = [];
+
+export function enqueueDiscardAnimation(
+  roomCode: string,
+  playerId: string,
+  card: Card,
+): void {
+  discardBuffer.push({
+    animId: `discard-${Math.random().toString(36).slice(2, 8)}`,
+    roomCode,
+    playerId,
+    card: {
+      uid: card.uid,
+      id: card.id,
+      name: card.name,
+      image: card.image,
+    },
+  });
+}
+
+export function drainDiscardAnimations(roomCode: string): DiscardAnimation[] {
+  const drained: DiscardAnimation[] = [];
+  for (let i = discardBuffer.length - 1; i >= 0; i--) {
+    if (discardBuffer[i].roomCode === roomCode) {
+      const [item] = discardBuffer.splice(i, 1);
+      drained.push(item);
+    }
+  }
+  return drained.reverse();
 }
