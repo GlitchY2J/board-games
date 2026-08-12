@@ -16,6 +16,7 @@ interface Props {
   items: SelectionItem[];
   maxSelection: number;
   confirmText?: string;
+  hide?: boolean;
   onConfirm(cardIds: string[]): void;
   onCancel?(): void;
 }
@@ -26,6 +27,7 @@ export default function CardSelectionOverlay({
   items,
   maxSelection,
   confirmText = 'Confirmar',
+  hide = false,
   onConfirm,
   onCancel,
 }: Props) {
@@ -66,8 +68,8 @@ export default function CardSelectionOverlay({
   }, [selected, items]);
 
   return (
-    <div className="overlay-backdrop">
-      <div className="card-selection-window">
+    <div className={`overlay-backdrop ${hide ? 'animating-out' : ''}`}>
+      <div className={`card-selection-window ${hide ? 'animating-out' : ''}`}>
         <h2>{title}</h2>
 
         {subtitle && <p>{subtitle}</p>}

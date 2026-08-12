@@ -46,6 +46,19 @@
   }
 }
 
+.overlay-backdrop.animating-out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-in;
+}
+
+.card-selection-window.animating-out {
+  opacity: 0;
+  transform: scale(0.95) translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.25s ease-in, transform 0.25s ease-in;
+}
+
 .card-selection-window h2 {
   font-size: 26px;
   font-weight: 800;

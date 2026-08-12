@@ -86,12 +86,8 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
             )} */}
         </div>
       </div>
-      <div className={`overlay-wrapper ${hidePendingPlay ? 'animating-out' : ''}`}>
-        <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} />
-      </div>
-      <div className={`overlay-wrapper ${hidePendingPlay ? 'animating-out' : ''}`}>
-        <PendingPlayOverlay gameState={gameState} localPlayerId={localPlayer.id} />
-      </div>
+      <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} hide={hidePendingPlay} />
+      <PendingPlayOverlay gameState={gameState} localPlayerId={localPlayer.id} hide={hidePendingPlay} />
       <div className="phase-panel-anchor">
         <PhasePanel gameState={gameState} />
       </div>

@@ -7,9 +7,10 @@ import './PendingPlayOverlay.css';
 interface Props {
   gameState: GameState;
   localPlayerId: string;
+  hide?: boolean;
 }
 
-export default function PendingPlayOverlay({ gameState, localPlayerId }: Props) {
+export default function PendingPlayOverlay({ gameState, localPlayerId, hide = false }: Props) {
   const pending = gameState.pendingPlay;
   const [now, setNow] = useState(() => Date.now());
 
@@ -75,7 +76,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId }: Props) 
   }
 
   return (
-    <div className="pending-play-backdrop">
+    <div className={`pending-play-backdrop ${hide ? 'animating-out' : ''}`}>
       <div className="pending-play-window">
         <h2 className="pending-play-title">
           {isMyPlay

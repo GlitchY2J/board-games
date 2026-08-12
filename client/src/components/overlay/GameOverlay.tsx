@@ -5,9 +5,10 @@ import CardSelectionOverlay from './CardSelectionOverlay';
 interface Props {
   gameState: GameState;
   localPlayerId: string;
+  hide?: boolean;
 }
 
-export default function GameOverlay({ gameState, localPlayerId }: Props) {
+export default function GameOverlay({ gameState, localPlayerId, hide = false }: Props) {
   const action = gameState.pendingAction;
 
   if (!action) {
@@ -32,6 +33,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title={titleMap[action.reason] ?? 'Descarta cartas'}
           subtitle={`Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`}
           items={player.hand.map((card, idx) => ({
@@ -117,6 +119,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title={getTitle()}
           subtitle={getSubtitle()}
           items={items}
@@ -153,6 +156,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title={isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
           subtitle={
             isAmericorn
@@ -226,6 +230,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
         return (
           <CardSelectionOverlay
+          hide={hide}
             title="🪚 Chainsaw Unicorn"
             subtitle="Selecciona un Upgrade de cualquier jugador para DESTRUIR, o un Downgrade de tu establo para SACRIFICAR"
             items={items}
@@ -254,6 +259,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
         return (
           <CardSelectionOverlay
+          hide={hide}
             title="😈 Dark Angel Unicorn"
             subtitle="Elige un unicornio de TU establo para sacrificar"
             items={localPlayer.stable
@@ -290,6 +296,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title={
             isUnicornPoison
               ? '🧪 Unicorn Poison'
@@ -352,6 +359,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title="✨ Alluring Narwhal"
           subtitle="Roba una carta de Mejora del establo de otro jugador"
           items={upgradeCards}
@@ -391,6 +399,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           key={currentTargetId}
           title="🌪️ Glitter Tornado"
           subtitle={`${stepLabel} — Elige una carta del establo de ${target.name} para regresar a su mano`}
@@ -424,6 +433,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           key={localPlayerId}
           title="🌪️ Mystical Vortex"
           subtitle="Debes descartar 1 carta de tu mano. El descarte se barajará en el mazo principal."
@@ -471,6 +481,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           key={localPlayerId}
           title="🦙 Llamacorn"
           subtitle="Debes descartar 1 carta de tu mano."
@@ -523,6 +534,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title="💥 Extremely Destructive Unicorn"
           subtitle="Debes sacrificar 1 unicornio de tu establo."
           items={player.stable
@@ -600,6 +612,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title={
             isMagicalFlyingUnicorn
               ? '🦄 Magical Flying Unicorn'
@@ -640,6 +653,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title="🐳 Classy Narwhal"
           subtitle="Elige una carta de Mejora del mazo para agregarla a tu mano (luego se barajará el mazo)"
           items={action.candidates.map((card, idx) => ({
@@ -672,6 +686,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
 
       return (
         <CardSelectionOverlay
+          hide={hide}
           title="🦢 Mother Goose Unicorn"
           subtitle="Elige un Baby Unicorn de la Nursery para traerlo a tu establo"
           items={babies.map((card, idx) => ({
