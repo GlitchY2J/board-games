@@ -849,11 +849,17 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
     case 'select_deck_card': {
       if (action.playerId !== localPlayerId) return null;
 
+      const isGreatNarwhal = action.reason === 'the_great_narwhal';
+
       return (
         <CardSelectionOverlay
           hide={hide}
-          title="🐳 Classy Narwhal"
-          subtitle="Elige una carta de Mejora del mazo para agregarla a tu mano (luego se barajará el mazo)"
+          title={isGreatNarwhal ? '🐋 The Great Narwhal' : '🐳 Classy Narwhal'}
+          subtitle={
+            isGreatNarwhal
+              ? 'Elige una carta con "Narwhal" en su nombre para agregarla a tu mano (luego se barajará el mazo)'
+              : 'Elige una carta de Mejora del mazo para agregarla a tu mano (luego se barajará el mazo)'
+          }
           items={action.candidates.map((card, idx) => ({
             id: `${card.id}_${idx}`,
             value: card.uid,

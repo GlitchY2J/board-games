@@ -537,6 +537,41 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "the_great_narwhal") {
+        if (choice === "yes") {
+          const candidates = room.gameState.deck.filter((card) =>
+            card.name.toLowerCase().includes("narwhal"),
+          );
+
+          if (candidates.length > 0) {
+            room.gameState.pendingAction = {
+              type: "select_deck_card",
+              reason: "the_great_narwhal",
+              playerId: player.id,
+              candidates,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de The Great Narwhal`
+            : `${player.name} omitió el efecto de The Great Narwhal`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       } else if (pending.reason === "magical_flying_unicorn") {
         if (choice === "yes") {
           const magicInDiscard = room.gameState.discard.some(
@@ -1034,10 +1069,11 @@ export function registerActionHandlers(
         return;
       }
 
-      if (pending.reason !== "classy_narwhal") return;
+      if (pending.reason !== "classy_narwhal" && pending.reason !== "the_great_narwhal")
+        return;
 
       if (
-        pending.cardType &&
+        pending.candidates.length > 0 &&
         !pending.candidates.some((candidate) => candidate.uid === cardId)
       ) {
         emitGameError(

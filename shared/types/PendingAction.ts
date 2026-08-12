@@ -81,6 +81,7 @@ export type PendingAction =
         | "black_knight_unicorn"
         | "chainsaw_unicorn"
         | "classy_narwhal"
+        | "the_great_narwhal"
         | "dark_angel_unicorn"
 | "magical_flying_unicorn"
         | "majestic_flying_unicorn"
@@ -107,7 +108,7 @@ export type PendingAction =
     }
   | {
       type: "select_deck_card";
-      reason: "classy_narwhal";
+      reason: "classy_narwhal" | "the_great_narwhal";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
       candidates: Card[];

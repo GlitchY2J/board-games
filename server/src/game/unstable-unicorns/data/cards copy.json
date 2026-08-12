@@ -12,23 +12,12 @@
   },
 
   {
-    "id": "swift_flying_unicorn",
-    "name": "Swifty Flying Unicorn",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/swift_flying_unicorn.png",
-    "description": "When this card enters your Stable, you may choose an Instant card from the discard pile and add it to your hand. If this card would be sacrificed or destroyed, return it to your hand instead.",
-    "effect": "swift_flying_unicorn",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
     "id": "the_great_narwhal",
     "name": "The Great Narwhal",
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/base/the_great_narwhal.png",
-    "description": "When this card enters your Stable, you may search the deck for a card with \"Narwhal\" in its name and add it to yoru hand. Shuffle the deck.",
+    "description": "When this card enters your Stable, you may search the deck for a card with \"Narwhal\" in its name and add it to yoru hand, then shuffle the deck.",
     "effect": "the_great_narwhal",
     "copies": 1,
     "expansion": "base"
