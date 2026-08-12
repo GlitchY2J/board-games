@@ -14,6 +14,8 @@ import {
   GameActionResult,
 } from '../../../../../shared/types/GameActionResult.ts';
 
+const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh']);
+
 export class RulesEngine {
   static stagePlay(
     state: GameState,
@@ -79,6 +81,14 @@ export class RulesEngine {
     }
 
     const playedCard = player.hand[handIndex];
+
+    if (playedCard.effect && NEIGH_EFFECTS.has(playedCard.effect)) {
+      return actionFailure(
+        'ACTION_NOT_ALLOWED',
+        'Neigh solo puede jugarse como respuesta a la carta de otro jugador.',
+        'play-card',
+      );
+    }
 
     if (
       playedCard.cardType === 'unicorn' &&

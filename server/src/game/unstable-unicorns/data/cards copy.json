@@ -1,16 +1,5 @@
 [
   {
-    "id": "seductive_unicorn",
-    "name": "Seductive Unicorn",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/seductive_unicorn.png",
-    "description": "When this card enters your Stable, you may DISCARD a card, then STEAL a Unicorn card.",
-    "effect": "seductive_unicorn",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
     "id": "shabby_the_narwhal",
     "name": "Shabby The Narwhal",
     "cardType": "unicorn",

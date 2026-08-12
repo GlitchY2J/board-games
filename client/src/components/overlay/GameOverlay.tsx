@@ -53,6 +53,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         annoying_flying_unicorn: 'Annoying Flying Unicorn',
         good_deal: '🤝 Good Deal',
         necromancer_unicorn: '🧙 Necromancer Unicorn',
+        seductive_unicorn: '💋 Seductive Unicorn',
       };
 
       const isNecromancer = action.reason === 'necromancer_unicorn';
@@ -313,6 +314,40 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
             items={items}
             maxSelection={1}
             confirmText="Destruir"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      if (action.reason === 'seductive_unicorn') {
+        const items = gameState.players
+          .filter((p) => p.id !== localPlayerId)
+          .flatMap((p) =>
+            p.stable
+              .filter((c) => c.cardType === 'unicorn')
+              .map((card, idx) => ({
+                id: `${card.id}_${p.id}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                subtitle: `Establo de ${p.name}`,
+                image: card.image,
+              })),
+          );
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="💋 Seductive Unicorn"
+            subtitle="Elige un unicornio de otro jugador para ROBARLO a tu establo"
+            items={items}
+            maxSelection={1}
+            confirmText="Robar"
             onConfirm={([cardId]) => {
               dismiss();
               socket.emit('select-stable-card', {

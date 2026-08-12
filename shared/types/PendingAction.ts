@@ -9,7 +9,8 @@ export type PendingAction =
         | "back_kick"
         | "annoying_flying_unicorn"
         | "good_deal"
-        | "necromancer_unicorn";
+        | "necromancer_unicorn"
+        | "seductive_unicorn";
       playerId: string;
       cardsToDiscard: number;
     }
@@ -35,7 +36,8 @@ export type PendingAction =
         | "chainsaw_unicorn"
         | "dark_angel_unicorn"
         | "mermaid_unicorn"
-        | "rhinocorn";
+        | "rhinocorn"
+        | "seductive_unicorn";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -83,7 +85,8 @@ export type PendingAction =
         | "mother_goose_unicorn"
         | "necromancer_unicorn"
         | "rainbow_unicorn"
-        | "rhinocorn";
+        | "rhinocorn"
+        | "seductive_unicorn";
       playerId: string;
       title: string;
       description: string;

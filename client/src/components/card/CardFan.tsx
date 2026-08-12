@@ -24,6 +24,8 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
 
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
+  const isNeigh = (card: CardType) =>
+    card.effect === 'neigh' || card.effect === 'super_neigh';
 
   function selectCard(cardId: string) {
     hidePreview();
@@ -50,7 +52,8 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                 disabled={
                   !isMyTurn ||
                   gamePhase !== 'ACTION' ||
-                  isBlocked(card.uid)
+                  isBlocked(card.uid) ||
+                  isNeigh(card)
                 }
                 selected={selectedCardId === card.uid}
                 onClick={() => {
@@ -63,6 +66,8 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                   if (pendingPlay) return;
 
                   if (isBlocked(card.uid)) return;
+
+                  if (isNeigh(card)) return;
 
                   selectCard(card.uid);
                 }}
@@ -102,6 +107,11 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                   <p className="text-xs text-slate-400 font-medium max-w-[200px] text-center">
                     No se puede jugar: Queen Bee Unicorn impide que los
                     unicornios básicos entren a tu establo.
+                  </p>
+                ) : isNeigh(selectedCard) ? (
+                  <p className="text-xs text-slate-400 font-medium max-w-[200px] text-center">
+                    Neigh solo puede jugarse como respuesta a la carta de otro
+                    jugador.
                   </p>
                 ) : (
                   <button

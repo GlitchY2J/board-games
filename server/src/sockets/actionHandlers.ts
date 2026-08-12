@@ -712,6 +712,30 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "seductive_unicorn") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "discard",
+            reason: "seductive_unicorn",
+            playerId: player.id,
+            cardsToDiscard: 1,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Seductive Unicorn`
+            : `${player.name} omitió el efecto de Seductive Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       }
     });
   }
