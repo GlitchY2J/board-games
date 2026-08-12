@@ -250,9 +250,15 @@ export class ActionResolver {
       }
 
       const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
-      CardMovement.destroyOrSacrifice(state, targetPlayer, destroyedCard);
+      const intercepted = CardMovement.destroyOrSacrifice(
+        state,
+        targetPlayer,
+        destroyedCard,
+      );
 
-      state.pendingAction = undefined;
+      if (!intercepted) {
+        state.pendingAction = undefined;
+      }
       return true;
     }
 
@@ -398,12 +404,14 @@ export class ActionResolver {
       if (idx === -1) return false;
 
       const [sacrificedCard] = sourcePlayer.stable.splice(idx, 1);
-      CardMovement.destroyOrSacrifice(
+      const intercepted = CardMovement.destroyOrSacrifice(
         state,
         sourcePlayer,
         sacrificedCard,
         'sacrifice',
       );
+
+      if (intercepted) return true;
 
       state.pendingAction = {
         type: 'select_discard_card',
@@ -503,12 +511,14 @@ export class ActionResolver {
       if (card.cardType !== 'unicorn') return false;
 
       const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
-      CardMovement.destroyOrSacrifice(
+      const intercepted = CardMovement.destroyOrSacrifice(
         state,
         targetPlayer,
         sacrificed,
         'sacrifice',
       );
+
+      if (intercepted) return true;
 
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
 
@@ -542,7 +552,13 @@ export class ActionResolver {
         if (card.cardType !== 'unicorn') return false;
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
-        CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
+        const intercepted = CardMovement.destroyOrSacrifice(
+          state,
+          targetPlayer,
+          destroyed,
+        );
+
+        if (intercepted) return true;
 
         state.pendingAction = undefined;
 

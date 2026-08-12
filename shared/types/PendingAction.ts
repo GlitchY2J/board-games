@@ -11,7 +11,8 @@ export type PendingAction =
         | "good_deal"
         | "necromancer_unicorn"
         | "seductive_unicorn"
-        | "unicorn_on_the_cob";
+        | "unicorn_on_the_cob"
+        | "unicorn_phoenix";
       playerId: string;
       cardsToDiscard: number;
     }
@@ -92,14 +93,17 @@ export type PendingAction =
         | "rainbow_unicorn"
         | "rhinocorn"
         | "seductive_unicorn"
-        | "shark_with_a_horn"
-        | "stabby_the_unicorn";
+| "shark_with_a_horn"
+        | "stabby_the_unicorn"
+        | "unicorn_phoenix";
       playerId: string;
       title: string;
       description: string;
       options: { value: string; text: string }[];
       targetCardId?: string;
       originalTargetPlayerId?: string;
+      /** Carta que está "en el aire" mientras se decide (p. ej. Unicorn Phoenix) */
+      heldCard?: Card;
     }
   | {
       type: "select_discard_card";

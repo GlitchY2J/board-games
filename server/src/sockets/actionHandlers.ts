@@ -9,6 +9,7 @@ import { emitGameState } from "./gameStateEmitter.ts";
 import { addLog } from "./gameLog.ts";
 import { roomManager } from "../roomManagerInstance.ts";
 import { GameState } from "../game/models/GameState.ts";
+import { enqueueCardAnimation } from "../game/cardAnimations.ts";
 
 export function registerActionHandlers(
   io: GameServer,
@@ -430,11 +431,15 @@ export function registerActionHandlers(
               );
               if (idx !== -1) {
                 const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
-                CardMovement.destroyOrSacrifice(
+                const intercepted = CardMovement.destroyOrSacrifice(
                   room.gameState,
                   targetPlayer,
                   destroyedCard,
                 );
+                if (intercepted) {
+                  emitGameState(io, room, "game-updated");
+                  return;
+                }
               }
             }
           }
@@ -864,6 +869,42 @@ export function registerActionHandlers(
           choice === "yes"
             ? `${player.name} sacrificó a Shark With A Horn para destruir un unicornio`
             : `${player.name} omitió el efecto de Shark With A Horn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "unicorn_phoenix") {
+        const heldCard = pending.heldCard;
+
+        if (choice === "yes" && heldCard) {
+          player.stable.push(heldCard);
+          room.gameState.pendingAction = {
+            type: "discard",
+            reason: "unicorn_phoenix",
+            playerId: player.id,
+            cardsToDiscard: 1,
+          };
+        } else {
+          if (heldCard) {
+            enqueueCardAnimation(
+              room.gameState.roomCode,
+              "destroy",
+              player.id,
+              heldCard,
+            );
+            room.gameState.discard.push(heldCard);
+          }
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes" && heldCard
+            ? `${player.name} descartó una carta para salvar a Unicorn Phoenix`
+            : `${player.name} dejó que Unicorn Phoenix fuera destruido`,
           { playerId: player.id },
         );
 

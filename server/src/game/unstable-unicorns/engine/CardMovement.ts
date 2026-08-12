@@ -54,23 +54,25 @@ export class CardMovement {
     player: Player,
     card: Card,
     animType: CardAnimType = 'destroy',
-  ): void {
+  ): boolean {
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
       state.nursery.push(card);
-      return;
+      return false;
     }
 
     if (card.id.includes('flying_unicorn') || card.effect === 'llamacorn') {
       player.hand.push(card);
-      return;
+      return false;
     }
 
     if (card.effect) {
       const effect = effects[card.effect];
-      effect?.onDestroyed?.(state, card, player);
+      const intercepted = effect?.onDestroyed?.(state, card, player);
+      if (intercepted) return true;
     }
 
     enqueueCardAnimation(state.roomCode, animType, player.id, card);
     state.discard.push(card);
+    return false;
   }
 }
