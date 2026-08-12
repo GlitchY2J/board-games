@@ -951,7 +951,155 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
       );
     }
 
+    // ───────────────────────────────────
+    // UNICORN ORACLE — mirar 3 cartas, robar 1, ordenar las 2 restantes
+    // ───────────────────────────────────
+    case 'select_oracle_cards': {
+      if (action.playerId !== localPlayerId) return null;
+
+      return (
+        <UnicornOracleOverlay
+          roomCode={gameState.roomCode}
+          candidates={action.candidates}
+          onDone={dismiss}
+        />
+      );
+    }
+
     default:
       return null;
   }
+}
+
+function UnicornOracleOverlay({
+  roomCode,
+  candidates,
+  onDone,
+}: {
+  roomCode: string;
+  candidates: { uid: string; id: string; name: string; image: string }[];
+  onDone: () => void;
+}) {
+  const [chosenCardId, setChosenCardId] = useState<string | null>(null);
+  const [order, setOrder] = useState<{ uid: string; id: string; name: string; image: string }[]>([]);
+
+  const remaining = order.length;
+  const totalToOrder = candidates.length - 1;
+
+function confirm() {
+    if (!chosenCardId || order.length !== totalToOrder) return;
+    socket.emit('select-oracle-cards', {
+      roomCode,
+      handCardId: chosenCardId,
+      orderCardIds: order.map((c) => c.uid),
+    });
+    onDone();
+  }
+
+  function clickCandidate(card: (typeof candidates)[number]) {
+    if (chosenCardId === card.uid) {
+      setChosenCardId(null);
+      return;
+    }
+    if (chosenCardId) return;
+    setChosenCardId(card.uid);
+  }
+
+  function clickOrderCard(card: (typeof candidates)[number]) {
+    setOrder((prev) =>
+      prev.some((c) => c.uid === card.uid)
+        ? prev // ya está ordenada, ignorar
+        : [...prev, card],
+    );
+  }
+
+  function removeFromOrder(card: (typeof candidates)[number]) {
+    setOrder((prev) => prev.filter((c) => c.uid !== card.uid));
+  }
+
+  const unselected = candidates.filter(
+    (c) => c.uid !== chosenCardId && !order.some((o) => o.uid === c.uid),
+  );
+
+  return (
+    <div className="overlay-backdrop">
+      <div className="card-selection-window choice-window">
+        <h2>🔮 Unicorn Oracle</h2>
+        <p>
+          Elige <strong>1 carta</strong> para añadir a tu mano, luego cliquea el resto en el
+          orden en que volverán a la parte superior del mazo (primero = arriba).
+        </p>
+
+        {!chosenCardId ? (
+          <>
+            <p className="text-sm text-slate-400 mb-2">¿Cuál carta añades a tu mano?</p>
+            <div className="flex gap-3 flex-wrap justify-center">
+              {candidates.map((card) => (
+                <button
+                  key={card.uid}
+                  className="choice-button confirm-button"
+                  onClick={() => clickCandidate(card)}
+                >
+                  <img src={card.image} alt={card.name} className="w-20 h-auto rounded-lg" />
+                  <span className="text-xs">{card.name}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-slate-400 mb-2">
+              Añadiste <strong>{candidates.find((c) => c.uid === chosenCardId)?.name}</strong> a tu mano.
+              Cliquea las {unselected.length} restantes para definir el tope del mazo{' '}
+              ({remaining}/{totalToOrder}).
+            </p>
+            <div className="flex gap-3 flex-wrap justify-center">
+              {unselected.map((card) => (
+                <button
+                  key={card.uid}
+                  className="choice-button confirm-button"
+                  onClick={() => clickOrderCard(card)}
+                >
+                  <img src={card.image} alt={card.name} className="w-16 h-auto rounded-lg" />
+                  <span className="text-xs">{card.name}</span>
+                </button>
+              ))}
+            </div>
+
+            {order.length > 0 && (
+              <div className="mt-3">
+                <p className="text-sm text-slate-400 mb-1">Orden al tope del mazo (de arriba a abajo):</p>
+                <div className="flex gap-2 flex-wrap justify-center">
+                  {order.map((card, i) => (
+                    <button
+                      key={card.uid}
+                      className="choice-button"
+                      onClick={() => removeFromOrder(card)}
+                    >
+                      <span className="text-xs">
+                        {i + 1}. {card.name} ✕
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <button className="choice-button" onClick={() => setChosenCardId(null)}>
+                Cambiar carta a robar
+              </button>
+              <button
+                className="confirm-button choice-button"
+                disabled={order.length !== totalToOrder}
+                onClick={confirm}
+              >
+                Confirmar
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }

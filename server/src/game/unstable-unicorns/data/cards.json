@@ -528,6 +528,17 @@
     "expansion": "base"
   },
   {
+    "id": "unicorn_oracle",
+    "name": "Unicorn Oracle",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/unicorn_oracle.png",
+    "description": "When this card enters your Stable, look at the top 3 cards of the deck and add one of them to your hand, then return the other two to the top of the deck in any order.",
+    "effect": "unicorn_oracle",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "back_kick",
     "name": "Back Kick",
     "cardType": "magic",

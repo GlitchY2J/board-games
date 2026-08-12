@@ -30,6 +30,7 @@ import { stabbyTheUnicorn } from '../../../cards/effects/stabbyTheUnicorn.ts';
 import { swiftyFlyingUnicorn } from '../../../cards/effects/swiftyFlyingUnicorn.ts';
 import { theGreatNarwhal } from '../../../cards/effects/theGreatNarwhal.ts';
 import { unicornOnTheCob } from '../../../cards/effects/unicornOnTheCob.ts';
+import { unicornOracle } from '../../../cards/effects/unicornOracle.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -65,4 +66,5 @@ export const effects: Record<string, CardEffect> = {
   swift_flying_unicorn: swiftyFlyingUnicorn,
   the_great_narwhal: theGreatNarwhal,
   unicorn_on_the_cob: unicornOnTheCob,
+  unicorn_oracle: unicornOracle,
 };

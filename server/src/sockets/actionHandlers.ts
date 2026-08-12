@@ -23,6 +23,7 @@ export function registerActionHandlers(
   registerSelectNurseryCard(io, socket);
   registerSelectDiscardCard(io, socket);
   registerSelectDeckCard(io, socket);
+  registerSelectOracleCards(io, socket);
   registerSelectOwnHandCard(io, socket);
 
   function continueBeginningPhaseIfReady(game: GameState): void {
@@ -1108,6 +1109,65 @@ export function registerActionHandlers(
       addLog(
         room.gameState,
         `${player.name} buscó ${upgrade.name} en el mazo y lo añadió a su mano`,
+        { playerId: player.id },
+      );
+
+      emitGameState(io, room, "game-updated");
+    });
+  }
+
+  function registerSelectOracleCards(io: GameServer, socket: GameSocket): void {
+    socket.on("select-oracle-cards", ({ roomCode, handCardId, orderCardIds }) => {
+      const room = roomManager.getRoom(roomCode);
+      if (!room?.gameState) return;
+
+      const player = room.gameState.players.find(
+        (p) => p.socketId === socket.id,
+      );
+      if (!player) return;
+
+      const pending = room.gameState.pendingAction;
+      if (
+        !pending ||
+        pending.type !== "select_oracle_cards" ||
+        pending.playerId !== player.id
+      ) {
+        return;
+      }
+
+      // Validar que handCardId sea una de las candidatas
+      const kept = pending.candidates.find((c) => c.uid === handCardId);
+      if (!kept) return;
+
+      // Las restantes deben ser las candidatas que no se robaron
+      const remaining = pending.candidates.filter((c) => c.uid !== handCardId);
+      if (remaining.length !== 2) return;
+      if (orderCardIds.length !== 2) return;
+
+      const remainingUids = remaining.map((c) => c.uid);
+      if (!orderCardIds.every((uid: string) => remainingUids.includes(uid))) {
+        return;
+      }
+      if (new Set(orderCardIds).size !== 2) return;
+
+      // Añadir la carta elegida a la mano
+      player.hand.push(kept);
+
+      // Devolver las otras dos al tope del mazo (orderCardIds[0] queda arriba)
+      const ordered = remaining
+        .slice()
+        .sort((a, b) => orderCardIds.indexOf(a.uid) - orderCardIds.indexOf(b.uid));
+      room.gameState.deck.unshift(...ordered);
+
+      room.gameState.pendingAction = undefined;
+
+      if (room.gameState.phase === TurnPhase.BEGINNING) {
+        TurnManager.nextPhase(room.gameState);
+      }
+
+      addLog(
+        room.gameState,
+        `${player.name} usó a Unicorn Oracle: añadió ${kept.name} a su mano y reordenó el mazo`,
         { playerId: player.id },
       );
 

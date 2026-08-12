@@ -58,6 +58,12 @@ export interface SelectDiscardCardPayload {
   cardId: string;
 }
 
+export interface SelectOracleCardsPayload {
+  roomCode: string;
+  handCardId: string;
+  orderCardIds: string[];
+}
+
 export interface NeighAcceptPayload {
   roomCode: string;
 }
@@ -205,6 +211,9 @@ export interface ClientToServerEvents {
 
   // Select Own Hand Card
   'select-own-hand-card': (payload: SelectDiscardCardPayload) => void;
+
+  // Select Oracle Cards
+  'select-oracle-cards': (payload: SelectOracleCardsPayload) => void;
 
   // Neigh Accept
   'neigh-accept': (payload: NeighAcceptPayload) => void;

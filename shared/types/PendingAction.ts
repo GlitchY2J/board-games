@@ -115,6 +115,11 @@ export type PendingAction =
       candidates: Card[];
     }
   | {
+      type: "select_oracle_cards";
+      playerId: string;
+      candidates: Card[];
+    }
+  | {
       type: "select_nursery_card";
       reason: "mother_goose_unicorn";
       playerId: string;
