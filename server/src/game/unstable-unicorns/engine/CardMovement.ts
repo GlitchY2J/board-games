@@ -39,7 +39,7 @@ export class CardMovement {
       return;
     }
 
-    if (card.id.includes('flying_unicorn')) {
+    if (card.id.includes('flying_unicorn') || card.effect === 'llamacorn') {
       player.hand.push(card);
       return;
     }

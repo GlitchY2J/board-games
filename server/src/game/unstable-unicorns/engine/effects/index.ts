@@ -9,7 +9,10 @@ import { unicornPoison } from '../../../cards/effects/unicornPoison.ts';
 import { annoyingFlyingUnicorn } from '../../../cards/effects/annoyingFlyingUnicorn.ts';
 import { chainsawUnicorn } from '../../../cards/effects/chainsawUnicorn.ts';
 import { classyNarwhal } from '../../../cards/effects/classyNarwhal.ts';
+import { greedyFlyingUnicorn } from '../../../cards/effects/greedyFlyingUnicorn.ts';
+import { llamacorn } from '../../../cards/effects/llamacorn.ts';
 import { darkAngelUnicorn } from '../../../cards/effects/darkAngelUnicorn.ts';
+import { ginormousUnicorn } from '../../../cards/effects/ginormousUnicorn.ts';
 import { extremelyDestructiveUnicorn } from '../../../cards/effects/extremelyDestructiveUnicorn.ts';
 import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import type { CardEffect } from './CardEffect.ts';
@@ -27,6 +30,9 @@ export const effects: Record<string, CardEffect> = {
   annoying_flying_unicorn: annoyingFlyingUnicorn,
   chainsaw_unicorn: chainsawUnicorn,
   classy_narwhal: classyNarwhal,
+  greedy_flying_unicorn: greedyFlyingUnicorn,
+  llamacorn: llamacorn,
   dark_angel_unicorn: darkAngelUnicorn,
+  ginormous_unicorn: ginormousUnicorn,
   extremely_destructive_unicorn: extremelyDestructiveUnicorn,
 };

@@ -1,6 +1,7 @@
 import type { GameState } from '../../types/GameState';
 import { cn } from '../../lib/cn';
 import { Sparkles, Layers } from 'lucide-react';
+import { getStablePower } from '../../lib/stablePower';
 
 type Player = GameState['players'][number];
 
@@ -66,7 +67,7 @@ export default function PlayerInfo({
         >
           <Sparkles size={11} className="text-amber-400" />
           <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
-            {player.stable.length}
+            {getStablePower(player)}
           </span>
         </div>
         <div

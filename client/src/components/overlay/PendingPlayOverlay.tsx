@@ -41,6 +41,8 @@ export default function PendingPlayOverlay({ gameState, localPlayerId }: Props) 
     localPlayer?.hand.some((c) => c.effect === 'neigh') ?? false;
   const hasSuperNeigh =
     localPlayer?.hand.some((c) => c.effect === 'super_neigh') ?? false;
+  const hasGinormousUnicorn =
+    localPlayer?.stable.some((card) => card.id === 'ginormous_unicorn') ?? false;
   const hasAccepted = pending.acceptedIds.includes(localPlayerId);
   const canRespond = !isMyPlay;
 
@@ -123,7 +125,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId }: Props) 
             >
               {hasAccepted ? 'Aceptado ✓' : 'Aceptar'}
             </button>
-            {hasRegularNeigh && (
+            {!hasGinormousUnicorn && hasRegularNeigh && (
               <button
                 className="pending-neigh-btn"
                 onClick={playNeigh}
@@ -131,7 +133,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId }: Props) 
                 Neigh
               </button>
             )}
-            {hasSuperNeigh && (
+            {!hasGinormousUnicorn && hasSuperNeigh && (
               <button
                 className="pending-super-neigh-btn"
                 onClick={playSuperNeigh}

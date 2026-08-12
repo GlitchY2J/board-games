@@ -438,6 +438,39 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
     }
 
     // ───────────────────────────────────
+    // LLAMACORN — cada jugador descarta 1 carta en orden
+    // ───────────────────────────────────
+    case 'llamacorn': {
+      if (!action.remainingPlayerIds.includes(localPlayerId)) return null;
+
+      const player = gameState.players.find((p) => p.id === localPlayerId);
+      if (!player) return null;
+
+      return (
+        <CardSelectionOverlay
+          key={localPlayerId}
+          title="🦙 Llamacorn"
+          subtitle="Debes descartar 1 carta de tu mano."
+          items={player.hand.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }))}
+          maxSelection={1}
+          confirmText="Descartar"
+          onConfirm={(cardIds) => {
+            socket.emit('discard-cards', {
+              roomCode: gameState.roomCode,
+              playerId: localPlayerId,
+              cardIds,
+            });
+          }}
+        />
+      );
+    }
+
+    // ───────────────────────────────────
     // EXTREMELY DESTRUCTIVE UNICORN
     // ───────────────────────────────────
     case 'extremely_destructive_unicorn': {

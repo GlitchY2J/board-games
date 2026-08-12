@@ -57,6 +57,10 @@ export type PendingAction =
       remainingPlayerIds: string[]; // cola de jugadores que deben descartar
     }
   | {
+      type: "llamacorn";
+      remainingPlayerIds: string[]; // cola de jugadores que deben descartar
+    }
+  | {
       type: "extremely_destructive_unicorn";
       remainingPlayerIds: string[]; // cola de jugadores que deben sacrificar un unicornio
       resolvedPlayerIds: string[];

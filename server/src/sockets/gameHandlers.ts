@@ -19,6 +19,7 @@ import type { Room } from '../game/models/Room.ts';
 const NEIGH_WINDOW_MS = 5000;
 
 const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh']);
+const NO_NEIGH_CARDS = new Set(['ginormous_unicorn']);
 
 const pendingTimers = new Map<string, NodeJS.Timeout>();
 
@@ -490,6 +491,16 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
     const gamePlayer = game.players.find((p) => p.id === player.id);
 
     if (!gamePlayer) return;
+
+    if (gamePlayer.stable.some((card) => NO_NEIGH_CARDS.has(card.id))) {
+      emitGameError(
+        socket,
+        'ACTION_NOT_ALLOWED',
+        'No puedes jugar Neigh mientras Ginormous Unicorn está en tu establo.',
+        'play-neigh',
+      );
+      return;
+    }
 
     const neighCard = gamePlayer.hand.find(
       (c) => c.uid === cardId && c.effect !== null && NEIGH_EFFECTS.has(c.effect),

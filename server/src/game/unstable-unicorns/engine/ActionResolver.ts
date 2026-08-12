@@ -512,4 +512,47 @@ export class ActionResolver {
     this.advanceMysticalVortex(state, rest);
     return true;
   }
+
+  static handleLlamacornDiscard(
+    state: GameState,
+    playerId: string,
+    cardIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'llamacorn' ||
+      !pending.remainingPlayerIds.includes(playerId)
+    ) {
+      return false;
+    }
+
+    if (cardIds.length !== 1) {
+      return false;
+    }
+
+    const player = state.players.find((p) => p.id === playerId);
+    if (!player) return false;
+
+    const cardId = cardIds[0];
+    const idx = player.hand.findIndex((c) => c.uid === cardId);
+    if (idx === -1) return false;
+
+    const [discarded] = player.hand.splice(idx, 1);
+    state.discard.push(discarded);
+
+    const remainingPlayerIds = pending.remainingPlayerIds.filter(
+      (id) => id !== playerId,
+    );
+
+    state.pendingAction =
+      remainingPlayerIds.length > 0
+        ? {
+            type: 'llamacorn',
+            remainingPlayerIds,
+          }
+        : undefined;
+
+    return true;
+  }
 }

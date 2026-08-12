@@ -67,6 +67,12 @@ export function registerActionHandlers(
           player.id,
           cardIds,
         );
+      } else if (game.pendingAction.type === "llamacorn") {
+        resolved = ActionResolver.handleLlamacornDiscard(
+          game,
+          player.id,
+          cardIds,
+        );
       } else {
         resolved = ActionResolver.handleDiscard(game, player.id, cardIds);
       }
@@ -493,6 +499,41 @@ export function registerActionHandlers(
 
         emitGameState(io, room, "game-updated");
       } else if (pending.reason === "classy_narwhal") {
+        if (choice === "yes") {
+          const candidates = room.gameState.deck.filter(
+            (card) => card.cardType === "upgrade",
+          );
+
+          if (candidates.length > 0) {
+            room.gameState.pendingAction = {
+              type: "select_deck_card",
+              reason: "classy_narwhal",
+              playerId: player.id,
+              cardType: "upgrade",
+              candidates,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Classy Narwhal`
+            : `${player.name} omitió el efecto de Classy Narwhal`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       }
     });
   }
@@ -573,6 +614,21 @@ export function registerActionHandlers(
         pending.type !== "select_deck_card" ||
         pending.playerId !== player.id
       ) {
+        return;
+      }
+
+      if (pending.reason !== "classy_narwhal") return;
+
+      if (
+        pending.cardType &&
+        !pending.candidates.some((candidate) => candidate.uid === cardId)
+      ) {
+        emitGameError(
+          socket,
+          "INVALID_SELECTION",
+          "La carta seleccionada no es válida.",
+          "select-deck-card",
+        );
         return;
       }
 
