@@ -131,6 +131,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
 export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerStartGame(io, socket);
+  registerConfirmStartGame(io, socket);
   registerPlayCard(io, socket);
   registerDrawActionCard(io, socket);
   registerNextPhase(io, socket);
@@ -138,6 +139,15 @@ export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerRestartGame(io, socket);
   registerNeighAccept(io, socket);
   registerPlayNeigh(io, socket);
+}
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
 function registerStartGame(io: GameServer, socket: GameSocket): void {
@@ -166,6 +176,47 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
         'GAME_ALREADY_STARTED',
         'La partida ya está iniciada.',
         'start-game',
+      );
+      return;
+    }
+
+    // Asignar el orden de turnos al azar
+    room.players = shuffleArray(room.players);
+
+    const order = room.players.map((p) => ({ id: p.id, name: p.name }));
+
+    io.to(room.code).emit('turn-order-assigned', order);
+
+    console.log(`Orden de turnos asignado en ${room.code}:`, order.map((p) => p.name));
+  });
+}
+
+function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
+  socket.on('confirm-start-game', (roomCode: string) => {
+    const context = getSocketPlayerContext(socket, roomCode);
+
+    if (!context) {
+      return;
+    }
+
+    const { room, player } = context;
+
+    if (room.hostId !== player.id) {
+      emitGameError(
+        socket,
+        'NOT_HOST',
+        'Solo el anfitrión puede confirmar el inicio.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    if (room.gameState?.started) {
+      emitGameError(
+        socket,
+        'GAME_ALREADY_STARTED',
+        'La partida ya está iniciada.',
+        'confirm-start-game',
       );
       return;
     }

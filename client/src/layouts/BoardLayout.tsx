@@ -9,7 +9,10 @@ import PlayerHand from '../components/player/PlayerHand';
 import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
-import { RotateCcw } from 'lucide-react';
+import PlayerInfo from '../components/player/PlayerInfo';
+import { RotateCcw, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useGame } from '../context/GameContext';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -19,10 +22,18 @@ interface Props {
 }
 
 export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hidePendingPlay = false }: Props) {
+  const navigate = useNavigate();
+  const { deactivate } = useGame();
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
 
   if (!localPlayer) return;
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
+  const totalPlayers = gameState.players.length;
+
+  const positions: ('top' | 'bottom')[] =
+    totalPlayers === 4
+      ? ['top', 'top', 'bottom']
+      : ['top', 'top'];
 
   const queenBeeOwnerId = gameState.players.find((p) =>
     p.stable.some((c) => c.id === 'queen_bee_unicorn'),
@@ -31,10 +42,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
   const blockedBasicUnicornIds = new Set(
     queenBeeOwnerId !== undefined && queenBeeOwnerId !== localPlayer.id
       ? localPlayer.hand
-          .filter(
-            (c) =>
-              c.cardType === 'unicorn' && c.unicornClass === 'basic',
-          )
+          .filter((c) => c.cardType === 'unicorn' && c.unicornClass === 'basic')
           .map((c) => c.uid)
       : [],
   );
@@ -43,21 +51,27 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
     <div className="board-layout">
       <div className="game-area">
         <div className="player-top">
-          {opponents[0] && (
-            <PlayerBoard
-              player={opponents[0]}
-              isLocalPlayer={false}
-              position="top"
-              isMyTurn={false}
-              gamePhase={gameState.phase}
-              status={getPlayerStatus(gameState, opponents[0].id)}
-              onPlay={() => {}}
-            />
-          )}
+          {opponents.map((opp) => {
+            const position = positions[opponents.indexOf(opp)];
+            if (position !== 'top') return null;
+            return (
+              <div key={opp.id} className="player-slot flex-col items-center gap-2">
+                <PlayerInfo
+                  player={opp}
+                  isActive={false}
+                  status={getPlayerStatus(gameState, opp.id)}
+                />
+                <PlayerBoard
+                  player={opp}
+                  isLocalPlayer={false}
+                  isMyTurn={false}
+                />
+              </div>
+            );
+          })}
         </div>
 
-        <div className="middle">
-          <div className="player-left" />
+<div className="middle">
           <div className="center">
             <div className="center-column">
               <div className="center-stack">
@@ -78,19 +92,42 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
               </div>
             </div>
           </div>
-          <div className="player-right" />
         </div>
 
         <div className="player-bottom">
-          <PlayerBoard
-            player={localPlayer}
-            isLocalPlayer
-            position="bottom"
-            isMyTurn={isMyTurn}
-            onPlay={onPlay}
-            gamePhase={gameState.phase}
-            status={getPlayerStatus(gameState, localPlayer.id)}
-          />
+          <div className="player-slot flex-col items-center gap-2">
+            <PlayerInfo
+              player={localPlayer}
+              isActive={isMyTurn}
+              status={getPlayerStatus(gameState, localPlayer.id)}
+            />
+            <PlayerBoard
+              player={localPlayer}
+              isLocalPlayer
+              isMyTurn={isMyTurn}
+            />
+          </div>
+          {opponents.map((opp) => {
+            const position = positions[opponents.indexOf(opp)];
+            if (position !== 'bottom') return null;
+            return (
+              <div
+                key={opp.id}
+                className="player-slot flex-col items-center gap-2"
+              >
+                <PlayerInfo
+                  player={opp}
+                  isActive={false}
+                  status={getPlayerStatus(gameState, opp.id)}
+                />
+                <PlayerBoard
+                  player={opp}
+                  isLocalPlayer={false}
+                  isMyTurn={false}
+                />
+              </div>
+            );
+          })}
 
           {/* {gameState.pendingAction?.type === 'discard' &&
             gameState.pendingAction.playerId === localPlayer.id && (
@@ -103,6 +140,17 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
       </div>
       <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} hide={hidePendingPlay} />
       <PendingPlayOverlay gameState={gameState} localPlayerId={localPlayer.id} hide={hidePendingPlay} />
+      <button
+        className="debug-reset leave-room"
+        title="Salir de la partida"
+        onClick={() => {
+          socket.emit('leave-room', { roomCode: gameState.roomCode });
+          deactivate();
+          navigate('/');
+        }}
+      >
+        <LogOut size={16} />
+      </button>
       <div className="phase-panel-anchor">
         <PhasePanel gameState={gameState} />
       </div>

@@ -46,6 +46,8 @@ export default function Lobby() {
   }, [contextRoom]);
 
   const [copied, setCopied] = useState(false);
+  const [turnOrder, setTurnOrder] = useState<{ id: string; name: string }[] | null>(null);
+  const [shuffling, setShuffling] = useState(false);
 
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -81,15 +83,38 @@ export default function Lobby() {
       });
     };
 
+    const onTurnOrderAssigned = (players: { id: string; name: string }[]) => {
+      setShuffling(false);
+      setTurnOrder(players);
+    };
+
     socket.on('room-updated', onRoomUpdated);
     socket.on('game-started', onGameStarted);
+    socket.on('turn-order-assigned', onTurnOrderAssigned);
 
     return () => {
       socket.off('connect', emitJoinRoom);
       socket.off('room-updated', onRoomUpdated);
       socket.off('game-started', onGameStarted);
+      socket.off('turn-order-assigned', onTurnOrderAssigned);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleStartGame = () => {
+    if (!room) return;
+    socket.emit('start-game', room.code);
+  };
+
+  const handleShuffleAgain = () => {
+    if (!room) return;
+    setShuffling(true);
+    socket.emit('start-game', room.code);
+  };
+
+  const handleConfirmStart = () => {
+    if (!room) return;
+    socket.emit('confirm-start-game', room.code);
+  };
 
   const handleCopyCode = () => {
     if (!room) return;
@@ -239,9 +264,7 @@ export default function Lobby() {
               </Button>
             ) : (
               <Button
-                onClick={() => {
-                  socket.emit('start-game', room.code);
-                }}
+                onClick={handleStartGame}
                 fullWidth
               >
                 Iniciar partida
@@ -255,6 +278,79 @@ export default function Lobby() {
           )}
         </div>
       </Card>
+
+      {/* Interfaz de asignación de turnos */}
+      {turnOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-6">
+          <Card className="w-full max-w-md relative z-10">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full text-xs font-semibold tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 uppercase">
+                <Users size={12} />
+                Orden de Turnos
+              </div>
+              <h2 className="text-2xl font-extrabold tracking-tight">Se han asignado los turnos</h2>
+              <p className="text-slate-400 text-sm mt-2">
+                El orden fue barajado al azar. El primer jugador comienza la partida.
+              </p>
+            </div>
+
+            <div className="space-y-3 mb-8">
+              {turnOrder.map((p, index) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-slate-950 font-black text-sm shadow-inner ${
+                        index === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-slate-700'
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    <span className="text-sm font-bold text-slate-100">
+                      {p.name} {p.id === playerId && '(tú)'}
+                    </span>
+                  </div>
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      index === 0
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        : 'text-slate-500'
+                    }`}
+                  >
+                    {index === 0 ? 'Empieza' : `${index + 1}° jugador`}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-slate-900 pt-6 flex flex-col items-center gap-3">
+              {isHost && (
+                <>
+                  <Button onClick={handleConfirmStart} fullWidth disabled={shuffling}>
+                    {shuffling ? 'Barajando...' : 'Confirmar y comenzar'}
+                  </Button>
+                  <button
+                    onClick={handleShuffleAgain}
+                    disabled={shuffling}
+                    className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-xs font-semibold cursor-pointer disabled:opacity-50"
+                  >
+                    <Loader2 className={shuffling ? 'animate-spin' : ''} size={14} />
+                    Barajar de nuevo
+                  </button>
+                </>
+              )}
+              {!isHost && (
+                <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold py-2">
+                  <Loader2 className="animate-spin text-amber-400" size={14} />
+                  Esperando que el creador confirme el orden...
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

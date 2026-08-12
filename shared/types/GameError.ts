@@ -20,6 +20,7 @@ export type GameErrorCode =
 
 export type GameActionName =
   | 'start-game'
+  | 'confirm-start-game'
   | 'play-card'
   | 'draw-action-card'
   | 'discard-card'

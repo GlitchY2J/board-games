@@ -1,5 +1,4 @@
 import type { GameState } from '../../types/GameState';
-import PlayerInfo from './PlayerInfo';
 import Stable from './Stable';
 
 type Player = GameState['players'][number];
@@ -7,27 +6,17 @@ type Player = GameState['players'][number];
 interface Props {
   player: Player;
   isLocalPlayer: boolean;
-  position: 'top' | 'bottom' | 'left' | 'right';
   isMyTurn: boolean;
-  gamePhase: string;
-  status?: string;
-  onPlay(cardId: string): void;
 }
 
 export default function PlayerBoard({
   player,
-  position,
   isMyTurn,
-  status,
 }: Props) {
-  const isTopOrLeft = position === 'top' || position === 'left';
-
   return (
     <div
       data-player-id={player.id}
-      className={`player-board relative rounded-2xl glass-panel bg-slate-950/30 border p-3 transition-all duration-300 ${
-        isTopOrLeft ? 'flex-col items-center gap-4' : 'flex-col items-center gap-4'
-      }`}
+      className={`player-board relative rounded-2xl glass-panel bg-slate-950/30 border p-3 transition-all duration-300 flex-col items-center gap-4`}
       style={{
         width: '100%',
         minWidth: '340px',
@@ -41,21 +30,9 @@ export default function PlayerBoard({
           : 'rgba(255, 255, 255, 0.08)',
       }}
     >
-      {isTopOrLeft ? (
-        <>
-          <div className="w-full flex justify-center">
-            <Stable player={player} />
-          </div>
-          <PlayerInfo player={player} isActive={isMyTurn} status={status} />
-        </>
-      ) : (
-        <>
-          <PlayerInfo player={player} isActive={isMyTurn} status={status} />
-          <div className="w-full flex justify-center">
-            <Stable player={player} />
-          </div>
-        </>
-      )}
+      <div className="w-full flex justify-center">
+        <Stable player={player} />
+      </div>
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function Stable({ player }: Props) {
   return (
     <div className="flex flex-col gap-2 w-full max-w-3xl">
       {/* Fila 1: Unicornios */}
-      <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-x-auto">
+      <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-visible">
         {hasUnicorns ? (
           <div className="flex items-center gap-2 flex-wrap">
             {player.stable.map((card) => (
@@ -38,7 +38,7 @@ export default function Stable({ player }: Props) {
 
       {/* Fila 2: Modificadores (Upgrades + Downgrades) */}
       {(hasUpgrades || hasDowngrades) && (
-        <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-x-auto">
+        <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-visible">
           {hasUpgrades && (
             <div className="flex items-center gap-2 flex-wrap">
               {player.upgrades.map((card) => (

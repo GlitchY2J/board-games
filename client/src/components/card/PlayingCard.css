@@ -20,6 +20,7 @@
 .playing-card:hover {
   transform: translateY(-15px) scale(1.12);
   box-shadow: 0 0 24px rgba(255, 255, 255, 0.45);
+  z-index: 30;
 }
 
 .playing-card.small {

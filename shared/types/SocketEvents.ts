@@ -149,6 +149,7 @@ export interface ServerToClientEvents {
   'neigh-animations': (animations: NeighAnimation[]) => void;
   'draw-animations': (animations: DrawAnimation[]) => void;
   'discard-animations': (animations: DiscardAnimation[]) => void;
+  'turn-order-assigned': (players: { id: string; name: string }[]) => void;
 }
 
 export interface ClientToServerEvents {
@@ -166,6 +167,9 @@ export interface ClientToServerEvents {
 
   // Start Game
   'start-game': (roomCode: string) => void;
+
+  // Confirm Start Game (after turn order is shown)
+  'confirm-start-game': (roomCode: string) => void;
 
   // Play Card
   'play-card': (payload: PlayCardPayload) => void;

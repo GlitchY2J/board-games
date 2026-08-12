@@ -23,7 +23,8 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding-top: 20px;
+  gap: 20px;
+  padding-top: 60px;
 }
 
 .middle {
@@ -34,24 +35,17 @@
   padding: 16px 0;
 }
 
-.player-left {
-  width: 12%;
-}
-
 .center {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.player-right {
-  width: 12%;
-}
-
 .player-bottom {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  gap: 20px;
   padding-bottom: 188px;
 }
 
@@ -142,6 +136,56 @@
   border-color: rgba(239, 68, 68, 0.45);
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
   transform: translateY(-2px);
+}
+
+/* Botón de salir de la partida (esquina superior izquierda) */
+.leave-room {
+  left: 24px;
+  bottom: auto;
+  top: 24px;
+  border-color: rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.05);
+  color: #34d399;
+}
+
+.leave-room:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
+/* ─── Tableros de jugadores por posición ─── */
+.player-slot {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Quitar el backdrop-filter del tablero para evitar el bug de Chrome que
+   compone en negro a los hijos con transform/zoom (las cartas del establo).
+   Se compensa con un fondo más sólido para mantener el estilo glass. */
+.player-board {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.player-slot .player-info {
+  width: 100%;
+  max-width: 480px;
+}
+
+.player-board-top,
+.player-board-left,
+.player-board-right {
+  min-width: 0;
+  max-width: 340px;
+  width: 100%;
+}
+
+.phase-action-anchor {
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
 }
 
 .debug-reset:active {
