@@ -441,7 +441,21 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
     // LLAMACORN — cada jugador descarta 1 carta en orden
     // ───────────────────────────────────
     case 'llamacorn': {
-      if (!action.remainingPlayerIds.includes(localPlayerId)) return null;
+      const needsToDiscard = action.remainingPlayerIds.includes(localPlayerId);
+      const alreadyDiscarded = action.resolvedPlayerIds.includes(localPlayerId);
+
+      if (!needsToDiscard && !alreadyDiscarded) return null;
+
+      if (alreadyDiscarded) {
+        return (
+          <div className="overlay-backdrop">
+            <div className="card-selection-window choice-window">
+              <h2>🦙 Llamacorn</h2>
+              <p>Esperando a que los demás jugadores descarten sus cartas...</p>
+            </div>
+          </div>
+        );
+      }
 
       const player = gameState.players.find((p) => p.id === localPlayerId);
       if (!player) return null;

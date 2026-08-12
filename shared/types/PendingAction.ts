@@ -59,6 +59,7 @@ export type PendingAction =
   | {
       type: "llamacorn";
       remainingPlayerIds: string[]; // cola de jugadores que deben descartar
+      resolvedPlayerIds: string[]; // jugadores que ya descartaron
     }
   | {
       type: "extremely_destructive_unicorn";

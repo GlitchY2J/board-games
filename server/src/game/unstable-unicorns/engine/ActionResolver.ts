@@ -545,13 +545,23 @@ export class ActionResolver {
       (id) => id !== playerId,
     );
 
-    state.pendingAction =
-      remainingPlayerIds.length > 0
-        ? {
-            type: 'llamacorn',
-            remainingPlayerIds,
-          }
-        : undefined;
+    if (remainingPlayerIds.length > 0) {
+      state.pendingAction = {
+        type: 'llamacorn',
+        remainingPlayerIds,
+        resolvedPlayerIds: [...pending.resolvedPlayerIds, playerId],
+      };
+    } else {
+      state.deck.push(...state.discard);
+      state.discard = [];
+
+      for (let i = state.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
+      }
+
+      state.pendingAction = undefined;
+    }
 
     return true;
   }

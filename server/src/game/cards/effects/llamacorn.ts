@@ -13,6 +13,7 @@ export const llamacorn: CardEffect = {
     state.pendingAction = {
       type: 'llamacorn',
       remainingPlayerIds,
+      resolvedPlayerIds: [],
     };
   },
 };
