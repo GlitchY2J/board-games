@@ -73,7 +73,8 @@ export type PendingAction =
         | "black_knight_unicorn"
         | "chainsaw_unicorn"
         | "classy_narwhal"
-        | "dark_angel_unicorn";
+        | "dark_angel_unicorn"
+        | "magical_flying_unicorn";
       playerId: string;
       title: string;
       description: string;
@@ -83,7 +84,7 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-      reason: "dark_angel_unicorn";
+      reason: "dark_angel_unicorn" | "magical_flying_unicorn";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
     }

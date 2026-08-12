@@ -574,16 +574,27 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       case 'select_discard_card': {
       if (action.playerId !== localPlayerId) return null;
 
+      const isMagicalFlyingUnicorn =
+        action.reason === 'magical_flying_unicorn';
+
       const eligibleCards = gameState.discard.filter(
         (card) =>
           (!action.cardType || card.cardType === action.cardType) &&
-          card.id !== 'dark_angel_unicorn',
+          (isMagicalFlyingUnicorn || card.id !== 'dark_angel_unicorn'),
       );
 
       return (
         <CardSelectionOverlay
-          title="😈 Dark Angel Unicorn"
-          subtitle="Elige un unicornio del descarte para traerlo a tu establo"
+          title={
+            isMagicalFlyingUnicorn
+              ? '🦄 Magical Flying Unicorn'
+              : '😈 Dark Angel Unicorn'
+          }
+          subtitle={
+            isMagicalFlyingUnicorn
+              ? 'Elige una carta de Magia del descarte para añadirla a tu mano'
+              : 'Elige un unicornio del descarte para traerlo a tu establo'
+          }
           items={eligibleCards.map((card, idx) => ({
             id: `${card.id}_${idx}`,
             value: card.uid,
@@ -591,7 +602,9 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             image: card.image,
           }))}
           maxSelection={1}
-          confirmText="Traer al Establo"
+          confirmText={
+            isMagicalFlyingUnicorn ? 'Añadir a la Mano' : 'Traer al Establo'
+          }
           onConfirm={([cardId]) => {
             socket.emit('select-discard-card', {
               roomCode: gameState.roomCode,

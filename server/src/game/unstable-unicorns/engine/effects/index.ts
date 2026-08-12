@@ -14,6 +14,7 @@ import { llamacorn } from '../../../cards/effects/llamacorn.ts';
 import { darkAngelUnicorn } from '../../../cards/effects/darkAngelUnicorn.ts';
 import { ginormousUnicorn } from '../../../cards/effects/ginormousUnicorn.ts';
 import { extremelyDestructiveUnicorn } from '../../../cards/effects/extremelyDestructiveUnicorn.ts';
+import { magicalFlyingUnicorn } from '../../../cards/effects/magicalFlyingUnicorn.ts';
 import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import type { CardEffect } from './CardEffect.ts';
 
@@ -35,4 +36,5 @@ export const effects: Record<string, CardEffect> = {
   dark_angel_unicorn: darkAngelUnicorn,
   ginormous_unicorn: ginormousUnicorn,
   extremely_destructive_unicorn: extremelyDestructiveUnicorn,
+  magical_flying_unicorn: magicalFlyingUnicorn,
 };

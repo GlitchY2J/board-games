@@ -534,6 +534,41 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "magical_flying_unicorn") {
+        if (choice === "yes") {
+          const magicInDiscard = room.gameState.discard.some(
+            (card) => card.cardType === "magic",
+          );
+
+          if (magicInDiscard) {
+            room.gameState.pendingAction = {
+              type: "select_discard_card",
+              reason: "magical_flying_unicorn",
+              playerId: player.id,
+              cardType: "magic",
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Magical Flying Unicorn`
+            : `${player.name} omitió el efecto de Magical Flying Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       }
     });
   }
@@ -557,7 +592,11 @@ export function registerActionHandlers(
         return;
       }
 
-      if (pending.reason !== "dark_angel_unicorn") return;
+      if (
+        pending.reason !== "dark_angel_unicorn" &&
+        pending.reason !== "magical_flying_unicorn"
+      )
+        return;
 
       const cardIdx = room.gameState.discard.findIndex((c) => c.uid === cardId);
       if (cardIdx === -1) return;
@@ -577,6 +616,19 @@ export function registerActionHandlers(
 
       const [removed] = room.gameState.discard.splice(cardIdx, 1);
       room.gameState.pendingAction = undefined;
+
+      if (pending.reason === "magical_flying_unicorn") {
+        player.hand.push(removed);
+
+        addLog(
+          room.gameState,
+          `${player.name} añadió ${removed.name} del descarte a su mano`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
+        return;
+      }
 
       const broughtFromDiscard = removed;
       CardMovement.enterStable(room.gameState, player, removed);
