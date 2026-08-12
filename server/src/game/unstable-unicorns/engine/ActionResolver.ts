@@ -298,6 +298,7 @@ export class ActionResolver {
         type: 'select_discard_card',
         reason: 'dark_angel_unicorn',
         playerId: sourcePlayerId,
+        cardType: 'unicorn',
       };
       return true;
     }

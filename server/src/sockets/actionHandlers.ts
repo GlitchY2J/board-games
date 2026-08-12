@@ -1,14 +1,14 @@
-import type { GameServer, GameSocket } from './socketTypes.ts';
+import type { GameServer, GameSocket } from "./socketTypes.ts";
 
-import { ActionResolver } from '../game/unstable-unicorns/engine/ActionResolver.ts';
-import { CardMovement } from '../game/unstable-unicorns/engine/CardMovement.ts';
-import { TurnManager } from '../game/turn/TurnManager.ts';
-import { TurnPhase } from '../game/turn/TurnPhase.ts';
-import { emitGameError, getSocketGameContext } from './socketContext.ts';
-import { emitGameState } from './gameStateEmitter.ts';
-import { addLog } from './gameLog.ts';
-import { roomManager } from '../roomManagerInstance.ts';
-import { GameState } from '../game/models/GameState.ts';
+import { ActionResolver } from "../game/unstable-unicorns/engine/ActionResolver.ts";
+import { CardMovement } from "../game/unstable-unicorns/engine/CardMovement.ts";
+import { TurnManager } from "../game/turn/TurnManager.ts";
+import { TurnPhase } from "../game/turn/TurnPhase.ts";
+import { emitGameError, getSocketGameContext } from "./socketContext.ts";
+import { emitGameState } from "./gameStateEmitter.ts";
+import { addLog } from "./gameLog.ts";
+import { roomManager } from "../roomManagerInstance.ts";
+import { GameState } from "../game/models/GameState.ts";
 
 export function registerActionHandlers(
   io: GameServer,
@@ -30,7 +30,7 @@ export function registerActionHandlers(
   }
 
   function registerDiscardCards(io: GameServer, socket: GameSocket): void {
-    socket.on('discard-cards', ({ roomCode, playerId, cardIds }) => {
+    socket.on("discard-cards", ({ roomCode, playerId, cardIds }) => {
       const context = getSocketGameContext(socket, roomCode);
 
       if (!context) {
@@ -42,9 +42,9 @@ export function registerActionHandlers(
       if (playerId !== player.id) {
         emitGameError(
           socket,
-          'INVALID_PLAYER',
-          'El jugador enviado no coincide con tu sesión.',
-          'discard-card',
+          "INVALID_PLAYER",
+          "El jugador enviado no coincide con tu sesión.",
+          "discard-card",
         );
         return;
       }
@@ -52,16 +52,16 @@ export function registerActionHandlers(
       if (!game.pendingAction) {
         emitGameError(
           socket,
-          'NO_PENDING_ACTION',
-          'No hay una acción de descarte pendiente.',
-          'discard-card',
+          "NO_PENDING_ACTION",
+          "No hay una acción de descarte pendiente.",
+          "discard-card",
         );
         return;
       }
 
       let resolved = false;
 
-      if (game.pendingAction.type === 'mystical_vortex') {
+      if (game.pendingAction.type === "mystical_vortex") {
         resolved = ActionResolver.handleMysticalVortexDiscard(
           game,
           player.id,
@@ -74,9 +74,9 @@ export function registerActionHandlers(
       if (!resolved) {
         emitGameError(
           socket,
-          'INVALID_SELECTION',
-          'La selección de descarte no es válida.',
-          'discard-card',
+          "INVALID_SELECTION",
+          "La selección de descarte no es válida.",
+          "discard-card",
         );
         return;
       }
@@ -85,16 +85,16 @@ export function registerActionHandlers(
 
       addLog(
         game,
-        `${player.name} descartó ${cardIds.length} carta${cardIds.length > 1 ? 's' : ''}`,
+        `${player.name} descartó ${cardIds.length} carta${cardIds.length > 1 ? "s" : ""}`,
         { playerId: player.id },
       );
 
-      emitGameState(io, room, 'game-updated');
+      emitGameState(io, room, "game-updated");
     });
   }
 
   function registerSelectPlayer(io: GameServer, socket: GameSocket): void {
-    socket.on('select-player', ({ roomCode, playerId }) => {
+    socket.on("select-player", ({ roomCode, playerId }) => {
       const room = roomManager.getRoom(roomCode);
       if (!room?.gameState) return;
 
@@ -129,13 +129,13 @@ export function registerActionHandlers(
           { playerId: sourcePlayer.id },
         );
 
-        emitGameState(io, room, 'game-updated');
+        emitGameState(io, room, "game-updated");
       }
     });
   }
 
   function registerSelectStableCard(io: GameServer, socket: GameSocket): void {
-    socket.on('select-stable-card', ({ roomCode, cardId }) => {
+    socket.on("select-stable-card", ({ roomCode, cardId }) => {
       const room = roomManager.getRoom(roomCode);
       if (!room?.gameState) return;
 
@@ -164,13 +164,13 @@ export function registerActionHandlers(
           { playerId: sourcePlayer.id },
         );
 
-        emitGameState(io, room, 'game-updated');
+        emitGameState(io, room, "game-updated");
       }
     });
   }
 
   function registerSelectHandCard(io: GameServer, socket: GameSocket): void {
-    socket.on('select-hand-card', ({ roomCode, cardId }) => {
+    socket.on("select-hand-card", ({ roomCode, cardId }) => {
       const context = getSocketGameContext(socket, roomCode);
 
       if (!context) {
@@ -181,12 +181,12 @@ export function registerActionHandlers(
 
       const pending = game.pendingAction;
 
-      if (!pending || pending.type !== 'select_hand_card') {
+      if (!pending || pending.type !== "select_hand_card") {
         emitGameError(
           socket,
-          'NO_PENDING_ACTION',
-          'No hay una selección de mano pendiente.',
-          'select-hand-card',
+          "NO_PENDING_ACTION",
+          "No hay una selección de mano pendiente.",
+          "select-hand-card",
         );
         return;
       }
@@ -194,16 +194,16 @@ export function registerActionHandlers(
       if (pending.sourcePlayerId !== player.id) {
         emitGameError(
           socket,
-          'NOT_YOUR_TURN',
-          'No puedes resolver la acción de otro jugador.',
-          'select-hand-card',
+          "NOT_YOUR_TURN",
+          "No puedes resolver la acción de otro jugador.",
+          "select-hand-card",
         );
         return;
       }
 
       let resolvedCardId = cardId;
 
-      if (pending.reason === 'americorn') {
+      if (pending.reason === "americorn") {
         const targetPlayer = game.players.find(
           (candidate) => candidate.id === pending.targetPlayerId,
         );
@@ -211,9 +211,9 @@ export function registerActionHandlers(
         if (!targetPlayer) {
           emitGameError(
             socket,
-            'PLAYER_NOT_FOUND',
-            'No se encontró el jugador objetivo.',
-            'select-hand-card',
+            "PLAYER_NOT_FOUND",
+            "No se encontró el jugador objetivo.",
+            "select-hand-card",
           );
           return;
         }
@@ -223,9 +223,9 @@ export function registerActionHandlers(
         if (!cardId.startsWith(expectedPrefix)) {
           emitGameError(
             socket,
-            'INVALID_SELECTION',
-            'La carta seleccionada no es válida.',
-            'select-hand-card',
+            "INVALID_SELECTION",
+            "La carta seleccionada no es válida.",
+            "select-hand-card",
           );
           return;
         }
@@ -241,9 +241,9 @@ export function registerActionHandlers(
         ) {
           emitGameError(
             socket,
-            'INVALID_SELECTION',
-            'La posición de la carta seleccionada no es válida.',
-            'select-hand-card',
+            "INVALID_SELECTION",
+            "La posición de la carta seleccionada no es válida.",
+            "select-hand-card",
           );
           return;
         }
@@ -259,16 +259,16 @@ export function registerActionHandlers(
       if (!resolved) {
         emitGameError(
           socket,
-          'INVALID_SELECTION',
-          'No se pudo seleccionar esa carta.',
-          'select-hand-card',
+          "INVALID_SELECTION",
+          "No se pudo seleccionar esa carta.",
+          "select-hand-card",
         );
         return;
       }
 
       continueBeginningPhaseIfReady(game);
 
-      if (pending.reason === 'americorn') {
+      if (pending.reason === "americorn") {
         const targetPlayer = game.players.find(
           (candidate) => candidate.id === pending.targetPlayerId,
         );
@@ -286,12 +286,12 @@ export function registerActionHandlers(
         });
       }
 
-      emitGameState(io, room, 'game-updated');
+      emitGameState(io, room, "game-updated");
     });
   }
 
   function registerCancelAction(io: GameServer, socket: GameSocket): void {
-    socket.on('cancel-action', ({ roomCode }) => {
+    socket.on("cancel-action", ({ roomCode }) => {
       const context = getSocketGameContext(socket, roomCode);
 
       if (!context) {
@@ -304,26 +304,26 @@ export function registerActionHandlers(
       if (!pending) {
         emitGameError(
           socket,
-          'NO_PENDING_ACTION',
-          'No hay una acción pendiente para cancelar.',
-          'cancel-action',
+          "NO_PENDING_ACTION",
+          "No hay una acción pendiente para cancelar.",
+          "cancel-action",
         );
         return;
       }
 
       const pendingPlayerId =
-        'playerId' in pending
+        "playerId" in pending
           ? pending.playerId
-          : 'sourcePlayerId' in pending
+          : "sourcePlayerId" in pending
             ? pending.sourcePlayerId
             : undefined;
 
       if (!pendingPlayerId || pendingPlayerId !== player.id) {
         emitGameError(
           socket,
-          'NOT_YOUR_TURN',
-          'No puedes cancelar la acción de otro jugador.',
-          'cancel-action',
+          "NOT_YOUR_TURN",
+          "No puedes cancelar la acción de otro jugador.",
+          "cancel-action",
         );
         return;
       }
@@ -332,12 +332,12 @@ export function registerActionHandlers(
 
       addLog(game, `${player.name} canceló la acción`, { playerId: player.id });
 
-      emitGameState(io, room, 'game-updated');
+      emitGameState(io, room, "game-updated");
     });
   }
 
   function registerSelectChoice(io: GameServer, socket: GameSocket): void {
-    socket.on('select-choice', ({ roomCode, choice }) => {
+    socket.on("select-choice", ({ roomCode, choice }) => {
       const room = roomManager.getRoom(roomCode);
       if (!room?.gameState) return;
 
@@ -349,29 +349,29 @@ export function registerActionHandlers(
       const pending = room.gameState.pendingAction;
       if (
         !pending ||
-        pending.type !== 'select_choice' ||
+        pending.type !== "select_choice" ||
         pending.playerId !== player.id
       ) {
         return;
       }
 
-      if (pending.reason === 'annoying_flying_unicorn') {
-        if (choice === 'yes') {
+      if (pending.reason === "annoying_flying_unicorn") {
+        if (choice === "yes") {
           const rivals = room.gameState.players.filter(
             (p) => p.id !== player.id && p.hand.length > 0,
           );
 
           if (rivals.length === 1) {
             room.gameState.pendingAction = {
-              type: 'discard',
-              reason: 'annoying_flying_unicorn',
+              type: "discard",
+              reason: "annoying_flying_unicorn",
               playerId: rivals[0].id,
               cardsToDiscard: 1,
             };
           } else {
             room.gameState.pendingAction = {
-              type: 'select_player',
-              reason: 'annoying_flying_unicorn',
+              type: "select_player",
+              reason: "annoying_flying_unicorn",
               sourcePlayerId: player.id,
             };
           }
@@ -384,21 +384,21 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          choice === 'yes'
+          choice === "yes"
             ? `${player.name} usó el efecto de Molesto Unicornio Volador`
             : `${player.name} omitió el efecto de Molesto Unicornio Volador`,
           { playerId: player.id },
         );
 
-        emitGameState(io, room, 'game-updated');
-      } else if (pending.reason === 'black_knight_unicorn') {
+        emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "black_knight_unicorn") {
         const targetCardId = pending.targetCardId;
         const originalTargetPlayerId = pending.originalTargetPlayerId;
 
-        if (choice === 'yes') {
+        if (choice === "yes") {
           // Sacrificar a Black Knight Unicorn
           const idx = player.stable.findIndex(
-            (c) => c.id === 'black_knight_unicorn',
+            (c) => c.id === "black_knight_unicorn",
           );
           if (idx !== -1) {
             const [blackKnight] = player.stable.splice(idx, 1);
@@ -438,18 +438,18 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          choice === 'yes'
+          choice === "yes"
             ? `${player.name} sacrificó a Black Knight Unicorn`
             : `${player.name} destruyó la carta objetivo`,
           { playerId: player.id },
         );
 
-        emitGameState(io, room, 'game-updated');
-      } else if (pending.reason === 'chainsaw_unicorn') {
-        if (choice === 'yes') {
+        emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "chainsaw_unicorn") {
+        if (choice === "yes") {
           room.gameState.pendingAction = {
-            type: 'select_stable_card',
-            reason: 'chainsaw_unicorn',
+            type: "select_stable_card",
+            reason: "chainsaw_unicorn",
             sourcePlayerId: player.id,
           };
         } else {
@@ -461,18 +461,18 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          choice === 'yes'
+          choice === "yes"
             ? `${player.name} usó el efecto de Chainsaw Unicorn`
             : `${player.name} omitió el efecto de Chainsaw Unicorn`,
           { playerId: player.id },
         );
 
-        emitGameState(io, room, 'game-updated');
-      } else if (pending.reason === 'dark_angel_unicorn') {
-        if (choice === 'yes') {
+        emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "dark_angel_unicorn") {
+        if (choice === "yes") {
           room.gameState.pendingAction = {
-            type: 'select_stable_card',
-            reason: 'dark_angel_unicorn',
+            type: "select_stable_card",
+            reason: "dark_angel_unicorn",
             sourcePlayerId: player.id,
             targetPlayerId: player.id,
           };
@@ -485,19 +485,20 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          choice === 'yes'
+          choice === "yes"
             ? `${player.name} usó el efecto de Dark Angel Unicorn`
             : `${player.name} omitió el efecto de Dark Angel Unicorn`,
           { playerId: player.id },
         );
 
-        emitGameState(io, room, 'game-updated');
-      } else if (pending.reason === 'classy_narwhal') {
+        emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "classy_narwhal") {
+      }
     });
   }
 
   function registerSelectDiscardCard(io: GameServer, socket: GameSocket): void {
-    socket.on('select-discard-card', ({ roomCode, cardId }) => {
+    socket.on("select-discard-card", ({ roomCode, cardId }) => {
       const room = roomManager.getRoom(roomCode);
       if (!room?.gameState) return;
 
@@ -509,21 +510,29 @@ export function registerActionHandlers(
       const pending = room.gameState.pendingAction;
       if (
         !pending ||
-        pending.type !== 'select_discard_card' ||
+        pending.type !== "select_discard_card" ||
         pending.playerId !== player.id
       ) {
         return;
       }
 
-      if (pending.reason !== 'dark_angel_unicorn') return;
+      if (pending.reason !== "dark_angel_unicorn") return;
 
-      const cardIdx = room.gameState.discard.findIndex(
-        (c) => c.uid === cardId,
-      );
+      const cardIdx = room.gameState.discard.findIndex((c) => c.uid === cardId);
       if (cardIdx === -1) return;
 
       const selectedCard = room.gameState.discard[cardIdx];
-      if (selectedCard.id === 'dark_angel_unicorn') return;
+      if (selectedCard.id === "dark_angel_unicorn") return;
+
+      if (pending.cardType && selectedCard.cardType !== pending.cardType) {
+        emitGameError(
+          socket,
+          "INVALID_SELECTION",
+          "La carta seleccionada no es válida.",
+          "select-discard-card",
+        );
+        return;
+      }
 
       const [removed] = room.gameState.discard.splice(cardIdx, 1);
       room.gameState.pendingAction = undefined;
@@ -544,12 +553,12 @@ export function registerActionHandlers(
         { playerId: player.id },
       );
 
-      emitGameState(io, room, 'game-updated');
+      emitGameState(io, room, "game-updated");
     });
   }
 
   function registerSelectDeckCard(io: GameServer, socket: GameSocket): void {
-    socket.on('select-deck-card', ({ roomCode, cardId }) => {
+    socket.on("select-deck-card", ({ roomCode, cardId }) => {
       const room = roomManager.getRoom(roomCode);
       if (!room?.gameState) return;
 
@@ -561,7 +570,7 @@ export function registerActionHandlers(
       const pending = room.gameState.pendingAction;
       if (
         !pending ||
-        pending.type !== 'select_deck_card' ||
+        pending.type !== "select_deck_card" ||
         pending.playerId !== player.id
       ) {
         return;
@@ -593,7 +602,7 @@ export function registerActionHandlers(
         { playerId: player.id },
       );
 
-      emitGameState(io, room, 'game-updated');
+      emitGameState(io, room, "game-updated");
     });
   }
 }

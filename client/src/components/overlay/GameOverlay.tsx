@@ -472,7 +472,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
     // ───────────────────────────────────
     // SELECCIONAR CARTA DEL DESCARTE
     // ───────────────────────────────────
-    case 'select_discard_card': {
+      case 'select_discard_card': {
       if (action.playerId !== localPlayerId) return null;
 
       const eligibleCards = gameState.discard.filter(
