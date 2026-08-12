@@ -86,8 +86,9 @@ export type PendingAction =
         | "majestic_flying_unicorn"
         | "mother_goose_unicorn"
         | "necromancer_unicorn"
+        | "swift_flying_unicorn"
         | "rainbow_unicorn"
-| "rhinocorn"
+        | "rhinocorn"
         | "seductive_unicorn"
         | "shark_with_a_horn"
         | "stabby_the_unicorn";
@@ -100,7 +101,7 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn";
+      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
     }

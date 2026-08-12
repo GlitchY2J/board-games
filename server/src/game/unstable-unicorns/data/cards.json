@@ -495,6 +495,17 @@
     "expansion": "base"
   },
   {
+    "id": "swift_flying_unicorn",
+    "name": "Swifty Flying Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/swift_flying_unicorn.png",
+    "description": "When this card enters your Stable, you may add a Neigh card from the discard pile to your hand. If this card is sacrificed or destroyed, return it to your hand.",
+    "effect": "swift_flying_unicorn",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "back_kick",
     "name": "Back Kick",
     "cardType": "magic",

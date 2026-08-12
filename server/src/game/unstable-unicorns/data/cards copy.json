@@ -12,17 +12,6 @@
   },
 
   {
-    "id": "stabby_the_unicorn",
-    "name": "Stabby The Unicorn",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/stabby_the_unicorn.png",
-    "description": "If this card is sacrificed or destroyed, you may DESTROY a Unicorn card.",
-    "effect": "stabby_the_unicorn",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
     "id": "swift_flying_unicorn",
     "name": "Swifty Flying Unicorn",
     "cardType": "unicorn",

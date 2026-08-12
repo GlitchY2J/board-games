@@ -736,6 +736,43 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "swift_flying_unicorn") {
+        if (choice === "yes") {
+          const neighInDiscard = room.gameState.discard.some(
+            (card) =>
+              card.cardType === "instant" &&
+              (card.effect === "neigh" || card.effect === "super_neigh"),
+          );
+
+          if (neighInDiscard) {
+            room.gameState.pendingAction = {
+              type: "select_discard_card",
+              reason: "swift_flying_unicorn",
+              playerId: player.id,
+              cardType: "instant",
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Swifty Flying Unicorn`
+            : `${player.name} omitió el efecto de Swifty Flying Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       } else if (pending.reason === "stabby_the_unicorn") {
         if (choice === "yes") {
           room.gameState.pendingAction = {
@@ -883,7 +920,8 @@ export function registerActionHandlers(
         pending.reason !== "dark_angel_unicorn" &&
         pending.reason !== "magical_flying_unicorn" &&
         pending.reason !== "majestic_flying_unicorn" &&
-        pending.reason !== "necromancer_unicorn"
+        pending.reason !== "necromancer_unicorn" &&
+        pending.reason !== "swift_flying_unicorn"
       )
         return;
 
@@ -903,12 +941,27 @@ export function registerActionHandlers(
         return;
       }
 
+      if (
+        pending.reason === "swift_flying_unicorn" &&
+        selectedCard.effect !== "neigh" &&
+        selectedCard.effect !== "super_neigh"
+      ) {
+        emitGameError(
+          socket,
+          "INVALID_SELECTION",
+          "La carta seleccionada no es un Neigh.",
+          "select-discard-card",
+        );
+        return;
+      }
+
       const [removed] = room.gameState.discard.splice(cardIdx, 1);
       room.gameState.pendingAction = undefined;
 
       if (
         pending.reason === "magical_flying_unicorn" ||
-        pending.reason === "majestic_flying_unicorn"
+        pending.reason === "majestic_flying_unicorn" ||
+        pending.reason === "swift_flying_unicorn"
       ) {
         player.hand.push(removed);
 

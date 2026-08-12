@@ -782,18 +782,23 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
 
       const addsToHand =
         action.reason === 'magical_flying_unicorn' ||
-        action.reason === 'majestic_flying_unicorn';
+        action.reason === 'majestic_flying_unicorn' ||
+        action.reason === 'swift_flying_unicorn';
 
       const isMagicalFlyingUnicorn =
         action.reason === 'magical_flying_unicorn';
       const isMajesticFlyingUnicorn =
         action.reason === 'majestic_flying_unicorn';
       const isNecromancer = action.reason === 'necromancer_unicorn';
+      const isSwiftFlyingUnicorn = action.reason === 'swift_flying_unicorn';
 
       const eligibleCards = gameState.discard.filter(
         (card) =>
           (!action.cardType || card.cardType === action.cardType) &&
-          (addsToHand || card.id !== 'dark_angel_unicorn'),
+          (addsToHand || card.id !== 'dark_angel_unicorn') &&
+          (!isSwiftFlyingUnicorn ||
+            card.effect === 'neigh' ||
+            card.effect === 'super_neigh'),
       );
 
       return (
@@ -804,16 +809,20 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
               ? '🦄 Magical Flying Unicorn'
               : isMajesticFlyingUnicorn
                 ? '🦄 Majestic Flying Unicorn'
-                : isNecromancer
-                  ? '🧙 Necromancer Unicorn'
-                  : '😈 Dark Angel Unicorn'
+                : isSwiftFlyingUnicorn
+                  ? '🕊️ Swifty Flying Unicorn'
+                  : isNecromancer
+                    ? '🧙 Necromancer Unicorn'
+                    : '😈 Dark Angel Unicorn'
           }
           subtitle={
             isMagicalFlyingUnicorn
               ? 'Elige una carta de Magia del descarte para añadirla a tu mano'
               : isMajesticFlyingUnicorn
                 ? 'Elige un unicornio del descarte para añadirlo a tu mano'
-                : 'Elige un unicornio del descarte para traerlo a tu establo'
+                : isSwiftFlyingUnicorn
+                  ? 'Elige un Neigh del descarte para añadirlo a tu mano'
+                  : 'Elige un unicornio del descarte para traerlo a tu establo'
           }
           items={eligibleCards.map((card, idx) => ({
             id: `${card.id}_${idx}`,
