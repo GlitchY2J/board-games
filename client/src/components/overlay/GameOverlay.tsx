@@ -438,6 +438,58 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
     }
 
     // ───────────────────────────────────
+    // EXTREMELY DESTRUCTIVE UNICORN
+    // ───────────────────────────────────
+    case 'extremely_destructive_unicorn': {
+      const targetPlayer = gameState.players.find((p) => p.id === localPlayerId);
+      const needsToResolve =
+        action.remainingPlayerIds.includes(localPlayerId) &&
+        !action.resolvedPlayerIds.includes(localPlayerId);
+
+      if (!targetPlayer) return null;
+
+      if (!needsToResolve) {
+        return (
+          <div className="overlay-backdrop">
+            <div className="card-selection-window choice-window">
+              <h2>💥 Extremely Destructive Unicorn</h2>
+              <p>
+                {action.remainingPlayerIds.length > action.resolvedPlayerIds.length
+                  ? 'Esperando sacrificios de otros jugadores...'
+                  : 'Resolviendo efecto...'}
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+      const player = targetPlayer;
+
+      return (
+        <CardSelectionOverlay
+          title="💥 Extremely Destructive Unicorn"
+          subtitle="Debes sacrificar 1 unicornio de tu establo."
+          items={player.stable
+            .filter((card) => card.cardType === 'unicorn')
+            .map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+          maxSelection={1}
+          confirmText="Sacrificar"
+          onConfirm={([cardId]) => {
+            socket.emit('select-stable-card', {
+              roomCode: gameState.roomCode,
+              cardId,
+            });
+          }}
+        />
+      );
+    }
+
+    // ───────────────────────────────────
     // DECISIÓN OPCIONAL (select_choice)
     // ───────────────────────────────────
     case 'select_choice': {

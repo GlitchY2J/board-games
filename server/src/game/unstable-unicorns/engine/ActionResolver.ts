@@ -133,18 +133,28 @@ export class ActionResolver {
     if (
       pending.type !== 'select_stable_card' &&
       pending.type !== 'glitter_tornado' &&
-      pending.type !== 'alluring_narwhal'
+      pending.type !== 'alluring_narwhal' &&
+      pending.type !== 'extremely_destructive_unicorn'
     ) {
       return false;
     }
 
-    const expectedPlayerId =
-      pending.type === 'alluring_narwhal'
-        ? pending.playerId
-        : pending.sourcePlayerId;
+    if (pending.type === 'extremely_destructive_unicorn') {
+      if (
+        !pending.remainingPlayerIds.includes(sourcePlayerId) ||
+        pending.resolvedPlayerIds.includes(sourcePlayerId)
+      ) {
+        return false;
+      }
+    } else {
+      const expectedPlayerId =
+        pending.type === 'alluring_narwhal'
+          ? pending.playerId
+          : pending.sourcePlayerId;
 
-    if (expectedPlayerId !== sourcePlayerId) {
-      return false;
+      if (expectedPlayerId !== sourcePlayerId) {
+        return false;
+      }
     }
 
     // ──────────────────────────────────────────
@@ -367,6 +377,45 @@ export class ActionResolver {
           remainingPlayerIds: rest,
         };
       }
+      return true;
+    }
+
+    // ──────────────────────────────────────────
+    // Extremely Destructive Unicorn: cada jugador sacrifica un unicornio
+    // ──────────────────────────────────────────
+    if (pending.type === 'extremely_destructive_unicorn') {
+      const targetPlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!targetPlayer) return false;
+
+      if (!pending.remainingPlayerIds.includes(sourcePlayerId)) {
+        return false;
+      }
+
+      if (pending.resolvedPlayerIds.includes(sourcePlayerId)) {
+        return false;
+      }
+
+      const cardIdx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+      if (cardIdx === -1) return false;
+
+      const card = targetPlayer.stable[cardIdx];
+      if (card.cardType !== 'unicorn') return false;
+
+      const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
+      CardMovement.destroyOrSacrifice(state, targetPlayer, sacrificed);
+
+      const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
+
+      if (resolvedPlayerIds.length >= pending.remainingPlayerIds.length) {
+        state.pendingAction = undefined;
+      } else {
+        state.pendingAction = {
+          type: 'extremely_destructive_unicorn',
+          remainingPlayerIds: pending.remainingPlayerIds,
+          resolvedPlayerIds,
+        };
+      }
+
       return true;
     }
 

@@ -33,6 +33,7 @@ export function getPlayerStatus(
           return 'Descartando carta...';
         case 'alluring_narwhal':
         case 'glitter_tornado':
+        case 'extremely_destructive_unicorn':
           return 'Eligiendo cartas...';
         case 'mystical_vortex':
           return 'Descartando carta...';
