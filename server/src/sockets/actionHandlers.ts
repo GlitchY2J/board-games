@@ -736,6 +736,29 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "stabby_the_unicorn") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "select_stable_card",
+            reason: "stabby_the_unicorn",
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Stabby The Unicorn para destruir un unicornio`
+            : `${player.name} omitió el efecto de Stabby The Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       } else if (pending.reason === "shark_with_a_horn") {
         if (choice === "yes") {
           const sharkIdx = player.stable.findIndex(

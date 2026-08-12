@@ -65,6 +65,11 @@ export class CardMovement {
       return;
     }
 
+    if (card.effect) {
+      const effect = effects[card.effect];
+      effect?.onDestroyed?.(state, card, player);
+    }
+
     enqueueCardAnimation(state.roomCode, animType, player.id, card);
     state.discard.push(card);
   }

@@ -8,4 +8,7 @@ export interface CardEffect {
   onEnterStable?(state: GameState, player: Player, card: Card): void;
 
   resolve?(state: GameState, player: Player, payload: unknown): void;
+
+  /** Se dispara cuando esta carta es sacrificada o destruida. */
+  onDestroyed?(state: GameState, card: Card, player: Player): void;
 }

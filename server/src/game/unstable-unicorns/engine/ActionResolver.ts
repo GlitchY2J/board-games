@@ -572,10 +572,19 @@ export class ActionResolver {
         const card = targetPlayer.stable[idx];
         if (card.cardType !== 'unicorn') return false;
 
+        const prevReason = pending.reason;
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
 
-        state.pendingAction = undefined;
+        // Si la carta destruida disparó su propio efecto (p. ej. Stabby The
+        // Unicorn), mantener su pendingAction en lugar de limpiarlo.
+        if (
+          !state.pendingAction ||
+          !('reason' in state.pendingAction) ||
+          state.pendingAction.reason === prevReason
+        ) {
+          state.pendingAction = undefined;
+        }
 
         if (state.phase === TurnPhase.BEGINNING) {
           state.phase = TurnPhase.ACTION;
@@ -626,6 +635,37 @@ export class ActionResolver {
           state.pendingAction = undefined;
         }
 
+        return true;
+      }
+
+      return false;
+    }
+
+    // ──────────────────────────────────────────
+    // Stabby The Unicorn: destruye un unicornio
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'stabby_the_unicorn'
+    ) {
+      for (const targetPlayer of state.players) {
+        const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+        if (idx === -1) continue;
+
+        const card = targetPlayer.stable[idx];
+        if (card.cardType !== 'unicorn') return false;
+
+        const prevReason = pending.reason;
+        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
+
+        if (
+          !state.pendingAction ||
+          !('reason' in state.pendingAction) ||
+          state.pendingAction.reason === prevReason
+        ) {
+          state.pendingAction = undefined;
+        }
         return true;
       }
 

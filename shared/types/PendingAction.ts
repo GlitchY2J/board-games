@@ -38,7 +38,8 @@ export type PendingAction =
         | "mermaid_unicorn"
         | "rhinocorn"
         | "seductive_unicorn"
-        | "shark_with_a_horn";
+        | "shark_with_a_horn"
+        | "stabby_the_unicorn";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -88,7 +89,8 @@ export type PendingAction =
         | "rainbow_unicorn"
 | "rhinocorn"
         | "seductive_unicorn"
-        | "shark_with_a_horn";
+        | "shark_with_a_horn"
+        | "stabby_the_unicorn";
       playerId: string;
       title: string;
       description: string;

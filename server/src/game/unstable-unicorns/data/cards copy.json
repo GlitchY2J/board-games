@@ -10,17 +10,7 @@
     "copies": 1,
     "expansion": "base"
   },
-  {
-    "id": "shark_with_a_horn",
-    "name": "Shark With A Horn",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/shark_with_a_horn.png",
-    "description": "When this card enters your Stable, you may SACRIFICE this card, then DESTROY a Unicorn card.",
-    "effect": "shark_with_a_horn",
-    "copies": 1,
-    "expansion": "base"
-  },
+
   {
     "id": "stabby_the_unicorn",
     "name": "Stabby The Unicorn",

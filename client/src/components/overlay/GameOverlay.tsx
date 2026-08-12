@@ -325,18 +325,54 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         );
       }
 
-      if (action.reason === 'shark_with_a_horn') {
-        const items = gameState.players.flatMap((p) =>
-          p.stable
-            .filter((c) => c.cardType === 'unicorn')
-            .map((card, idx) => ({
-              id: `${card.id}_${p.id}_${idx}`,
-              value: card.uid,
-              title: card.name,
-              subtitle: `Establo de ${p.name}`,
-              image: card.image,
-            })),
+      if (action.reason === 'stabby_the_unicorn') {
+        const items = gameState.players
+          .filter((p) => p.id !== localPlayerId)
+          .flatMap((p) =>
+            p.stable
+              .filter((c) => c.cardType === 'unicorn')
+              .map((card, idx) => ({
+                id: `${card.id}_${p.id}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                subtitle: `Establo de ${p.name}`,
+                image: card.image,
+              })),
+          );
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="🔪 Stabby The Unicorn"
+            subtitle="Elige un unicornio para DESTRUIR"
+            items={items}
+            maxSelection={1}
+            confirmText="Destruir"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
         );
+      }
+
+      if (action.reason === 'shark_with_a_horn') {
+        const items = gameState.players
+          .filter((p) => p.id !== localPlayerId)
+          .flatMap((p) =>
+            p.stable
+              .filter((c) => c.cardType === 'unicorn')
+              .map((card, idx) => ({
+                id: `${card.id}_${p.id}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                subtitle: `Establo de ${p.name}`,
+                image: card.image,
+              })),
+          );
 
         return (
           <CardSelectionOverlay
