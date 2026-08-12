@@ -29,6 +29,8 @@ export function getPlayerStatus(
           return 'Seleccionando carta del descarte...';
         case 'select_deck_card':
           return 'Buscando carta...';
+        case 'select_nursery_card':
+          return 'Eligiendo Baby Unicorn...';
         case 'discard':
           return 'Descartando carta...';
         case 'alluring_narwhal':

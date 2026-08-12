@@ -78,6 +78,24 @@ export interface ResumeSessionPayload {
   sessionToken: string;
 }
 
+export interface LeaveRoomPayload {
+  roomCode: string;
+}
+
+export type CardAnimType = 'sacrifice' | 'destroy';
+
+export interface CardAnimation {
+  animId: string;
+  type: CardAnimType;
+  ownerId: string;
+  card: {
+    uid: string;
+    id: string;
+    name: string;
+    image: string;
+  };
+}
+
 export interface ResumeSessionResponse {
   success: boolean;
   playerId?: string;
@@ -91,6 +109,7 @@ export interface ServerToClientEvents {
   'game-started': (gameState: GameState) => void;
   'game-updated': (gameState: GameState) => void;
   'game-error': (error: GameError) => void;
+  'card-animations': (animations: CardAnimation[]) => void;
 }
 
 export interface ClientToServerEvents {
@@ -102,6 +121,9 @@ export interface ClientToServerEvents {
     payload: CreateRoomPayload,
     callback: (response: RoomCreateResponse) => void,
   ) => void;
+
+  // Leave Room
+  'leave-room': (payload: LeaveRoomPayload) => void;
 
   // Start Game
   'start-game': (roomCode: string) => void;
@@ -144,6 +166,9 @@ export interface ClientToServerEvents {
 
   // Select Deck Card
   'select-deck-card': (payload: SelectDiscardCardPayload) => void;
+
+  // Select Nursery Card
+  'select-nursery-card': (payload: SelectDiscardCardPayload) => void;
 
   // Neigh Accept
   'neigh-accept': (payload: NeighAcceptPayload) => void;

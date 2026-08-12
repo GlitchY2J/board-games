@@ -1,6 +1,7 @@
 import type { GameState } from '../../models/GameState.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
 import { CardMovement } from './CardMovement.ts';
+import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
 
 export class ActionResolver {
   static handleDiscard(
@@ -109,6 +110,16 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'mermaid_unicorn') {
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 'mermaid_unicorn',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
     if (pending.reason === 'play_downgrade') {
       const card = (pending as any).card;
       if (card) {
@@ -174,6 +185,11 @@ export class ActionResolver {
 
       const targetCard = targetPlayer.stable[idx];
 
+      // Magical Kittencorn no puede ser destruido por Magic cards
+      if (isImmuneToMagicDestruction(targetCard.id)) {
+        return false;
+      }
+
       // Si el oponente tiene Black Knight Unicorn en su establo y la carta elegida no es Black Knight Unicorn
       const hasBlackKnight = targetPlayer.stable.some(
         (c) => c.id === 'black_knight_unicorn',
@@ -234,7 +250,7 @@ export class ActionResolver {
           );
           if (idx !== -1) {
             const [card] = targetPlayer.downgrades.splice(idx, 1);
-            CardMovement.destroyOrSacrifice(state, targetPlayer, card);
+            CardMovement.destroyOrSacrifice(state, targetPlayer, card, 'sacrifice');
           }
         }
 
@@ -289,6 +305,43 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
+    // Mermaid Unicorn: devuelve una carta del establo al jugador elegido (sin descarte)
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'mermaid_unicorn'
+    ) {
+      const targetPlayer = state.players.find(
+        (p) => p.id === pending.targetPlayerId,
+      );
+      if (!targetPlayer) return false;
+
+      let removedCard;
+
+      let idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+      if (idx !== -1) {
+        [removedCard] = targetPlayer.stable.splice(idx, 1);
+      } else {
+        idx = targetPlayer.upgrades.findIndex((c) => c.uid === cardId);
+        if (idx !== -1) {
+          [removedCard] = targetPlayer.upgrades.splice(idx, 1);
+        } else {
+          idx = targetPlayer.downgrades.findIndex((c) => c.uid === cardId);
+          if (idx !== -1) {
+            [removedCard] = targetPlayer.downgrades.splice(idx, 1);
+          }
+        }
+      }
+
+      if (!removedCard) return false;
+
+      CardMovement.returnToHand(state, targetPlayer, removedCard);
+
+      state.pendingAction = undefined;
+      return true;
+    }
+
+    // ──────────────────────────────────────────
     // Dark Angel Unicorn: sacrifica un Unicornio propio, luego trae uno del descarte
     // ──────────────────────────────────────────
     if (
@@ -302,7 +355,7 @@ export class ActionResolver {
       if (idx === -1) return false;
 
       const [sacrificedCard] = sourcePlayer.stable.splice(idx, 1);
-      CardMovement.destroyOrSacrifice(state, sourcePlayer, sacrificedCard);
+      CardMovement.destroyOrSacrifice(state, sourcePlayer, sacrificedCard, 'sacrifice');
 
       state.pendingAction = {
         type: 'select_discard_card',
@@ -402,7 +455,7 @@ export class ActionResolver {
       if (card.cardType !== 'unicorn') return false;
 
       const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
-      CardMovement.destroyOrSacrifice(state, targetPlayer, sacrificed);
+      CardMovement.destroyOrSacrifice(state, targetPlayer, sacrificed, 'sacrifice');
 
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
 

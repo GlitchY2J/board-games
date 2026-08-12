@@ -1,14 +1,13 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
-import { isImmuneToMagicDestruction } from './magicalKittencorn.ts';
 
-export const unicornPoison: CardEffect = {
-  onPlay(state, player) {
+export const mermaidUnicorn: CardEffect = {
+  onEnterStable(state, player) {
     const validTargets = state.players.filter(
       (p) =>
         p.id !== player.id &&
-        p.stable.some(
-          (c) => c.cardType === 'unicorn' && !isImmuneToMagicDestruction(c.id),
-        ),
+        (p.stable.length > 0 ||
+          p.upgrades.length > 0 ||
+          p.downgrades.length > 0),
     );
 
     if (validTargets.length === 0) {
@@ -18,7 +17,7 @@ export const unicornPoison: CardEffect = {
     if (validTargets.length === 1) {
       state.pendingAction = {
         type: 'select_stable_card',
-        reason: 'unicorn_poison',
+        reason: 'mermaid_unicorn',
         sourcePlayerId: player.id,
         targetPlayerId: validTargets[0].id,
       };
@@ -27,7 +26,7 @@ export const unicornPoison: CardEffect = {
 
     state.pendingAction = {
       type: 'select_player',
-      reason: 'unicorn_poison',
+      reason: 'mermaid_unicorn',
       sourcePlayerId: player.id,
     };
   },

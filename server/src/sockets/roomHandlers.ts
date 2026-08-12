@@ -80,6 +80,20 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
 
 
 
+  socket.on('leave-room', ({ roomCode }) => {
+    const room = roomManager.getRoom(roomCode);
+    if (!room) return;
+
+    roomManager.removePlayer(socket.id);
+
+    const updatedRoom = roomManager.getRoom(roomCode);
+
+    if (updatedRoom) {
+      socket.leave(roomCode);
+      io.to(roomCode).emit('room-updated', updatedRoom);
+    }
+  });
+
   socket.on('room:create', ({ hostName, game }, callback) => {
     const room = roomManager.createRoom(hostName, game, socket.id);
 

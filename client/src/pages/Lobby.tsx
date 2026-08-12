@@ -9,6 +9,7 @@ import { Copy, Check, Users, Crown, Loader2, ArrowLeft } from 'lucide-react';
 interface Player {
   id: string;
   socketId: string | null;
+  connected: boolean;
   name: string;
 }
 
@@ -119,6 +120,8 @@ export default function Lobby() {
     );
   }
 
+  const connectedPlayers = room.players.filter((p) => p.connected);
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-6 relative overflow-hidden">
       {/* Luces de fondo */}
@@ -127,6 +130,7 @@ export default function Lobby() {
       <Card className="w-full max-w-xl relative z-10">
         <button
           onClick={() => {
+            socket.emit('leave-room', { roomCode: room.code });
             deactivate();
             navigate('/');
           }}
@@ -183,12 +187,12 @@ export default function Lobby() {
               Jugadores Conectados
             </span>
             <span className="text-xs font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
-              {room.players.length} / 8
+              {connectedPlayers.length} / 8
             </span>
           </div>
 
           <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-            {room.players.map((player) => (
+            {connectedPlayers.map((player) => (
               <div
                 key={player.id}
                 className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/30 border border-slate-800/40 hover:border-slate-800 transition-all"
@@ -228,14 +232,21 @@ export default function Lobby() {
         {/* Panel de Control/Inicio */}
         <div className="border-t border-slate-900 pt-6 flex justify-center">
           {isHost ? (
-            <Button
-              onClick={() => {
-                socket.emit('start-game', room.code);
-              }}
-              fullWidth
-            >
-              Iniciar partida
-            </Button>
+            connectedPlayers.length <= 1 ? (
+              <Button fullWidth disabled>
+                <Loader2 className="animate-spin mr-2 inline" size={14} />
+                Esperando jugadores...
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  socket.emit('start-game', room.code);
+                }}
+                fullWidth
+              >
+                Iniciar partida
+              </Button>
+            )
           ) : (
             <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold py-2">
               <Loader2 className="animate-spin text-emerald-400" size={14} />

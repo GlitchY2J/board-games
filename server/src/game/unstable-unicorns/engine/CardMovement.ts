@@ -2,6 +2,10 @@ import type { Card } from '../../models/Card.ts';
 import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
 import { effects } from './effects/index.ts';
+import {
+  enqueueCardAnimation,
+  type CardAnimType,
+} from '../../cardAnimations.ts';
 
 export class CardMovement {
   /**
@@ -33,7 +37,12 @@ export class CardMovement {
    * Regla Especial: Si la carta es un Baby Unicorn, regresa a la Nursery en lugar del montón de descarte.
    * Regla Especial: Si es un Flying Unicorn, regresa a la mano del jugador.
    */
-  static destroyOrSacrifice(state: GameState, player: Player, card: Card): void {
+  static destroyOrSacrifice(
+    state: GameState,
+    player: Player,
+    card: Card,
+    animType: CardAnimType = 'destroy',
+  ): void {
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
       state.nursery.push(card);
       return;
@@ -44,6 +53,7 @@ export class CardMovement {
       return;
     }
 
+    enqueueCardAnimation(state.roomCode, animType, player.id, card);
     state.discard.push(card);
   }
 }

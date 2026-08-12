@@ -20,7 +20,8 @@ export type PendingAction =
         | "blatant_thievery"
         | "unicorn_poison"
         | "annoying_flying_unicorn"
-        | "play_downgrade";
+        | "play_downgrade"
+        | "mermaid_unicorn";
       sourcePlayerId: string;
       card?: Card;
     }
@@ -31,7 +32,8 @@ export type PendingAction =
         | "sacrifice_destroy"
         | "unicorn_poison"
         | "chainsaw_unicorn"
-        | "dark_angel_unicorn";
+        | "dark_angel_unicorn"
+        | "mermaid_unicorn";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -74,7 +76,9 @@ export type PendingAction =
         | "chainsaw_unicorn"
         | "classy_narwhal"
         | "dark_angel_unicorn"
-        | "magical_flying_unicorn";
+| "magical_flying_unicorn"
+        | "majestic_flying_unicorn"
+        | "mother_goose_unicorn";
       playerId: string;
       title: string;
       description: string;
@@ -84,7 +88,7 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-      reason: "dark_angel_unicorn" | "magical_flying_unicorn";
+      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
     }
@@ -94,4 +98,9 @@ export type PendingAction =
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
       candidates: Card[];
+    }
+  | {
+      type: "select_nursery_card";
+      reason: "mother_goose_unicorn";
+      playerId: string;
     };

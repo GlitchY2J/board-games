@@ -75,12 +75,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const resumeRef = useRef(resume);
   resumeRef.current = resume;
 
+  const playerIdRef = useRef(playerId);
+  playerIdRef.current = playerId;
+
   useEffect(() => {
     socket.connect();
 
     resumeRef.current();
 
-    const onRoomUpdated = (updatedRoom: Room) => setRoom(updatedRoom);
+    const onRoomUpdated = (updatedRoom: Room) => {
+      setRoom(updatedRoom);
+      setIsHost(updatedRoom.hostId === playerIdRef.current);
+    };
     const onGameUpdated = (state: GameState) => setGameState(state);
 
     socket.on('room-updated', onRoomUpdated);

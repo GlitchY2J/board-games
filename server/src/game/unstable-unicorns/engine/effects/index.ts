@@ -15,6 +15,11 @@ import { darkAngelUnicorn } from '../../../cards/effects/darkAngelUnicorn.ts';
 import { ginormousUnicorn } from '../../../cards/effects/ginormousUnicorn.ts';
 import { extremelyDestructiveUnicorn } from '../../../cards/effects/extremelyDestructiveUnicorn.ts';
 import { magicalFlyingUnicorn } from '../../../cards/effects/magicalFlyingUnicorn.ts';
+import { magicalKittencorn } from '../../../cards/effects/magicalKittencorn.ts';
+import { majesticFlyingUnicorn } from '../../../cards/effects/majesticFlyingUnicorn.ts';
+import { mermaidUnicorn } from '../../../cards/effects/mermaidUnicorn.ts';
+import { motherGooseUnicorn } from '../../../cards/effects/motherGooseUnicorn.ts';
+import { narwhalTorpedo } from '../../../cards/effects/narwhalTorpedo.ts';
 import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import type { CardEffect } from './CardEffect.ts';
 
@@ -37,4 +42,9 @@ export const effects: Record<string, CardEffect> = {
   ginormous_unicorn: ginormousUnicorn,
   extremely_destructive_unicorn: extremelyDestructiveUnicorn,
   magical_flying_unicorn: magicalFlyingUnicorn,
+  magical_kittencorn: magicalKittencorn,
+  majestic_flying_unicorn: majesticFlyingUnicorn,
+  mermaid_unicorn: mermaidUnicorn,
+  mother_goose_unicorn: motherGooseUnicorn,
+  narwhal_torpedo: narwhalTorpedo,
 };

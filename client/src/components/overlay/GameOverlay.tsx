@@ -64,6 +64,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       const isUnicornPoison = action.reason === 'unicorn_poison';
       const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
       const isPlayDowngrade = action.reason === 'play_downgrade';
+      const isMermaid = action.reason === 'mermaid_unicorn';
       const needsHand = isBlatantThievery || isAmericorn || isAnnoyingFlying;
 
       const eligiblePlayers = gameState.players.filter((p) => {
@@ -94,6 +95,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
         if (isUnicornPoison) return '🧪 Unicorn Poison';
         if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
         if (isPlayDowngrade) return '⏬ Jugar Desmejora';
+        if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
         return 'Seleccionar Objetivo';
       };
 
@@ -108,6 +110,8 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           return 'Elige a un jugador para forzarlo a descartar una carta';
         if (isPlayDowngrade)
           return 'Elige en qué establo deseas colocar esta carta de Desmejora';
+        if (isMermaid)
+          return 'Elige a un jugador para devolver una carta de su establo a su mano';
         return 'Elige a un jugador como objetivo de tu acción';
       };
 
@@ -125,7 +129,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             });
           }}
           onCancel={
-            isUnicornPoison || isAnnoyingFlying
+            isUnicornPoison || isAnnoyingFlying || isMermaid
               ? () => {
                   socket.emit('cancel-action', {
                     roomCode: gameState.roomCode,
@@ -278,9 +282,10 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       if (!target) return null;
 
       const isUnicornPoison = action.reason === 'unicorn_poison';
+      const isMermaid = action.reason === 'mermaid_unicorn';
 
       const cardsToSelect = isUnicornPoison
-        ? target.stable
+        ? target.stable.filter((c) => c.id !== 'magical_kittencorn')
         : [...target.stable, ...target.upgrades, ...target.downgrades];
 
       return (
@@ -288,12 +293,16 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           title={
             isUnicornPoison
               ? '🧪 Unicorn Poison'
-              : 'Seleccionar Carta del Establo'
+              : isMermaid
+                ? '🧜‍♀️ Mermaid Unicorn'
+                : 'Seleccionar Carta del Establo'
           }
           subtitle={
             isUnicornPoison
               ? `Selecciona un unicornio del establo de ${target.name} para destruirlo`
-              : `Selecciona una carta del establo de ${target.name}`
+              : isMermaid
+                ? `Selecciona una carta del establo de ${target.name} para devolverla a su mano`
+                : `Selecciona una carta del establo de ${target.name}`
           }
           items={cardsToSelect.map((card, idx) => ({
             id: `${card.id}_${idx}`,
@@ -302,7 +311,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             image: card.image,
           }))}
           maxSelection={1}
-          confirmText={isUnicornPoison ? 'Destruir' : 'Aceptar'}
+          confirmText={isUnicornPoison ? 'Destruir' : isMermaid ? 'Devolver' : 'Aceptar'}
           onConfirm={([cardId]) => {
             socket.emit('select-stable-card', {
               roomCode: gameState.roomCode,
@@ -574,13 +583,19 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
       case 'select_discard_card': {
       if (action.playerId !== localPlayerId) return null;
 
+      const addsToHand =
+        action.reason === 'magical_flying_unicorn' ||
+        action.reason === 'majestic_flying_unicorn';
+
       const isMagicalFlyingUnicorn =
         action.reason === 'magical_flying_unicorn';
+      const isMajesticFlyingUnicorn =
+        action.reason === 'majestic_flying_unicorn';
 
       const eligibleCards = gameState.discard.filter(
         (card) =>
           (!action.cardType || card.cardType === action.cardType) &&
-          (isMagicalFlyingUnicorn || card.id !== 'dark_angel_unicorn'),
+          (addsToHand || card.id !== 'dark_angel_unicorn'),
       );
 
       return (
@@ -588,12 +603,16 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           title={
             isMagicalFlyingUnicorn
               ? '🦄 Magical Flying Unicorn'
-              : '😈 Dark Angel Unicorn'
+              : isMajesticFlyingUnicorn
+                ? '🦄 Majestic Flying Unicorn'
+                : '😈 Dark Angel Unicorn'
           }
           subtitle={
             isMagicalFlyingUnicorn
               ? 'Elige una carta de Magia del descarte para añadirla a tu mano'
-              : 'Elige un unicornio del descarte para traerlo a tu establo'
+              : isMajesticFlyingUnicorn
+                ? 'Elige un unicornio del descarte para añadirlo a tu mano'
+                : 'Elige un unicornio del descarte para traerlo a tu establo'
           }
           items={eligibleCards.map((card, idx) => ({
             id: `${card.id}_${idx}`,
@@ -602,9 +621,7 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
             image: card.image,
           }))}
           maxSelection={1}
-          confirmText={
-            isMagicalFlyingUnicorn ? 'Añadir a la Mano' : 'Traer al Establo'
-          }
+          confirmText={addsToHand ? 'Añadir a la Mano' : 'Traer al Establo'}
           onConfirm={([cardId]) => {
             socket.emit('select-discard-card', {
               roomCode: gameState.roomCode,
@@ -635,6 +652,38 @@ export default function GameOverlay({ gameState, localPlayerId }: Props) {
           confirmText="Tomar"
           onConfirm={([cardId]) => {
             socket.emit('select-deck-card', {
+              roomCode: gameState.roomCode,
+              cardId,
+            });
+          }}
+        />
+      );
+    }
+
+    // ───────────────────────────────────
+    // SELECCIONAR CARTAS DE LA NURSERY
+    // ───────────────────────────────────
+    case 'select_nursery_card': {
+      if (action.playerId !== localPlayerId) return null;
+
+      const babies = gameState.nursery.filter(
+        (card) => card.cardType === 'unicorn' && card.unicornClass === 'baby',
+      );
+
+      return (
+        <CardSelectionOverlay
+          title="🦢 Mother Goose Unicorn"
+          subtitle="Elige un Baby Unicorn de la Nursery para traerlo a tu establo"
+          items={babies.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }))}
+          maxSelection={1}
+          confirmText="Traer al Establo"
+          onConfirm={([cardId]) => {
+            socket.emit('select-nursery-card', {
               roomCode: gameState.roomCode,
               cardId,
             });

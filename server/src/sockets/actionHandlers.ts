@@ -20,6 +20,7 @@ export function registerActionHandlers(
   registerSelectHandCard(io, socket);
   registerCancelAction(io, socket);
   registerSelectChoice(io, socket);
+  registerSelectNurseryCard(io, socket);
   registerSelectDiscardCard(io, socket);
   registerSelectDeckCard(io, socket);
 
@@ -412,6 +413,7 @@ export function registerActionHandlers(
               room.gameState,
               player,
               blackKnight,
+              "sacrifice",
             );
           }
         } else {
@@ -569,7 +571,138 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "majestic_flying_unicorn") {
+        if (choice === "yes") {
+          const unicornInDiscard = room.gameState.discard.some(
+            (card) => card.cardType === "unicorn",
+          );
+
+          if (unicornInDiscard) {
+            room.gameState.pendingAction = {
+              type: "select_discard_card",
+              reason: "majestic_flying_unicorn",
+              playerId: player.id,
+              cardType: "unicorn",
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Majestic Flying Unicorn`
+            : `${player.name} omitió el efecto de Majestic Flying Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "mother_goose_unicorn") {
+        if (choice === "yes") {
+          const hasBaby = room.gameState.nursery.some(
+            (card) =>
+              card.cardType === "unicorn" && card.unicornClass === "baby",
+          );
+
+          if (hasBaby) {
+            room.gameState.pendingAction = {
+              type: "select_nursery_card",
+              reason: "mother_goose_unicorn",
+              playerId: player.id,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Mother Goose Unicorn`
+            : `${player.name} omitió el efecto de Mother Goose Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       }
+    });
+  }
+
+  function registerSelectNurseryCard(
+    io: GameServer,
+    socket: GameSocket,
+  ): void {
+    socket.on("select-nursery-card", ({ roomCode, cardId }) => {
+      const room = roomManager.getRoom(roomCode);
+      if (!room?.gameState) return;
+
+      const player = room.gameState.players.find(
+        (p) => p.socketId === socket.id,
+      );
+      if (!player) return;
+
+      const pending = room.gameState.pendingAction;
+      if (
+        !pending ||
+        pending.type !== "select_nursery_card" ||
+        pending.playerId !== player.id ||
+        pending.reason !== "mother_goose_unicorn"
+      ) {
+        return;
+      }
+
+      const cardIdx = room.gameState.nursery.findIndex(
+        (c) => c.uid === cardId,
+      );
+      if (cardIdx === -1) return;
+
+      const baby = room.gameState.nursery[cardIdx];
+      if (baby.cardType !== "unicorn" || baby.unicornClass !== "baby") {
+        emitGameError(
+          socket,
+          "INVALID_SELECTION",
+          "La carta seleccionada no es un Baby Unicorn válido.",
+          "select-nursery-card",
+        );
+        return;
+      }
+
+      const [removed] = room.gameState.nursery.splice(cardIdx, 1);
+      room.gameState.pendingAction = undefined;
+
+      CardMovement.enterStable(room.gameState, player, removed);
+
+      if (
+        room.gameState.phase === TurnPhase.BEGINNING &&
+        !room.gameState.pendingAction
+      ) {
+        TurnManager.nextPhase(room.gameState);
+      }
+
+      addLog(
+        room.gameState,
+        `${player.name} trajo ${removed.name} de la Nursery a su establo`,
+        { playerId: player.id },
+      );
+
+      emitGameState(io, room, "game-updated");
     });
   }
 
@@ -594,7 +727,8 @@ export function registerActionHandlers(
 
       if (
         pending.reason !== "dark_angel_unicorn" &&
-        pending.reason !== "magical_flying_unicorn"
+        pending.reason !== "magical_flying_unicorn" &&
+        pending.reason !== "majestic_flying_unicorn"
       )
         return;
 
@@ -617,7 +751,10 @@ export function registerActionHandlers(
       const [removed] = room.gameState.discard.splice(cardIdx, 1);
       room.gameState.pendingAction = undefined;
 
-      if (pending.reason === "magical_flying_unicorn") {
+      if (
+        pending.reason === "magical_flying_unicorn" ||
+        pending.reason === "majestic_flying_unicorn"
+      ) {
         player.hand.push(removed);
 
         addLog(

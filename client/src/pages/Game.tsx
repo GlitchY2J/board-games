@@ -7,6 +7,8 @@ import BoardLayout from '../layouts/BoardLayout';
 import VictoryScreen from '../components/game/VictoryScreen';
 import TurnAnnouncement from '../components/game/TurnAnnouncement';
 import CardMoveEffect from '../components/effects/CardMoveEffect';
+import CardRemovalAnimation from '../components/effects/CardRemovalAnimation';
+import type { CardAnimation } from '../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface DrawnCard {
@@ -32,6 +34,10 @@ export default function Game() {
 
   const [drawnCard, setDrawnCard] = useState<DrawnCard | null>(null);
   const [turnAnnounce, setTurnAnnounce] = useState<TurnAnnounce | null>(null);
+
+  const [removalAnims, setRemovalAnims] = useState<
+    { animation: CardAnimation; rect: { left: number; top: number; width: number; height: number } }[]
+  >([]);
 
   const initialGameState =
     contextGameState ?? (location.state?.gameState as GameState | undefined) ?? null;
@@ -93,8 +99,28 @@ export default function Game() {
       prevTurnRef.current = { turn: state.turn, currentPlayer: state.currentPlayer };
     });
 
+    const onCardAnimations = (animations: CardAnimation[]) => {
+      const found = animations
+        .map((animation) => {
+          const el = document.querySelector(
+            `[data-card-uid="${animation.card.uid}"]`,
+          );
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          return { animation, rect };
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null);
+
+      if (found.length > 0) {
+        setRemovalAnims((prev) => [...prev, ...found]);
+      }
+    };
+
+    socket.on('card-animations', onCardAnimations);
+
     return () => {
       socket.off('game-updated');
+      socket.off('card-animations');
     };
   }, []);
 
@@ -147,9 +173,9 @@ export default function Game() {
     socket.emit('restart-game', gs.roomCode);
   }
 
-  // function endTurn() {
-  //   socket.emit('end-turn');
-  // }
+  function removeRemovalAnim(animId: string) {
+    setRemovalAnims((prev) => prev.filter((a) => a.animation.animId !== animId));
+  }
 
   return (
     <>
@@ -180,6 +206,14 @@ export default function Game() {
           onDone={() => setDrawnCard(null)}
         />
       )}
+      {removalAnims.map(({ animation, rect }) => (
+        <CardRemovalAnimation
+          key={animation.animId}
+          animation={animation}
+          rect={rect}
+          onDone={() => removeRemovalAnim(animation.animId)}
+        />
+      ))}
     </>
   );
 }

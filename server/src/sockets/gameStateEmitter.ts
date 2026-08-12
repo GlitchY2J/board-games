@@ -2,6 +2,7 @@ import type { GameServer } from './socketTypes.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { GameState } from '../game/models/GameState.ts';
 import type { Card } from '../game/models/Card.ts';
+import { drainCardAnimations } from '../game/cardAnimations.ts';
 
 const CARD_BACK_IMAGE = '/cards/base/card_back.png';
 
@@ -78,6 +79,11 @@ export function emitGameState(
 
   if (!game) {
     return;
+  }
+
+  const anims = drainCardAnimations(game.roomCode);
+  if (anims.length > 0) {
+    io.to(room.code).emit('card-animations', anims);
   }
 
   for (const roomPlayer of room.players) {
