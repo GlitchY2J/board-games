@@ -203,6 +203,9 @@ export interface ClientToServerEvents {
   // Select Nursery Card
   'select-nursery-card': (payload: SelectDiscardCardPayload) => void;
 
+  // Select Own Hand Card
+  'select-own-hand-card': (payload: SelectDiscardCardPayload) => void;
+
   // Neigh Accept
   'neigh-accept': (payload: NeighAcceptPayload) => void;
 

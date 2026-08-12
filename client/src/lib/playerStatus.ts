@@ -32,6 +32,8 @@ export function getPlayerStatus(
           return 'Buscando carta...';
         case 'select_nursery_card':
           return 'Eligiendo Baby Unicorn...';
+        case 'select_own_hand_card':
+          return 'Eligiendo unicornio básico...';
         case 'discard':
           return 'Descartando carta...';
         case 'alluring_narwhal':

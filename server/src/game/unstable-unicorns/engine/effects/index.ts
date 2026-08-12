@@ -23,6 +23,7 @@ import { narwhalTorpedo } from '../../../cards/effects/narwhalTorpedo.ts';
 import { necromancerUnicorn } from '../../../cards/effects/necromancerUnicorn.ts';
 import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import { queenBeeUnicorn } from '../../../cards/effects/queenBeeUnicorn.ts';
+import { rainbowUnicorn } from '../../../cards/effects/rainbowUnicorn.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -51,4 +52,5 @@ export const effects: Record<string, CardEffect> = {
   narwhal_torpedo: narwhalTorpedo,
   necromancer_unicorn: necromancerUnicorn,
   queen_bee_unicorn: queenBeeUnicorn,
+  rainbow_unicorn: rainbowUnicorn,
 };

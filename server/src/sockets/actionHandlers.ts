@@ -23,6 +23,7 @@ export function registerActionHandlers(
   registerSelectNurseryCard(io, socket);
   registerSelectDiscardCard(io, socket);
   registerSelectDeckCard(io, socket);
+  registerSelectOwnHandCard(io, socket);
 
   function continueBeginningPhaseIfReady(game: GameState): void {
     if (!game.pendingAction && game.phase === TurnPhase.BEGINNING) {
@@ -665,6 +666,29 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "rainbow_unicorn") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "select_own_hand_card",
+            reason: "rainbow_unicorn",
+            playerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Rainbow Unicorn`
+            : `${player.name} omitió el efecto de Rainbow Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       }
     });
   }
@@ -889,6 +913,60 @@ export function registerActionHandlers(
       addLog(
         room.gameState,
         `${player.name} buscó ${upgrade.name} en el mazo y lo añadió a su mano`,
+        { playerId: player.id },
+      );
+
+      emitGameState(io, room, "game-updated");
+    });
+  }
+
+  function registerSelectOwnHandCard(io: GameServer, socket: GameSocket): void {
+    socket.on("select-own-hand-card", ({ roomCode, cardId }) => {
+      const room = roomManager.getRoom(roomCode);
+      if (!room?.gameState) return;
+
+      const player = room.gameState.players.find(
+        (p) => p.socketId === socket.id,
+      );
+      if (!player) return;
+
+      const pending = room.gameState.pendingAction;
+      if (
+        !pending ||
+        pending.type !== "select_own_hand_card" ||
+        pending.playerId !== player.id
+      ) {
+        return;
+      }
+
+      if (pending.reason !== "rainbow_unicorn") return;
+
+      const resolved = ActionResolver.handleSelectOwnHandCardToStable(
+        room.gameState,
+        player.id,
+        cardId,
+      );
+
+      if (!resolved) {
+        emitGameError(
+          socket,
+          "INVALID_SELECTION",
+          "La carta seleccionada no es un unicornio básico válido.",
+          "select-own-hand-card",
+        );
+        return;
+      }
+
+      if (
+        room.gameState.phase === TurnPhase.BEGINNING &&
+        !room.gameState.pendingAction
+      ) {
+        TurnManager.nextPhase(room.gameState);
+      }
+
+      addLog(
+        room.gameState,
+        `${player.name} trajo un unicornio básico de su mano a su establo`,
         { playerId: player.id },
       );
 

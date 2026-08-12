@@ -541,6 +541,43 @@ export class ActionResolver {
     return true;
   }
 
+  static handleSelectOwnHandCardToStable(
+    state: GameState,
+    playerId: string,
+    cardId: string,
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'select_own_hand_card' ||
+      pending.playerId !== playerId
+    ) {
+      return false;
+    }
+
+    const player = state.players.find((p) => p.id === playerId);
+    if (!player) return false;
+
+    const cardIdx = player.hand.findIndex((c) => c.uid === cardId);
+    if (cardIdx === -1) return false;
+
+    const card = player.hand[cardIdx];
+    if (card.cardType !== 'unicorn' || card.unicornClass !== 'basic') {
+      return false;
+    }
+
+    const [moved] = player.hand.splice(cardIdx, 1);
+    const entered = CardMovement.enterStable(state, player, moved);
+
+    if (!entered) {
+      player.hand.push(moved);
+      return false;
+    }
+
+    state.pendingAction = undefined;
+    return true;
+  }
+
   static advanceMysticalVortex(state: GameState, remaining: string[]) {
     while (remaining.length > 0) {
       const nextPlayerId = remaining[0];

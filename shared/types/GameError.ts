@@ -34,6 +34,7 @@ export type GameActionName =
   | 'select-discard-card'
   | 'select-deck-card'
   | 'select-nursery-card'
+  | 'select-own-hand-card'
   | 'neigh-accept'
   | 'play-neigh'
   | 'unknown';

@@ -80,7 +80,8 @@ export type PendingAction =
 | "magical_flying_unicorn"
         | "majestic_flying_unicorn"
         | "mother_goose_unicorn"
-        | "necromancer_unicorn";
+        | "necromancer_unicorn"
+        | "rainbow_unicorn";
       playerId: string;
       title: string;
       description: string;
@@ -104,5 +105,10 @@ export type PendingAction =
   | {
       type: "select_nursery_card";
       reason: "mother_goose_unicorn";
+      playerId: string;
+    }
+  | {
+      type: "select_own_hand_card";
+      reason: "rainbow_unicorn";
       playerId: string;
     };

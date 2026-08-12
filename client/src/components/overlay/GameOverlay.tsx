@@ -761,6 +761,43 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
       );
     }
 
+    // ───────────────────────────────────
+    // RAINBOW UNICORN — traer un unicornio básico de la mano al establo
+    // ───────────────────────────────────
+    case 'select_own_hand_card': {
+      if (action.playerId !== localPlayerId) return null;
+
+      const player = gameState.players.find((p) => p.id === localPlayerId);
+      if (!player) return null;
+
+      const basicUnicorns = player.hand.filter(
+        (card) => card.cardType === 'unicorn' && card.unicornClass === 'basic',
+      );
+
+      return (
+        <CardSelectionOverlay
+          hide={hide}
+          title="🌈 Rainbow Unicorn"
+          subtitle="Elige un unicornio básico de tu mano para traerlo directamente a tu establo"
+          items={basicUnicorns.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }))}
+          maxSelection={1}
+          confirmText="Traer al Establo"
+          onConfirm={([cardId]) => {
+            dismiss();
+            socket.emit('select-own-hand-card', {
+              roomCode: gameState.roomCode,
+              cardId,
+            });
+          }}
+        />
+      );
+    }
+
     default:
       return null;
   }
