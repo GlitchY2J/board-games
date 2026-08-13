@@ -700,6 +700,16 @@
     "expansion": "base"
   },
   {
+    "id": "broken_stable",
+    "name": "Broken Stable",
+    "cardType": "downgrade",
+    "image": "/cards/base/broken_stable.png",
+    "description": "You cannot play Upgrade cards.",
+    "effect": "broken_stable",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "slowdown",
     "name": "Slowdown",
     "cardType": "downgrade",

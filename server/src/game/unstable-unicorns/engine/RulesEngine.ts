@@ -101,6 +101,17 @@ export class RulesEngine {
       );
     }
 
+    if (
+      playedCard.cardType === 'upgrade' &&
+      player.downgrades.some((c) => c.id === 'broken_stable')
+    ) {
+      return actionFailure(
+        'ACTION_NOT_ALLOWED',
+        'Broken Stable impide que juegues cartas de Upgrade.',
+        'play-card',
+      );
+    }
+
     return actionSuccess({ card: playedCard });
   }
 

@@ -24,6 +24,16 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
 
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
+
+  const blockedReason = (card: CardType): string => {
+    if (card.cardType === 'upgrade') {
+      return 'Broken Stable impide que juegues cartas de Upgrade.';
+    }
+    if (card.cardType === 'unicorn' && card.unicornClass === 'basic') {
+      return 'Queen Bee Unicorn impide que los unicornios básicos entren a tu establo.';
+    }
+    return '';
+  };
   const isNeigh = (card: CardType) =>
     card.effect === 'neigh' || card.effect === 'super_neigh';
 
@@ -105,8 +115,7 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                 </button>
                 {isBlocked(selectedCardId) ? (
                   <p className="text-xs text-slate-400 font-medium max-w-[200px] text-center">
-                    No se puede jugar: Queen Bee Unicorn impide que los
-                    unicornios básicos entren a tu establo.
+                    {blockedReason(selectedCard)}
                   </p>
                 ) : isNeigh(selectedCard) ? (
                   <p className="text-xs text-slate-400 font-medium max-w-[200px] text-center">

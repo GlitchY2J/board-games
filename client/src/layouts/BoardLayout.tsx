@@ -79,6 +79,22 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
       : [],
   );
 
+  const hasBrokenStable =
+    localPlayer.downgrades.some((c) => c.id === 'broken_stable') ?? false;
+
+  const blockedUpgradeIds = hasBrokenStable
+    ? new Set(
+        localPlayer.hand
+          .filter((c) => c.cardType === 'upgrade')
+          .map((c) => c.uid),
+      )
+    : new Set<string>();
+
+  const blockedCardIds = new Set<string>([
+    ...blockedBasicUnicornIds,
+    ...blockedUpgradeIds,
+  ]);
+
   return (
     <div className="board-layout">
       <div className="game-area">
@@ -224,7 +240,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           gamePhase={gameState.phase}
           actionUsed={gameState.actionUsed}
           pendingPlay={!!gameState.pendingPlay}
-          blockedCardIds={blockedBasicUnicornIds}
+          blockedCardIds={blockedCardIds}
           onPlay={onPlay}
         />
       </div>
