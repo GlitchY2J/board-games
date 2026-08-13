@@ -600,6 +600,16 @@
     "expansion": "base"
   },
   {
+    "id": "kiss_of_life",
+    "name": "Kiss Of Life",
+    "cardType": "magic",
+    "image": "/cards/base/kiss_of_life.png",
+    "description": "Bring a Unicorn card from the discard pile into your Stable.",
+    "effect": "kiss_of_life",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "mystical_vortex",
     "name": "Mystical Vortex",
     "cardType": "magic",

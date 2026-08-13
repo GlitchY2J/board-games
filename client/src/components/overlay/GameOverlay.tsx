@@ -792,6 +792,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         action.reason === 'majestic_flying_unicorn';
       const isNecromancer = action.reason === 'necromancer_unicorn';
       const isSwiftFlyingUnicorn = action.reason === 'swift_flying_unicorn';
+      const isKissOfLife = action.reason === 'kiss_of_life';
 
       const eligibleCards = gameState.discard.filter(
         (card) =>
@@ -814,7 +815,9 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
                   ? '🕊️ Swifty Flying Unicorn'
                   : isNecromancer
                     ? '🧙 Necromancer Unicorn'
-                    : '😈 Dark Angel Unicorn'
+                    : isKissOfLife
+                      ? '💋 Kiss Of Life'
+                      : '😈 Dark Angel Unicorn'
           }
           subtitle={
             isMagicalFlyingUnicorn

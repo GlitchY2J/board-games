@@ -998,7 +998,8 @@ export function registerActionHandlers(
         pending.reason !== "magical_flying_unicorn" &&
         pending.reason !== "majestic_flying_unicorn" &&
         pending.reason !== "necromancer_unicorn" &&
-        pending.reason !== "swift_flying_unicorn"
+        pending.reason !== "swift_flying_unicorn" &&
+        pending.reason !== "kiss_of_life"
       )
         return;
 
