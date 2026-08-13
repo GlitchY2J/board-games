@@ -22,7 +22,7 @@ interface TurnAnnounce {
 
 export default function Game() {
   const location = useLocation();
-  const { gameState: contextGameState, isHost: contextIsHost, deactivate } = useGame();
+  const { gameState: contextGameState, isHost: contextIsHost, room: roomFromContext, deactivate } = useGame();
 
   const [gameState, setGameState] = useState<GameState | null>(
     contextGameState ?? location.state?.gameState ?? null,
@@ -168,7 +168,7 @@ export default function Game() {
     return <h2>Jugador no encontrado.</h2>;
   }
 
-  const isHost = contextIsHost || localPlayer.id === gameState.players[0].id;
+  const isHost = contextIsHost || localPlayer.id === roomFromContext?.hostId;
 
   const gs: GameState = gameState;
   const isMyTurn = activePlayer.socketId === socket.id;

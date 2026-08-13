@@ -105,7 +105,8 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
       const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
       const isPlayDowngrade = action.reason === 'play_downgrade';
       const isMermaid = action.reason === 'mermaid_unicorn';
-      const needsHand = isBlatantThievery || isAmericorn || isAnnoyingFlying;
+      const isUnfairBargain = action.reason === 'unfair_bargain';
+      const needsHand = isBlatantThievery || isAmericorn || isAnnoyingFlying || isUnfairBargain;
 
       const eligiblePlayers = gameState.players.filter((p) => {
         if (isPlayDowngrade) return true;
@@ -136,6 +137,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
         if (isPlayDowngrade) return '⏬ Jugar Desmejora';
         if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
+        if (isUnfairBargain) return '🤝 Unfair Bargain';
         return 'Seleccionar Objetivo';
       };
 
@@ -152,6 +154,8 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           return 'Elige en qué establo deseas colocar esta carta de Desmejora';
         if (isMermaid)
           return 'Elige a un jugador para devolver una carta de su establo a su mano';
+        if (isUnfairBargain)
+          return 'Elige a un jugador para intercambiar manos con él';
         return 'Elige a un jugador como objetivo de tu acción';
       };
 

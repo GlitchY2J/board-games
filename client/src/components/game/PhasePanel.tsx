@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState } from '../../types/GameState';
 import type { GameLogEntry } from '../../types/GameState';
 import { socket } from '../../services/socket';
-import { User } from 'lucide-react';
+import { Info, X } from 'lucide-react';
 import { cn } from '../../lib/cn';
+import './PhasePanel.css';
 
 interface Props {
   gameState: GameState;
@@ -21,8 +22,7 @@ const PLAYER_COLORS = [
 ];
 
 export default function PhasePanel({ gameState }: Props) {
-  const activePlayer = gameState.players[gameState.currentPlayer];
-  const isActivePlayer = activePlayer.socketId === socket.id;
+  const [open, setOpen] = useState(false);
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
   const logEntries = gameState.log ?? [];
   const logRef = useRef<HTMLDivElement>(null);
@@ -101,71 +101,75 @@ export default function PhasePanel({ gameState }: Props) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex items-center gap-4 p-4 rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 text-center">
-        <div className="flex items-center gap-2">
-          <User size={13} className={cn(isActivePlayer ? 'text-emerald-400' : 'text-slate-400')} />
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-            Activo
-          </span>
-        </div>
-        <div className={cn(
-          "text-sm font-black tracking-wide truncate max-w-[160px]",
-          isActivePlayer ? "text-emerald-400 animate-pulse" : "text-slate-200"
-        )}>
-          {activePlayer.name} {isActivePlayer && '(Tú)'}
-        </div>
-        <div className="w-px h-6 bg-slate-900/60" />
-        <div className={cn(
-          "px-3 py-1.5 rounded-xl text-[11px] font-black tracking-wider uppercase border",
-          getPhaseColor(gameState.phase)
-        )}>
-          {gameState.phase}
-        </div>
-      </div>
-      <div className="w-full px-4 py-1.5 rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 text-center">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          Ronda{' '}
-        </span>
-        <span className="text-sm font-black text-amber-400">
-          {gameState.turn}
-        </span>
-      </div>
-      <div className="w-full rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 overflow-hidden">
-        <div className="px-4 py-2 border-b border-slate-900/60 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
-          Historial
-        </div>
-        <div
-          ref={logRef}
-          className="px-3 py-2 max-h-44 overflow-y-auto flex flex-col gap-2"
+    <div className={cn('phase-panel', open && 'phase-panel-open')}>
+      {!open ? (
+        <button
+          className="phase-panel-toggle"
+          title="Información de la partida"
+          onClick={() => setOpen(true)}
         >
-          {rounds.map((round) => (
-            <div key={round.turn} className="flex flex-col gap-1">
-              <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center select-none">
-                ═════ Ronda {round.turn} ═════
+          <Info size={20} />
+        </button>
+      ) : (
+        <div className="phase-panel-body">
+          <div className="w-full px-4 py-1.5 rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 flex items-center justify-center gap-3 relative">
+            <button
+              className="phase-panel-close"
+              title="Cerrar información"
+              onClick={() => setOpen(false)}
+            >
+              <X size={14} />
+            </button>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Ronda{' '}
+            </span>
+            <span className="text-sm font-black text-amber-400">
+              {gameState.turn}
+            </span>
+            <span className={cn(
+              "px-3 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase border",
+              getPhaseColor(gameState.phase)
+            )}>
+              {gameState.phase}
+            </span>
+          </div>
+            <div className="w-full rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 overflow-hidden">
+              <div className="px-4 py-2 border-b border-slate-900/60 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
+                Historial
               </div>
-              {round.entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className={cn(
-                    "text-[10px] leading-snug",
-                    entry.playerId === localPlayer?.id
-                      ? "text-emerald-300/90"
-                      : "text-slate-400/90",
-                  )}
-                >
-                  {renderEntry(entry)}
-                </div>
-              ))}
+              <div
+                ref={logRef}
+                className="px-3 py-2 max-h-44 overflow-y-auto flex flex-col gap-2"
+              >
+                {rounds.map((round) => (
+                  <div key={round.turn} className="flex flex-col gap-1">
+                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center select-none">
+                      ═════ Ronda {round.turn} ═════
+                    </div>
+                    {round.entries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className={cn(
+                          "text-[10px] leading-snug",
+                          entry.playerId === localPlayer?.id
+                            ? "text-emerald-300/90"
+                            : "text-slate-400/90",
+                        )}
+                      >
+                        {renderEntry(entry)}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                {rounds.length === 0 && (
+                  <div className="text-[10px] text-slate-600 text-center py-1">
+                    Sin acciones aún
+                  </div>
+                )}
+              </div>
             </div>
-          ))}
-          {rounds.length === 0 && (
-            <div className="text-[10px] text-slate-600 text-center py-1">
-              Sin acciones aún
-            </div>
-          )}
-        </div>
-      </div>
+          </div>
+      )}
     </div>
   );
 }

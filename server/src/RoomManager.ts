@@ -121,9 +121,11 @@ export class RoomManager {
   }
 
   // Remover jugador
-  removePlayer(socketId: string) {
+  removePlayer(socketId: string, playerId?: string) {
     for (const room of this.rooms.values()) {
-      room.players = room.players.filter((p) => p.socketId !== socketId);
+      room.players = room.players.filter(
+        (p) => p.socketId !== socketId && (!playerId || p.id !== playerId),
+      );
 
       if (room.players.length === 0) {
         this.rooms.delete(room.code);

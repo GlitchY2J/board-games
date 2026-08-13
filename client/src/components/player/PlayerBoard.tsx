@@ -19,15 +19,11 @@ export default function PlayerBoard({
       className={`player-board relative rounded-2xl glass-panel bg-slate-950/30 border p-3 transition-all duration-300 flex-col items-center gap-4`}
       style={{
         width: '100%',
-        minWidth: '340px',
+        minWidth: '0',
         maxWidth: '480px',
-        opacity: isMyTurn ? 1 : 0.9,
-        boxShadow: isMyTurn
-          ? '0 0 30px rgba(16, 185, 129, 0.15)'
-          : '0 10px 30px rgba(0, 0, 0, 0.3)',
-        borderColor: isMyTurn
-          ? 'rgba(16, 185, 129, 0.3)'
-          : 'rgba(255, 255, 255, 0.08)',
+        opacity: isMyTurn ? 1 : 0.85,
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
       }}
     >
       <div className="w-full flex justify-center">

@@ -13,6 +13,8 @@ import PlayerInfo from '../components/player/PlayerInfo';
 import { RotateCcw, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
+import LeaveConfirm from '../components/overlay/LeaveConfirm';
+import { useState } from 'react';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -24,11 +26,13 @@ interface Props {
 export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hidePendingPlay = false }: Props) {
   const navigate = useNavigate();
   const { deactivate } = useGame();
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
 
   if (!localPlayer) return;
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
   const totalPlayers = gameState.players.length;
+  const activePlayer = gameState.players[gameState.currentPlayer];
 
   const positions: ('top' | 'bottom')[] =
     totalPlayers === 4
@@ -58,13 +62,13 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
               <div key={opp.id} className="player-slot flex-col items-center gap-2">
                 <PlayerInfo
                   player={opp}
-                  isActive={false}
+                  isActive={opp.id === activePlayer.id}
                   status={getPlayerStatus(gameState, opp.id)}
                 />
                 <PlayerBoard
                   player={opp}
                   isLocalPlayer={false}
-                  isMyTurn={false}
+                  isMyTurn={opp.id === activePlayer.id}
                 />
               </div>
             );
@@ -117,13 +121,13 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
               >
                 <PlayerInfo
                   player={opp}
-                  isActive={false}
+                  isActive={opp.id === activePlayer.id}
                   status={getPlayerStatus(gameState, opp.id)}
                 />
                 <PlayerBoard
                   player={opp}
                   isLocalPlayer={false}
-                  isMyTurn={false}
+                  isMyTurn={opp.id === activePlayer.id}
                 />
               </div>
             );
@@ -143,14 +147,20 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
       <button
         className="debug-reset leave-room"
         title="Salir de la partida"
-        onClick={() => {
-          socket.emit('leave-room', { roomCode: gameState.roomCode });
-          deactivate();
-          navigate('/');
-        }}
+        onClick={() => setLeaveOpen(true)}
       >
         <LogOut size={16} />
       </button>
+      {leaveOpen && (
+        <LeaveConfirm
+          onCancel={() => setLeaveOpen(false)}
+          onConfirm={() => {
+            socket.emit('leave-room', { roomCode: gameState.roomCode });
+            deactivate();
+            navigate('/');
+          }}
+        />
+      )}
       <div className="phase-panel-anchor">
         <PhasePanel gameState={gameState} />
       </div>

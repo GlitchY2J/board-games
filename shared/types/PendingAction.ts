@@ -25,7 +25,8 @@ export type PendingAction =
         | "unicorn_poison"
         | "annoying_flying_unicorn"
         | "play_downgrade"
-        | "mermaid_unicorn";
+        | "mermaid_unicorn"
+        | "unfair_bargain";
       sourcePlayerId: string;
       card?: Card;
     }

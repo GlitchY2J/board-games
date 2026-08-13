@@ -2,6 +2,7 @@ import type { GameState } from '../../types/GameState';
 import { cn } from '../../lib/cn';
 import { Sparkles, Layers } from 'lucide-react';
 import { getStablePower } from '../../lib/stablePower';
+import './PlayerInfo.css';
 
 type Player = GameState['players'][number];
 
@@ -21,10 +22,18 @@ export default function PlayerInfo({
       className={cn(
         'flex items-center justify-between gap-3 px-4 py-2 rounded-2xl transition-all duration-300',
         'glass-panel border w-full',
-        isActive
-          ? 'border-emerald-500/40 ring-1 ring-emerald-500/20 shadow-lg shadow-emerald-500/10 bg-slate-950/40'
-          : 'border-slate-800/40 bg-slate-950/20'
       )}
+      style={{
+        backgroundColor: isActive
+          ? '#1e3a5f'
+          : 'rgba(15, 23, 42, 0.4)',
+        borderColor: isActive
+          ? 'rgba(59, 130, 246, 0.6)'
+          : 'rgba(71, 85, 105, 0.4)',
+        boxShadow: isActive
+          ? '0 0 0 1px rgba(59, 130, 246, 0.4)'
+          : 'none',
+      }}
     >
       <div className="flex items-center gap-2.5 flex-1 min-w-0">
         <span

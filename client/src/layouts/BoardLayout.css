@@ -191,3 +191,87 @@
 .debug-reset:active {
   transform: translateY(0);
 }
+
+/* ───────── Tablet ≤ 1024px ───────── */
+@media (max-width: 1024px) {
+  .game-area {
+    padding: 12px;
+  }
+  .player-top,
+  .player-bottom {
+    gap: 10px;
+  }
+  .player-top {
+    padding-top: 52px;
+  }
+  .player-bottom {
+    padding-bottom: 150px;
+  }
+  .center-column {
+    gap: 20px;
+  }
+}
+
+/* ───────── Móvil ≤ 640px ───────── */
+@media (max-width: 640px) {
+  .game-area {
+    padding: 8px;
+  }
+  .player-top {
+    padding-top: 52px;
+    gap: 6px;
+    align-items: flex-end;
+  }
+  .player-bottom {
+    gap: 6px;
+    padding-bottom: 138px;
+  }
+  .player-top,
+  .player-bottom {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  .player-slot .player-info {
+    max-width: 100%;
+  }
+  .player-slot {
+    gap: 2px !important;
+    width: 100%;
+    max-width: 460px;
+  }
+  .player-slot .player-board {
+    max-width: 100%;
+  }
+  .middle {
+    padding: 8px 0;
+  }
+  .center-stack {
+    gap: 6px;
+  }
+  .center-stack > .flex {
+    gap: 8px !important;
+    padding: 6px !important;
+  }
+  .draw-hint {
+    font-size: 10px;
+    padding: 6px 14px;
+  }
+  .phase-panel-anchor {
+    top: 16px;
+    right: 16px;
+  }
+  .phase-action-anchor {
+    right: 16px;
+    bottom: 16px;
+  }
+  .leave-room,
+  .debug-reset {
+    left: 16px;
+    width: 36px;
+    height: 36px;
+  }
+  .debug-reset {
+    bottom: 16px;
+  }
+}

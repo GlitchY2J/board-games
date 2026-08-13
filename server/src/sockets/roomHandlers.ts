@@ -1,8 +1,21 @@
 import type { GameServer, GameSocket } from './socketTypes.ts';
 import { roomManager } from '../roomManagerInstance.ts';
 import { emitGameState } from './gameStateEmitter.ts';
+import { addLog } from './gameLog.ts';
 import { Room } from '../game/models/Room.ts';
 import { Player } from '../game/models/Player.ts';
+import { Card } from '../game/models/Card.ts';
+import { GameState } from '../game/models/GameState.ts';
+
+function sendCardsOnLeave(game: GameState, cards: Card[]): void {
+  for (const card of cards) {
+    if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
+      game.nursery.push(card);
+    } else {
+      game.discard.push(card);
+    }
+  }
+}
 
 function createPublicRoom(room: Room): Room {
   return {
@@ -84,13 +97,67 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     const room = roomManager.getRoom(roomCode);
     if (!room) return;
 
+    // Si hay una partida en curso, eliminar al jugador del juego:
+    // sus cartas (mano, establo, upgrades, downgrades) van al descarte.
+    const game = room.gameState;
+    if (game) {
+      const leavingId = room.players.find((p) => p.socketId === socket.id)?.id;
+
+      const gamePlayer = leavingId
+        ? game.players.find((p) => p.id === leavingId)
+        : undefined;
+
+      if (gamePlayer) {
+        sendCardsOnLeave(game, gamePlayer.hand);
+        sendCardsOnLeave(game, gamePlayer.stable);
+        sendCardsOnLeave(game, gamePlayer.upgrades);
+        sendCardsOnLeave(game, gamePlayer.downgrades);
+
+        addLog(
+          game,
+          `${gamePlayer.name} salió de la partida`,
+          { playerId: gamePlayer.id },
+        );
+
+        const index = game.players.findIndex((p) => p.id === gamePlayer.id);
+        if (index !== -1) {
+          game.players.splice(index, 1);
+        }
+
+        if (game.players.length > 0) {
+          game.currentPlayer = game.currentPlayer % game.players.length;
+        }
+      }
+
+      // Limpiar referencias del jugador en acciones pendientes
+      if (game.pendingAction) {
+        const pending = game.pendingAction as any;
+        if (
+          pending.playerId === gamePlayer?.id ||
+          pending.sourcePlayerId === gamePlayer?.id
+        ) {
+          game.pendingAction = undefined;
+        }
+      }
+      if (game.pendingPlay?.playerId === gamePlayer?.id) {
+        game.pendingPlay = undefined;
+      }
+    }
+
     roomManager.removePlayer(socket.id);
 
     const updatedRoom = roomManager.getRoom(roomCode);
 
-    if (updatedRoom) {
-      socket.leave(roomCode);
-      io.to(roomCode).emit('room-updated', updatedRoom);
+    if (!updatedRoom) {
+      // La sala se eliminó (sin jugadores restantes)
+      return;
+    }
+
+    socket.leave(roomCode);
+    io.to(roomCode).emit('room-updated', updatedRoom);
+
+    if (game) {
+      emitGameState(io, updatedRoom, 'game-updated');
     }
   });
 

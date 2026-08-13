@@ -133,3 +133,22 @@
     transform: scale(1);
   }
 }
+
+/* ───────── Responsivo: abanico de la mano ───────── */
+@media (max-width: 640px) {
+  .card-fan {
+    height: 190px;
+  }
+  .fan-card {
+    margin-left: -46px;
+  }
+}
+
+@media (max-width: 420px) {
+  .card-fan {
+    height: 165px;
+  }
+  .fan-card {
+    margin-left: -40px;
+  }
+}

@@ -48,3 +48,37 @@
   transform: translateY(-25px);
   box-shadow: 0 0 30px rgba(0, 255, 255, 0.9);
 }
+
+/* ───────── Responsivo: compactar cartas en pantallas pequeñas ───────── */
+@media (max-width: 1024px) {
+  .playing-card.medium {
+    width: 84px;
+  }
+  .playing-card.large {
+    width: 118px;
+  }
+  .playing-card.xlarge {
+    width: 190px;
+  }
+  .playing-card.small {
+    width: 38px;
+  }
+}
+
+@media (max-width: 640px) {
+  .playing-card.small {
+    width: 32px;
+  }
+  .playing-card.medium {
+    width: 64px;
+  }
+  .playing-card.large {
+    width: 100px;
+  }
+  .playing-card.xlarge {
+    width: 160px;
+  }
+  .playing-card:hover {
+    transform: translateY(-10px) scale(1.08);
+  }
+}

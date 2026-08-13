@@ -167,6 +167,18 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'unfair_bargain') {
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!sourcePlayer) return false;
+
+      const sourceHand = sourcePlayer.hand;
+      sourcePlayer.hand = targetPlayer.hand;
+      targetPlayer.hand = sourceHand;
+
+      state.pendingAction = undefined;
+      return true;
+    }
+
     return false;
   }
 

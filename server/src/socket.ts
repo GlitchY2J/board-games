@@ -14,7 +14,9 @@ export function initializeSocket(io: GameServer): void {
     registerGameHandlers(io, socket);
     registerActionHandlers(io, socket);
 
-    // Desconexión
+    // Desconexión temporal (refresh o cierre del navegador).
+    // Solo se marca al jugador como desconectado para permitir la reconexión;
+    // el jugador NO se elimina del juego aquí.
     socket.on('disconnect', () => {
       console.log(`Cliente desconectado: ${socket.id}`);
 

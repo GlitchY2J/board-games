@@ -640,6 +640,16 @@
     "expansion": "base"
   },
   {
+    "id": "unfair_bargain",
+    "name": "Unfair Bargain",
+    "cardType": "magic",
+    "image": "/cards/base/unfair_bargain.png",
+    "description": "Trade hands with any other player.",
+    "effect": "unfair_bargain",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
     "id": "unicorn_poison",
     "name": "Unicorn Poison",
     "cardType": "magic",
