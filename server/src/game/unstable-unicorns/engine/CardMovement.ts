@@ -7,6 +7,10 @@ import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.
 export function hasUpgrade(player: Player, id: string): boolean {
   return player.upgrades.some((c) => c.id === id);
 }
+
+export function hasDowngrade(player: Player, id: string): boolean {
+  return player.downgrades.some((c) => c.id === id);
+}
 import {
   enqueueCardAnimation,
   type CardAnimType,
@@ -28,7 +32,12 @@ export class CardMovement {
 
     player.stable.push(card);
 
-    if (card.effect) {
+    // Blinding Light: bloquea la activación de efectos de tus Unicornios
+    if (
+      !hasDowngrade(player, 'blinding_light') &&
+      card.effect &&
+      card.cardType === 'unicorn'
+    ) {
       const effect = effects[card.effect];
       effect?.onEnterStable?.(state, player, card);
     }
@@ -81,7 +90,12 @@ export class CardMovement {
       return false;
     }
 
-    if (card.effect) {
+    // Blinding Light: bloquea la activación de efectos al destruir/sacrificar
+    // tus Unicornios.
+    const blindingLightActive =
+      card.cardType === 'unicorn' && hasDowngrade(player, 'blinding_light');
+
+    if (card.effect && !blindingLightActive) {
       const effect = effects[card.effect];
       const intercepted = effect?.onDestroyed?.(state, card, player);
       if (intercepted) return true;

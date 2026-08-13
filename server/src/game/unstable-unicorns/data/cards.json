@@ -700,6 +700,16 @@
     "expansion": "base"
   },
   {
+    "id": "blinding_light",
+    "name": "Blinding Light",
+    "cardType": "downgrade",
+    "image": "/cards/base/blinding_light.png",
+    "description": "Triggered effects of your Unicorn cards do not activate.",
+    "effect": "blinding_light",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "broken_stable",
     "name": "Broken Stable",
     "cardType": "downgrade",
@@ -719,6 +729,7 @@
     "copies": 1,
     "expansion": "base"
   },
+
   {
     "id": "nanny_cam",
     "name": "Nanny Cam",
