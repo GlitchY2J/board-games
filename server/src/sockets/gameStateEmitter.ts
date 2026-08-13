@@ -81,6 +81,12 @@ export function emitGameState(
     return;
   }
 
+  // Reanuda el siguiente paso de un flujo encadenado (p. ej. efectos on-enter
+  // interactivos disparados por Unicorn Swap) cuando la acción actual terminó.
+  while (!game.pendingAction && game.pendingResume?.length) {
+    game.pendingAction = game.pendingResume.pop();
+  }
+
   const anims = drainCardAnimations(game.roomCode);
   if (anims.length > 0) {
     io.to(room.code).emit('card-animations', anims);

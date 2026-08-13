@@ -26,7 +26,8 @@ export type PendingAction =
         | "annoying_flying_unicorn"
         | "play_downgrade"
         | "mermaid_unicorn"
-        | "unfair_bargain";
+        | "unfair_bargain"
+        | "unicorn_swap";
       sourcePlayerId: string;
       card?: Card;
     }
@@ -42,7 +43,9 @@ export type PendingAction =
         | "rhinocorn"
         | "seductive_unicorn"
         | "shark_with_a_horn"
-        | "stabby_the_unicorn";
+        | "stabby_the_unicorn"
+        | "unicorn_swap_give"
+        | "unicorn_swap_steal";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }

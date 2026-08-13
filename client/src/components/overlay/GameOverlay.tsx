@@ -1,5 +1,6 @@
 import { socket } from '../../services/socket';
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { GameState } from '../../types/GameState';
 import CardSelectionOverlay from './CardSelectionOverlay';
 
@@ -25,9 +26,11 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
   })();
 
   const [dismissedKey, setDismissedKey] = useState<string | null>(null);
+  const [minimized, setMinimized] = useState(false);
 
   useEffect(() => {
     setDismissedKey((prev) => (prev && prev !== actionKey ? null : prev));
+    setMinimized(false);
   }, [actionKey]);
 
   const dismiss = () => setDismissedKey(actionKey);
@@ -40,7 +43,8 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
     return null;
   }
 
-  switch (action.type) {
+  const renderOverlay = (): ReactNode => {
+    switch (action.type) {
     // ───────────────────────────────────
     // DESCARTE DE CARTAS
     // ───────────────────────────────────
@@ -106,12 +110,14 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
       const isPlayDowngrade = action.reason === 'play_downgrade';
       const isMermaid = action.reason === 'mermaid_unicorn';
       const isUnfairBargain = action.reason === 'unfair_bargain';
+      const isUnicornSwap = action.reason === 'unicorn_swap';
       const needsHand = isBlatantThievery || isAmericorn || isAnnoyingFlying || isUnfairBargain;
 
       const eligiblePlayers = gameState.players.filter((p) => {
         if (isPlayDowngrade) return true;
         if (p.id === localPlayerId) return false;
         if (needsHand) return p.hand.length > 0;
+        if (isUnicornSwap) return p.stable.some((c) => c.cardType === 'unicorn');
         if (isUnicornPoison) return p.stable.length > 0;
         return (
           p.stable.length > 0 ||
@@ -125,9 +131,11 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         title: p.id === localPlayerId ? `${p.name} (Tú)` : p.name,
         subtitle: isPlayDowngrade
           ? `Desmejoras actuales: ${p.downgrades.length}`
-          : needsHand
-            ? `${p.hand.length} carta(s) en mano`
-            : `${p.stable.length} unicornio(s) en establo`,
+          : isUnicornSwap
+            ? `${p.stable.filter((c) => c.cardType === 'unicorn').length} unicornio(s) en establo`
+            : needsHand
+              ? `${p.hand.length} carta(s) en mano`
+              : `${p.stable.length} unicornio(s) en establo`,
       }));
 
       const getTitle = () => {
@@ -138,6 +146,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         if (isPlayDowngrade) return '⏬ Jugar Desmejora';
         if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
         if (isUnfairBargain) return '🤝 Unfair Bargain';
+        if (isUnicornSwap) return '🦄 Unicorn Swap';
         return 'Seleccionar Objetivo';
       };
 
@@ -156,6 +165,8 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           return 'Elige a un jugador para devolver una carta de su establo a su mano';
         if (isUnfairBargain)
           return 'Elige a un jugador para intercambiar manos con él';
+        if (isUnicornSwap)
+          return 'Elige a un jugador para intercambiar un unicornio con él';
         return 'Elige a un jugador como objetivo de tu acción';
       };
 
@@ -384,6 +395,77 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
             items={items}
             maxSelection={1}
             confirmText="Destruir"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      if (action.reason === 'unicorn_swap_give') {
+        const localPlayer = gameState.players.find(
+          (p) => p.id === localPlayerId,
+        );
+        const target = gameState.players.find(
+          (p) => p.id === action.targetPlayerId,
+        );
+
+        const items = (localPlayer?.stable ?? [])
+          .filter((c) => c.cardType === 'unicorn')
+          .map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: 'Tu establo',
+            image: card.image,
+          }));
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="🦄 Unicorn Swap"
+            subtitle={`Elige un unicornio de TU establo para moverlo al establo de ${target?.name ?? ''}`}
+            items={items}
+            maxSelection={1}
+            confirmText="Mover"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      if (action.reason === 'unicorn_swap_steal') {
+        const target = gameState.players.find(
+          (p) => p.id === action.targetPlayerId,
+        );
+
+        const items = (target?.stable ?? [])
+          .filter((c) => c.cardType === 'unicorn')
+          .map((card, idx) => ({
+            id: `${card.id}_${target?.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: `Establo de ${target?.name ?? ''}`,
+            image: card.image,
+          }));
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="🦄 Unicorn Swap"
+            subtitle={`ROBA un unicornio del establo de ${target?.name ?? ''}`}
+            items={items}
+            maxSelection={1}
+            confirmText="Robar"
             onConfirm={([cardId]) => {
               dismiss();
               socket.emit('select-stable-card', {
@@ -1041,6 +1123,25 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
     default:
       return null;
   }
+  };
+
+  const overlay = renderOverlay();
+  if (!overlay) {
+    return null;
+  }
+
+  return (
+    <>
+      <button
+        className="overlay-toggle"
+        title={minimized ? 'Mostrar overlay' : 'Ocultar overlay'}
+        onClick={() => setMinimized((m) => !m)}
+      >
+        {minimized ? '◉' : '−'}
+      </button>
+      {!minimized && overlay}
+    </>
+  );
 }
 
 function UnicornOracleOverlay({

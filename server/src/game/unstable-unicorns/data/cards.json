@@ -660,6 +660,16 @@
     "expansion": "base"
   },
   {
+    "id": "unicorn_swap",
+    "name": "Unicorn Swap",
+    "cardType": "magic",
+    "image": "/cards/base/unicorn_swap.png",
+    "description": "Move a Unicorn card in your Stable to any other player's Stable, then STEAL a Unicorn card from that player's Stable.",
+    "effect": "unicorn_swap",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
     "id": "neigh",
     "name": "Neigh",
     "cardType": "instant",

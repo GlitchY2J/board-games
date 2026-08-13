@@ -179,6 +179,16 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'unicorn_swap') {
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 'unicorn_swap_give',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
     return false;
   }
 
@@ -280,6 +290,82 @@ export class ActionResolver {
 
     if (Array.isArray(cardId)) {
       return false;
+    }
+
+    // Unicorn Swap: mover un unicornio propio al establo del objetivo
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_swap_give'
+    ) {
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      const targetPlayer = state.players.find(
+        (p) => p.id === pending.targetPlayerId,
+      );
+      if (!sourcePlayer || !targetPlayer) return false;
+
+      const idx = sourcePlayer.stable.findIndex((c) => c.uid === cardId);
+      if (idx === -1) return false;
+
+      const [moved] = sourcePlayer.stable.splice(idx, 1);
+      CardMovement.enterStable(state, targetPlayer, moved);
+
+      // Si el efecto on-enter de la carta entrante abrió su propio pendingAction
+      // interactivo (p. ej. Seductive Unicorn), priorizarlo; el steal se reanuda después.
+      const nextPending = state.pendingAction;
+      if (
+        nextPending &&
+        nextPending !== pending &&
+        !(
+          nextPending.type === 'select_stable_card' &&
+          'reason' in nextPending &&
+          nextPending.reason === 'unicorn_swap_steal'
+        )
+      ) {
+        if (!state.pendingResume) state.pendingResume = [];
+        state.pendingResume.push({
+          type: 'select_stable_card',
+          reason: 'unicorn_swap_steal',
+          sourcePlayerId,
+          targetPlayerId: pending.targetPlayerId,
+        });
+      } else {
+        state.pendingAction = {
+          type: 'select_stable_card',
+          reason: 'unicorn_swap_steal',
+          sourcePlayerId,
+          targetPlayerId: pending.targetPlayerId,
+        };
+      }
+      return true;
+    }
+
+    // Unicorn Swap: robar un unicornio del establo del objetivo
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_swap_steal'
+    ) {
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      const targetPlayer = state.players.find(
+        (p) => p.id === pending.targetPlayerId,
+      );
+      if (!sourcePlayer || !targetPlayer) return false;
+
+      const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+      if (idx === -1) return false;
+
+      const [stolen] = targetPlayer.stable.splice(idx, 1);
+      CardMovement.enterStable(state, sourcePlayer, stolen);
+
+      // Si el on-enter del unicornio robado abrió su propio pendingAction interactivo,
+      // dejarlo activo; de lo contrario cierra el flujo.
+      if (
+        state.pendingAction === pending ||
+        !state.pendingAction
+      ) {
+        state.pendingAction = undefined;
+      }
+
+      return true;
     }
 
     if (pending.type === 'extremely_destructive_unicorn') {

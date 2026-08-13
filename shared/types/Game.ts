@@ -48,6 +48,8 @@ export interface GameState {
   phase: TurnPhase;
   pendingAction?: PendingAction;
   pendingPlay?: PendingPlay;
+  /** Cola LIFO de pasos de flujo pendientes de reanudar cuando termine la acción actual (p. ej. efectos on-enter anidados). */
+  pendingResume?: PendingAction[];
   actionUsed: boolean;
   winnerId?: string;
   extraTurn?: boolean;
