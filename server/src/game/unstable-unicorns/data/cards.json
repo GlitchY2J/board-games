@@ -680,6 +680,16 @@
     "expansion": "base"
   },
   {
+    "id": "rainbow_aura",
+    "name": "Rainbow Aura",
+    "cardType": "upgrade",
+    "image": "/cards/base/rainbow_aura.png",
+    "description": "Your Unicorn cards cannot be destroyed.",
+    "effect": "rainbow_aura",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "yay",
     "name": "Yay",
     "cardType": "upgrade",

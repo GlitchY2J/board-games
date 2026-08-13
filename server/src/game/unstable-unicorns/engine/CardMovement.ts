@@ -3,6 +3,10 @@ import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
 import { effects } from './effects/index.ts';
 import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.ts';
+
+export function hasUpgrade(player: Player, id: string): boolean {
+  return player.upgrades.some((c) => c.id === id);
+}
 import {
   enqueueCardAnimation,
   type CardAnimType,
@@ -58,6 +62,18 @@ export class CardMovement {
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
       state.nursery.push(card);
       return false;
+    }
+
+    // Rainbow Aura: tus Unicornios no pueden ser DESTRUIDOS (el sacrificio no se bloquea)
+    if (
+      card.cardType === 'unicorn' &&
+      animType !== 'sacrifice' &&
+      hasUpgrade(player, 'rainbow_aura')
+    ) {
+      if (!player.stable.some((c) => c.uid === card.uid)) {
+        player.stable.push(card);
+      }
+      return true;
     }
 
     if (card.id.includes('flying_unicorn') || card.effect === 'llamacorn') {

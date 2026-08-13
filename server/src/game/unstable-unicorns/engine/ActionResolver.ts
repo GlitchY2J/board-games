@@ -231,12 +231,25 @@ export class ActionResolver {
           'sacrifice',
         );
 
-        state.pendingAction = {
-          type: 'two_for_one',
-          sourcePlayerId,
-          phase: 'destroy',
-          remainingToDestroy: 2,
-        };
+        const nextPending = state.pendingAction;
+        if (nextPending && nextPending !== pending) {
+          // El sacrificio disparó un efecto onDestroyed interactivo (p. ej.
+          // Stabby The Unicorn). Encolar la fase 'destroy' para reanudarla después.
+          if (!state.pendingResume) state.pendingResume = [];
+          state.pendingResume.push({
+            type: 'two_for_one',
+            sourcePlayerId,
+            phase: 'destroy',
+            remainingToDestroy: 2,
+          });
+        } else {
+          state.pendingAction = {
+            type: 'two_for_one',
+            sourcePlayerId,
+            phase: 'destroy',
+            remainingToDestroy: 2,
+          };
+        }
         return true;
       }
 
@@ -630,12 +643,25 @@ export class ActionResolver {
 
       if (intercepted) return true;
 
-      state.pendingAction = {
-        type: 'select_discard_card',
-        reason: 'dark_angel_unicorn',
-        playerId: sourcePlayerId,
-        cardType: 'unicorn',
-      };
+      const nextPending = state.pendingAction;
+      if (nextPending && nextPending !== pending) {
+        // El sacrificio disparó un efecto onDestroyed interactivo (p. ej.
+        // Stabby The Unicorn). Encolar el siguiente paso para reanudarlo después.
+        if (!state.pendingResume) state.pendingResume = [];
+        state.pendingResume.push({
+          type: 'select_discard_card',
+          reason: 'dark_angel_unicorn',
+          playerId: sourcePlayerId,
+          cardType: 'unicorn',
+        });
+      } else {
+        state.pendingAction = {
+          type: 'select_discard_card',
+          reason: 'dark_angel_unicorn',
+          playerId: sourcePlayerId,
+          cardType: 'unicorn',
+        };
+      }
       return true;
     }
 
@@ -738,15 +764,27 @@ export class ActionResolver {
       if (intercepted) return true;
 
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
+      const onDestroyedOpened = state.pendingAction && state.pendingAction !== pending;
 
       if (resolvedPlayerIds.length >= pending.remainingPlayerIds.length) {
-        state.pendingAction = undefined;
+        // Último jugador: cerrar el flujo. Si el sacrificio abrió un efecto
+        // onDestroyed interactivo (p. ej. Stabby), mantenerlo activo.
+        if (!onDestroyedOpened) {
+          state.pendingAction = undefined;
+        }
       } else {
-        state.pendingAction = {
+        const nextStep = {
+          ...pending,
           type: 'extremely_destructive_unicorn',
           remainingPlayerIds: pending.remainingPlayerIds,
           resolvedPlayerIds,
-        };
+        } as typeof pending;
+        if (onDestroyedOpened) {
+          if (!state.pendingResume) state.pendingResume = [];
+          state.pendingResume.push(nextStep);
+        } else {
+          state.pendingAction = nextStep;
+        }
       }
 
       return true;
@@ -775,8 +813,8 @@ export class ActionResolver {
           destroyed,
         );
 
-        if (intercepted) return true;
-
+        // Rhinocorn avanza el turno igual si la destrucción fue interceptada
+        // (p. ej. protegida por Rainbow Aura), para no dejar el juego colgado.
         state.pendingAction = undefined;
 
         // Pasa a la fase de acción pero sin acciones, obligando a "Terminar Turno"
