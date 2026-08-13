@@ -131,7 +131,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         title: p.id === localPlayerId ? `${p.name} (Tú)` : p.name,
         avatar: p.avatar || undefined,
         subtitle: isPlayDowngrade
-          ? `Desmejoras actuales: ${p.downgrades.length}`
+          ? `Downgrades actuales: ${p.downgrades.length}`
           : isUnicornSwap
             ? `${p.stable.filter((c) => c.cardType === 'unicorn').length} unicornio(s) en establo`
             : needsHand
@@ -144,7 +144,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         if (isAmericorn) return '🇺🇸 Americorn';
         if (isUnicornPoison) return '🧪 Unicorn Poison';
         if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
-        if (isPlayDowngrade) return '⏬ Jugar Desmejora';
+        if (isPlayDowngrade) return '⏬ Jugar Downgrade';
         if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
         if (isUnfairBargain) return '🤝 Unfair Bargain';
         if (isUnicornSwap) return '🦄 Unicorn Swap';
@@ -161,7 +161,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         if (isAnnoyingFlying)
           return 'Elige a un jugador para forzarlo a descartar una carta';
         if (isPlayDowngrade)
-          return 'Elige en qué establo deseas colocar esta carta de Desmejora';
+          return 'Elige en qué establo deseas colocar esta carta de Downgrade';
         if (isMermaid)
           return 'Elige a un jugador para devolver una carta de su establo a su mano';
         if (isUnfairBargain)
@@ -433,7 +433,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
               id: `${card.id}_upg_${idx}`,
               value: card.uid,
               title: card.name,
-              subtitle: 'Tu mejora',
+              subtitle: 'Tu upgrade',
               image: card.image,
             })),
           ...(localPlayer?.downgrades ?? []).map((card, idx) => ({
@@ -718,7 +718,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
     }
 
     // ───────────────────────────────────
-    // ALLURING NARWHAL — Robar Mejora del establo
+    // ALLURING NARWHAL — Robar Upgrade del establo
     // ───────────────────────────────────
     case 'alluring_narwhal': {
       if (action.playerId !== localPlayerId) return null;
@@ -749,10 +749,10 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         <CardSelectionOverlay
           hide={hide}
           title="✨ Alluring Narwhal"
-          subtitle="Roba una carta de Mejora del establo de otro jugador"
+          subtitle="Roba una carta de Upgrade del establo de otro jugador"
           items={upgradeCards}
           maxSelection={1}
-          confirmText="Robar Mejora"
+          confirmText="Robar Upgrade"
           onConfirm={([cardId]) => {
             dismiss();
             socket.emit('select-stable-card', {
@@ -1071,7 +1071,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           subtitle={
             isGreatNarwhal
               ? 'Elige una carta con "Narwhal" en su nombre para agregarla a tu mano (luego se barajará el mazo)'
-              : 'Elige una carta de Mejora del mazo para agregarla a tu mano (luego se barajará el mazo)'
+              : 'Elige una carta de Upgrade del mazo para agregarla a tu mano (luego se barajará el mazo)'
           }
           items={action.candidates.map((card, idx) => ({
             id: `${card.id}_${idx}`,

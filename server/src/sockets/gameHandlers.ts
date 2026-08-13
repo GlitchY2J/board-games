@@ -603,6 +603,16 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    if (gamePlayer.downgrades.some((card) => card.id === 'slowdown')) {
+      emitGameError(
+        socket,
+        'ACTION_NOT_ALLOWED',
+        'Slowdown te impide jugar cartas Instantáneas.',
+        'play-neigh',
+      );
+      return;
+    }
+
     const neighCard = gamePlayer.hand.find(
       (c) => c.uid === cardId && c.effect !== null && NEIGH_EFFECTS.has(c.effect),
     );

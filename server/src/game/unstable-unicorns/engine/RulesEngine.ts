@@ -1,7 +1,6 @@
 import type { Card } from '../../models/Card.js';
 import type { GameState } from '../../models/GameState.ts';
 import { TurnPhase } from '../../turn/TurnPhase.ts';
-import { DowngradeHandler } from './handlers/DowngradeHandler.ts';
 import { InstantHandler } from './handlers/InstantHandler.ts';
 import { MagicHandler } from './handlers/MagicHandler.ts';
 import { UnicornHandler } from './handlers/UnicornHandler.ts';
@@ -139,7 +138,12 @@ export class RulesEngine {
           UpgradeHandler.play(player, card);
           break;
         case 'downgrade':
-          DowngradeHandler.play(player, card);
+          state.pendingAction = {
+            type: 'select_player',
+            reason: 'play_downgrade',
+            sourcePlayerId: player.id,
+            card,
+          };
           break;
         case 'magic':
           MagicHandler.play(state, player, card);

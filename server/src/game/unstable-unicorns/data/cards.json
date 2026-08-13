@@ -700,6 +700,16 @@
     "expansion": "base"
   },
   {
+    "id": "slowdown",
+    "name": "Slowdown",
+    "cardType": "downgrade",
+    "image": "/cards/base/slowdown.png",
+    "description": "You cannot play Instant cards.",
+    "effect": "slowdown",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "neigh",
     "name": "Neigh",
     "cardType": "instant",
