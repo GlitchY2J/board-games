@@ -3,7 +3,9 @@ import type { Player } from '../../../models/Player.ts';
 import type { Card } from '../../../models/Card.ts';
 
 export interface CardEffect {
-  onPlay?(state: GameState, player: Player, card: Card): void;
+  /** Se dispara al jugar la carta. Devuelve `true` si la carta fue consumida
+   *  (no se manda al descarte automáticamente). */
+  onPlay?(state: GameState, player: Player, card: Card): boolean | void;
 
   onEnterStable?(state: GameState, player: Player, card: Card): void;
 

@@ -620,6 +620,16 @@
     "expansion": "base"
   },
   {
+    "id": "shake_up",
+    "name": "Shake Up",
+    "cardType": "magic",
+    "image": "/cards/base/shake_up.png",
+    "description": "Shuffle this card, your hand, and the discard pile into the deck. DRAW 5 cards.",
+    "effect": "shake_up",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "unicorn_poison",
     "name": "Unicorn Poison",
     "cardType": "magic",

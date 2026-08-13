@@ -155,9 +155,12 @@ export class RulesEngine {
           );
       }
 
-      // Retiramos la carta después de comprobar su tipo
-      // Los handlers reciben la misma referencia del objeto
-      player.hand.splice(handIndex, 1);
+      // Retiramos la carta después de comprobar su tipo.
+      // Recalculamos el índice por si el efecto modificó la mano (p. ej. Shake Up).
+      const finalHandIndex = player.hand.findIndex((c) => c.uid === card.uid);
+      if (finalHandIndex !== -1) {
+        player.hand.splice(finalHandIndex, 1);
+      }
 
       state.actionUsed = true;
 

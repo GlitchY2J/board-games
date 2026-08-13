@@ -5,11 +5,15 @@ import { effects } from '../effects/index.ts';
 
 export class MagicHandler {
   static play(state: GameState, player: Player, card: Card) {
+    let consumed = false;
+
     if (card.effect) {
       const effect = effects[card.effect];
-      effect?.onPlay?.(state, player, card);
+      consumed = effect?.onPlay?.(state, player, card) === true;
     }
 
-    state.discard.push(card);
+    if (!consumed) {
+      state.discard.push(card);
+    }
   }
 }
