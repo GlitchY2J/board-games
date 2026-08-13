@@ -27,6 +27,7 @@ import { rainbowUnicorn } from '../../../cards/effects/rainbowUnicorn.ts';
 import { seductiveUnicorn } from '../../../cards/effects/seductiveUnicorn.ts';
 import { sharkWithAHorn } from '../../../cards/effects/sharkWithAHorn.ts';
 import { stabbyTheUnicorn } from '../../../cards/effects/stabbyTheUnicorn.ts';
+import { shabbyTheNarwhal } from '../../../cards/effects/shabbyTheNarwhal.ts';
 import { swiftyFlyingUnicorn } from '../../../cards/effects/swiftyFlyingUnicorn.ts';
 import { theGreatNarwhal } from '../../../cards/effects/theGreatNarwhal.ts';
 import { unicornOnTheCob } from '../../../cards/effects/unicornOnTheCob.ts';
@@ -69,6 +70,7 @@ export const effects: Record<string, CardEffect> = {
   seductive_unicorn: seductiveUnicorn,
   shark_with_a_horn: sharkWithAHorn,
   stabby_the_unicorn: stabbyTheUnicorn,
+  shabby_the_narwhal: shabbyTheNarwhal,
   swift_flying_unicorn: swiftyFlyingUnicorn,
   the_great_narwhal: theGreatNarwhal,
   unicorn_on_the_cob: unicornOnTheCob,

@@ -47,7 +47,7 @@ export default function Lobby() {
   }, [contextRoom]);
 
   const [copied, setCopied] = useState(false);
-  const [turnOrder, setTurnOrder] = useState<{ id: string; name: string }[] | null>(null);
+  const [turnOrder, setTurnOrder] = useState<{ id: string; name: string; avatar?: string }[] | null>(null);
   const [shuffling, setShuffling] = useState(false);
 
   const roomRef = useRef(room);

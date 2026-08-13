@@ -578,6 +578,41 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "shabby_the_narwhal") {
+        if (choice === "yes") {
+          const candidates = room.gameState.deck.filter(
+            (card) => card.cardType === "downgrade",
+          );
+
+          if (candidates.length > 0) {
+            room.gameState.pendingAction = {
+              type: "select_deck_card",
+              reason: "shabby_the_narwhal",
+              playerId: player.id,
+              candidates,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.nextPhase(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usó el efecto de Shabby The Narwhal`
+            : `${player.name} omitió el efecto de Shabby The Narwhal`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       } else if (pending.reason === "magical_flying_unicorn") {
         if (choice === "yes") {
           const magicInDiscard = room.gameState.discard.some(
@@ -1135,7 +1170,11 @@ export function registerActionHandlers(
         return;
       }
 
-      if (pending.reason !== "classy_narwhal" && pending.reason !== "the_great_narwhal")
+      if (
+        pending.reason !== "classy_narwhal" &&
+        pending.reason !== "the_great_narwhal" &&
+        pending.reason !== "shabby_the_narwhal"
+      )
         return;
 
       if (

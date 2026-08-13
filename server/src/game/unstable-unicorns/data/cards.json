@@ -473,6 +473,17 @@
     "expansion": "base"
   },
   {
+    "id": "shabby_the_narwhal",
+    "name": "Shabby The Narwhal",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/base/shabby_the_narwhal.png",
+    "description": "When this card enters your Stable, you may search the deck for a Downgrade card and add it to your hand. Shuffle the deck.",
+    "effect": "shabby_the_narwhal",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "shark_with_a_horn",
     "name": "Shark With A Horn",
     "cardType": "unicorn",

@@ -107,7 +107,8 @@ export type PendingAction =
         | "shark_with_a_horn"
         | "stabby_the_unicorn"
         | "unicorn_phoenix"
-        | "caffeine_overload";
+        | "caffeine_overload"
+        | "shabby_the_narwhal";
       playerId: string;
       title: string;
       description: string;
@@ -125,7 +126,7 @@ export type PendingAction =
     }
   | {
       type: "select_deck_card";
-      reason: "classy_narwhal" | "the_great_narwhal";
+      reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
       candidates: Card[];

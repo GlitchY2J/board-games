@@ -183,7 +183,11 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
     // Asignar el orden de turnos al azar
     room.players = shuffleArray(room.players);
 
-    const order = room.players.map((p) => ({ id: p.id, name: p.name }));
+    const order = room.players.map((p) => ({
+      id: p.id,
+      name: p.name,
+      avatar: p.avatar,
+    }));
 
     io.to(room.code).emit('turn-order-assigned', order);
 
