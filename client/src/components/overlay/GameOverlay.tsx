@@ -18,6 +18,8 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
     if ('playerId' in action) parts.push(`player:${action.playerId}`);
     if ('sourcePlayerId' in action) parts.push(`source:${action.sourcePlayerId}`);
     if ('targetPlayerId' in action) parts.push(`target:${action.targetPlayerId}`);
+    if ('phase' in action) parts.push(`phase:${action.phase}`);
+    if ('remainingToDestroy' in action) parts.push(`rem:${action.remainingToDestroy}`);
     if ('remainingPlayerIds' in action) parts.push(`first:${action.remainingPlayerIds[0]}`);
     return parts.join(':');
   })();
@@ -223,6 +225,69 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
     // ───────────────────────────────────
     // SELECCIONAR CARTA DEL ESTABLO (Back Kick, Unicorn Poison, etc.)
     // ───────────────────────────────────
+    case 'two_for_one': {
+      if (action.sourcePlayerId !== localPlayerId) return null;
+
+      const isSacrifice = action.phase === 'sacrifice';
+
+      let items: {
+        id: string;
+        value: string;
+        title: string;
+        subtitle?: string;
+        image: string;
+      }[] = [];
+
+      if (isSacrifice) {
+        const localPlayer = gameState.players.find(
+          (p) => p.id === localPlayerId,
+        );
+        if (localPlayer) {
+          items = localPlayer.stable.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: 'Tu establo',
+            image: card.image,
+          }));
+        }
+      } else {
+        items = gameState.players
+          .filter((p) => p.id !== localPlayerId)
+          .flatMap((p) =>
+            p.stable.map((card, idx) => ({
+              id: `${card.id}_${p.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: `Establo de ${p.name}`,
+              image: card.image,
+            })),
+          );
+      }
+
+      return (
+        <CardSelectionOverlay
+          hide={hide}
+          title="🎴 Two For One"
+          subtitle={
+            isSacrifice
+              ? 'SACRIFICA 1 carta de tu establo'
+              : `DESTRUYE ${action.remainingToDestroy} carta(s) de establos rivales`
+          }
+          items={items}
+          maxSelection={isSacrifice ? 1 : action.remainingToDestroy}
+          confirmText="Confirmar"
+          onConfirm={(values) => {
+            dismiss();
+            socket.emit('select-stable-card', {
+              roomCode: gameState.roomCode,
+              cardId: isSacrifice ? values[0] : values,
+            });
+          }}
+        />
+      );
+    }
+
     case 'select_stable_card': {
       if (action.sourcePlayerId !== localPlayerId) return null;
 

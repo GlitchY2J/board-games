@@ -77,6 +77,12 @@ export type PendingAction =
       resolvedPlayerIds: string[];
     }
   | {
+      type: "two_for_one";
+      sourcePlayerId: string;
+      phase: "sacrifice" | "destroy";
+      remainingToDestroy: number;
+    }
+  | {
       type: "select_choice";
       reason:
         | "annoying_flying_unicorn"

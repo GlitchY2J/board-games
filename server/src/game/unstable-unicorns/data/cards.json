@@ -630,6 +630,16 @@
     "expansion": "base"
   },
   {
+    "id": "two_for_one",
+    "name": "Two For One",
+    "cardType": "magic",
+    "image": "/cards/base/two_for_one.png",
+    "description": "SACRIFICE a card, then DESTROY 2 cards.",
+    "effect": "two_for_one",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
     "id": "unicorn_poison",
     "name": "Unicorn Poison",
     "cardType": "magic",

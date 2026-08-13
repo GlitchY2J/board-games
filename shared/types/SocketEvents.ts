@@ -36,7 +36,7 @@ export interface SelectPlayerPayload {
 
 export interface SelectStableCardPayload {
   roomCode: string;
-  cardId: string;
+  cardId: string | string[];
 }
 
 export interface SelectHandCardPayload {

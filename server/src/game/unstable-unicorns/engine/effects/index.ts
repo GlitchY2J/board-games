@@ -33,6 +33,7 @@ import { unicornOnTheCob } from '../../../cards/effects/unicornOnTheCob.ts';
 import { unicornPhoenix } from '../../../cards/effects/unicornPhoenix.ts';
 import { kissOfLife } from '../../../cards/effects/kissOfLife.ts';
 import { shakeUp } from '../../../cards/effects/shakeUp.ts';
+import { twoForOne } from '../../../cards/effects/twoForOne.ts';
 import { unicornOracle } from '../../../cards/effects/unicornOracle.ts';
 import type { CardEffect } from './CardEffect.ts';
 
@@ -73,4 +74,5 @@ export const effects: Record<string, CardEffect> = {
   unicorn_phoenix: unicornPhoenix,
   kiss_of_life: kissOfLife,
   shake_up: shakeUp,
+  two_for_one: twoForOne,
 };

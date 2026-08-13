@@ -173,7 +173,7 @@ export class ActionResolver {
   static handleSelectStableCard(
     state: GameState,
     sourcePlayerId: string,
-    cardId: string,
+    cardId: string | string[],
   ): boolean {
     const pending = state.pendingAction;
     if (!pending) return false;
@@ -181,10 +181,92 @@ export class ActionResolver {
     // Solo procesar acciones que correspondan al jugador correcto
     if (
       pending.type !== 'select_stable_card' &&
+      pending.type !== 'two_for_one' &&
       pending.type !== 'glitter_tornado' &&
       pending.type !== 'alluring_narwhal' &&
       pending.type !== 'extremely_destructive_unicorn'
     ) {
+      return false;
+    }
+
+    if (pending.type === 'two_for_one') {
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
+
+      if (pending.phase === 'sacrifice') {
+        const player = state.players.find((p) => p.id === sourcePlayerId);
+        if (!player) return false;
+
+        const idx = player.stable.findIndex((c) => c.uid === cardId);
+        if (idx === -1) return false;
+
+        const [sacrificed] = player.stable.splice(idx, 1);
+        CardMovement.destroyOrSacrifice(
+          state,
+          player,
+          sacrificed,
+          'sacrifice',
+        );
+
+        state.pendingAction = {
+          type: 'two_for_one',
+          sourcePlayerId,
+          phase: 'destroy',
+          remainingToDestroy: 2,
+        };
+        return true;
+      }
+
+      // phase 'destroy': puede destruir varias cartas a la vez
+      const ids = Array.isArray(cardId) ? cardId : [cardId];
+
+      let destroyedCount = 0;
+      let interceptedOnce = false;
+
+      for (const uid of ids) {
+        const destroyedCard = state.players
+          .flatMap((p) => p.stable)
+          .find((c) => c.uid === uid);
+        if (!destroyedCard) {
+          interceptedOnce = true;
+          continue;
+        }
+
+        const targetPlayer = state.players.find((p) =>
+          p.stable.some((c) => c.uid === uid),
+        );
+        if (!targetPlayer) continue;
+
+        if (isImmuneToMagicDestruction(destroyedCard.id)) {
+          interceptedOnce = true;
+          continue;
+        }
+
+        const idx = targetPlayer.stable.findIndex((c) => c.uid === uid);
+        const [removed] = targetPlayer.stable.splice(idx, 1);
+        const intercepted = CardMovement.destroyOrSacrifice(
+          state,
+          targetPlayer,
+          removed,
+        );
+        if (intercepted) interceptedOnce = true;
+        destroyedCount++;
+      }
+
+      const remaining = pending.remainingToDestroy - destroyedCount;
+      if (remaining > 0 && !interceptedOnce) {
+        state.pendingAction = {
+          type: 'two_for_one',
+          sourcePlayerId,
+          phase: 'destroy',
+          remainingToDestroy: remaining,
+        };
+      } else {
+        state.pendingAction = undefined;
+      }
+      return true;
+    }
+
+    if (Array.isArray(cardId)) {
       return false;
     }
 
