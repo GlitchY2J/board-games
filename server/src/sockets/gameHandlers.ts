@@ -491,6 +491,8 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    room.players = shuffleArray(room.players);
+
     room.gameState = createGameState(room);
 
     room.gameState.pendingAction = undefined;

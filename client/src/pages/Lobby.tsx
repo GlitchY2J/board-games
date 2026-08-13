@@ -118,8 +118,33 @@ export default function Lobby() {
 
   const handleCopyCode = () => {
     if (!room) return;
-    navigator.clipboard.writeText(room.code);
-    setCopied(true);
+
+    const copyToClipboard = () => {
+      const textarea = document.createElement('textarea');
+      textarea.value = room.code;
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-9999px';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard
+        .writeText(room.code)
+        .then(() => setCopied(true))
+        .catch(() => {
+          copyToClipboard();
+          setCopied(true);
+        });
+    } else {
+      copyToClipboard();
+      setCopied(true);
+    }
+
     setTimeout(() => setCopied(false), 2000);
   };
 
