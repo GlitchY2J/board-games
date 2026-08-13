@@ -4,9 +4,10 @@ import { ArrowRight } from 'lucide-react';
 
 interface Props {
   gameState: GameState;
+  autoEnabled?: boolean;
 }
 
-export default function PhaseActionButton({ gameState }: Props) {
+export default function PhaseActionButton({ gameState, autoEnabled = false }: Props) {
   const activePlayer = gameState.players[gameState.currentPlayer];
   const isActivePlayer = activePlayer.socketId === socket.id;
 
@@ -27,6 +28,8 @@ export default function PhaseActionButton({ gameState }: Props) {
         return 'Siguiente Fase';
     }
   }
+
+  if (autoEnabled && isActivePlayer) return null;
 
   const showButton =
     (isActivePlayer &&

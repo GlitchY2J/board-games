@@ -6,6 +6,7 @@ import { saveSession } from '../services/session';
 import { useGame } from '../context/GameContext';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import AvatarPicker from '../components/ui/AvatarPicker';
 import { ArrowLeft } from 'lucide-react';
 
 export default function JoinRoom() {
@@ -13,6 +14,7 @@ export default function JoinRoom() {
   const { activate } = useGame();
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('');
+  const [avatar, setAvatar] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleJoin() {
@@ -37,6 +39,7 @@ export default function JoinRoom() {
         roomCode: roomCode.trim().toUpperCase(),
         playerName: playerName.trim(),
         socketId: socket.id,
+        avatar,
       });
 
       const { room, playerId, sessionToken } = response;
@@ -122,6 +125,8 @@ export default function JoinRoom() {
               className="w-full px-4 py-3.5 rounded-2xl bg-slate-950/50 border border-slate-800 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/30 transition-all text-sm"
             />
           </div>
+
+          <AvatarPicker value={avatar} onChange={setAvatar} accent="cyan" />
 
           <Button
             onClick={handleJoin}

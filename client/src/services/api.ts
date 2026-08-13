@@ -5,6 +5,7 @@ export async function createRoom(data: {
   hostName: string;
   game: string;
   socketId: string;
+  avatar: string;
 }) {
   const response = await fetch(`${API}/rooms/create`, {
     method: 'POST',
@@ -27,6 +28,7 @@ export async function joinRoom(data: {
   roomCode: string;
   playerName: string;
   socketId: string;
+  avatar: string;
 }) {
   const response = await fetch(`${API}/rooms/join`, {
     method: 'POST',

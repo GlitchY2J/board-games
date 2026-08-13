@@ -4,7 +4,7 @@ import { roomManager } from '../roomManagerInstance.ts';
 const router = Router();
 
 router.post('/create', (req, res) => {
-  const { hostName, game, socketId } = req.body;
+  const { hostName, game, socketId, avatar } = req.body;
 
   if (!hostName || !game || !socketId) {
     return res.status(400).json({
@@ -12,7 +12,7 @@ router.post('/create', (req, res) => {
     });
   }
 
-  const room = roomManager.createRoom(hostName, game, socketId);
+  const room = roomManager.createRoom(hostName, game, socketId, avatar);
 
   const host = room.players.find((player) => player.id === room.hostId);
 
@@ -20,7 +20,7 @@ router.post('/create', (req, res) => {
 });
 
 router.post('/join', (req, res) => {
-  const { roomCode, playerName, socketId } = req.body;
+  const { roomCode, playerName, socketId, avatar } = req.body;
 
   if (!roomCode || !playerName || !socketId) {
     return res.status(400).json({
@@ -28,7 +28,7 @@ router.post('/join', (req, res) => {
     });
   }
 
-  const room = roomManager.joinRoom(roomCode, playerName, socketId);
+  const room = roomManager.joinRoom(roomCode, playerName, socketId, avatar);
 
   const player = room?.players.find(
     (candidate) => candidate.socketId === socketId,

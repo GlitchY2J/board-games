@@ -9,6 +9,7 @@ interface Props {
   disabled?: boolean;
   selected?: boolean;
   preview?: boolean;
+  plain?: boolean;
   onClick?: () => void;
 }
 
@@ -20,6 +21,7 @@ export default function PlayingCard({
   disabled = false,
   selected = false,
   preview = true,
+  plain = false,
   onClick,
 }: Props) {
   const { showPreview, hidePreview } = useCardPreview();
@@ -39,7 +41,7 @@ export default function PlayingCard({
 
   return (
     <div
-      className={`playing-card ${size} ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''}`}
+      className={`playing-card ${size} ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''} ${plain ? 'plain' : ''}`}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={hidePreview}

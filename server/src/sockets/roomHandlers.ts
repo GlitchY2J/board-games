@@ -29,7 +29,7 @@ function createPublicRoom(room: Room): Room {
 }
 
 export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
-  socket.on('join-room', ({ roomCode, playerName }) => {
+  socket.on('join-room', ({ roomCode, playerName, avatar }) => {
     console.log(`[join-room] Petición recibida de socket ${socket.id} para unirse a la sala ${roomCode} con nombre ${playerName}`);
     const existingRoom = roomManager.getRoom(roomCode);
 
@@ -74,7 +74,7 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
 
     // 3. Jugador nuevo → unirlo a la sala
     console.log(`[join-room] Jugador nuevo: ${playerName}. Registrando en roomManager...`);
-    const room = roomManager.joinRoom(roomCode, playerName, socket.id);
+    const room = roomManager.joinRoom(roomCode, playerName, socket.id, avatar);
 
     if (!room) {
       console.log(`[join-room] Error al registrar al jugador nuevo en roomManager`);
@@ -161,8 +161,8 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     }
   });
 
-  socket.on('room:create', ({ hostName, game }, callback) => {
-    const room = roomManager.createRoom(hostName, game, socket.id);
+  socket.on('room:create', ({ hostName, game, avatar }, callback) => {
+    const room = roomManager.createRoom(hostName, game, socket.id, avatar);
 
     socket.join(room.code);
 

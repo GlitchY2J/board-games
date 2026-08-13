@@ -129,6 +129,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
       const items = eligiblePlayers.map((p) => ({
         id: p.id,
         title: p.id === localPlayerId ? `${p.name} (Tú)` : p.name,
+        avatar: p.avatar || undefined,
         subtitle: isPlayDowngrade
           ? `Desmejoras actuales: ${p.downgrades.length}`
           : isUnicornSwap

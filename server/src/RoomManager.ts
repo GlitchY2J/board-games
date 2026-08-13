@@ -44,13 +44,19 @@ export class RoomManager {
   }
 
   // Crear Sala
-  createRoom(hostName: string, game: string, socketId: string): Room {
+  createRoom(
+    hostName: string,
+    game: string,
+    socketId: string,
+    avatar?: string,
+  ): Room {
     const host: Player = {
       id: crypto.randomUUID(),
       sessionToken: crypto.randomUUID(),
       socketId,
       connected: true,
       name: hostName,
+      avatar: avatar ?? '',
       hand: [],
       stable: [],
       upgrades: [],
@@ -73,6 +79,7 @@ export class RoomManager {
     roomCode: string,
     playerName: string,
     socketId: string,
+    avatar?: string,
   ): Room | null {
     const room = this.rooms.get(roomCode);
 
@@ -90,6 +97,7 @@ export class RoomManager {
       socketId,
       connected: true,
       name: playerName,
+      avatar: avatar ?? '',
       hand: [],
       stable: [],
       upgrades: [],

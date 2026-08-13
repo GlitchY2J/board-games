@@ -108,50 +108,81 @@
   z-index: 40;
 }
 
-/* Botón debug de reset más integrado y estético */
-.debug-reset {
+/* Contenedor vertical de controles en la esquina superior izquierda */
+.corner-controls {
   position: absolute;
-  right: auto;
+  top: 24px;
   left: 24px;
-  bottom: 24px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Botón base de control */
+.ctrl-button {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 12px;
-  background: rgba(239, 68, 68, 0.05);
+  background: rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  color: #ef4444;
+  color: #94a3b8;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 50;
 }
 
-.debug-reset:hover {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.45);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+.ctrl-button:hover {
   transform: translateY(-2px);
 }
 
-/* Botón de salir de la partida (esquina superior izquierda) */
-.leave-room {
-  left: 24px;
-  bottom: auto;
-  top: 24px;
+/* Variante neutra (auto) - sin color */
+.ctrl-neutral:hover {
+  background: rgba(148, 163, 184, 0.25);
+  border-color: rgba(148, 163, 184, 0.5);
+  box-shadow: 0 0 20px rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+}
+
+/* Estado activo del modo automático */
+.ctrl-button.auto-on {
+  border-color: rgba(16, 185, 129, 0.6);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+}
+
+/* Variante reiniciar (rojo) */
+.ctrl-reset {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+  color: #ef4444;
+}
+
+.ctrl-reset:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Variante salir (verde) */
+.ctrl-leave {
   border-color: rgba(16, 185, 129, 0.25);
   background: rgba(16, 185, 129, 0.05);
   color: #34d399;
 }
 
-.leave-room:hover {
+.ctrl-leave:hover {
   background: rgba(16, 185, 129, 0.2);
   border-color: rgba(16, 185, 129, 0.45);
   box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  color: #34d399;
 }
 
 /* ─── Tableros de jugadores por posición ─── */
@@ -188,7 +219,7 @@
   z-index: 40;
 }
 
-.debug-reset:active {
+.ctrl-button:active {
   transform: translateY(0);
 }
 
@@ -265,13 +296,12 @@
     right: 16px;
     bottom: 16px;
   }
-  .leave-room,
-  .debug-reset {
+  .corner-controls {
+    top: 16px;
     left: 16px;
+  }
+  .ctrl-button {
     width: 36px;
     height: 36px;
-  }
-  .debug-reset {
-    bottom: 16px;
   }
 }

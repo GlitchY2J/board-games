@@ -6,12 +6,14 @@ import { saveSession } from '../services/session';
 import { useGame } from '../context/GameContext';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import AvatarPicker from '../components/ui/AvatarPicker';
 import { ArrowLeft } from 'lucide-react';
 
 export default function CreateRoom() {
   const navigate = useNavigate();
   const { activate } = useGame();
   const [hostName, setHostName] = useState('');
+  const [avatar, setAvatar] = useState('');
   const [game] = useState('unstable-unicorns');
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +35,7 @@ export default function CreateRoom() {
         hostName: hostName.trim(),
         game,
         socketId: socket.id,
+        avatar,
       });
       const { room, playerId, sessionToken } = response;
 
@@ -101,6 +104,8 @@ export default function CreateRoom() {
               className="w-full px-4 py-3.5 rounded-2xl bg-slate-950/50 border border-slate-800 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-400/50 focus:ring-1 focus:ring-emerald-400/30 transition-all text-sm"
             />
           </div>
+
+          <AvatarPicker value={avatar} onChange={setAvatar} accent="emerald" />
 
           <div>
             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">

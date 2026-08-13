@@ -36,16 +36,33 @@ export default function PlayerInfo({
       }}
     >
       <div className="flex items-center gap-2.5 flex-1 min-w-0">
-        <span
-          className={cn(
-            'w-8 h-8 shrink-0 rounded-xl bg-gradient-to-br flex items-center justify-center text-slate-950 font-black text-xs uppercase shadow-inner',
-            isActive
-              ? 'from-emerald-400 to-cyan-500'
-              : 'from-slate-700 to-slate-600'
-          )}
-        >
-          {player.name.substring(0, 2)}
-        </span>
+        {player.avatar ? (
+          <span
+            className={cn(
+              'w-8 h-8 shrink-0 rounded-xl flex items-center justify-center overflow-hidden border',
+              isActive
+                ? 'border-emerald-400/60'
+                : 'border-slate-600/40'
+            )}
+          >
+            <img
+              src={`/avatars/${player.avatar}.png`}
+              alt={player.name}
+              className="w-full h-full object-cover"
+            />
+          </span>
+        ) : (
+          <span
+            className={cn(
+              'w-8 h-8 shrink-0 rounded-xl bg-gradient-to-br flex items-center justify-center text-slate-950 font-black text-xs uppercase shadow-inner',
+              isActive
+                ? 'from-emerald-400 to-cyan-500'
+                : 'from-slate-700 to-slate-600'
+            )}
+          >
+            {player.name.substring(0, 2)}
+          </span>
+        )}
         <div className="flex flex-col min-w-0">
           <span
             className={cn(

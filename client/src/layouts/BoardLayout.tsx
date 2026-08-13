@@ -10,11 +10,11 @@ import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
-import { RotateCcw, LogOut } from 'lucide-react';
+import { RotateCcw, LogOut, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -27,12 +27,40 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
   const navigate = useNavigate();
   const { deactivate } = useGame();
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [autoEnabled, setAutoEnabled] = useState(false);
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
 
   if (!localPlayer) return;
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
   const totalPlayers = gameState.players.length;
   const activePlayer = gameState.players[gameState.currentPlayer];
+  const isActivePlayer = activePlayer?.socketId === socket.id;
+
+  useEffect(() => {
+    if (!autoEnabled || !isActivePlayer) return;
+    if (gameState.pendingAction || gameState.pendingPlay) return;
+
+    const canAutoAdvance =
+      gameState.phase === 'BEGINNING' ||
+      gameState.phase === 'END' ||
+      (gameState.phase === 'ACTION' && gameState.actionUsed);
+
+    if (!canAutoAdvance) return;
+
+    const timer = setTimeout(() => {
+      socket.emit('next-phase', gameState.roomCode);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [
+    autoEnabled,
+    isActivePlayer,
+    gameState.phase,
+    gameState.actionUsed,
+    gameState.pendingAction,
+    gameState.pendingPlay,
+    gameState.roomCode,
+  ]);
 
   const positions: ('top' | 'bottom')[] =
     totalPlayers === 4
@@ -144,13 +172,31 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
       </div>
       <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} hide={hidePendingPlay} />
       <PendingPlayOverlay gameState={gameState} localPlayerId={localPlayer.id} hide={hidePendingPlay} />
-      <button
-        className="debug-reset leave-room"
-        title="Salir de la partida"
-        onClick={() => setLeaveOpen(true)}
-      >
-        <LogOut size={16} />
-      </button>
+      <div className="corner-controls">
+        <button
+          className={`ctrl-button ctrl-neutral${autoEnabled ? ' auto-on' : ''}`}
+          title={autoEnabled ? 'Desactivar modo automático' : 'Activar modo automático'}
+          onClick={() => setAutoEnabled((v) => !v)}
+        >
+          <Bot size={16} />
+        </button>
+        {isHost && (
+          <button
+            className="ctrl-button ctrl-reset"
+            title="Reiniciar partida"
+            onClick={() => socket.emit('restart-game', gameState.roomCode)}
+          >
+            <RotateCcw size={16} />
+          </button>
+        )}
+        <button
+          className="ctrl-button ctrl-leave"
+          title="Salir de la partida"
+          onClick={() => setLeaveOpen(true)}
+        >
+          <LogOut size={16} />
+        </button>
+      </div>
       {leaveOpen && (
         <LeaveConfirm
           onCancel={() => setLeaveOpen(false)}
@@ -165,17 +211,8 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
         <PhasePanel gameState={gameState} />
       </div>
       <div className="phase-action-anchor">
-        <PhaseActionButton gameState={gameState} />
+        <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
       </div>
-      {isHost && (
-        <button
-          className="debug-reset"
-          title="Reiniciar partida"
-          onClick={() => socket.emit('restart-game', gameState.roomCode)}
-        >
-          <RotateCcw size={16} />
-        </button>
-      )}
       <div className="bottom-hand" data-hand>
         <PlayerHand
           player={localPlayer}

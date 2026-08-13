@@ -8,6 +8,7 @@ export interface SelectionItem {
   title: string;
   subtitle?: string;
   image?: string;
+  avatar?: string;
 }
 
 interface Props {
@@ -101,10 +102,28 @@ export default function CardSelectionOverlay({
                   </div>
                 ) : (
                   <div className="selection-list-item">
-                    <div className="selection-title">{item.title}</div>
-                    {item.subtitle && (
-                      <div className="selection-subtitle">{item.subtitle}</div>
-                    )}
+                    <div className="selection-list-avatar">
+                      {item.avatar ? (
+                        <img
+                          src={`/avatars/${item.avatar}.png`}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <PlayingCard
+                          name={item.title}
+                          image="/cards/base/card_back.png"
+                          size="small"
+                          preview={false}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <div className="selection-title">{item.title}</div>
+                      {item.subtitle && (
+                        <div className="selection-subtitle">{item.subtitle}</div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

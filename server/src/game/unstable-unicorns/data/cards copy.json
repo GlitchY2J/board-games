@@ -12,109 +12,6 @@
   },
 
   {
-    "id": "unicorn_on_the_cob",
-    "name": "Unicorn On The Cob",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/unicorn_on_the_cob.png",
-    "description": "When this card enters your Stable, DRAW 2 cards and DISCARD a card.",
-    "effect": "unicorn_on_the_cob",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "unicorn_oracle",
-    "name": "Unicorn Oracle",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/unicorn_oracle.png",
-    "description": "When this card enters your Stable, look at the top 3 cards of the deck and add one of them to your hand, then return the other two to the top of the deck in any order.",
-    "effect": "unicorn_oracle",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "unicorn_phoenix",
-    "name": "Unicorn Phoenix",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/unicorn_phoenix.png",
-    "description": "If this card would be sacrificed or destroyed, you may DISCARD a card instead.",
-    "effect": "unicorn_phoenix",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "back_kick",
-    "name": "Back Kick",
-    "cardType": "magic",
-    "image": "/cards/base/back_kick.png",
-    "description": "Choose any player. Return a card in that player's Stable to their hand. That player must DISCARD a card.",
-    "effect": "backKick",
-    "copies": 3,
-    "expansion": "base"
-  },
-  {
-    "id": "blatant_thievery",
-    "name": "Blatant Thievery",
-    "cardType": "magic",
-    "image": "/cards/base/blatant_thievery.png",
-    "description": "Choose any player and look at that player's hand. Choose a card from that player's hand and add it to your hand.",
-    "effect": "blatant_thievery",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "change_of_luck",
-    "name": "Change Of Luck",
-    "cardType": "magic",
-    "image": "/cards/base/change_of_luck.png",
-    "description": "DRAW 2 cards and DISCARD 3 cards, then take another turn.",
-    "effect": "changeOfLuck",
-    "copies": 2,
-    "expansion": "base"
-  },
-  {
-    "id": "glitter_tornado",
-    "name": "Glitter Tornado",
-    "cardType": "magic",
-    "image": "/cards/base/glitter_tornado.png",
-    "description": "Return a card in each player's Stable to that player's hand.",
-    "effect": "glitter_tornado",
-    "copies": 2,
-    "expansion": "base"
-  },
-  {
-    "id": "good_deal",
-    "name": "Good Deal",
-    "cardType": "magic",
-    "image": "/cards/base/good_deal.png",
-    "description": "DRAW 3 cards and DISCARD a card.",
-    "effect": "good_deal",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "kiss_of_life",
-    "name": "Kiss Of Life",
-    "cardType": "magic",
-    "image": "/cards/base/kiss_of_life.png",
-    "description": "Bring a Unicorn card from the discard pile into your Stable.",
-    "effect": "kiss_of_life",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "mystical_vortex",
-    "name": "Mystical Vortex",
-    "cardType": "magic",
-    "image": "/cards/base/mystical_vortex.png",
-    "description": "Each player must DISCARD a card. Shuffle the discard pile into the deck.",
-    "effect": "mystical_vortex",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
     "id": "re_target",
     "name": "Re-Target",
     "cardType": "magic",
@@ -134,16 +31,7 @@
     "copies": 1,
     "expansion": "base"
   },
-  {
-    "id": "shake_up",
-    "name": "Shake Up",
-    "cardType": "magic",
-    "image": "/cards/base/shake_up.png",
-    "description": "Shuffle this card, your hand, and the discard pile into the deck. DRAW 5 cards.",
-    "effect": "shake_up",
-    "copies": 1,
-    "expansion": "base"
-  },
+
   {
     "id": "targeted_destruction",
     "name": "Targeted Destruction",
@@ -154,46 +42,7 @@
     "copies": 1,
     "expansion": "base"
   },
-  {
-    "id": "two_for_one",
-    "name": "Two For One",
-    "cardType": "magic",
-    "image": "/cards/base/two_for_one.png",
-    "description": "SACRIFICE a card, then DESTROY 2 cards.",
-    "effect": "two_for_one",
-    "copies": 2,
-    "expansion": "base"
-  },
-  {
-    "id": "unfair_bargain",
-    "name": "Unfair Bargain",
-    "cardType": "magic",
-    "image": "/cards/base/unfair_bargain.png",
-    "description": "Trade hands with any other player.",
-    "effect": "unfair_bargain",
-    "copies": 2,
-    "expansion": "base"
-  },
-  {
-    "id": "unicorn_poison",
-    "name": "Unicorn Poison",
-    "cardType": "magic",
-    "image": "/cards/base/unicorn_poison.png",
-    "description": "DESTROY a Unicorn card.",
-    "effect": "unicorn_poison",
-    "copies": 3,
-    "expansion": "base"
-  },
-  {
-    "id": "unicorn_swap",
-    "name": "Unicorn Swap",
-    "cardType": "magic",
-    "image": "/cards/base/unicorn_swap.png",
-    "description": "Move a Unicorn card in your Stable to any other player's Stable, then STEAL a Unicorn card from that player's Stable.",
-    "effect": "unicorn_swap",
-    "copies": 2,
-    "expansion": "base"
-  },
+
   {
     "id": "caffeine_overload",
     "name": "Caffeine Overload",

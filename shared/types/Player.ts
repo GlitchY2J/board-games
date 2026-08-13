@@ -6,6 +6,7 @@ export interface Player {
   socketId: string | null;
   connected: boolean;
   name: string;
+  avatar: string;
   hand: Card[];
   stable: Card[];
   upgrades: Card[];

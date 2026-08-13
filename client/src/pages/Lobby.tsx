@@ -11,6 +11,7 @@ interface Player {
   socketId: string | null;
   connected: boolean;
   name: string;
+  avatar: string;
 }
 
 interface Room {
@@ -248,13 +249,23 @@ export default function Lobby() {
                 className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/30 border border-slate-800/40 hover:border-slate-800 transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarGradient(
-                      player.name
-                    )} flex items-center justify-center text-slate-950 font-black text-sm uppercase shadow-inner`}
-                  >
-                    {player.name.substring(0, 2)}
-                  </div>
+                  {player.avatar ? (
+                    <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-600/40 shrink-0">
+                      <img
+                        src={`/avatars/${player.avatar}.png`}
+                        alt={player.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarGradient(
+                        player.name
+                      )} flex items-center justify-center text-slate-950 font-black text-sm uppercase shadow-inner`}
+                    >
+                      {player.name.substring(0, 2)}
+                    </div>
+                  )}
                   <div>
                     <span className="text-sm font-bold text-slate-200 block">
                       {player.name} {player.id === playerId && '(tú)'}

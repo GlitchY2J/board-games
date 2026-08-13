@@ -167,13 +167,25 @@
 }
 
 .selection-list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 16px;
-  padding: 20px 28px;
-  min-width: 200px;
-  text-align: center;
+  padding: 14px 20px;
+  min-width: 220px;
+  text-align: left;
   transition: all 0.2s ease;
+}
+
+.selection-list-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .selection-list-item:hover {

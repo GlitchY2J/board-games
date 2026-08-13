@@ -5,11 +5,13 @@ import type { Room } from './Room.ts';
 export interface JoinRoomPayload {
   roomCode: string;
   playerName: string;
+  avatar?: string;
 }
 
 export interface CreateRoomPayload {
   hostName: string;
   game: string;
+  avatar?: string;
 }
 
 export interface PlayCardPayload {
