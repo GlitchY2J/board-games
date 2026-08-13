@@ -265,6 +265,29 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
     const { card } = result.data;
     const startedAt = Date.now();
 
+    // Yay: las cartas que juegas no pueden ser Neigh'd → se resuelven de inmediato
+    // sin abrir la ventana de Neigh. Se consulta el player del game state, no el
+    // del room, porque las upgrades se acumulan sobre game.players.
+    const gamePlayer = context.game.players.find(
+      (p) => p.id === context.player.id,
+    );
+    const playerHasYay = gamePlayer?.upgrades.some(
+      (c) => c.id === 'yay',
+    );
+
+    if (playerHasYay) {
+      RulesEngine.resolvePlay(context.game, context.player.id, card);
+
+      addLog(
+        context.game,
+        `${context.player.name} jugó carta "${card.name}" (protegida por Yay)`,
+        { playerId: context.player.id },
+      );
+
+      emitGameState(io, context.room, 'game-updated');
+      return;
+    }
+
     context.game.pendingPlay = {
       playerId: context.player.id,
       playerName: context.player.name,

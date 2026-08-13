@@ -680,6 +680,16 @@
     "expansion": "base"
   },
   {
+    "id": "yay",
+    "name": "Yay",
+    "cardType": "upgrade",
+    "image": "/cards/base/yay.png",
+    "description": "Cards you play cannot be Neigh'd",
+    "effect": "yay",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
     "id": "neigh",
     "name": "Neigh",
     "cardType": "instant",
