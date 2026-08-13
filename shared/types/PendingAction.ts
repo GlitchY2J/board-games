@@ -45,7 +45,8 @@ export type PendingAction =
         | "shark_with_a_horn"
         | "stabby_the_unicorn"
         | "unicorn_swap_give"
-        | "unicorn_swap_steal";
+        | "unicorn_swap_steal"
+        | "caffeine_overload";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -103,9 +104,10 @@ export type PendingAction =
         | "rainbow_unicorn"
         | "rhinocorn"
         | "seductive_unicorn"
-| "shark_with_a_horn"
+        | "shark_with_a_horn"
         | "stabby_the_unicorn"
-        | "unicorn_phoenix";
+        | "unicorn_phoenix"
+        | "caffeine_overload";
       playerId: string;
       title: string;
       description: string;

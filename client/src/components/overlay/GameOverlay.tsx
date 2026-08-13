@@ -407,6 +407,63 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         );
       }
 
+      if (action.reason === 'caffeine_overload') {
+        const localPlayer = gameState.players.find(
+          (p) => p.id === localPlayerId,
+        );
+
+        const items = [
+          ...(localPlayer?.hand ?? []).map((card, idx) => ({
+            id: `${card.id}_hand_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: 'Tu mano',
+            image: card.image,
+          })),
+          ...(localPlayer?.stable ?? []).map((card, idx) => ({
+            id: `${card.id}_stable_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: 'Tu establo',
+            image: card.image,
+          })),
+          ...(localPlayer?.upgrades ?? [])
+            .filter((c) => c.id !== 'caffeine_overload')
+            .map((card, idx) => ({
+              id: `${card.id}_upg_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu mejora',
+              image: card.image,
+            })),
+          ...(localPlayer?.downgrades ?? []).map((card, idx) => ({
+            id: `${card.id}_dow_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: 'Tu degradación',
+            image: card.image,
+          })),
+        ];
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="☕ Caffeine Overload"
+            subtitle="Elige una carta de tu mano o establo para SACRIFICAR. Luego robarás 2 cartas."
+            items={items}
+            maxSelection={1}
+            confirmText="Sacrificar"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
       if (action.reason === 'unicorn_swap_give') {
         const localPlayer = gameState.players.find(
           (p) => p.id === localPlayerId,

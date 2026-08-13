@@ -31,9 +31,9 @@ export default function Deck({ gameState, isMyTurn, localPlayerId }: Props) {
       style={{ cursor: canDraw ? 'pointer' : 'default' }}
       className="relative"
     >
-      <PlayingCard name="Deck" image="" hidden size="medium" />
-      <span className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500 text-slate-950 text-xs font-black shadow-lg border-2 border-slate-900 select-none">
-        <span className="px-0.5">{gameState.deck.length}</span>
+      <PlayingCard name="Deck" image="" hidden size="medium" plain />
+      <span className="absolute -top-2 -right-2 z-40 flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded-full bg-slate-900/80 backdrop-blur-sm text-slate-300 text-[11px] font-bold shadow-inner border border-slate-600/40 select-none pointer-events-none">
+        <span>{gameState.deck.length}</span>
       </span>
     </div>
   );

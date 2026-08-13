@@ -670,6 +670,16 @@
     "expansion": "base"
   },
   {
+    "id": "caffeine_overload",
+    "name": "Caffeine Overload",
+    "cardType": "upgrade",
+    "image": "/cards/base/caffeine_overload.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card, then DRAW 2 cards.",
+    "effect": "caffeine_overload",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "neigh",
     "name": "Neigh",
     "cardType": "instant",

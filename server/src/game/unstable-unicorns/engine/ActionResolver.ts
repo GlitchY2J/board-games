@@ -2,7 +2,9 @@ import type { GameState } from '../../models/GameState.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
 import { TurnPhase } from '../../turn/TurnPhase.ts';
 import { CardMovement } from './CardMovement.ts';
+import type { Card } from '../../models/Card.ts';
 import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
+import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
 
 export class ActionResolver {
@@ -365,6 +367,41 @@ export class ActionResolver {
         state.pendingAction = undefined;
       }
 
+      return true;
+    }
+
+    // Caffeine Overload: sacrificar una carta del propio establo y robar 2
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'caffeine_overload'
+    ) {
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      let sacrificed: Card | undefined;
+      let zone: 'stable' | 'upgrades' | 'downgrades' | 'hand' | null = null;
+      for (const z of ['hand', 'stable', 'upgrades', 'downgrades'] as const) {
+        const i = player[z].findIndex((c) => c.uid === cardId);
+        if (i !== -1) {
+          sacrificed = player[z][i];
+          player[z].splice(i, 1);
+          zone = z;
+          break;
+        }
+      }
+      if (!sacrificed || !zone) return false;
+
+      CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+
+      for (let i = 0; i < 2; i++) {
+        const drawn = state.deck.shift();
+        if (drawn) {
+          enqueueDrawAnimation(state.roomCode, player.id, drawn);
+          player.hand.push(drawn);
+        }
+      }
+
+      state.pendingAction = undefined;
       return true;
     }
 

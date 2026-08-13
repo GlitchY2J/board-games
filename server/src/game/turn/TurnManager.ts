@@ -36,7 +36,13 @@ export class TurnManager {
   private static hasBeginningOfTurnTrigger(game: GameState): boolean {
     const activePlayer = game.players[game.currentPlayer];
 
-    return activePlayer.stable.some(
+    const stableCards = [
+      ...activePlayer.stable,
+      ...activePlayer.upgrades,
+      ...activePlayer.downgrades,
+    ];
+
+    return stableCards.some(
       (c) => c.effect !== null && BEGINNING_OF_TURN_EFFECTS.has(c.effect),
     );
   }
@@ -78,6 +84,34 @@ export class TurnManager {
         ],
       };
       return true;
+    }
+
+        const hasCaffeineOverload =
+      activePlayer.stable.some((c) => c.id === 'caffeine_overload') ||
+      activePlayer.upgrades.some((c) => c.id === 'caffeine_overload');
+
+    if (hasCaffeineOverload) {
+      const hasSomethingToSacrifice =
+        activePlayer.stable.length +
+          activePlayer.upgrades.filter((c) => c.id !== 'caffeine_overload').length +
+          activePlayer.downgrades.length +
+          activePlayer.hand.length >
+        0;
+      if (hasSomethingToSacrifice) {
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'caffeine_overload',
+          playerId: activePlayer.id,
+          title: '☕ Caffeine Overload',
+          description:
+            '¿Deseas SACRIFICAR una carta para luego ROBAR 2 cartas?',
+          options: [
+            { value: 'yes', text: 'Sí, sacrificar y robar 2' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+        };
+        return true;
+      }
     }
 
     return false;

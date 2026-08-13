@@ -753,6 +753,29 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "caffeine_overload") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "select_stable_card",
+            reason: "caffeine_overload",
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} sacrificará una carta por Caffeine Overload`
+            : `${player.name} omitió el efecto de Caffeine Overload`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       } else if (pending.reason === "seductive_unicorn") {
         if (choice === "yes") {
           room.gameState.pendingAction = {

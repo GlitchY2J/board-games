@@ -23,6 +23,11 @@
   z-index: 30;
 }
 
+.playing-card.plain:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+}
+
 .playing-card.small {
   width: 44px;
 }
