@@ -27,6 +27,16 @@ function canViewerSeeTargetHand(
 ): boolean {
   const pending = game.pendingAction;
 
+  if (
+    game.players.some(
+      (p) =>
+        p.id === targetPlayerId &&
+        p.downgrades.some((c) => c.id === 'nanny_cam'),
+    )
+  ) {
+    return true;
+  }
+
   if (!pending || pending.type !== 'select_hand_card') {
     return false;
   }

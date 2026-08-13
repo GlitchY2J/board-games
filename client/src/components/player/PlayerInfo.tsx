@@ -1,6 +1,9 @@
 import type { GameState } from '../../types/GameState';
 import { cn } from '../../lib/cn';
-import { Sparkles, Layers } from 'lucide-react';
+import { Sparkles, Layers, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import PlayingCard from '../card/PlayingCard';
 import { getStablePower } from '../../lib/stablePower';
 import './PlayerInfo.css';
 
@@ -10,13 +13,22 @@ interface Props {
   player: Player;
   isActive?: boolean;
   status?: string;
+  localPlayerId?: string;
 }
 
 export default function PlayerInfo({
   player,
   isActive = false,
   status,
+  localPlayerId,
 }: Props) {
+  const [showHand, setShowHand] = useState(false);
+
+  const hasNannyCam =
+    player.downgrades.some((c) => c.id === 'nanny_cam') ?? false;
+  const canView =
+    hasNannyCam && localPlayerId !== undefined && localPlayerId !== player.id;
+
   return (
     <div
       className={cn(
@@ -105,7 +117,56 @@ export default function PlayerInfo({
             {player.hand.length}
           </span>
         </div>
+        {canView && (
+          <button
+            type="button"
+            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-cyan-500/40 hover:bg-cyan-900/40 transition-colors text-cyan-200 cursor-pointer"
+            title={`Ver la mano de ${player.name} (Nanny Cam)`}
+            onClick={() => setShowHand(true)}
+          >
+            <Eye size={11} />
+          </button>
+        )}
       </div>
+
+      {showHand &&
+        createPortal(
+          <div
+            className="nanny-cam-backdrop"
+            onClick={() => setShowHand(false)}
+          >
+            <div
+              className="nanny-cam-panel"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="nanny-cam-header">
+                <span className="nanny-cam-title">Mano de {player.name}</span>
+                <button
+                  type="button"
+                  className="nanny-cam-close"
+                  onClick={() => setShowHand(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="nanny-cam-cards">
+                {player.hand.length === 0 && (
+                  <span className="nanny-cam-empty">Sin cartas en mano</span>
+                )}
+                {player.hand.map((c) => (
+                  <PlayingCard
+                    key={c.uid}
+                    name={c.name}
+                    image={c.image}
+                    size="large"
+                    preview
+                  />
+                ))}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

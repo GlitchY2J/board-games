@@ -710,6 +710,16 @@
     "expansion": "base"
   },
   {
+    "id": "nanny_cam",
+    "name": "Nanny Cam",
+    "cardType": "downgrade",
+    "image": "/cards/base/nanny_cam.png",
+    "description": "Your hand must be visible to all players at all times.",
+    "effect": "nanny_cam",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "neigh",
     "name": "Neigh",
     "cardType": "instant",

@@ -92,6 +92,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
                   player={opp}
                   isActive={opp.id === activePlayer.id}
                   status={getPlayerStatus(gameState, opp.id)}
+                  localPlayerId={localPlayer.id}
                 />
                 <PlayerBoard
                   player={opp}
@@ -132,6 +133,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
               player={localPlayer}
               isActive={isMyTurn}
               status={getPlayerStatus(gameState, localPlayer.id)}
+              localPlayerId={localPlayer.id}
             />
             <PlayerBoard
               player={localPlayer}
@@ -151,6 +153,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
                   player={opp}
                   isActive={opp.id === activePlayer.id}
                   status={getPlayerStatus(gameState, opp.id)}
+                  localPlayerId={localPlayer.id}
                 />
                 <PlayerBoard
                   player={opp}
