@@ -496,6 +496,73 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'targeted_destruction') {
+          const items: {
+            id: string;
+            value: string;
+            title: string;
+            image: string;
+          }[] = [];
+
+          gameState.players.forEach((p) => {
+            if (p.id === localPlayerId) return;
+            p.upgrades.forEach((card, idx) => {
+              items.push({
+                id: `${card.id}_upgrade_${p.id}_${idx}`,
+                value: JSON.stringify({
+                  cardId: card.uid,
+                  targetPlayerId: p.id,
+                  type: 'upgrade',
+                }),
+                title: `Upgrade de ${p.name}`,
+                image: card.image,
+              });
+            });
+          });
+
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+          if (localPlayer) {
+            localPlayer.downgrades.forEach((card, idx) => {
+              items.push({
+                id: `${card.id}_downgrade_${localPlayerId}_${idx}`,
+                value: JSON.stringify({
+                  cardId: card.uid,
+                  targetPlayerId: localPlayerId,
+                  type: 'downgrade',
+                }),
+                title: `Downgrade de ${localPlayer.name}`,
+                image: card.image,
+              });
+            });
+          }
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🎯 Targeted Destruction"
+              subtitle="Selecciona un Upgrade de cualquier jugador para DESTRUIR, o un Downgrade de tu establo para SACRIFICAR"
+              items={items}
+              maxSelection={1}
+              confirmText="Confirmar"
+              onConfirm={([cardValue]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId: cardValue,
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('cancel-action', {
+                  roomCode: gameState.roomCode,
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'rhinocorn') {
           const items = gameState.players
             .filter((p) => p.id !== localPlayerId)

@@ -1,38 +1,5 @@
 [
   {
-    "id": "shabby_the_narwhal",
-    "name": "Shabby The Narwhal",
-    "cardType": "unicorn",
-    "unicornClass": "magical",
-    "image": "/cards/base/shabby_the_narwhal.png",
-    "description": "When this card enters your Stable, you may search the deck for a Downgrade card and add it to your hand. Shuffle the deck.",
-    "effect": "shabby_the_narwhal",
-    "copies": 1,
-    "expansion": "base"
-  },
-
-  {
-    "id": "re_target",
-    "name": "Re-Target",
-    "cardType": "magic",
-    "image": "/cards/base/re_target.png",
-    "description": "Move and Upgrade or Downgrade card from any player's Stable to any other player's Stable.",
-    "effect": "re_target",
-    "copies": 2,
-    "expansion": "base"
-  },
-  {
-    "id": "reset_button",
-    "name": "Reset Button",
-    "cardType": "magic",
-    "image": "/cards/base/reset_button.png",
-    "description": "Each player must SACRIFICE all Upgrade and Downgrade cards. Shuffle the discard pile into the deck.",
-    "effect": "reset_button",
-    "copies": 1,
-    "expansion": "base"
-  },
-
-  {
     "id": "targeted_destruction",
     "name": "Targeted Destruction",
     "cardType": "magic",
@@ -74,16 +41,6 @@
     "expansion": "base"
   },
   {
-    "id": "rainbow_aura",
-    "name": "Rainbow Aura",
-    "cardType": "upgrade",
-    "image": "/cards/base/rainbow_aura.png",
-    "description": "Your Unicorn cards cannot be destroyed.",
-    "effect": "rainbow_aura",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
     "id": "rainbow_lasso",
     "name": "Rainbow Lasso",
     "cardType": "upgrade",
@@ -103,16 +60,7 @@
     "copies": 3,
     "expansion": "base"
   },
-  {
-    "id": "yay",
-    "name": "Yay",
-    "cardType": "upgrade",
-    "image": "/cards/base/yay.png",
-    "description": "Cards you play cannot be Neigh'd",
-    "effect": "yay",
-    "copies": 2,
-    "expansion": "base"
-  },
+
   {
     "id": "barbed_wire",
     "name": "Barbed Wire",
@@ -138,51 +86,12 @@
     "name": "Sadistic Ritual",
     "cardType": "downgrade",
     "image": "/cards/base/sadistic_ritual.png",
-    "description": "If this card is in yoru Stable at the beginning of yoru turn, SACRIFICE a Unicorn card, then DRAW a card.",
+    "description": "If this card is in your Stable at the beginning of yoru turn, SACRIFICE a Unicorn card, then DRAW a card.",
     "effect": "sadistic_ritual",
     "copies": 1,
     "expansion": "base"
   },
-  {
-    "id": "slowdown",
-    "name": "Slowdown",
-    "cardType": "downgrade",
-    "image": "/cards/base/slowdown.png",
-    "description": "You cannot play Instant cards.",
-    "effect": "slowdown",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "nanny_cam",
-    "name": "Nanny Cam",
-    "cardType": "downgrade",
-    "image": "/cards/base/nanny_cam.png",
-    "description": "Your hand must be visible to all players at all times.",
-    "effect": "nanny_cam",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "broken_stable",
-    "name": "Broken Stable",
-    "cardType": "downgrade",
-    "image": "/cards/base/broken_stable.png",
-    "description": "You cannot play Upgrade cards.",
-    "effect": "broken_stable",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "blinding_light",
-    "name": "Blinding Light",
-    "cardType": "downgrade",
-    "image": "/cards/base/blinding_light.png",
-    "description": "Triggered effects of your Unicorn cards do not activate.",
-    "effect": "blinding_light",
-    "copies": 1,
-    "expansion": "base"
-  },
+
   {
     "id": "tiny_stable",
     "name": "Tiny Stable",
@@ -190,26 +99,6 @@
     "image": "/cards/base/tiny_stable.png",
     "description": "If at any time you have mor than 5 Unicorns in your Stable, SACRIFICE a Unicorn card.",
     "effect": "tiny_stable",
-    "copies": 1,
-    "expansion": "base"
-  },
-  {
-    "id": "neigh",
-    "name": "Neigh",
-    "cardType": "instant",
-    "image": "/cards/base/neigh.png",
-    "description": "Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile.",
-    "effect": "neigh",
-    "copies": 14,
-    "expansion": "base"
-  },
-  {
-    "id": "super_neigh",
-    "name": "Super Neigh",
-    "cardType": "instant",
-    "image": "/cards/base/super_neigh.png",
-    "description": "Play this card when any other player tries to play a card. Stop that player's card from being played and send it to the discard pile. This card cannot be Neigh'd.",
-    "effect": "super_neigh",
     "copies": 1,
     "expansion": "base"
   }

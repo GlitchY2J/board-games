@@ -40,6 +40,7 @@ import { unicornSwap } from '../../../cards/effects/unicornSwap.ts';
 import { unicornOracle } from '../../../cards/effects/unicornOracle.ts';
 import { reTarget } from '../../../cards/effects/reTarget.ts';
 import { resetButton } from '../../../cards/effects/resetButton.ts';
+import { targetedDestruction } from '../../../cards/effects/targetedDestruction.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -85,4 +86,5 @@ export const effects: Record<string, CardEffect> = {
   unicorn_swap: unicornSwap,
   re_target: reTarget,
   reset_button: resetButton,
+  targeted_destruction: targetedDestruction,
 };

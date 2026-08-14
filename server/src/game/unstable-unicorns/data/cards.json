@@ -661,6 +661,16 @@
     "expansion": "base"
   },
   {
+    "id": "targeted_destruction",
+    "name": "Targeted Destruction",
+    "cardType": "magic",
+    "image": "/cards/base/targeted_destruction.png",
+    "description": "SACRIFICE or DESTROY an Upgrade or Downgrade card.",
+    "effect": "targeted_destruction",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "two_for_one",
     "name": "Two For One",
     "cardType": "magic",
@@ -720,6 +730,7 @@
     "copies": 1,
     "expansion": "base"
   },
+
   {
     "id": "yay",
     "name": "Yay",

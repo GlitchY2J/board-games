@@ -51,7 +51,8 @@ export type PendingAction =
         | "unicorn_swap_give"
         | "unicorn_swap_steal"
         | "caffeine_overload"
-        | "re_target_card";
+        | "re_target_card"
+        | "targeted_destruction";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }

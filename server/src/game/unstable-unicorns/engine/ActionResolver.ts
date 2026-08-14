@@ -627,6 +627,54 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
+    // Targeted Destruction: destruye un Upgrade o sacrifica un Downgrade
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'targeted_destruction'
+    ) {
+      try {
+        const {
+          cardId: actualCardId,
+          targetPlayerId,
+          type,
+        } = JSON.parse(cardId);
+        const targetPlayer = state.players.find((p) => p.id === targetPlayerId);
+        if (!targetPlayer) return false;
+
+        if (type === 'upgrade') {
+          if (targetPlayerId === sourcePlayerId) return false;
+          const idx = targetPlayer.upgrades.findIndex(
+            (c) => c.uid === actualCardId,
+          );
+          if (idx !== -1) {
+            const [card] = targetPlayer.upgrades.splice(idx, 1);
+            CardMovement.destroyOrSacrifice(state, targetPlayer, card);
+          }
+        } else if (type === 'downgrade') {
+          if (targetPlayerId !== sourcePlayerId) return false;
+          const idx = targetPlayer.downgrades.findIndex(
+            (c) => c.uid === actualCardId,
+          );
+          if (idx !== -1) {
+            const [card] = targetPlayer.downgrades.splice(idx, 1);
+            CardMovement.destroyOrSacrifice(
+              state,
+              targetPlayer,
+              card,
+              'sacrifice',
+            );
+          }
+        }
+
+        state.pendingAction = undefined;
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // ──────────────────────────────────────────
     // Back Kick: regresa una carta del establo al rival (incluyendo upgrades/downgrades)
     // ──────────────────────────────────────────
     if (
