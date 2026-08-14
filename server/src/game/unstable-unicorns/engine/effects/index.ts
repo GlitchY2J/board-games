@@ -38,6 +38,7 @@ import { twoForOne } from '../../../cards/effects/twoForOne.ts';
 import { unfairBargain } from '../../../cards/effects/unfairBargain.ts';
 import { unicornSwap } from '../../../cards/effects/unicornSwap.ts';
 import { unicornOracle } from '../../../cards/effects/unicornOracle.ts';
+import { reTarget } from '../../../cards/effects/reTarget.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -81,4 +82,5 @@ export const effects: Record<string, CardEffect> = {
   two_for_one: twoForOne,
   unfair_bargain: unfairBargain,
   unicorn_swap: unicornSwap,
+  re_target: reTarget,
 };

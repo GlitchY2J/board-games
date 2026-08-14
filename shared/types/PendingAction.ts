@@ -27,9 +27,13 @@ export type PendingAction =
         | "play_downgrade"
         | "mermaid_unicorn"
         | "unfair_bargain"
-        | "unicorn_swap";
+        | "unicorn_swap"
+        | "re_target_source"
+        | "re_target_destination";
       sourcePlayerId: string;
       card?: Card;
+      /** Jugador dueño original de la carta que se mueve (Re-Target). */
+      fromPlayerId?: string;
     }
   | {
       type: "select_stable_card";
@@ -46,7 +50,8 @@ export type PendingAction =
         | "stabby_the_unicorn"
         | "unicorn_swap_give"
         | "unicorn_swap_steal"
-        | "caffeine_overload";
+        | "caffeine_overload"
+        | "re_target_card";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }

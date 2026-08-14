@@ -59,8 +59,7 @@ export class ActionResolver {
     if (reason === 'seductive_unicorn') {
       const canSteal = state.players.some(
         (p) =>
-          p.id !== playerId &&
-          p.stable.some((c) => c.cardType === 'unicorn'),
+          p.id !== playerId && p.stable.some((c) => c.cardType === 'unicorn'),
       );
 
       if (canSteal) {
@@ -192,6 +191,53 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 're_target_source') {
+      const targetPlayer = state.players.find((p) => p.id === targetPlayerId);
+      if (
+        !targetPlayer ||
+        (targetPlayer.upgrades.length === 0 &&
+          targetPlayer.downgrades.length === 0)
+      ) {
+        return false;
+      }
+
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 're_target_card',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
+    if (pending.reason === 're_target_destination') {
+      const card = pending.card;
+      const destPlayer = state.players.find((p) => p.id === targetPlayerId);
+      if (!destPlayer || !card) return false;
+
+      if (card.cardType === 'upgrade') {
+        destPlayer.upgrades.push(card);
+      } else if (card.cardType === 'downgrade') {
+        destPlayer.downgrades.push(card);
+      } else {
+        return false;
+      }
+
+      const caster = state.players.find((p) => p.id === sourcePlayerId);
+      const fromPlayer = state.players.find(
+        (p) => p.id === pending.fromPlayerId,
+      );
+
+      addLog(
+        state,
+        `${caster?.name ?? 'Alguien'} usó Re-Target: movió "${card.name}" de ${fromPlayer?.name ?? 'otro jugador'} a ${destPlayer.name}`,
+        { playerId: sourcePlayerId },
+      );
+
+      state.pendingAction = undefined;
+      return true;
+    }
+
     return false;
   }
 
@@ -225,12 +271,7 @@ export class ActionResolver {
         if (idx === -1) return false;
 
         const [sacrificed] = player.stable.splice(idx, 1);
-        CardMovement.destroyOrSacrifice(
-          state,
-          player,
-          sacrificed,
-          'sacrifice',
-        );
+        CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
 
         const nextPending = state.pendingAction;
         if (nextPending && nextPending !== pending) {
@@ -383,13 +424,48 @@ export class ActionResolver {
 
       // Si el on-enter del unicornio robado abrió su propio pendingAction interactivo,
       // dejarlo activo; de lo contrario cierra el flujo.
-      if (
-        state.pendingAction === pending ||
-        !state.pendingAction
-      ) {
+      if (state.pendingAction === pending || !state.pendingAction) {
         state.pendingAction = undefined;
       }
 
+      return true;
+    }
+
+    // Re-Target: mover una carta de Upgrade/Downgrade al establo de otro jugador
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 're_target_card'
+    ) {
+      const fromPlayer = state.players.find(
+        (p) => p.id === pending.targetPlayerId,
+      );
+      if (!fromPlayer) return false;
+
+      const card = Array.isArray(cardId)
+        ? fromPlayer.upgrades.find((c) => c.uid === cardId[0]) ||
+          fromPlayer.downgrades.find((c) => c.uid === cardId[0])
+        : fromPlayer.upgrades.find((c) => c.uid === cardId) ||
+          fromPlayer.downgrades.find((c) => c.uid === cardId);
+
+      if (!card) return false;
+
+      const upIdx = fromPlayer.upgrades.findIndex((c) => c.uid === card.uid);
+      if (upIdx !== -1) {
+        fromPlayer.upgrades.splice(upIdx, 1);
+      } else {
+        const downIdx = fromPlayer.downgrades.findIndex(
+          (c) => c.uid === card.uid,
+        );
+        if (downIdx !== -1) fromPlayer.downgrades.splice(downIdx, 1);
+      }
+
+      state.pendingAction = {
+        type: 'select_player',
+        reason: 're_target_destination',
+        sourcePlayerId,
+        card,
+        fromPlayerId: pending.targetPlayerId,
+      };
       return true;
     }
 
@@ -551,7 +627,7 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
-    // Back Kick: regresa una carta del establo al rival (incluyendo mejoras/desmejoras)
+    // Back Kick: regresa una carta del establo al rival (incluyendo upgrades/downgrades)
     // ──────────────────────────────────────────
     if (
       pending.type === 'select_stable_card' &&
@@ -689,7 +765,7 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
-    // Alluring Narwhal: robar una carta de Mejora de otro jugador a tu establo
+    // Alluring Narwhal: robar una carta de Upgrade de otro jugador a tu establo
     // ──────────────────────────────────────────
     if (pending.type === 'alluring_narwhal') {
       let targetPlayer = null;

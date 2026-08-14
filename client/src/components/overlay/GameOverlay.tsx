@@ -10,18 +10,26 @@ interface Props {
   hide?: boolean;
 }
 
-export default function GameOverlay({ gameState, localPlayerId, hide = false }: Props) {
+export default function GameOverlay({
+  gameState,
+  localPlayerId,
+  hide = false,
+}: Props) {
   const action = gameState.pendingAction;
 
   const actionKey = (() => {
     if (!action) return null;
     const parts = [action.type, 'reason' in action ? action.reason : ''];
     if ('playerId' in action) parts.push(`player:${action.playerId}`);
-    if ('sourcePlayerId' in action) parts.push(`source:${action.sourcePlayerId}`);
-    if ('targetPlayerId' in action) parts.push(`target:${action.targetPlayerId}`);
+    if ('sourcePlayerId' in action)
+      parts.push(`source:${action.sourcePlayerId}`);
+    if ('targetPlayerId' in action)
+      parts.push(`target:${action.targetPlayerId}`);
     if ('phase' in action) parts.push(`phase:${action.phase}`);
-    if ('remainingToDestroy' in action) parts.push(`rem:${action.remainingToDestroy}`);
-    if ('remainingPlayerIds' in action) parts.push(`first:${action.remainingPlayerIds[0]}`);
+    if ('remainingToDestroy' in action)
+      parts.push(`rem:${action.remainingToDestroy}`);
+    if ('remainingPlayerIds' in action)
+      parts.push(`first:${action.remainingPlayerIds[0]}`);
     return parts.join(':');
   })();
 
@@ -58,7 +66,8 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
               <div className="card-selection-window choice-window">
                 <h2>💥 Extremely Destructive Unicorn</h2>
                 <p>
-                  {step.remainingPlayerIds.length > step.resolvedPlayerIds.length
+                  {step.remainingPlayerIds.length >
+                  step.resolvedPlayerIds.length
                     ? 'Esperando sacrificios de otros jugadores...'
                     : 'Resolviendo efecto...'}
                 </p>
@@ -81,341 +90,790 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
     }
 
     switch (action.type) {
-    // ───────────────────────────────────
-    // DESCARTE DE CARTAS
-    // ───────────────────────────────────
-    case 'discard': {
-      const player = gameState.players.find((p) => p.id === localPlayerId);
-      if (!player || action.playerId !== localPlayerId) return null;
+      // ───────────────────────────────────
+      // DESCARTE DE CARTAS
+      // ───────────────────────────────────
+      case 'discard': {
+        const player = gameState.players.find((p) => p.id === localPlayerId);
+        if (!player || action.playerId !== localPlayerId) return null;
 
-      const titleMap: Record<string, string> = {
-        hand_limit: 'Límite de mano superado',
-        change_of_luck: 'Change of Luck',
-        back_kick: 'Back Kick',
-        annoying_flying_unicorn: 'Annoying Flying Unicorn',
-        good_deal: '🤝 Good Deal',
-        necromancer_unicorn: '🧙 Necromancer Unicorn',
-        seductive_unicorn: '💋 Seductive Unicorn',
-        unicorn_on_the_cob: '🌽 Unicorn On The Cob',
-      };
+        const titleMap: Record<string, string> = {
+          hand_limit: 'Límite de mano superado',
+          change_of_luck: 'Change of Luck',
+          back_kick: 'Back Kick',
+          annoying_flying_unicorn: 'Annoying Flying Unicorn',
+          good_deal: '🤝 Good Deal',
+          necromancer_unicorn: '🧙 Necromancer Unicorn',
+          seductive_unicorn: '💋 Seductive Unicorn',
+          unicorn_on_the_cob: '🌽 Unicorn On The Cob',
+        };
 
-      const isNecromancer = action.reason === 'necromancer_unicorn';
-      const discardableCards = isNecromancer
-        ? player.hand.filter((c) => c.cardType === 'unicorn')
-        : player.hand;
+        const isNecromancer = action.reason === 'necromancer_unicorn';
+        const discardableCards = isNecromancer
+          ? player.hand.filter((c) => c.cardType === 'unicorn')
+          : player.hand;
 
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title={titleMap[action.reason] ?? 'Descarta cartas'}
-          subtitle={
-            isNecromancer
-              ? `Debes descartar ${action.cardsToDiscard} unicornio(s) de tu mano.`
-              : `Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`
-          }
-          items={discardableCards.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
-          maxSelection={action.cardsToDiscard}
-          confirmText="Descartar"
-          onConfirm={(cardIds) => {
-            dismiss();
-            socket.emit('discard-cards', {
-              roomCode: gameState.roomCode,
-              playerId: localPlayerId,
-              cardIds,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // SELECCIONAR JUGADOR OBJETIVO
-    // ───────────────────────────────────
-    case 'select_player': {
-      if (action.sourcePlayerId !== localPlayerId) return null;
-
-      const isBlatantThievery = action.reason === 'blatant_thievery';
-      const isAmericorn = action.reason === 'americorn';
-      const isUnicornPoison = action.reason === 'unicorn_poison';
-      const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
-      const isPlayDowngrade = action.reason === 'play_downgrade';
-      const isMermaid = action.reason === 'mermaid_unicorn';
-      const isUnfairBargain = action.reason === 'unfair_bargain';
-      const isUnicornSwap = action.reason === 'unicorn_swap';
-      const needsHand = isBlatantThievery || isAmericorn || isAnnoyingFlying || isUnfairBargain;
-
-      const eligiblePlayers = gameState.players.filter((p) => {
-        if (isPlayDowngrade) return true;
-        if (p.id === localPlayerId) return false;
-        if (needsHand) return p.hand.length > 0;
-        if (isUnicornSwap) return p.stable.some((c) => c.cardType === 'unicorn');
-        if (isUnicornPoison) return p.stable.length > 0;
         return (
-          p.stable.length > 0 ||
-          p.upgrades.length > 0 ||
-          p.downgrades.length > 0
+          <CardSelectionOverlay
+            hide={hide}
+            title={titleMap[action.reason] ?? 'Descarta cartas'}
+            subtitle={
+              isNecromancer
+                ? `Debes descartar ${action.cardsToDiscard} unicornio(s) de tu mano.`
+                : `Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`
+            }
+            items={discardableCards.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={action.cardsToDiscard}
+            confirmText="Descartar"
+            onConfirm={(cardIds) => {
+              dismiss();
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds,
+              });
+            }}
+          />
         );
-      });
-
-      const items = eligiblePlayers.map((p) => ({
-        id: p.id,
-        title: p.id === localPlayerId ? `${p.name} (Tú)` : p.name,
-        avatar: p.avatar || undefined,
-        subtitle: isPlayDowngrade
-          ? `Downgrades actuales: ${p.downgrades.length}`
-          : isUnicornSwap
-            ? `${p.stable.filter((c) => c.cardType === 'unicorn').length} unicornio(s) en establo`
-            : needsHand
-              ? `${p.hand.length} carta(s) en mano`
-              : `${p.stable.length} unicornio(s) en establo`,
-      }));
-
-      const getTitle = () => {
-        if (isBlatantThievery) return '🃏 Blatant Thievery';
-        if (isAmericorn) return '🇺🇸 Americorn';
-        if (isUnicornPoison) return '🧪 Unicorn Poison';
-        if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
-        if (isPlayDowngrade) return '⏬ Jugar Downgrade';
-        if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
-        if (isUnfairBargain) return '🤝 Unfair Bargain';
-        if (isUnicornSwap) return '🦄 Unicorn Swap';
-        return 'Seleccionar Objetivo';
-      };
-
-      const getSubtitle = () => {
-        if (isBlatantThievery)
-          return 'Elige al jugador cuya mano quieres ver y robar una carta';
-        if (isAmericorn)
-          return 'Elige a un jugador para tomar una carta de su mano al azar';
-        if (isUnicornPoison)
-          return 'Elige a un jugador para destruir uno de sus unicornios';
-        if (isAnnoyingFlying)
-          return 'Elige a un jugador para forzarlo a descartar una carta';
-        if (isPlayDowngrade)
-          return 'Elige en qué establo deseas colocar esta carta de Downgrade';
-        if (isMermaid)
-          return 'Elige a un jugador para devolver una carta de su establo a su mano';
-        if (isUnfairBargain)
-          return 'Elige a un jugador para intercambiar manos con él';
-        if (isUnicornSwap)
-          return 'Elige a un jugador para intercambiar un unicornio con él';
-        return 'Elige a un jugador como objetivo de tu acción';
-      };
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title={getTitle()}
-          subtitle={getSubtitle()}
-          items={items}
-          maxSelection={1}
-          confirmText="Seleccionar"
-          onConfirm={([playerId]) => {
-            dismiss();
-            socket.emit('select-player', {
-              roomCode: gameState.roomCode,
-              playerId,
-            });
-          }}
-          onCancel={
-            isUnicornPoison || isAnnoyingFlying || isMermaid
-              ? () => {
-                  dismiss();
-                  socket.emit('cancel-action', {
-                    roomCode: gameState.roomCode,
-                  });
-                }
-              : undefined
-          }
-        />
-      );
-    }
-
-    case 'select_hand_card': {
-      if (action.sourcePlayerId !== localPlayerId) return null;
-
-      const target = gameState.players.find(
-        (p) => p.id === action.targetPlayerId,
-      );
-      if (!target) return null;
-
-      const isAmericorn = action.reason === 'americorn';
-      const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
-      const revealAmericorn = isAmericorn && hasNannyCam;
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title={isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
-          subtitle={
-            isAmericorn
-              ? revealAmericorn
-                ? `Nanny Cam: se ven las cartas de ${target.name}. Elige una`
-                : `Elige una carta boca abajo de la mano de ${target.name}`
-              : `Elige una carta de la mano de ${target.name} para robarla`
-          }
-          items={target.hand.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: revealAmericorn
-              ? card.name
-              : isAmericorn
-                ? `Carta ${idx + 1}`
-                : card.name,
-            image: revealAmericorn
-              ? card.image
-              : isAmericorn
-                ? '/cards/base/card_back.png'
-                : card.image,
-          }))}
-          maxSelection={1}
-          confirmText="Robar"
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-hand-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // SELECCIONAR CARTA DEL ESTABLO (Back Kick, Unicorn Poison, etc.)
-    // ───────────────────────────────────
-    case 'two_for_one': {
-      if (action.sourcePlayerId !== localPlayerId) return null;
-
-      const isSacrifice = action.phase === 'sacrifice';
-
-      let items: {
-        id: string;
-        value: string;
-        title: string;
-        subtitle?: string;
-        image: string;
-      }[] = [];
-
-      if (isSacrifice) {
-        const localPlayer = gameState.players.find(
-          (p) => p.id === localPlayerId,
-        );
-        if (localPlayer) {
-          items = localPlayer.stable.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            subtitle: 'Tu establo',
-            image: card.image,
-          }));
-        }
-      } else {
-        items = gameState.players
-          .filter((p) => p.id !== localPlayerId)
-          .flatMap((p) => {
-            const zones: Array<[string, typeof p.stable]> = [
-              ['stable', p.stable],
-              ['upgrade', p.upgrades],
-              ['downgrade', p.downgrades],
-            ];
-            return zones.flatMap(([zone, cards]) =>
-              cards.map((card, idx) => ({
-                id: `${card.id}_${p.id}_${zone}_${idx}`,
-                value: card.uid,
-                title: card.name,
-                subtitle: `Establo de ${p.name}`,
-                image: card.image,
-              })),
-            );
-          });
       }
 
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title="🎴 Two For One"
-          subtitle={
-            isSacrifice
-              ? 'SACRIFICA 1 carta de tu establo'
-              : `DESTRUYE ${action.remainingToDestroy} carta(s) de establos rivales`
+      // ───────────────────────────────────
+      // SELECCIONAR JUGADOR OBJETIVO
+      // ───────────────────────────────────
+      case 'select_player': {
+        if (action.sourcePlayerId !== localPlayerId) return null;
+
+        const isBlatantThievery = action.reason === 'blatant_thievery';
+        const isAmericorn = action.reason === 'americorn';
+        const isUnicornPoison = action.reason === 'unicorn_poison';
+        const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
+        const isPlayDowngrade = action.reason === 'play_downgrade';
+        const isMermaid = action.reason === 'mermaid_unicorn';
+        const isUnfairBargain = action.reason === 'unfair_bargain';
+        const isUnicornSwap = action.reason === 'unicorn_swap';
+        const isReTargetSource = action.reason === 're_target_source';
+        const isReTargetDestination = action.reason === 're_target_destination';
+        const needsHand =
+          isBlatantThievery ||
+          isAmericorn ||
+          isAnnoyingFlying ||
+          isUnfairBargain;
+
+        const eligiblePlayers = gameState.players.filter((p) => {
+          if (isPlayDowngrade) return true;
+          if (isReTargetDestination) return true;
+          if (isReTargetSource) {
+            return p.upgrades.length > 0 || p.downgrades.length > 0;
           }
-          items={items}
-          maxSelection={isSacrifice ? 1 : action.remainingToDestroy}
-          confirmText="Confirmar"
-          onConfirm={(values) => {
-            dismiss();
-            socket.emit('select-stable-card', {
-              roomCode: gameState.roomCode,
-              cardId: isSacrifice ? values[0] : values,
-            });
-          }}
-        />
-      );
-    }
+          if (p.id === localPlayerId) return false;
+          if (needsHand) return p.hand.length > 0;
+          if (isUnicornSwap)
+            return p.stable.some((c) => c.cardType === 'unicorn');
+          if (isUnicornPoison) return p.stable.length > 0;
+          return (
+            p.stable.length > 0 ||
+            p.upgrades.length > 0 ||
+            p.downgrades.length > 0
+          );
+        });
 
-    case 'select_stable_card': {
-      if (action.sourcePlayerId !== localPlayerId) return null;
+        const items = eligiblePlayers.map((p) => ({
+          id: p.id,
+          title: p.id === localPlayerId ? `${p.name} (Tú)` : p.name,
+          avatar: p.avatar || undefined,
+          subtitle: isPlayDowngrade
+            ? `Downgrades actuales: ${p.downgrades.length}`
+            : isReTargetSource
+              ? `${p.upgrades.length} upgrade(s), ${p.downgrades.length} downgrade(s)`
+              : isUnicornSwap
+                ? `${p.stable.filter((c) => c.cardType === 'unicorn').length} unicornio(s) en establo`
+                : needsHand
+                  ? `${p.hand.length} carta(s) en mano`
+                  : `${p.stable.length} unicornio(s) en establo`,
+        }));
 
-      if (action.reason === 'chainsaw_unicorn') {
-        const items: {
+        const getTitle = () => {
+          if (isBlatantThievery) return '🃏 Blatant Thievery';
+          if (isAmericorn) return '🇺🇸 Americorn';
+          if (isUnicornPoison) return '🧪 Unicorn Poison';
+          if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
+          if (isPlayDowngrade) return '⏬ Jugar Downgrade';
+          if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
+          if (isUnfairBargain) return '🤝 Unfair Bargain';
+          if (isUnicornSwap) return '🦄 Unicorn Swap';
+          if (isReTargetSource) return '🎯 Re-Target';
+          if (isReTargetDestination) return '🎯 Re-Target: destino';
+          return 'Seleccionar Objetivo';
+        };
+
+        const getSubtitle = () => {
+          if (isBlatantThievery)
+            return 'Elige al jugador cuya mano quieres ver y robar una carta';
+          if (isAmericorn)
+            return 'Elige a un jugador para tomar una carta de su mano al azar';
+          if (isUnicornPoison)
+            return 'Elige a un jugador para destruir uno de sus unicornios';
+          if (isAnnoyingFlying)
+            return 'Elige a un jugador para forzarlo a descartar una carta';
+          if (isPlayDowngrade)
+            return 'Elige en qué establo deseas colocar esta carta de Downgrade';
+          if (isMermaid)
+            return 'Elige a un jugador para devolver una carta de su establo a su mano';
+          if (isUnfairBargain)
+            return 'Elige a un jugador para intercambiar manos con él';
+          if (isUnicornSwap)
+            return 'Elige a un jugador para intercambiar un unicornio con él';
+          if (isReTargetSource)
+            return 'Elige de qué jugador moverás un Upgrade o Downgrade';
+          if (isReTargetDestination)
+            return 'Elige a qué jugador se moverá la carta';
+          return 'Elige a un jugador como objetivo de tu acción';
+        };
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title={getTitle()}
+            subtitle={getSubtitle()}
+            items={items}
+            maxSelection={1}
+            confirmText="Seleccionar"
+            onConfirm={([playerId]) => {
+              dismiss();
+              socket.emit('select-player', {
+                roomCode: gameState.roomCode,
+                playerId,
+              });
+            }}
+            onCancel={
+              isUnicornPoison || isAnnoyingFlying || isMermaid
+                ? () => {
+                    dismiss();
+                    socket.emit('cancel-action', {
+                      roomCode: gameState.roomCode,
+                    });
+                  }
+                : undefined
+            }
+          />
+        );
+      }
+
+      case 'select_hand_card': {
+        if (action.sourcePlayerId !== localPlayerId) return null;
+
+        const target = gameState.players.find(
+          (p) => p.id === action.targetPlayerId,
+        );
+        if (!target) return null;
+
+        const isAmericorn = action.reason === 'americorn';
+        const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
+        const revealAmericorn = isAmericorn && hasNannyCam;
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title={isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
+            subtitle={
+              isAmericorn
+                ? revealAmericorn
+                  ? `Nanny Cam: se ven las cartas de ${target.name}. Elige una`
+                  : `Elige una carta boca abajo de la mano de ${target.name}`
+                : `Elige una carta de la mano de ${target.name} para robarla`
+            }
+            items={target.hand.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: revealAmericorn
+                ? card.name
+                : isAmericorn
+                  ? `Carta ${idx + 1}`
+                  : card.name,
+              image: revealAmericorn
+                ? card.image
+                : isAmericorn
+                  ? '/cards/base/card_back.png'
+                  : card.image,
+            }))}
+            maxSelection={1}
+            confirmText="Robar"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-hand-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
+      // SELECCIONAR CARTA DEL ESTABLO (Back Kick, Unicorn Poison, etc.)
+      // ───────────────────────────────────
+      case 'two_for_one': {
+        if (action.sourcePlayerId !== localPlayerId) return null;
+
+        const isSacrifice = action.phase === 'sacrifice';
+
+        let items: {
           id: string;
           value: string;
           title: string;
+          subtitle?: string;
           image: string;
         }[] = [];
-        gameState.players.forEach((p) => {
-          if (p.id === localPlayerId) return;
-          p.upgrades.forEach((card, idx) => {
-            items.push({
-              id: `${card.id}_upgrade_${p.id}_${idx}`,
-              value: JSON.stringify({
-                cardId: card.uid,
-                targetPlayerId: p.id,
-                type: 'upgrade',
-              }),
-              title: `Upgrade de ${p.name}`,
-              image: card.image,
-            });
-          });
-        });
 
-        const localPlayer = gameState.players.find(
-          (p) => p.id === localPlayerId,
-        );
-        if (localPlayer) {
-          localPlayer.downgrades.forEach((card, idx) => {
-            items.push({
-              id: `${card.id}_downgrade_${localPlayerId}_${idx}`,
-              value: JSON.stringify({
-                cardId: card.uid,
-                targetPlayerId: localPlayerId,
-                type: 'downgrade',
-              }),
-              title: `Downgrade de ${localPlayer.name}`,
+        if (isSacrifice) {
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+          if (localPlayer) {
+            items = localPlayer.stable.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu establo',
               image: card.image,
+            }));
+          }
+        } else {
+          items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) => {
+              const zones: Array<[string, typeof p.stable]> = [
+                ['stable', p.stable],
+                ['upgrade', p.upgrades],
+                ['downgrade', p.downgrades],
+              ];
+              return zones.flatMap(([zone, cards]) =>
+                cards.map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${zone}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+              );
             });
-          });
         }
 
         return (
           <CardSelectionOverlay
-          hide={hide}
-            title="🪚 Chainsaw Unicorn"
-            subtitle="Selecciona un Upgrade de cualquier jugador para DESTRUIR, o un Downgrade de tu establo para SACRIFICAR"
+            hide={hide}
+            title="🎴 Two For One"
+            subtitle={
+              isSacrifice
+                ? 'SACRIFICA 1 carta de tu establo'
+                : `DESTRUYE ${action.remainingToDestroy} carta(s) de establos rivales`
+            }
             items={items}
-            maxSelection={1}
+            maxSelection={isSacrifice ? 1 : action.remainingToDestroy}
             confirmText="Confirmar"
-            onConfirm={([cardValue]) => {
+            onConfirm={(values) => {
               dismiss();
               socket.emit('select-stable-card', {
                 roomCode: gameState.roomCode,
-                cardId: cardValue,
+                cardId: isSacrifice ? values[0] : values,
+              });
+            }}
+          />
+        );
+      }
+
+      case 'select_stable_card': {
+        if (action.sourcePlayerId !== localPlayerId) return null;
+
+        if (action.reason === 're_target_card') {
+          const source = gameState.players.find(
+            (p) => p.id === action.targetPlayerId,
+          );
+          if (!source) return null;
+
+          const items = [
+            ...source.upgrades.map((card, idx) => ({
+              id: `${card.id}_up_${idx}`,
+              value: card.uid,
+              title: `Upgrade: ${card.name}`,
+              image: card.image,
+            })),
+            ...source.downgrades.map((card, idx) => ({
+              id: `${card.id}_down_${idx}`,
+              value: card.uid,
+              title: `Downgrade: ${card.name}`,
+              image: card.image,
+            })),
+          ];
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🎯 Re-Target"
+              subtitle={`Elige qué Upgrade o Downgrade mover del establo de ${source.name}`}
+              items={items}
+              maxSelection={1}
+              confirmText="Mover"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'chainsaw_unicorn') {
+          const items: {
+            id: string;
+            value: string;
+            title: string;
+            image: string;
+          }[] = [];
+          gameState.players.forEach((p) => {
+            if (p.id === localPlayerId) return;
+            p.upgrades.forEach((card, idx) => {
+              items.push({
+                id: `${card.id}_upgrade_${p.id}_${idx}`,
+                value: JSON.stringify({
+                  cardId: card.uid,
+                  targetPlayerId: p.id,
+                  type: 'upgrade',
+                }),
+                title: `Upgrade de ${p.name}`,
+                image: card.image,
+              });
+            });
+          });
+
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+          if (localPlayer) {
+            localPlayer.downgrades.forEach((card, idx) => {
+              items.push({
+                id: `${card.id}_downgrade_${localPlayerId}_${idx}`,
+                value: JSON.stringify({
+                  cardId: card.uid,
+                  targetPlayerId: localPlayerId,
+                  type: 'downgrade',
+                }),
+                title: `Downgrade de ${localPlayer.name}`,
+                image: card.image,
+              });
+            });
+          }
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🪚 Chainsaw Unicorn"
+              subtitle="Selecciona un Upgrade de cualquier jugador para DESTRUIR, o un Downgrade de tu establo para SACRIFICAR"
+              items={items}
+              maxSelection={1}
+              confirmText="Confirmar"
+              onConfirm={([cardValue]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId: cardValue,
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('cancel-action', {
+                  roomCode: gameState.roomCode,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'rhinocorn') {
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) =>
+              p.stable
+                .filter((c) => c.cardType === 'unicorn')
+                .map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦏 Rhinocorn"
+              subtitle="Elige un unicornio de OTRO jugador para DESTRUIR. Pasarás a la fase de acción sin acciones."
+              items={items}
+              maxSelection={1}
+              confirmText="Destruir"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'caffeine_overload') {
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+
+          const items = [
+            ...(localPlayer?.stable ?? []).map((card, idx) => ({
+              id: `${card.id}_stable_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu establo',
+              image: card.image,
+            })),
+            ...(localPlayer?.upgrades ?? []).map((card, idx) => ({
+              id: `${card.id}_upg_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu upgrade',
+              image: card.image,
+            })),
+            ...(localPlayer?.downgrades ?? []).map((card, idx) => ({
+              id: `${card.id}_dow_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu degradación',
+              image: card.image,
+            })),
+          ];
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="☕ Caffeine Overload"
+              subtitle="Elige una carta de tu establo para SACRIFICAR. Luego robarás 2 cartas."
+              items={items}
+              maxSelection={1}
+              confirmText="Sacrificar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'unicorn_swap_give') {
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+          const target = gameState.players.find(
+            (p) => p.id === action.targetPlayerId,
+          );
+
+          const items = (localPlayer?.stable ?? [])
+            .filter((c) => c.cardType === 'unicorn')
+            .map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu establo',
+              image: card.image,
+            }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦄 Unicorn Swap"
+              subtitle={`Elige un unicornio de TU establo para moverlo al establo de ${target?.name ?? ''}`}
+              items={items}
+              maxSelection={1}
+              confirmText="Mover"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'unicorn_swap_steal') {
+          const target = gameState.players.find(
+            (p) => p.id === action.targetPlayerId,
+          );
+
+          const items = (target?.stable ?? [])
+            .filter((c) => c.cardType === 'unicorn')
+            .map((card, idx) => ({
+              id: `${card.id}_${target?.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: `Establo de ${target?.name ?? ''}`,
+              image: card.image,
+            }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦄 Unicorn Swap"
+              subtitle={`ROBA un unicornio del establo de ${target?.name ?? ''}`}
+              items={items}
+              maxSelection={1}
+              confirmText="Robar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'stabby_the_unicorn') {
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) =>
+              p.stable
+                .filter((c) => c.cardType === 'unicorn')
+                .map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🔪 Stabby The Unicorn"
+              subtitle="Elige un unicornio para DESTRUIR"
+              items={items}
+              maxSelection={1}
+              confirmText="Destruir"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'shark_with_a_horn') {
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) =>
+              p.stable
+                .filter((c) => c.cardType === 'unicorn')
+                .map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦈 Shark With A Horn"
+              subtitle="Elige un unicornio para DESTRUIR"
+              items={items}
+              maxSelection={1}
+              confirmText="Destruir"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'seductive_unicorn') {
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) =>
+              p.stable
+                .filter((c) => c.cardType === 'unicorn')
+                .map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="💋 Seductive Unicorn"
+              subtitle="Elige un unicornio de otro jugador para ROBARLO a tu establo"
+              items={items}
+              maxSelection={1}
+              confirmText="Robar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'dark_angel_unicorn') {
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+          if (!localPlayer) return null;
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="😈 Dark Angel Unicorn"
+              subtitle="Elige un unicornio de TU establo para sacrificar"
+              items={localPlayer.stable
+                .filter((c) => c.cardType === 'unicorn')
+                .map((card, idx) => ({
+                  id: `${card.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  image: card.image,
+                }))}
+              maxSelection={1}
+              confirmText="Sacrificar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        const target = gameState.players.find(
+          (p) => p.id === action.targetPlayerId,
+        );
+        if (!target) return null;
+
+        const isUnicornPoison = action.reason === 'unicorn_poison';
+        const isMermaid = action.reason === 'mermaid_unicorn';
+
+        const cardsToSelect = isUnicornPoison
+          ? target.stable.filter((c) => c.id !== 'magical_kittencorn')
+          : [...target.stable, ...target.upgrades, ...target.downgrades];
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title={
+              isUnicornPoison
+                ? '🧪 Unicorn Poison'
+                : isMermaid
+                  ? '🧜‍♀️ Mermaid Unicorn'
+                  : 'Seleccionar Carta del Establo'
+            }
+            subtitle={
+              isUnicornPoison
+                ? `Selecciona un unicornio del establo de ${target.name} para destruirlo`
+                : isMermaid
+                  ? `Selecciona una carta del establo de ${target.name} para devolverla a su mano`
+                  : `Selecciona una carta del establo de ${target.name}`
+            }
+            items={cardsToSelect.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={1}
+            confirmText={
+              isUnicornPoison ? 'Destruir' : isMermaid ? 'Devolver' : 'Aceptar'
+            }
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
+      // ALLURING NARWHAL — Robar Upgrade del establo
+      // ───────────────────────────────────
+      case 'alluring_narwhal': {
+        if (action.playerId !== localPlayerId) return null;
+
+        const opponentsWithUpgrades = gameState.players.filter(
+          (p) =>
+            p.id !== localPlayerId &&
+            (p.upgrades.length > 0 ||
+              p.stable.some((c) => c.cardType === 'upgrade')),
+        );
+
+        const upgradeCards = opponentsWithUpgrades.flatMap((p) =>
+          [
+            ...p.upgrades,
+            ...p.stable.filter((c) => c.cardType === 'upgrade'),
+          ].map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: `Establo de ${p.name}`,
+            image: card.image,
+          })),
+        );
+
+        if (upgradeCards.length === 0) return null;
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="✨ Alluring Narwhal"
+            subtitle="Roba una carta de Upgrade del establo de otro jugador"
+            items={upgradeCards}
+            maxSelection={1}
+            confirmText="Robar Upgrade"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
               });
             }}
             onCancel={() => {
@@ -428,29 +886,37 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         );
       }
 
-      if (action.reason === 'rhinocorn') {
-        const items = gameState.players
-          .filter((p) => p.id !== localPlayerId)
-          .flatMap((p) =>
-            p.stable
-              .filter((c) => c.cardType === 'unicorn')
-              .map((card, idx) => ({
-                id: `${card.id}_${p.id}_${idx}`,
-                value: card.uid,
-                title: card.name,
-                subtitle: `Establo de ${p.name}`,
-                image: card.image,
-              })),
-          );
+      // ───────────────────────────────────
+      // GLITTER TORNADO — el jugador activo elige una carta por cada establo
+      // ───────────────────────────────────
+      case 'glitter_tornado': {
+        // Solo muestra el overlay al jugador que jugó la carta
+        if (action.sourcePlayerId !== localPlayerId) return null;
+
+        const currentTargetId = action.remainingPlayerIds[0];
+        const target = gameState.players.find((p) => p.id === currentTargetId);
+        if (!target || target.stable.length === 0) return null;
+
+        const totalPlayers = gameState.players.filter(
+          (p) => p.stable.length > 0,
+        ).length;
+        const remaining = action.remainingPlayerIds.length;
+        const stepLabel = `Paso ${totalPlayers - remaining + 1} de ${totalPlayers}`;
 
         return (
           <CardSelectionOverlay
             hide={hide}
-            title="🦏 Rhinocorn"
-            subtitle="Elige un unicornio de OTRO jugador para DESTRUIR. Pasarás a la fase de acción sin acciones."
-            items={items}
+            key={currentTargetId}
+            title="🌪️ Glitter Tornado"
+            subtitle={`${stepLabel} — Elige una carta del establo de ${target.name} para regresar a su mano`}
+            items={target.stable.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
             maxSelection={1}
-            confirmText="Destruir"
+            confirmText={remaining === 1 ? 'Confirmar' : 'Siguiente →'}
             onConfirm={([cardId]) => {
               dismiss();
               socket.emit('select-stable-card', {
@@ -462,240 +928,133 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         );
       }
 
-      if (action.reason === 'caffeine_overload') {
-        const localPlayer = gameState.players.find(
+      // ───────────────────────────────────
+      // MYSTICAL VORTEX — cada jugador debe descartar una carta de forma secuencial
+      // ───────────────────────────────────
+      case 'mystical_vortex': {
+        const currentTargetId = action.remainingPlayerIds[0];
+        if (currentTargetId !== localPlayerId) return null;
+
+        const player = gameState.players.find((p) => p.id === localPlayerId);
+        if (!player) return null;
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            key={localPlayerId}
+            title="🌪️ Mystical Vortex"
+            subtitle="Debes descartar 1 carta de tu mano. El descarte se barajará en el mazo principal."
+            items={player.hand.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={1}
+            confirmText="Descartar"
+            onConfirm={(cardIds) => {
+              dismiss();
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
+      // LLAMACORN — cada jugador descarta 1 carta en orden
+      // ───────────────────────────────────
+      case 'llamacorn': {
+        const needsToDiscard =
+          action.remainingPlayerIds.includes(localPlayerId);
+        const alreadyDiscarded =
+          action.resolvedPlayerIds.includes(localPlayerId);
+
+        if (!needsToDiscard && !alreadyDiscarded) return null;
+
+        if (alreadyDiscarded) {
+          return (
+            <div className="overlay-backdrop">
+              <div className="card-selection-window choice-window">
+                <h2>🦙 Llamacorn</h2>
+                <p>
+                  Esperando a que los demás jugadores descarten sus cartas...
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        const player = gameState.players.find((p) => p.id === localPlayerId);
+        if (!player) return null;
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            key={localPlayerId}
+            title="🦙 Llamacorn"
+            subtitle="Debes descartar 1 carta de tu mano."
+            items={player.hand.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={1}
+            confirmText="Descartar"
+            onConfirm={(cardIds) => {
+              dismiss();
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
+      // EXTREMELY DESTRUCTIVE UNICORN
+      // ───────────────────────────────────
+      case 'extremely_destructive_unicorn': {
+        const targetPlayer = gameState.players.find(
           (p) => p.id === localPlayerId,
         );
+        const needsToResolve =
+          action.remainingPlayerIds.includes(localPlayerId) &&
+          !action.resolvedPlayerIds.includes(localPlayerId);
 
-        const items = [
-          ...(localPlayer?.stable ?? []).map((card, idx) => ({
-            id: `${card.id}_stable_${idx}`,
-            value: card.uid,
-            title: card.name,
-            subtitle: 'Tu establo',
-            image: card.image,
-          })),
-          ...(localPlayer?.upgrades ?? []).map((card, idx) => ({
-            id: `${card.id}_upg_${idx}`,
-            value: card.uid,
-            title: card.name,
-            subtitle: 'Tu upgrade',
-            image: card.image,
-          })),
-          ...(localPlayer?.downgrades ?? []).map((card, idx) => ({
-            id: `${card.id}_dow_${idx}`,
-            value: card.uid,
-            title: card.name,
-            subtitle: 'Tu degradación',
-            image: card.image,
-          })),
-        ];
+        if (!targetPlayer) return null;
 
-        return (
-          <CardSelectionOverlay
-            hide={hide}
-            title="☕ Caffeine Overload"
-            subtitle="Elige una carta de tu establo para SACRIFICAR. Luego robarás 2 cartas."
-            items={items}
-            maxSelection={1}
-            confirmText="Sacrificar"
-            onConfirm={([cardId]) => {
-              dismiss();
-              socket.emit('select-stable-card', {
-                roomCode: gameState.roomCode,
-                cardId,
-              });
-            }}
-          />
-        );
-      }
-
-      if (action.reason === 'unicorn_swap_give') {
-        const localPlayer = gameState.players.find(
-          (p) => p.id === localPlayerId,
-        );
-        const target = gameState.players.find(
-          (p) => p.id === action.targetPlayerId,
-        );
-
-        const items = (localPlayer?.stable ?? [])
-          .filter((c) => c.cardType === 'unicorn')
-          .map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            subtitle: 'Tu establo',
-            image: card.image,
-          }));
-
-        return (
-          <CardSelectionOverlay
-            hide={hide}
-            title="🦄 Unicorn Swap"
-            subtitle={`Elige un unicornio de TU establo para moverlo al establo de ${target?.name ?? ''}`}
-            items={items}
-            maxSelection={1}
-            confirmText="Mover"
-            onConfirm={([cardId]) => {
-              dismiss();
-              socket.emit('select-stable-card', {
-                roomCode: gameState.roomCode,
-                cardId,
-              });
-            }}
-          />
-        );
-      }
-
-      if (action.reason === 'unicorn_swap_steal') {
-        const target = gameState.players.find(
-          (p) => p.id === action.targetPlayerId,
-        );
-
-        const items = (target?.stable ?? [])
-          .filter((c) => c.cardType === 'unicorn')
-          .map((card, idx) => ({
-            id: `${card.id}_${target?.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            subtitle: `Establo de ${target?.name ?? ''}`,
-            image: card.image,
-          }));
-
-        return (
-          <CardSelectionOverlay
-            hide={hide}
-            title="🦄 Unicorn Swap"
-            subtitle={`ROBA un unicornio del establo de ${target?.name ?? ''}`}
-            items={items}
-            maxSelection={1}
-            confirmText="Robar"
-            onConfirm={([cardId]) => {
-              dismiss();
-              socket.emit('select-stable-card', {
-                roomCode: gameState.roomCode,
-                cardId,
-              });
-            }}
-          />
-        );
-      }
-
-      if (action.reason === 'stabby_the_unicorn') {
-        const items = gameState.players
-          .filter((p) => p.id !== localPlayerId)
-          .flatMap((p) =>
-            p.stable
-              .filter((c) => c.cardType === 'unicorn')
-              .map((card, idx) => ({
-                id: `${card.id}_${p.id}_${idx}`,
-                value: card.uid,
-                title: card.name,
-                subtitle: `Establo de ${p.name}`,
-                image: card.image,
-              })),
+        if (!needsToResolve) {
+          return (
+            <div className="overlay-backdrop">
+              <div className="card-selection-window choice-window">
+                <h2>💥 Extremely Destructive Unicorn</h2>
+                <p>
+                  {action.remainingPlayerIds.length >
+                  action.resolvedPlayerIds.length
+                    ? 'Esperando sacrificios de otros jugadores...'
+                    : 'Resolviendo efecto...'}
+                </p>
+              </div>
+            </div>
           );
+        }
+
+        const player = targetPlayer;
 
         return (
           <CardSelectionOverlay
             hide={hide}
-            title="🔪 Stabby The Unicorn"
-            subtitle="Elige un unicornio para DESTRUIR"
-            items={items}
-            maxSelection={1}
-            confirmText="Destruir"
-            onConfirm={([cardId]) => {
-              dismiss();
-              socket.emit('select-stable-card', {
-                roomCode: gameState.roomCode,
-                cardId,
-              });
-            }}
-          />
-        );
-      }
-
-      if (action.reason === 'shark_with_a_horn') {
-        const items = gameState.players
-          .filter((p) => p.id !== localPlayerId)
-          .flatMap((p) =>
-            p.stable
-              .filter((c) => c.cardType === 'unicorn')
-              .map((card, idx) => ({
-                id: `${card.id}_${p.id}_${idx}`,
-                value: card.uid,
-                title: card.name,
-                subtitle: `Establo de ${p.name}`,
-                image: card.image,
-              })),
-          );
-
-        return (
-          <CardSelectionOverlay
-            hide={hide}
-            title="🦈 Shark With A Horn"
-            subtitle="Elige un unicornio para DESTRUIR"
-            items={items}
-            maxSelection={1}
-            confirmText="Destruir"
-            onConfirm={([cardId]) => {
-              dismiss();
-              socket.emit('select-stable-card', {
-                roomCode: gameState.roomCode,
-                cardId,
-              });
-            }}
-          />
-        );
-      }
-
-      if (action.reason === 'seductive_unicorn') {
-        const items = gameState.players
-          .filter((p) => p.id !== localPlayerId)
-          .flatMap((p) =>
-            p.stable
-              .filter((c) => c.cardType === 'unicorn')
-              .map((card, idx) => ({
-                id: `${card.id}_${p.id}_${idx}`,
-                value: card.uid,
-                title: card.name,
-                subtitle: `Establo de ${p.name}`,
-                image: card.image,
-              })),
-          );
-
-        return (
-          <CardSelectionOverlay
-            hide={hide}
-            title="💋 Seductive Unicorn"
-            subtitle="Elige un unicornio de otro jugador para ROBARLO a tu establo"
-            items={items}
-            maxSelection={1}
-            confirmText="Robar"
-            onConfirm={([cardId]) => {
-              dismiss();
-              socket.emit('select-stable-card', {
-                roomCode: gameState.roomCode,
-                cardId,
-              });
-            }}
-          />
-        );
-      }
-
-      if (action.reason === 'dark_angel_unicorn') {
-        const localPlayer = gameState.players.find(
-          (p) => p.id === localPlayerId,
-        );
-        if (!localPlayer) return null;
-
-        return (
-          <CardSelectionOverlay
-          hide={hide}
-            title="😈 Dark Angel Unicorn"
-            subtitle="Elige un unicornio de TU establo para sacrificar"
-            items={localPlayer.stable
-              .filter((c) => c.cardType === 'unicorn')
+            title="💥 Extremely Destructive Unicorn"
+            subtitle="Debes sacrificar 1 unicornio de tu establo."
+            items={player.stable
+              .filter((card) => card.cardType === 'unicorn')
               .map((card, idx) => ({
                 id: `${card.id}_${idx}`,
                 value: card.uid,
@@ -715,542 +1074,261 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         );
       }
 
-      const target = gameState.players.find(
-        (p) => p.id === action.targetPlayerId,
-      );
-      if (!target) return null;
+      // ───────────────────────────────────
+      // DECISIÓN OPCIONAL (select_choice)
+      // ───────────────────────────────────
+      case 'select_choice': {
+        if (action.playerId !== localPlayerId) return null;
 
-      const isUnicornPoison = action.reason === 'unicorn_poison';
-      const isMermaid = action.reason === 'mermaid_unicorn';
-
-      const cardsToSelect = isUnicornPoison
-        ? target.stable.filter((c) => c.id !== 'magical_kittencorn')
-        : [...target.stable, ...target.upgrades, ...target.downgrades];
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title={
-            isUnicornPoison
-              ? '🧪 Unicorn Poison'
-              : isMermaid
-                ? '🧜‍♀️ Mermaid Unicorn'
-                : 'Seleccionar Carta del Establo'
-          }
-          subtitle={
-            isUnicornPoison
-              ? `Selecciona un unicornio del establo de ${target.name} para destruirlo`
-              : isMermaid
-                ? `Selecciona una carta del establo de ${target.name} para devolverla a su mano`
-                : `Selecciona una carta del establo de ${target.name}`
-          }
-          items={cardsToSelect.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
-          maxSelection={1}
-          confirmText={isUnicornPoison ? 'Destruir' : isMermaid ? 'Devolver' : 'Aceptar'}
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-stable-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // ALLURING NARWHAL — Robar Upgrade del establo
-    // ───────────────────────────────────
-    case 'alluring_narwhal': {
-      if (action.playerId !== localPlayerId) return null;
-
-      const opponentsWithUpgrades = gameState.players.filter(
-        (p) =>
-          p.id !== localPlayerId &&
-          (p.upgrades.length > 0 ||
-            p.stable.some((c) => c.cardType === 'upgrade')),
-      );
-
-      const upgradeCards = opponentsWithUpgrades.flatMap((p) =>
-        [
-          ...p.upgrades,
-          ...p.stable.filter((c) => c.cardType === 'upgrade'),
-        ].map((card, idx) => ({
-          id: `${card.id}_${idx}`,
-          value: card.uid,
-          title: card.name,
-          subtitle: `Establo de ${p.name}`,
-          image: card.image,
-        })),
-      );
-
-      if (upgradeCards.length === 0) return null;
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title="✨ Alluring Narwhal"
-          subtitle="Roba una carta de Upgrade del establo de otro jugador"
-          items={upgradeCards}
-          maxSelection={1}
-          confirmText="Robar Upgrade"
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-stable-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-          onCancel={() => {
-            dismiss();
-            socket.emit('cancel-action', {
-              roomCode: gameState.roomCode,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // GLITTER TORNADO — el jugador activo elige una carta por cada establo
-    // ───────────────────────────────────
-    case 'glitter_tornado': {
-      // Solo muestra el overlay al jugador que jugó la carta
-      if (action.sourcePlayerId !== localPlayerId) return null;
-
-      const currentTargetId = action.remainingPlayerIds[0];
-      const target = gameState.players.find((p) => p.id === currentTargetId);
-      if (!target || target.stable.length === 0) return null;
-
-      const totalPlayers = gameState.players.filter(
-        (p) => p.stable.length > 0,
-      ).length;
-      const remaining = action.remainingPlayerIds.length;
-      const stepLabel = `Paso ${totalPlayers - remaining + 1} de ${totalPlayers}`;
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          key={currentTargetId}
-          title="🌪️ Glitter Tornado"
-          subtitle={`${stepLabel} — Elige una carta del establo de ${target.name} para regresar a su mano`}
-          items={target.stable.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
-          maxSelection={1}
-          confirmText={remaining === 1 ? 'Confirmar' : 'Siguiente →'}
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-stable-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // MYSTICAL VORTEX — cada jugador debe descartar una carta de forma secuencial
-    // ───────────────────────────────────
-    case 'mystical_vortex': {
-      const currentTargetId = action.remainingPlayerIds[0];
-      if (currentTargetId !== localPlayerId) return null;
-
-      const player = gameState.players.find((p) => p.id === localPlayerId);
-      if (!player) return null;
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          key={localPlayerId}
-          title="🌪️ Mystical Vortex"
-          subtitle="Debes descartar 1 carta de tu mano. El descarte se barajará en el mazo principal."
-          items={player.hand.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
-          maxSelection={1}
-          confirmText="Descartar"
-          onConfirm={(cardIds) => {
-            dismiss();
-            socket.emit('discard-cards', {
-              roomCode: gameState.roomCode,
-              playerId: localPlayerId,
-              cardIds,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // LLAMACORN — cada jugador descarta 1 carta en orden
-    // ───────────────────────────────────
-    case 'llamacorn': {
-      const needsToDiscard = action.remainingPlayerIds.includes(localPlayerId);
-      const alreadyDiscarded = action.resolvedPlayerIds.includes(localPlayerId);
-
-      if (!needsToDiscard && !alreadyDiscarded) return null;
-
-      if (alreadyDiscarded) {
         return (
           <div className="overlay-backdrop">
             <div className="card-selection-window choice-window">
-              <h2>🦙 Llamacorn</h2>
-              <p>Esperando a que los demás jugadores descarten sus cartas...</p>
+              <h2>{action.title}</h2>
+              <p>{action.description}</p>
+              <div className="choice-options-grid">
+                {action.options.map((option) => (
+                  <button
+                    key={option.value}
+                    className="confirm-button choice-button"
+                    onClick={() => {
+                      dismiss();
+                      socket.emit('select-choice', {
+                        roomCode: gameState.roomCode,
+                        choice: option.value,
+                      });
+                    }}
+                  >
+                    {option.text}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         );
       }
 
-      const player = gameState.players.find((p) => p.id === localPlayerId);
-      if (!player) return null;
+      // ───────────────────────────────────
+      // SELECCIONAR CARTA DEL DESCARTE
+      // ───────────────────────────────────
+      case 'select_discard_card': {
+        if (action.playerId !== localPlayerId) return null;
 
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          key={localPlayerId}
-          title="🦙 Llamacorn"
-          subtitle="Debes descartar 1 carta de tu mano."
-          items={player.hand.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
-          maxSelection={1}
-          confirmText="Descartar"
-          onConfirm={(cardIds) => {
-            dismiss();
-            socket.emit('discard-cards', {
-              roomCode: gameState.roomCode,
-              playerId: localPlayerId,
-              cardIds,
-            });
-          }}
-        />
-      );
-    }
+        const addsToHand =
+          action.reason === 'magical_flying_unicorn' ||
+          action.reason === 'majestic_flying_unicorn' ||
+          action.reason === 'swift_flying_unicorn';
 
-    // ───────────────────────────────────
-    // EXTREMELY DESTRUCTIVE UNICORN
-    // ───────────────────────────────────
-    case 'extremely_destructive_unicorn': {
-      const targetPlayer = gameState.players.find((p) => p.id === localPlayerId);
-      const needsToResolve =
-        action.remainingPlayerIds.includes(localPlayerId) &&
-        !action.resolvedPlayerIds.includes(localPlayerId);
+        const isMagicalFlyingUnicorn =
+          action.reason === 'magical_flying_unicorn';
+        const isMajesticFlyingUnicorn =
+          action.reason === 'majestic_flying_unicorn';
+        const isNecromancer = action.reason === 'necromancer_unicorn';
+        const isSwiftFlyingUnicorn = action.reason === 'swift_flying_unicorn';
+        const isKissOfLife = action.reason === 'kiss_of_life';
 
-      if (!targetPlayer) return null;
-
-      if (!needsToResolve) {
-        return (
-          <div className="overlay-backdrop">
-            <div className="card-selection-window choice-window">
-              <h2>💥 Extremely Destructive Unicorn</h2>
-              <p>
-                {action.remainingPlayerIds.length > action.resolvedPlayerIds.length
-                  ? 'Esperando sacrificios de otros jugadores...'
-                  : 'Resolviendo efecto...'}
-              </p>
-            </div>
-          </div>
+        const eligibleCards = gameState.discard.filter(
+          (card) =>
+            (!action.cardType || card.cardType === action.cardType) &&
+            (action.reason !== 'dark_angel_unicorn' ||
+              card.id !== 'dark_angel_unicorn') &&
+            (!isSwiftFlyingUnicorn ||
+              card.effect === 'neigh' ||
+              card.effect === 'super_neigh'),
         );
-      }
 
-      const player = targetPlayer;
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title="💥 Extremely Destructive Unicorn"
-          subtitle="Debes sacrificar 1 unicornio de tu establo."
-          items={player.stable
-            .filter((card) => card.cardType === 'unicorn')
-            .map((card, idx) => ({
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title={
+              isMagicalFlyingUnicorn
+                ? '🦄 Magical Flying Unicorn'
+                : isMajesticFlyingUnicorn
+                  ? '🦄 Majestic Flying Unicorn'
+                  : isSwiftFlyingUnicorn
+                    ? '🕊️ Swifty Flying Unicorn'
+                    : isNecromancer
+                      ? '🧙 Necromancer Unicorn'
+                      : isKissOfLife
+                        ? '💋 Kiss Of Life'
+                        : '😈 Dark Angel Unicorn'
+            }
+            subtitle={
+              isMagicalFlyingUnicorn
+                ? 'Elige una carta de Magia del descarte para añadirla a tu mano'
+                : isMajesticFlyingUnicorn
+                  ? 'Elige un unicornio del descarte para añadirlo a tu mano'
+                  : isSwiftFlyingUnicorn
+                    ? 'Elige un Neigh del descarte para añadirlo a tu mano'
+                    : 'Elige un unicornio del descarte para traerlo a tu establo'
+            }
+            items={eligibleCards.map((card, idx) => ({
               id: `${card.id}_${idx}`,
               value: card.uid,
               title: card.name,
               image: card.image,
             }))}
-          maxSelection={1}
-          confirmText="Sacrificar"
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-stable-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-        />
-      );
+            maxSelection={1}
+            confirmText={addsToHand ? 'Añadir a la Mano' : 'Traer al Establo'}
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-discard-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
+      // SELECCIONAR CARTA DEL MAZO
+      // ───────────────────────────────────
+      case 'select_deck_card': {
+        if (action.playerId !== localPlayerId) return null;
+
+        const isGreatNarwhal = action.reason === 'the_great_narwhal';
+        const isShabbyNarwhal = action.reason === 'shabby_the_narwhal';
+        const isDebugDraw = action.reason === 'debug_draw';
+
+        const title = isDebugDraw
+          ? '🐛 Modo Debug — Roba una carta'
+          : isGreatNarwhal
+            ? '🐋 The Great Narwhal'
+            : isShabbyNarwhal
+              ? '🦄 Shabby The Narwhal'
+              : '🐳 Classy Narwhal';
+
+        const subtitle = isDebugDraw
+          ? 'Elige qué carta del mazo quieres tomar en tu fase de robo'
+          : isGreatNarwhal
+            ? 'Elige una carta con "Narwhal" en su nombre para agregarla a tu mano (luego se barajará el mazo)'
+            : isShabbyNarwhal
+              ? 'Elige una carta de Downgrade del mazo para agregarla a tu mano (luego se barajará el mazo)'
+              : 'Elige una carta de Upgrade del mazo para agregarla a tu mano (luego se barajará el mazo)';
+
+        const items = isDebugDraw
+          ? gameState.deck.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))
+          : action.candidates.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }));
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title={title}
+            subtitle={subtitle}
+            items={items}
+            maxSelection={1}
+            confirmText={isDebugDraw ? 'Robar' : 'Tomar'}
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-deck-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
+      // SELECCIONAR CARTAS DE LA NURSERY
+      // ───────────────────────────────────
+      case 'select_nursery_card': {
+        if (action.playerId !== localPlayerId) return null;
+
+        const babies = gameState.nursery.filter(
+          (card) => card.cardType === 'unicorn' && card.unicornClass === 'baby',
+        );
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="🦢 Mother Goose Unicorn"
+            subtitle="Elige un Baby Unicorn de la Nursery para traerlo a tu establo"
+            items={babies.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={1}
+            confirmText="Traer al Establo"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-nursery-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
+      // RAINBOW UNICORN — traer un unicornio básico de la mano al establo
+      // ───────────────────────────────────
+      case 'select_own_hand_card': {
+        if (action.playerId !== localPlayerId) return null;
+
+        const player = gameState.players.find((p) => p.id === localPlayerId);
+        if (!player) return null;
+
+        const basicUnicorns = player.hand.filter(
+          (card) =>
+            card.cardType === 'unicorn' && card.unicornClass === 'basic',
+        );
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="🌈 Rainbow Unicorn"
+            subtitle="Elige un unicornio básico de tu mano para traerlo directamente a tu establo"
+            items={basicUnicorns.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={1}
+            confirmText="Traer al Establo"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-own-hand-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
+      // UNICORN ORACLE — mirar 3 cartas, robar 1, ordenar las 2 restantes
+      // ───────────────────────────────────
+      case 'select_oracle_cards': {
+        if (action.playerId !== localPlayerId) return null;
+
+        return (
+          <UnicornOracleOverlay
+            roomCode={gameState.roomCode}
+            candidates={action.candidates}
+            onDone={dismiss}
+          />
+        );
+      }
+
+      default:
+        return null;
     }
-
-    // ───────────────────────────────────
-    // DECISIÓN OPCIONAL (select_choice)
-    // ───────────────────────────────────
-    case 'select_choice': {
-      if (action.playerId !== localPlayerId) return null;
-
-      return (
-        <div className="overlay-backdrop">
-          <div className="card-selection-window choice-window">
-            <h2>{action.title}</h2>
-            <p>{action.description}</p>
-            <div className="choice-options-grid">
-              {action.options.map((option) => (
-                <button
-                  key={option.value}
-                  className="confirm-button choice-button"
-                  onClick={() => {
-                    dismiss();
-                    socket.emit('select-choice', {
-                      roomCode: gameState.roomCode,
-                      choice: option.value,
-                    });
-                  }}
-                >
-                  {option.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ───────────────────────────────────
-    // SELECCIONAR CARTA DEL DESCARTE
-    // ───────────────────────────────────
-      case 'select_discard_card': {
-      if (action.playerId !== localPlayerId) return null;
-
-      const addsToHand =
-        action.reason === 'magical_flying_unicorn' ||
-        action.reason === 'majestic_flying_unicorn' ||
-        action.reason === 'swift_flying_unicorn';
-
-      const isMagicalFlyingUnicorn =
-        action.reason === 'magical_flying_unicorn';
-      const isMajesticFlyingUnicorn =
-        action.reason === 'majestic_flying_unicorn';
-      const isNecromancer = action.reason === 'necromancer_unicorn';
-      const isSwiftFlyingUnicorn = action.reason === 'swift_flying_unicorn';
-      const isKissOfLife = action.reason === 'kiss_of_life';
-
-      const eligibleCards = gameState.discard.filter(
-        (card) =>
-          (!action.cardType || card.cardType === action.cardType) &&
-          (action.reason !== 'dark_angel_unicorn' ||
-            card.id !== 'dark_angel_unicorn') &&
-          (!isSwiftFlyingUnicorn ||
-            card.effect === 'neigh' ||
-            card.effect === 'super_neigh'),
-      );
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title={
-            isMagicalFlyingUnicorn
-              ? '🦄 Magical Flying Unicorn'
-              : isMajesticFlyingUnicorn
-                ? '🦄 Majestic Flying Unicorn'
-                : isSwiftFlyingUnicorn
-                  ? '🕊️ Swifty Flying Unicorn'
-                  : isNecromancer
-                    ? '🧙 Necromancer Unicorn'
-                    : isKissOfLife
-                      ? '💋 Kiss Of Life'
-                      : '😈 Dark Angel Unicorn'
-          }
-          subtitle={
-            isMagicalFlyingUnicorn
-              ? 'Elige una carta de Magia del descarte para añadirla a tu mano'
-              : isMajesticFlyingUnicorn
-                ? 'Elige un unicornio del descarte para añadirlo a tu mano'
-                : isSwiftFlyingUnicorn
-                  ? 'Elige un Neigh del descarte para añadirlo a tu mano'
-                  : 'Elige un unicornio del descarte para traerlo a tu establo'
-          }
-          items={eligibleCards.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
-          maxSelection={1}
-          confirmText={addsToHand ? 'Añadir a la Mano' : 'Traer al Establo'}
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-discard-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // SELECCIONAR CARTA DEL MAZO
-    // ───────────────────────────────────
-    case 'select_deck_card': {
-      if (action.playerId !== localPlayerId) return null;
-
-      const isGreatNarwhal = action.reason === 'the_great_narwhal';
-      const isShabbyNarwhal = action.reason === 'shabby_the_narwhal';
-      const isDebugDraw = action.reason === 'debug_draw';
-
-      const title = isDebugDraw
-        ? '🐛 Modo Debug — Roba una carta'
-        : isGreatNarwhal
-          ? '🐋 The Great Narwhal'
-          : isShabbyNarwhal
-            ? '🦄 Shabby The Narwhal'
-            : '🐳 Classy Narwhal';
-
-      const subtitle = isDebugDraw
-        ? 'Elige qué carta del mazo quieres tomar en tu fase de robo'
-        : isGreatNarwhal
-          ? 'Elige una carta con "Narwhal" en su nombre para agregarla a tu mano (luego se barajará el mazo)'
-          : isShabbyNarwhal
-            ? 'Elige una carta de Downgrade del mazo para agregarla a tu mano (luego se barajará el mazo)'
-            : 'Elige una carta de Upgrade del mazo para agregarla a tu mano (luego se barajará el mazo)';
-
-      const items = isDebugDraw
-        ? gameState.deck.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))
-        : action.candidates.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }));
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title={title}
-          subtitle={subtitle}
-          items={items}
-          maxSelection={1}
-          confirmText={isDebugDraw ? 'Robar' : 'Tomar'}
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-deck-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // SELECCIONAR CARTAS DE LA NURSERY
-    // ───────────────────────────────────
-    case 'select_nursery_card': {
-      if (action.playerId !== localPlayerId) return null;
-
-      const babies = gameState.nursery.filter(
-        (card) => card.cardType === 'unicorn' && card.unicornClass === 'baby',
-      );
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title="🦢 Mother Goose Unicorn"
-          subtitle="Elige un Baby Unicorn de la Nursery para traerlo a tu establo"
-          items={babies.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
-          maxSelection={1}
-          confirmText="Traer al Establo"
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-nursery-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // RAINBOW UNICORN — traer un unicornio básico de la mano al establo
-    // ───────────────────────────────────
-    case 'select_own_hand_card': {
-      if (action.playerId !== localPlayerId) return null;
-
-      const player = gameState.players.find((p) => p.id === localPlayerId);
-      if (!player) return null;
-
-      const basicUnicorns = player.hand.filter(
-        (card) => card.cardType === 'unicorn' && card.unicornClass === 'basic',
-      );
-
-      return (
-        <CardSelectionOverlay
-          hide={hide}
-          title="🌈 Rainbow Unicorn"
-          subtitle="Elige un unicornio básico de tu mano para traerlo directamente a tu establo"
-          items={basicUnicorns.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
-          maxSelection={1}
-          confirmText="Traer al Establo"
-          onConfirm={([cardId]) => {
-            dismiss();
-            socket.emit('select-own-hand-card', {
-              roomCode: gameState.roomCode,
-              cardId,
-            });
-          }}
-        />
-      );
-    }
-
-    // ───────────────────────────────────
-    // UNICORN ORACLE — mirar 3 cartas, robar 1, ordenar las 2 restantes
-    // ───────────────────────────────────
-    case 'select_oracle_cards': {
-      if (action.playerId !== localPlayerId) return null;
-
-      return (
-        <UnicornOracleOverlay
-          roomCode={gameState.roomCode}
-          candidates={action.candidates}
-          onDone={dismiss}
-        />
-      );
-    }
-
-    default:
-      return null;
-  }
   };
 
   const overlay = renderOverlay();
@@ -1282,12 +1360,14 @@ function UnicornOracleOverlay({
   onDone: () => void;
 }) {
   const [chosenCardId, setChosenCardId] = useState<string | null>(null);
-  const [order, setOrder] = useState<{ uid: string; id: string; name: string; image: string }[]>([]);
+  const [order, setOrder] = useState<
+    { uid: string; id: string; name: string; image: string }[]
+  >([]);
 
   const remaining = order.length;
   const totalToOrder = candidates.length - 1;
 
-function confirm() {
+  function confirm() {
     if (!chosenCardId || order.length !== totalToOrder) return;
     socket.emit('select-oracle-cards', {
       roomCode,
@@ -1327,13 +1407,16 @@ function confirm() {
       <div className="card-selection-window choice-window">
         <h2>🔮 Unicorn Oracle</h2>
         <p>
-          Elige <strong>1 carta</strong> para añadir a tu mano, luego cliquea el resto en el
-          orden en que volverán a la parte superior del mazo (primero = arriba).
+          Elige <strong>1 carta</strong> para añadir a tu mano, luego cliquea el
+          resto en el orden en que volverán a la parte superior del mazo
+          (primero = arriba).
         </p>
 
         {!chosenCardId ? (
           <>
-            <p className="text-sm text-slate-400 mb-2">¿Cuál carta añades a tu mano?</p>
+            <p className="text-sm text-slate-400 mb-2">
+              ¿Cuál carta añades a tu mano?
+            </p>
             <div className="flex gap-3 flex-wrap justify-center">
               {candidates.map((card) => (
                 <button
@@ -1341,7 +1424,11 @@ function confirm() {
                   className="choice-button confirm-button"
                   onClick={() => clickCandidate(card)}
                 >
-                  <img src={card.image} alt={card.name} className="w-20 h-auto rounded-lg" />
+                  <img
+                    src={card.image}
+                    alt={card.name}
+                    className="w-20 h-auto rounded-lg"
+                  />
                   <span className="text-xs">{card.name}</span>
                 </button>
               ))}
@@ -1350,9 +1437,12 @@ function confirm() {
         ) : (
           <>
             <p className="text-sm text-slate-400 mb-2">
-              Añadiste <strong>{candidates.find((c) => c.uid === chosenCardId)?.name}</strong> a tu mano.
-              Cliquea las {unselected.length} restantes para definir el tope del mazo{' '}
-              ({remaining}/{totalToOrder}).
+              Añadiste{' '}
+              <strong>
+                {candidates.find((c) => c.uid === chosenCardId)?.name}
+              </strong>{' '}
+              a tu mano. Cliquea las {unselected.length} restantes para definir
+              el tope del mazo ({remaining}/{totalToOrder}).
             </p>
             <div className="flex gap-3 flex-wrap justify-center">
               {unselected.map((card) => (
@@ -1361,7 +1451,11 @@ function confirm() {
                   className="choice-button confirm-button"
                   onClick={() => clickOrderCard(card)}
                 >
-                  <img src={card.image} alt={card.name} className="w-16 h-auto rounded-lg" />
+                  <img
+                    src={card.image}
+                    alt={card.name}
+                    className="w-16 h-auto rounded-lg"
+                  />
                   <span className="text-xs">{card.name}</span>
                 </button>
               ))}
@@ -1369,7 +1463,9 @@ function confirm() {
 
             {order.length > 0 && (
               <div className="mt-3">
-                <p className="text-sm text-slate-400 mb-1">Orden al tope del mazo (de arriba a abajo):</p>
+                <p className="text-sm text-slate-400 mb-1">
+                  Orden al tope del mazo (de arriba a abajo):
+                </p>
                 <div className="flex gap-2 flex-wrap justify-center">
                   {order.map((card, i) => (
                     <button
@@ -1387,7 +1483,10 @@ function confirm() {
             )}
 
             <div className="flex items-center justify-center gap-4 mt-4">
-              <button className="choice-button" onClick={() => setChosenCardId(null)}>
+              <button
+                className="choice-button"
+                onClick={() => setChosenCardId(null)}
+              >
                 Cambiar carta a robar
               </button>
               <button

@@ -12,7 +12,8 @@ export const classyNarwhal: CardEffect = {
       reason: 'classy_narwhal',
       playerId: player.id,
       title: '🐳 Classy Narwhal',
-      description: '¿Deseas buscar una carta de Mejora en el mazo y agregarla a tu mano? (Luego se barajará el mazo)',
+      description:
+        '¿Deseas buscar una carta de Upgrade en el mazo y agregarla a tu mano? (Luego se barajará el mazo)',
       options: [
         { value: 'yes', text: 'Sí, buscar' },
         { value: 'no', text: 'No, omitir efecto' },

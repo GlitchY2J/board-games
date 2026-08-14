@@ -631,6 +631,26 @@
     "expansion": "base"
   },
   {
+    "id": "reset_button",
+    "name": "Reset Button",
+    "cardType": "magic",
+    "image": "/cards/base/reset_button.png",
+    "description": "Each player must SACRIFICE all Upgrade and Downgrade cards. Shuffle the discard pile into the deck.",
+    "effect": "reset_button",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
+    "id": "re_target",
+    "name": "Re-Target",
+    "cardType": "magic",
+    "image": "/cards/base/re_target.png",
+    "description": "Move and Upgrade or Downgrade card from any player's Stable to any other player's Stable.",
+    "effect": "re_target",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
     "id": "shake_up",
     "name": "Shake Up",
     "cardType": "magic",
