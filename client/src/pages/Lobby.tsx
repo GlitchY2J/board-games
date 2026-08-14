@@ -5,6 +5,7 @@ import { useGame } from '../context/GameContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { Copy, Check, Users, Crown, Loader2, ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Player {
   id: string;
@@ -49,6 +50,7 @@ export default function Lobby() {
   const [copied, setCopied] = useState(false);
   const [turnOrder, setTurnOrder] = useState<{ id: string; name: string; avatar?: string }[] | null>(null);
   const [shuffling, setShuffling] = useState(false);
+  const [isVisualShuffling, setIsVisualShuffling] = useState(false);
 
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -84,9 +86,15 @@ export default function Lobby() {
       });
     };
 
-    const onTurnOrderAssigned = (players: { id: string; name: string }[]) => {
+    const onTurnOrderAssigned = (players: { id: string; name: string; avatar?: string }[]) => {
       setShuffling(false);
-      setTurnOrder(players);
+      setIsVisualShuffling(true);
+      setTurnOrder(players); // Set immediately so the modal renders
+      
+      // Delay finishing the shuffle animation
+      setTimeout(() => {
+        setIsVisualShuffling(false);
+      }, 2000);
     };
 
     socket.on('room-updated', onRoomUpdated);
@@ -109,6 +117,7 @@ export default function Lobby() {
   const handleShuffleAgain = () => {
     if (!room) return;
     setShuffling(true);
+    setIsVisualShuffling(true);
     socket.emit('start-game', room.code);
   };
 
@@ -324,55 +333,171 @@ export default function Lobby() {
                 <Users size={12} />
                 Orden de Turnos
               </div>
-              <h2 className="text-2xl font-extrabold tracking-tight">Se han asignado los turnos</h2>
+              <h2 className="text-2xl font-extrabold tracking-tight">
+                {isVisualShuffling ? 'Barajando turnos...' : 'Se han asignado los turnos'}
+              </h2>
               <p className="text-slate-400 text-sm mt-2">
-                El orden fue barajado al azar. El primer jugador comienza la partida.
+                {isVisualShuffling 
+                  ? 'Decidiendo el orden de juego al azar...' 
+                  : 'El orden fue barajado al azar. El primer jugador comienza la partida.'}
               </p>
             </div>
 
-            <div className="space-y-3 mb-8">
-              {turnOrder.map((p, index) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50 transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-slate-950 font-black text-sm shadow-inner ${
-                        index === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-slate-700'
-                      }`}
-                    >
-                      {index + 1}
-                    </span>
-                    <span className="text-sm font-bold text-slate-100">
-                      {p.name} {p.id === playerId && '(tú)'}
-                    </span>
-                  </div>
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                      index === 0
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        : 'text-slate-500'
-                    }`}
+            <div className="mb-8 min-h-[260px] flex items-center justify-center">
+              <AnimatePresence mode="wait">
+                {isVisualShuffling ? (
+                  <motion.div
+                    key="shuffling-deck"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="relative w-full h-48 flex items-center justify-center"
                   >
-                    {index === 0 ? 'Empieza' : `${index + 1}° jugador`}
-                  </span>
-                </div>
-              ))}
+                    {[...Array(Math.min(4, turnOrder.length))].map((_, idx) => {
+                      const playerInfo = turnOrder[idx % turnOrder.length];
+                      return (
+                        <motion.div
+                          key={idx}
+                          className="absolute w-60 h-32 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4 shadow-2xl flex flex-col justify-between"
+                          style={{
+                            zIndex: 10 + idx,
+                          }}
+                          animate={{
+                            x: idx % 2 === 0 
+                              ? [0, -110, 10, 0] 
+                              : [0, 110, -10, 0],
+                            y: [0, -4 * idx, 0],
+                            scale: [1, 1.03, 0.97, 1],
+                            rotate: [idx % 2 === 0 ? -2 : 2, idx % 2 === 0 ? -10 : 10, 0],
+                          }}
+                          transition={{
+                            duration: 0.7,
+                            repeat: Infinity,
+                            repeatType: "loop",
+                            delay: idx * 0.12,
+                            ease: "easeInOut"
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            {playerInfo?.avatar ? (
+                              <div className="w-9 h-9 rounded-xl overflow-hidden border border-slate-600/40 shrink-0">
+                                <img
+                                  src={`/avatars/${playerInfo.avatar}.png`}
+                                  alt={playerInfo.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div
+                                className={`w-9 h-9 rounded-xl bg-gradient-to-br ${getAvatarGradient(
+                                  playerInfo?.name || 'Player'
+                                )} flex items-center justify-center text-slate-950 font-black text-xs uppercase shadow-inner`}
+                              >
+                                {(playerInfo?.name || 'PL').substring(0, 2)}
+                              </div>
+                            )}
+                            <div className="text-left">
+                              <span className="text-sm font-bold text-slate-200 block truncate max-w-[120px]">
+                                {playerInfo?.name}
+                              </span>
+                              <span className="text-[9px] text-cyan-400 font-medium block animate-pulse">
+                                Barajando...
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center mt-3">
+                            <div className="h-1 w-20 bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-cyan-500 animate-pulse w-full"></div>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-600 tracking-wider">
+                              ?
+                            </span>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="turn-order-list"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      visible: {
+                        transition: {
+                          staggerChildren: 0.1,
+                        }
+                      }
+                    }}
+                    className="space-y-3 w-full"
+                  >
+                    {turnOrder.map((p, index) => (
+                      <motion.div
+                        key={p.id}
+                        variants={{
+                          hidden: { opacity: 0, y: 15, scale: 0.98 },
+                          visible: { opacity: 1, y: 0, scale: 1 }
+                        }}
+                        transition={{ type: 'spring', stiffness: 120, damping: 14 }}
+                        className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50 transition-all hover:border-slate-700/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-slate-950 font-black text-sm shadow-inner ${
+                              index === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-slate-700'
+                            }`}
+                          >
+                            {index + 1}
+                          </span>
+                          {p.avatar ? (
+                            <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-600/40 shrink-0">
+                              <img
+                                src={`/avatars/${p.avatar}.png`}
+                                alt={p.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarGradient(
+                                p.name
+                              )} flex items-center justify-center text-slate-950 font-black text-xs uppercase shadow-inner`}
+                            >
+                              {p.name.substring(0, 2)}
+                            </div>
+                          )}
+                          <span className="text-sm font-bold text-slate-100">
+                            {p.name} {p.id === playerId && '(tú)'}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                            index === 0
+                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                              : 'text-slate-500'
+                          }`}
+                        >
+                          {index === 0 ? 'Empieza' : `${index + 1}° jugador`}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="border-t border-slate-900 pt-6 flex flex-col items-center gap-3">
               {isHost && (
                 <>
-                  <Button onClick={handleConfirmStart} fullWidth disabled={shuffling}>
-                    {shuffling ? 'Barajando...' : 'Confirmar y comenzar'}
+                  <Button onClick={handleConfirmStart} fullWidth disabled={shuffling || isVisualShuffling}>
+                    {shuffling || isVisualShuffling ? 'Barajando...' : 'Confirmar y comenzar'}
                   </Button>
                   <button
                     onClick={handleShuffleAgain}
-                    disabled={shuffling}
+                    disabled={shuffling || isVisualShuffling}
                     className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-xs font-semibold cursor-pointer disabled:opacity-50"
                   >
-                    <Loader2 className={shuffling ? 'animate-spin' : ''} size={14} />
+                    <Loader2 className={shuffling || isVisualShuffling ? 'animate-spin' : ''} size={14} />
                     Barajar de nuevo
                   </button>
                 </>
@@ -380,7 +505,9 @@ export default function Lobby() {
               {!isHost && (
                 <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold py-2">
                   <Loader2 className="animate-spin text-amber-400" size={14} />
-                  Esperando que el creador confirme el orden...
+                  {isVisualShuffling 
+                    ? 'Barajando turnos...' 
+                    : 'Esperando que el creador confirme el orden...'}
                 </div>
               )}
             </div>
