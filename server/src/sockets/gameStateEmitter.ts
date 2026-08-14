@@ -62,6 +62,14 @@ export function createGameStateForPlayer(
 
       const canSeeHand = canViewerSeeTargetHand(game, viewerId, player.id);
 
+      // El jugador que usa Americorn ve la mano objetivo boca abajo, pero en
+      // orden aleatorio (sin filtrar el orden real de la mano).
+      const isAmericornViewer =
+        game.pendingAction?.type === 'select_hand_card' &&
+        game.pendingAction?.reason === 'americorn' &&
+        game.pendingAction?.sourcePlayerId === viewerId &&
+        game.pendingAction?.targetPlayerId === player.id;
+
       return {
         ...player,
         hand:
@@ -69,9 +77,20 @@ export function createGameStateForPlayer(
             ? player.hand.map((card) => ({
                 ...card,
               }))
-            : player.hand.map((_, index) =>
-                createHiddenCard(`hidden-hand-${player.id}-${index}`),
-              ),
+            : (() => {
+                const hidden = player.hand.map((_, index) =>
+                  createHiddenCard(`hidden-hand-${player.id}-${index}`),
+                );
+
+                if (isAmericornViewer && hidden.length > 1) {
+                  for (let i = hidden.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [hidden[i], hidden[j]] = [hidden[j], hidden[i]];
+                  }
+                }
+
+                return hidden;
+              })(),
         stable: player.stable.map((card) => ({ ...card })),
         upgrades: player.upgrades.map((card) => ({ ...card })),
         downgrades: player.downgrades.map((card) => ({ ...card })),
@@ -85,7 +104,7 @@ export function createGameStateForPlayer(
 export function emitGameState(
   io: GameServer,
   room: Room,
-  eventName: 'game-started' | 'game-updated',
+  eventName: 'game-started' | 'game-updated' | 'game-restarted',
 ): void {
   const game = room.gameState;
 

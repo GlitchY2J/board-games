@@ -615,7 +615,7 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
 
     TurnManager.skipBeginningIfNoTriggers(room.gameState);
 
-    emitGameState(io, room, 'game-updated');
+    emitGameState(io, room, 'game-restarted');
 
     console.log(`Partida reiniciada: ${roomCode}`);
   });

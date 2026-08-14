@@ -245,6 +245,8 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
       if (!target) return null;
 
       const isAmericorn = action.reason === 'americorn';
+      const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
+      const revealAmericorn = isAmericorn && hasNannyCam;
 
       return (
         <CardSelectionOverlay
@@ -252,14 +254,24 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           title={isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
           subtitle={
             isAmericorn
-              ? `Elige una carta boca abajo de la mano de ${target.name}`
+              ? revealAmericorn
+                ? `Nanny Cam: se ven las cartas de ${target.name}. Elige una`
+                : `Elige una carta boca abajo de la mano de ${target.name}`
               : `Elige una carta de la mano de ${target.name} para robarla`
           }
           items={target.hand.map((card, idx) => ({
             id: `${card.id}_${idx}`,
             value: card.uid,
-            title: isAmericorn ? `Carta ${idx + 1}` : card.name,
-            image: isAmericorn ? '/cards/base/card_back.png' : card.image,
+            title: revealAmericorn
+              ? card.name
+              : isAmericorn
+                ? `Carta ${idx + 1}`
+                : card.name,
+            image: revealAmericorn
+              ? card.image
+              : isAmericorn
+                ? '/cards/base/card_back.png'
+                : card.image,
           }))}
           maxSelection={1}
           confirmText="Robar"

@@ -146,6 +146,7 @@ export interface ServerToClientEvents {
   'room-updated': (room: Room) => void;
   'game-started': (gameState: GameState) => void;
   'game-updated': (gameState: GameState) => void;
+  'game-restarted': (gameState: GameState) => void;
   'game-error': (error: GameError) => void;
   'card-animations': (animations: CardAnimation[]) => void;
   'neigh-animations': (animations: NeighAnimation[]) => void;

@@ -104,6 +104,14 @@ export default function Game() {
       }
     });
 
+    socket.on('game-restarted', (state: GameState) => {
+      // Reinicio: forzar que el anuncio de turno se muestre de nuevo.
+      prevTurnRef.current = null;
+      pendingGameStateRef.current = null;
+      activeAnimationsCountRef.current = 0;
+      applyGameState(state);
+    });
+
     const onCardAnimations = (animations: CardAnimation[]) => {
       const found = animations
         .map((animation) => {
@@ -158,6 +166,7 @@ export default function Game() {
 
     return () => {
       socket.off('game-updated');
+      socket.off('game-restarted');
       socket.off('card-animations');
       socket.off('neigh-animations');
       socket.off('draw-animations');

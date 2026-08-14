@@ -236,35 +236,33 @@ export function registerActionHandlers(
 
         const expectedPrefix = `hidden-hand-${targetPlayer.id}-`;
 
-        if (!cardId.startsWith(expectedPrefix)) {
-          emitGameError(
-            socket,
-            "INVALID_SELECTION",
-            "La carta seleccionada no es válida.",
-            "select-hand-card",
-          );
-          return;
+        if (cardId.startsWith(expectedPrefix)) {
+          // Mano boca abajo: el cliente envía el uid de la carta oculta y el
+          // índice codificado se traduce a la carta real de la mano.
+          const indexText = cardId.slice(expectedPrefix.length);
+
+          const selectedIndex = Number(indexText);
+
+          if (
+            !Number.isInteger(selectedIndex) ||
+            selectedIndex < 0 ||
+            selectedIndex >= targetPlayer.hand.length
+          ) {
+            emitGameError(
+              socket,
+              "INVALID_SELECTION",
+              "La posición de la carta seleccionada no es válida.",
+              "select-hand-card",
+            );
+            return;
+          }
+
+          resolvedCardId = targetPlayer.hand[selectedIndex].uid;
+        } else {
+          // Nanny Cam: la mano está revelada y el cliente envía el uid real de
+          // la carta. handleSelectHandCard validará que pertenezca a la mano.
+          resolvedCardId = cardId;
         }
-
-        const indexText = cardId.slice(expectedPrefix.length);
-
-        const selectedIndex = Number(indexText);
-
-        if (
-          !Number.isInteger(selectedIndex) ||
-          selectedIndex < 0 ||
-          selectedIndex >= targetPlayer.hand.length
-        ) {
-          emitGameError(
-            socket,
-            "INVALID_SELECTION",
-            "La posición de la carta seleccionada no es válida.",
-            "select-hand-card",
-          );
-          return;
-        }
-
-        resolvedCardId = targetPlayer.hand[selectedIndex].uid;
       }
       const resolved = ActionResolver.handleSelectHandCard(
         game,
@@ -292,8 +290,8 @@ export function registerActionHandlers(
         addLog(
           game,
           targetPlayer
-            ? `${player.name} robó una carta de la mano de ${targetPlayer.name}`
-            : `${player.name} robó una carta de una mano`,
+            ? `${player.name} eligió a ${targetPlayer.name} y robó una carta de su mano al azar`
+            : `${player.name} robó una carta de una mano al azar`,
           { playerId: player.id },
         );
       } else {
@@ -1113,7 +1111,7 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          `${player.name} añadió ${removed.name} del descarte a su mano`,
+          `${player.name} trajo una carta del descarte a su mano`,
           { playerId: player.id },
         );
 
@@ -1296,7 +1294,7 @@ export function registerActionHandlers(
 
       addLog(
         room.gameState,
-        `${player.name} usó a Unicorn Oracle: añadió ${kept.name} a su mano y reordenó el mazo`,
+        `${player.name} usó a Unicorn Oracle: añadió una carta a su mano y reordenó el mazo`,
         { playerId: player.id },
       );
 
