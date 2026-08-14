@@ -126,7 +126,7 @@ export type PendingAction =
     }
   | {
       type: "select_deck_card";
-      reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal";
+      reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
       candidates: Card[];

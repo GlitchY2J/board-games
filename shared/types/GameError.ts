@@ -38,6 +38,7 @@ export type GameActionName =
   | 'select-own-hand-card'
   | 'neigh-accept'
   | 'play-neigh'
+  | 'toggle-debug-mode'
   | 'unknown';
 
 export interface GameError {

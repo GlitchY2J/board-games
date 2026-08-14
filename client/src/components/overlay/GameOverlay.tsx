@@ -43,7 +43,43 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
     return null;
   }
 
+  const renderResumeWaiting = (): ReactNode => {
+    const resume = gameState.pendingResume;
+    if (!resume || resume.length === 0) return null;
+
+    for (const step of resume) {
+      if (step.type === 'extremely_destructive_unicorn') {
+        const stillAwaiting =
+          step.remainingPlayerIds.includes(localPlayerId) &&
+          !step.resolvedPlayerIds.includes(localPlayerId);
+        if (stillAwaiting) {
+          return (
+            <div className="overlay-backdrop">
+              <div className="card-selection-window choice-window">
+                <h2>💥 Extremely Destructive Unicorn</h2>
+                <p>
+                  {step.remainingPlayerIds.length > step.resolvedPlayerIds.length
+                    ? 'Esperando sacrificios de otros jugadores...'
+                    : 'Resolviendo efecto...'}
+                </p>
+              </div>
+            </div>
+          );
+        }
+      }
+    }
+    return null;
+  };
+
   const renderOverlay = (): ReactNode => {
+    // Si la acción actual pertenece a otro jugador (p. ej. el efecto de Unicorn
+    // Phoenix que interrumpe), pero el jugador local aún está esperando su turno
+    // en una cadena de acciones reanudables, mantener visible su overlay.
+    if ('playerId' in action && action.playerId !== localPlayerId) {
+      const waiting = renderResumeWaiting();
+      if (waiting) return waiting;
+    }
+
     switch (action.type) {
     // ───────────────────────────────────
     // DESCARTE DE CARTAS
@@ -270,15 +306,22 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
       } else {
         items = gameState.players
           .filter((p) => p.id !== localPlayerId)
-          .flatMap((p) =>
-            p.stable.map((card, idx) => ({
-              id: `${card.id}_${p.id}_${idx}`,
-              value: card.uid,
-              title: card.name,
-              subtitle: `Establo de ${p.name}`,
-              image: card.image,
-            })),
-          );
+          .flatMap((p) => {
+            const zones: Array<[string, typeof p.stable]> = [
+              ['stable', p.stable],
+              ['upgrade', p.upgrades],
+              ['downgrade', p.downgrades],
+            ];
+            return zones.flatMap(([zone, cards]) =>
+              cards.map((card, idx) => ({
+                id: `${card.id}_${p.id}_${zone}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                subtitle: `Establo de ${p.name}`,
+                image: card.image,
+              })),
+            );
+          });
       }
 
       return (
@@ -413,13 +456,6 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
         );
 
         const items = [
-          ...(localPlayer?.hand ?? []).map((card, idx) => ({
-            id: `${card.id}_hand_${idx}`,
-            value: card.uid,
-            title: card.name,
-            subtitle: 'Tu mano',
-            image: card.image,
-          })),
           ...(localPlayer?.stable ?? []).map((card, idx) => ({
             id: `${card.id}_stable_${idx}`,
             value: card.uid,
@@ -427,15 +463,13 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
             subtitle: 'Tu establo',
             image: card.image,
           })),
-          ...(localPlayer?.upgrades ?? [])
-            .filter((c) => c.id !== 'caffeine_overload')
-            .map((card, idx) => ({
-              id: `${card.id}_upg_${idx}`,
-              value: card.uid,
-              title: card.name,
-              subtitle: 'Tu upgrade',
-              image: card.image,
-            })),
+          ...(localPlayer?.upgrades ?? []).map((card, idx) => ({
+            id: `${card.id}_upg_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: 'Tu upgrade',
+            image: card.image,
+          })),
           ...(localPlayer?.downgrades ?? []).map((card, idx) => ({
             id: `${card.id}_dow_${idx}`,
             value: card.uid,
@@ -449,7 +483,7 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
           <CardSelectionOverlay
             hide={hide}
             title="☕ Caffeine Overload"
-            subtitle="Elige una carta de tu mano o establo para SACRIFICAR. Luego robarás 2 cartas."
+            subtitle="Elige una carta de tu establo para SACRIFICAR. Luego robarás 2 cartas."
             items={items}
             maxSelection={1}
             confirmText="Sacrificar"
@@ -1006,7 +1040,8 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
       const eligibleCards = gameState.discard.filter(
         (card) =>
           (!action.cardType || card.cardType === action.cardType) &&
-          (addsToHand || card.id !== 'dark_angel_unicorn') &&
+          (action.reason !== 'dark_angel_unicorn' ||
+            card.id !== 'dark_angel_unicorn') &&
           (!isSwiftFlyingUnicorn ||
             card.effect === 'neigh' ||
             card.effect === 'super_neigh'),
@@ -1064,32 +1099,46 @@ export default function GameOverlay({ gameState, localPlayerId, hide = false }: 
 
       const isGreatNarwhal = action.reason === 'the_great_narwhal';
       const isShabbyNarwhal = action.reason === 'shabby_the_narwhal';
+      const isDebugDraw = action.reason === 'debug_draw';
 
-      const title = isGreatNarwhal
-        ? '🐋 The Great Narwhal'
-        : isShabbyNarwhal
-          ? '🦄 Shabby The Narwhal'
-          : '🐳 Classy Narwhal';
+      const title = isDebugDraw
+        ? '🐛 Modo Debug — Roba una carta'
+        : isGreatNarwhal
+          ? '🐋 The Great Narwhal'
+          : isShabbyNarwhal
+            ? '🦄 Shabby The Narwhal'
+            : '🐳 Classy Narwhal';
 
-      const subtitle = isGreatNarwhal
-        ? 'Elige una carta con "Narwhal" en su nombre para agregarla a tu mano (luego se barajará el mazo)'
-        : isShabbyNarwhal
-          ? 'Elige una carta de Downgrade del mazo para agregarla a tu mano (luego se barajará el mazo)'
-          : 'Elige una carta de Upgrade del mazo para agregarla a tu mano (luego se barajará el mazo)';
+      const subtitle = isDebugDraw
+        ? 'Elige qué carta del mazo quieres tomar en tu fase de robo'
+        : isGreatNarwhal
+          ? 'Elige una carta con "Narwhal" en su nombre para agregarla a tu mano (luego se barajará el mazo)'
+          : isShabbyNarwhal
+            ? 'Elige una carta de Downgrade del mazo para agregarla a tu mano (luego se barajará el mazo)'
+            : 'Elige una carta de Upgrade del mazo para agregarla a tu mano (luego se barajará el mazo)';
+
+      const items = isDebugDraw
+        ? gameState.deck.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }))
+        : action.candidates.map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }));
 
       return (
         <CardSelectionOverlay
           hide={hide}
           title={title}
           subtitle={subtitle}
-          items={action.candidates.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))}
+          items={items}
           maxSelection={1}
-          confirmText="Tomar"
+          confirmText={isDebugDraw ? 'Robar' : 'Tomar'}
           onConfirm={([cardId]) => {
             dismiss();
             socket.emit('select-deck-card', {

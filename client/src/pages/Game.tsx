@@ -49,11 +49,25 @@ export default function Game() {
 
     const prev = prevTurnRef.current;
     const active = state.players[state.currentPlayer];
+    if (!active) {
+      prevTurnRef.current = {
+        turn: state.turn,
+        currentPlayer: state.currentPlayer,
+      };
+      return;
+    }
+
+    // Al iniciar por primera vez o tras un reinicio (el turno vuelve a bajar)
+    // siempre se anuncia el turno, aunque coincidan turn/currentPlayer con el
+    // estado anterior.
+    const isFirst = !prev;
+    const isRestart = !!prev && state.turn < prev.turn;
+
     if (
-      prev &&
-      (state.turn !== prev.turn ||
-        state.currentPlayer !== prev.currentPlayer) &&
-      active
+      isFirst ||
+      isRestart ||
+      state.turn !== prev.turn ||
+      state.currentPlayer !== prev.currentPlayer
     ) {
       setTurnAnnounce({
         name: active.name,
@@ -110,10 +124,17 @@ export default function Game() {
     };
 
     const onNeighAnimations = (animations: NeighAnimation[]) => {
-      if (animations.length > 0) {
-        activeAnimationsCountRef.current += animations.length;
-        setNeighAnims((prev) => [...prev, ...animations]);
-      }
+      if (animations.length === 0) return;
+
+      // De una cadena de Neighs solo importa el último (el que gana).
+      const last = animations[animations.length - 1];
+      setNeighAnims((prev) => {
+        activeAnimationsCountRef.current = Math.max(
+          0,
+          activeAnimationsCountRef.current - prev.length + 1,
+        );
+        return [last];
+      });
     };
 
     const onDrawAnimations = (animations: DrawAnimation[]) => {
@@ -290,13 +311,13 @@ export default function Game() {
           onDone={() => removeRemovalAnim(animation.animId)}
         />
       ))}
-      {neighAnims.map((animation) => (
+      {neighAnims.length > 0 && (
         <NeighAnnouncement
-          key={animation.animId}
-          animation={animation}
-          onDone={() => removeNeighAnim(animation.animId)}
+          key={neighAnims[0].animId}
+          animation={neighAnims[0]}
+          onDone={() => removeNeighAnim(neighAnims[0].animId)}
         />
-      ))}
+      )}
       {drawAnims.map((animation) => (
         <CardDrawEffect
           key={animation.animId}

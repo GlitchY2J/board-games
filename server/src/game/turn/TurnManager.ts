@@ -3,6 +3,7 @@ import { TurnPhase } from './TurnPhase.ts';
 import { CardRepository } from '../unstable-unicorns/CardRepository.ts';
 import { VictoryManager } from '../VictoryManager.ts';
 import { enqueueDrawAnimation } from '../cardAnimations.ts';
+import { addLog } from '../../sockets/gameLog.ts';
 
 const BEGINNING_OF_TURN_EFFECTS = new Set([
   'rhinocorn',
@@ -29,6 +30,10 @@ export class TurnManager {
 
     enqueueDrawAnimation(game.roomCode, player.id, card);
     player.hand.push(card);
+
+    addLog(game, `${player.name} robó una carta del mazo`, {
+      playerId: player.id,
+    });
 
     VictoryManager.checkWinner(game);
   }
@@ -93,9 +98,8 @@ export class TurnManager {
     if (hasCaffeineOverload) {
       const hasSomethingToSacrifice =
         activePlayer.stable.length +
-          activePlayer.upgrades.filter((c) => c.id !== 'caffeine_overload').length +
-          activePlayer.downgrades.length +
-          activePlayer.hand.length >
+          activePlayer.upgrades.length +
+          activePlayer.downgrades.length >
         0;
       if (hasSomethingToSacrifice) {
         game.pendingAction = {
@@ -118,6 +122,14 @@ export class TurnManager {
   }
 
   private static passTurn(game: GameState): void {
+    const endingPlayer = game.players[game.currentPlayer];
+
+    if (endingPlayer) {
+      addLog(game, `${endingPlayer.name} terminó su turno`, {
+        playerId: endingPlayer.id,
+      });
+    }
+
     if (game.extraTurn) {
       game.extraTurn = false;
     } else {
@@ -131,6 +143,16 @@ export class TurnManager {
     }
     game.phase = TurnPhase.BEGINNING;
     this.skipBeginningIfNoTriggers(game);
+
+    const startingPlayer = game.players[game.currentPlayer];
+
+    if (startingPlayer) {
+      addLog(
+        game,
+        `Comienza el turno de ${startingPlayer.name} (turno ${game.turn})`,
+        { playerId: startingPlayer.id },
+      );
+    }
   }
 
   static skipEndIfNoTriggers(game: GameState): void {
@@ -170,6 +192,17 @@ export class TurnManager {
 
       // DRAW PHASE
       case TurnPhase.DRAW:
+        if (game.debugMode && game.deck.length > 0) {
+          // Modo debug: el jugador activo elige qué carta del mazo tomar
+          const currentPlayer = game.players[game.currentPlayer];
+          game.pendingAction = {
+            type: 'select_deck_card',
+            reason: 'debug_draw',
+            playerId: currentPlayer.id,
+            candidates: [],
+          };
+          break;
+        }
         this.drawCard(game);
         game.phase = TurnPhase.ACTION;
         break;

@@ -10,7 +10,7 @@ import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
-import { RotateCcw, LogOut, Bot } from 'lucide-react';
+import { RotateCcw, LogOut, Bot, Bug } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
@@ -199,6 +199,19 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
         >
           <Bot size={16} />
         </button>
+        {isHost && (
+          <button
+            className={`ctrl-button ctrl-neutral${gameState.debugMode ? ' auto-on' : ''}`}
+            title={
+              gameState.debugMode
+                ? 'Desactivar modo debug'
+                : 'Activar modo debug (elegir carta del mazo en la fase de robo)'
+            }
+            onClick={() => socket.emit('toggle-debug-mode', gameState.roomCode)}
+          >
+            <Bug size={16} />
+          </button>
+        )}
         {isHost && (
           <button
             className="ctrl-button ctrl-reset"

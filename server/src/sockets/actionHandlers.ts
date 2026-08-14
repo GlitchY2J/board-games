@@ -9,7 +9,8 @@ import { emitGameState } from "./gameStateEmitter.ts";
 import { addLog } from "./gameLog.ts";
 import { roomManager } from "../roomManagerInstance.ts";
 import { GameState } from "../game/models/GameState.ts";
-import { enqueueCardAnimation } from "../game/cardAnimations.ts";
+import { enqueueCardAnimation, enqueueDrawAnimation } from "../game/cardAnimations.ts";
+import { VictoryManager } from "../game/VictoryManager.ts";
 
 export function registerActionHandlers(
   io: GameServer,
@@ -154,6 +155,8 @@ export function registerActionHandlers(
       );
       if (!sourcePlayer) return;
 
+      const pendingType = room.gameState.pendingAction?.type;
+
       const resolved = ActionResolver.handleSelectStableCard(
         room.gameState,
         sourcePlayer.id,
@@ -168,11 +171,14 @@ export function registerActionHandlers(
           TurnManager.nextPhase(room.gameState);
         }
 
-        addLog(
-          room.gameState,
-          `${sourcePlayer.name} eligió una carta de su establo`,
-          { playerId: sourcePlayer.id },
-        );
+        // Alluring Narwhal ya registra su propio log específico (qué carta robó).
+        if (pendingType !== "alluring_narwhal") {
+          addLog(
+            room.gameState,
+            `${sourcePlayer.name} eligió una carta de su establo`,
+            { playerId: sourcePlayer.id },
+          );
+        }
 
         emitGameState(io, room, "game-updated");
       }
@@ -1065,7 +1071,11 @@ export function registerActionHandlers(
       if (cardIdx === -1) return;
 
       const selectedCard = room.gameState.discard[cardIdx];
-      if (selectedCard.id === "dark_angel_unicorn") return;
+      if (
+        pending.reason === "dark_angel_unicorn" &&
+        selectedCard.id === "dark_angel_unicorn"
+      )
+        return;
 
       if (pending.cardType && selectedCard.cardType !== pending.cardType) {
         emitGameError(
@@ -1173,7 +1183,8 @@ export function registerActionHandlers(
       if (
         pending.reason !== "classy_narwhal" &&
         pending.reason !== "the_great_narwhal" &&
-        pending.reason !== "shabby_the_narwhal"
+        pending.reason !== "shabby_the_narwhal" &&
+        pending.reason !== "debug_draw"
       )
         return;
 
@@ -1196,23 +1207,37 @@ export function registerActionHandlers(
       const [upgrade] = room.gameState.deck.splice(cardIdx, 1);
       player.hand.push(upgrade);
 
-      for (let i = room.gameState.deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [room.gameState.deck[i], room.gameState.deck[j]] = [
-          room.gameState.deck[j],
-          room.gameState.deck[i],
-        ];
+      if (pending.reason !== "debug_draw") {
+        for (let i = room.gameState.deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [room.gameState.deck[i], room.gameState.deck[j]] = [
+            room.gameState.deck[j],
+            room.gameState.deck[i],
+          ];
+        }
+      }
+
+      if (pending.reason === "debug_draw") {
+        enqueueDrawAnimation(room.gameState.roomCode, player.id, upgrade);
       }
 
       room.gameState.pendingAction = undefined;
 
       if (room.gameState.phase === TurnPhase.BEGINNING) {
         TurnManager.nextPhase(room.gameState);
+      } else if (
+        room.gameState.phase === TurnPhase.DRAW &&
+        pending.reason === "debug_draw"
+      ) {
+        room.gameState.phase = TurnPhase.ACTION;
+        VictoryManager.checkWinner(room.gameState);
       }
 
       addLog(
         room.gameState,
-        `${player.name} buscó ${upgrade.name} en el mazo y lo añadió a su mano`,
+        pending.reason === "debug_draw"
+          ? `${player.name} (debug) eligió ${upgrade.name} del mazo`
+          : `${player.name} buscó ${upgrade.name} en el mazo y lo añadió a su mano`,
         { playerId: player.id },
       );
 

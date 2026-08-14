@@ -15,6 +15,10 @@ export interface PendingPlayLink {
   playerId: string;
   playerName: string;
   card: Card;
+  /** Grupo al que pertenece este Neigh. Los Neighs jugados dentro de la ventana
+   * de gracia comparten grupo: todos apuntan a la misma carta (no se cancelan
+   * entre sí). La carta original es siempre el grupo 0. */
+  group?: number;
 }
 
 export interface PendingPlay {
@@ -25,6 +29,9 @@ export interface PendingPlay {
   durationMs: number;
   acceptedIds: string[];
   chain: PendingPlayLink[];
+  /** Hasta cuándo (Date.now()) los Neighs se agrupan con el Neigh actual,
+   * apuntando a la misma carta, en vez de encadenarse uno encima del otro. */
+  neighGraceUntil?: number;
 }
 
 export interface GameLogEntry {
@@ -53,5 +60,7 @@ export interface GameState {
   actionUsed: boolean;
   winnerId?: string;
   extraTurn?: boolean;
+  /** Modo debug: permite a cada jugador elegir qué carta del mazo tomar en su fase de robo. Solo el anfitrión lo activa. */
+  debugMode?: boolean;
   log: GameLogEntry[];
 }

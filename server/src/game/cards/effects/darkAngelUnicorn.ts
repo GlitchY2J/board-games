@@ -3,14 +3,10 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 export const darkAngelUnicorn: CardEffect = {
   onEnterStable(state, player, card) {
     const canSacrifice = player.stable.some(
-      (c) => c.cardType === 'unicorn' && c.uid !== card.uid,
+      (c) => c.cardType === 'unicorn',
     );
 
-    const discardHasUnicorns = state.discard.some(
-      (c) => c.cardType === 'unicorn' && c.id !== 'dark_angel_unicorn',
-    );
-
-    if (!canSacrifice || !discardHasUnicorns) return;
+    if (!canSacrifice) return;
 
     state.pendingAction = {
       type: 'select_choice',

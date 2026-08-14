@@ -15,9 +15,12 @@ import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { roomManager } from '../roomManagerInstance.ts';
 import type { Room } from '../game/models/Room.ts';
+import type { PendingPlayLink } from '../../../shared/types/Game.ts';
+import { VictoryManager } from '../game/VictoryManager.ts';
 import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation } from '../game/cardAnimations.ts';
 
 const NEIGH_WINDOW_MS = 5000;
+const NEIGH_GRACE_MS = 800;
 
 const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh']);
 const NO_NEIGH_CARDS = new Set(['ginormous_unicorn']);
@@ -62,19 +65,48 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   const chain = pending.chain;
   const n = chain.length;
 
-  // Resolución pila (LIFO): la carta más reciente se resuelve primero.
-  // Cada Neigh cancela a la carta inmediatamente debajo en la cadena.
-  const canceled = new Array<boolean>(n).fill(false);
-
-  for (let i = n - 1; i >= 0; i--) {
-    if (i < n - 1) {
-      canceled[i] = !canceled[i + 1];
+  // Agrupar la cadena en bloques: los Neighs del mismo grupo (jugados dentro de
+  // la ventana de gracia) apuntan a la misma carta y no se cancelan entre sí.
+  interface NeighBlock {
+    group: number;
+    links: PendingPlayLink[];
+  }
+  const blocks: NeighBlock[] = [];
+  for (const link of chain) {
+    const group = link.group ?? 0;
+    const last = blocks[blocks.length - 1];
+    if (last && last.group === group) {
+      last.links.push(link);
+    } else {
+      blocks.push({ group, links: [link] });
     }
   }
 
-  // Registrar animaciones para las cartas canceladas en la cadena
+  // Un bloque de Neighs cancela al bloque inmediatamente inferior. El bloque
+  // superior nunca está cancelado.
+  const blockCanceled = new Array<boolean>(blocks.length).fill(false);
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    if (i === blocks.length - 1) {
+      blockCanceled[i] = false;
+    } else {
+      const aboveIsNeigh = blocks[i + 1].links.some(
+        (l) => l.card.effect === 'neigh' || l.card.effect === 'super_neigh',
+      );
+      blockCanceled[i] = aboveIsNeigh && !blockCanceled[i + 1];
+    }
+  }
+
+  // Mapear estado de cancelación por eslabón de la cadena.
+  const linkCanceled: boolean[] = [];
+  for (const block of blocks) {
+    for (let k = 0; k < block.links.length; k++) {
+      linkCanceled.push(blockCanceled[blocks.indexOf(block)]);
+    }
+  }
+
+  // Registrar animaciones para las cartas canceladas en la cadena.
   for (let i = 0; i < n - 1; i++) {
-    if (canceled[i]) {
+    if (linkCanceled[i]) {
       const type = chain[i + 1].card.effect === 'super_neigh' ? 'super_neigh' : 'neigh';
       enqueueNeighAnimation(
         room.code,
@@ -94,7 +126,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   const original = chain[0];
   const activePlayer = game.players.find((p) => p.id === original.playerId);
 
-  if (canceled[0]) {
+  if (linkCanceled[0]) {
     if (activePlayer) {
       const idx = activePlayer.hand.findIndex(
         (c) => c.uid === original.card.uid,
@@ -137,6 +169,7 @@ export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerNextPhase(io, socket);
   registerEndTurn(io, socket);
   registerRestartGame(io, socket);
+  registerToggleDebugMode(io, socket);
   registerNeighAccept(io, socket);
   registerPlayNeigh(io, socket);
 }
@@ -229,6 +262,15 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
 
     addLog(room.gameState, 'Partida iniciada');
 
+    const firstPlayer = room.gameState.players[room.gameState.currentPlayer];
+    if (firstPlayer) {
+      addLog(
+        room.gameState,
+        `Comienza el turno de ${firstPlayer.name} (turno ${room.gameState.turn})`,
+        { playerId: firstPlayer.id },
+      );
+    }
+
     TurnManager.skipBeginningIfNoTriggers(room.gameState);
 
     emitGameState(io, room, 'game-started');
@@ -304,6 +346,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
           playerId: context.player.id,
           playerName: context.player.name,
           card,
+          group: 0,
         },
       ],
     };
@@ -385,6 +428,33 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    if (game.debugMode && game.phase === TurnPhase.DRAW) {
+      if (game.deck.length === 0) {
+        emitGameError(
+          socket,
+          'DECK_EMPTY',
+          'El mazo está vacío',
+          'draw-action-card',
+        );
+        return;
+      }
+
+      // Modo debug: el jugador elige qué carta del mazo tomar
+      game.pendingAction = {
+        type: 'select_deck_card',
+        reason: 'debug_draw',
+        playerId: gamePlayer.id,
+        candidates: [],
+      };
+
+      addLog(game, `${player.name} eligió carta del mazo (modo debug)`, {
+        playerId: player.id,
+      });
+
+      emitGameState(io, room, 'game-updated');
+      return;
+    }
+
     const card = game.deck.shift();
 
     if (!card) {
@@ -400,13 +470,17 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
     enqueueDrawAnimation(game.roomCode, gamePlayer.id, card);
     gamePlayer.hand.push(card);
 
+    VictoryManager.checkWinner(game);
+
     if (game.phase === TurnPhase.DRAW) {
       game.phase = TurnPhase.ACTION;
     } else {
       game.actionUsed = true;
     }
 
-    addLog(game, `${player.name} robó una carta`, { playerId: player.id });
+    addLog(game, `${player.name} robó una carta del mazo`, {
+      playerId: player.id,
+    });
 
     emitGameState(io, room, 'game-updated');
   });
@@ -530,11 +604,59 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
 
     addLog(room.gameState, 'Partida iniciada');
 
+    const firstPlayer = room.gameState.players[room.gameState.currentPlayer];
+    if (firstPlayer) {
+      addLog(
+        room.gameState,
+        `Comienza el turno de ${firstPlayer.name} (turno ${room.gameState.turn})`,
+        { playerId: firstPlayer.id },
+      );
+    }
+
     TurnManager.skipBeginningIfNoTriggers(room.gameState);
 
     emitGameState(io, room, 'game-updated');
 
     console.log(`Partida reiniciada: ${roomCode}`);
+  });
+}
+
+function registerToggleDebugMode(io: GameServer, socket: GameSocket): void {
+  socket.on('toggle-debug-mode', (roomCode: string) => {
+    const context = getSocketPlayerContext(socket, roomCode);
+
+    if (!context) {
+      return;
+    }
+
+    const { room, player } = context;
+
+    if (room.hostId !== player.id) {
+      emitGameError(
+        socket,
+        'NOT_HOST',
+        'Solo el anfitrión puede activar el modo debug',
+        'toggle-debug-mode',
+      );
+      return;
+    }
+
+    if (!room.gameState) {
+      return;
+    }
+
+    room.gameState.debugMode = !room.gameState.debugMode;
+
+    addLog(
+      room.gameState,
+      room.gameState.debugMode
+        ? 'Modo debug activado'
+        : 'Modo debug desactivado',
+    );
+
+    emitGameState(io, room, 'game-updated');
+
+    console.log(`Modo debug: ${room.gameState.debugMode ? 'ON' : 'OFF'} (${roomCode})`);
   });
 }
 
@@ -637,10 +759,15 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
 
     const startedAt = Date.now();
 
+    const withinGrace =
+      pending.neighGraceUntil != null && startedAt < pending.neighGraceUntil;
+    const group = withinGrace ? (top.group ?? 0) : (top.group ?? 0) + 1;
+
     pending.chain.push({
       playerId: player.id,
       playerName: player.name,
       card: neighCard,
+      group,
     });
 
     pending.playerId = player.id;
@@ -648,6 +775,7 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
     pending.card = neighCard;
     pending.startedAt = startedAt;
     pending.acceptedIds = [];
+    pending.neighGraceUntil = startedAt + NEIGH_GRACE_MS;
 
     addLog(
       game,
@@ -657,8 +785,11 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
       { playerId: player.id },
     );
 
-    // Super Neigh no puede ser Neigh'd: la cadena termina aquí
-    if (neighCard.effect === 'super_neigh') {
+    // Super Neigh no puede ser Neigh'd: la cadena termina aquí.
+    // Yay: el Neigh jugado por un jugador con Yay tampoco puede ser Neigh'd.
+    const playerHasYay = gamePlayer.upgrades.some((c) => c.id === 'yay');
+
+    if (neighCard.effect === 'super_neigh' || playerHasYay) {
       resolvePendingPlayWindow(io, room);
       return;
     }

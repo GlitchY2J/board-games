@@ -6,6 +6,7 @@ import type { Card } from '../../models/Card.ts';
 import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
+import { addLog } from '../../../sockets/gameLog.ts';
 
 export class ActionResolver {
   static handleDiscard(
@@ -260,26 +261,35 @@ export class ActionResolver {
       let interceptedOnce = false;
 
       for (const uid of ids) {
-        const destroyedCard = state.players
-          .flatMap((p) => p.stable)
-          .find((c) => c.uid === uid);
-        if (!destroyedCard) {
+        let destroyedCard: Card | undefined;
+        let targetPlayer: (typeof state.players)[number] | undefined;
+        let zone: 'stable' | 'upgrades' | 'downgrades' | null = null;
+
+        for (const p of state.players) {
+          for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
+            const i = p[z].findIndex((c) => c.uid === uid);
+            if (i !== -1) {
+              destroyedCard = p[z][i];
+              targetPlayer = p;
+              zone = z;
+              break;
+            }
+          }
+          if (zone) break;
+        }
+
+        if (!destroyedCard || !targetPlayer || !zone) {
           interceptedOnce = true;
           continue;
         }
-
-        const targetPlayer = state.players.find((p) =>
-          p.stable.some((c) => c.uid === uid),
-        );
-        if (!targetPlayer) continue;
 
         if (isImmuneToMagicDestruction(destroyedCard.id)) {
           interceptedOnce = true;
           continue;
         }
 
-        const idx = targetPlayer.stable.findIndex((c) => c.uid === uid);
-        const [removed] = targetPlayer.stable.splice(idx, 1);
+        const idx = targetPlayer[zone].findIndex((c) => c.uid === uid);
+        const [removed] = targetPlayer[zone].splice(idx, 1);
         const intercepted = CardMovement.destroyOrSacrifice(
           state,
           targetPlayer,
@@ -392,8 +402,8 @@ export class ActionResolver {
       if (!player) return false;
 
       let sacrificed: Card | undefined;
-      let zone: 'stable' | 'upgrades' | 'downgrades' | 'hand' | null = null;
-      for (const z of ['hand', 'stable', 'upgrades', 'downgrades'] as const) {
+      let zone: 'stable' | 'upgrades' | 'downgrades' | null = null;
+      for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
         const i = player[z].findIndex((c) => c.uid === cardId);
         if (i !== -1) {
           sacrificed = player[z][i];
@@ -643,6 +653,19 @@ export class ActionResolver {
 
       if (intercepted) return true;
 
+      // Si no hay ningún unicornio válido (distinto de Dark Angel) en el descarte
+      // para traer de vuelta, se omite la segunda parte del efecto. Esto ocurre
+      // p. ej. cuando Dark Angel se sacrifica a sí mismo sobre un descarte sin
+      // otros unicornios.
+      const hasValidTarget = state.discard.some(
+        (c) => c.cardType === 'unicorn' && c.id !== 'dark_angel_unicorn',
+      );
+
+      if (!hasValidTarget) {
+        state.pendingAction = undefined;
+        return true;
+      }
+
       const nextPending = state.pendingAction;
       if (nextPending && nextPending !== pending) {
         // El sacrificio disparó un efecto onDestroyed interactivo (p. ej.
@@ -691,13 +714,19 @@ export class ActionResolver {
         }
       }
 
-      if (!stolenCard) return false;
+      if (!stolenCard || !targetPlayer) return false;
 
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
       if (!sourcePlayer) return false;
 
       sourcePlayer.upgrades.push(stolenCard);
       state.pendingAction = undefined;
+
+      addLog(
+        state,
+        `${sourcePlayer.name} usó Alluring Narwhal y robó "${stolenCard.name}" de ${targetPlayer.name}`,
+        { playerId: sourcePlayer.id },
+      );
       return true;
     }
 
@@ -754,17 +783,16 @@ export class ActionResolver {
       if (card.cardType !== 'unicorn') return false;
 
       const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
-      const intercepted = CardMovement.destroyOrSacrifice(
+      CardMovement.destroyOrSacrifice(
         state,
         targetPlayer,
         sacrificed,
         'sacrifice',
       );
 
-      if (intercepted) return true;
-
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
-      const onDestroyedOpened = state.pendingAction && state.pendingAction !== pending;
+      const onDestroyedOpened =
+        state.pendingAction && state.pendingAction !== pending;
 
       if (resolvedPlayerIds.length >= pending.remainingPlayerIds.length) {
         // Último jugador: cerrar el flujo. Si el sacrificio abrió un efecto

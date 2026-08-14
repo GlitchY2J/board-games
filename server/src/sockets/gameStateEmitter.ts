@@ -54,7 +54,9 @@ export function createGameStateForPlayer(
 ): GameState {
   return {
     ...game,
-    deck: game.deck.map((_, index) => createHiddenCard(`hidden-deck-${index}`)),
+    deck: game.debugMode
+      ? game.deck.map((card) => ({ ...card }))
+      : game.deck.map((_, index) => createHiddenCard(`hidden-deck-${index}`)),
     players: game.players.map((player) => {
       const isViewer = player.id === viewerId;
 

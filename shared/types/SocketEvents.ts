@@ -200,6 +200,9 @@ export interface ClientToServerEvents {
   // Restart Game
   'restart-game': (roomCode: string) => void;
 
+  // Toggle Debug Mode
+  'toggle-debug-mode': (roomCode: string) => void;
+
   // Cancel Action
   'cancel-action': (payload: CancelActionPayload) => void;
 
