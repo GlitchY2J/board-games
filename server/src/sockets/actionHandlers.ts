@@ -30,7 +30,7 @@ export function registerActionHandlers(
 
   function continueBeginningPhaseIfReady(game: GameState): void {
     if (!game.pendingAction && game.phase === TurnPhase.BEGINNING) {
-      TurnManager.nextPhase(game);
+      TurnManager.processBeginningQueue(game);
     }
   }
 
@@ -125,7 +125,7 @@ export function registerActionHandlers(
           !room.gameState.pendingAction &&
           room.gameState.phase === TurnPhase.BEGINNING
         ) {
-          TurnManager.nextPhase(room.gameState);
+          TurnManager.processBeginningQueue(room.gameState);
         }
 
         const targetPlayer = room.gameState.players.find(
@@ -168,7 +168,7 @@ export function registerActionHandlers(
           !room.gameState.pendingAction &&
           room.gameState.phase === TurnPhase.BEGINNING
         ) {
-          TurnManager.nextPhase(room.gameState);
+          TurnManager.processBeginningQueue(room.gameState);
         }
 
         // Alluring Narwhal ya registra su propio log específico (qué carta robó).
@@ -369,6 +369,25 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === "beginning_effect_picker") {
+        // El jugador elige en qué orden resolver sus efectos de inicio de turno.
+        const q = room.gameState.beginningEffectsQueue ?? [];
+        const idx = q.indexOf(choice);
+        if (idx !== -1) q.splice(idx, 1);
+        room.gameState.beginningEffectsQueue = q;
+
+        const started = TurnManager.startBeginningEffect(
+          room.gameState,
+          choice,
+        );
+        if (!started) {
+          TurnManager.processBeginningQueue(room.gameState);
+        }
+
+        emitGameState(io, room, "game-updated");
+        return;
+      }
+
       if (pending.reason === "annoying_flying_unicorn") {
         if (choice === "yes") {
           const rivals = room.gameState.players.filter(
@@ -392,7 +411,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -430,11 +449,12 @@ export function registerActionHandlers(
               (p) => p.id === originalTargetPlayerId,
             );
             if (targetPlayer) {
-              const idx = targetPlayer.stable.findIndex(
-                (c) => c.uid === targetCardId,
-              );
-              if (idx !== -1) {
-                const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
+              for (const z of ["stable", "upgrades", "downgrades"] as const) {
+                const idx = targetPlayer[z].findIndex(
+                  (c) => c.uid === targetCardId,
+                );
+                if (idx === -1) continue;
+                const [destroyedCard] = targetPlayer[z].splice(idx, 1);
                 const intercepted = CardMovement.destroyOrSacrifice(
                   room.gameState,
                   targetPlayer,
@@ -444,6 +464,7 @@ export function registerActionHandlers(
                   emitGameState(io, room, "game-updated");
                   return;
                 }
+                break;
               }
             }
           }
@@ -452,7 +473,7 @@ export function registerActionHandlers(
         room.gameState.pendingAction = undefined;
 
         if (room.gameState.phase === TurnPhase.BEGINNING) {
-          TurnManager.nextPhase(room.gameState);
+          TurnManager.processBeginningQueue(room.gameState);
         }
 
         addLog(
@@ -474,7 +495,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -498,7 +519,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -528,13 +549,13 @@ export function registerActionHandlers(
           } else {
             room.gameState.pendingAction = undefined;
             if (room.gameState.phase === TurnPhase.BEGINNING) {
-              TurnManager.nextPhase(room.gameState);
+              TurnManager.processBeginningQueue(room.gameState);
             }
           }
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -563,13 +584,13 @@ export function registerActionHandlers(
           } else {
             room.gameState.pendingAction = undefined;
             if (room.gameState.phase === TurnPhase.BEGINNING) {
-              TurnManager.nextPhase(room.gameState);
+              TurnManager.processBeginningQueue(room.gameState);
             }
           }
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -598,13 +619,13 @@ export function registerActionHandlers(
           } else {
             room.gameState.pendingAction = undefined;
             if (room.gameState.phase === TurnPhase.BEGINNING) {
-              TurnManager.nextPhase(room.gameState);
+              TurnManager.processBeginningQueue(room.gameState);
             }
           }
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -633,13 +654,13 @@ export function registerActionHandlers(
           } else {
             room.gameState.pendingAction = undefined;
             if (room.gameState.phase === TurnPhase.BEGINNING) {
-              TurnManager.nextPhase(room.gameState);
+              TurnManager.processBeginningQueue(room.gameState);
             }
           }
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -668,13 +689,13 @@ export function registerActionHandlers(
           } else {
             room.gameState.pendingAction = undefined;
             if (room.gameState.phase === TurnPhase.BEGINNING) {
-              TurnManager.nextPhase(room.gameState);
+              TurnManager.processBeginningQueue(room.gameState);
             }
           }
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -703,13 +724,13 @@ export function registerActionHandlers(
           } else {
             room.gameState.pendingAction = undefined;
             if (room.gameState.phase === TurnPhase.BEGINNING) {
-              TurnManager.nextPhase(room.gameState);
+              TurnManager.processBeginningQueue(room.gameState);
             }
           }
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -733,7 +754,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -756,7 +777,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -779,7 +800,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -802,7 +823,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -826,7 +847,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -835,6 +856,29 @@ export function registerActionHandlers(
           choice === "yes"
             ? `${player.name} usará Claw Machine para descartar y robar`
             : `${player.name} omitió el efecto de Claw Machine`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "glitter_bomb") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "select_stable_card",
+            reason: "glitter_bomb_sacrifice",
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usará Glitter Bomb para sacrificar y destruir`
+            : `${player.name} omitió el efecto de Glitter Bomb`,
           { playerId: player.id },
         );
 
@@ -850,7 +894,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -881,13 +925,13 @@ export function registerActionHandlers(
           } else {
             room.gameState.pendingAction = undefined;
             if (room.gameState.phase === TurnPhase.BEGINNING) {
-              TurnManager.nextPhase(room.gameState);
+              TurnManager.processBeginningQueue(room.gameState);
             }
           }
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -910,7 +954,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -946,7 +990,7 @@ export function registerActionHandlers(
         } else {
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -982,7 +1026,7 @@ export function registerActionHandlers(
           }
           room.gameState.pendingAction = undefined;
           if (room.gameState.phase === TurnPhase.BEGINNING) {
-            TurnManager.nextPhase(room.gameState);
+            TurnManager.processBeginningQueue(room.gameState);
           }
         }
 
@@ -1047,7 +1091,7 @@ export function registerActionHandlers(
         room.gameState.phase === TurnPhase.BEGINNING &&
         !room.gameState.pendingAction
       ) {
-        TurnManager.nextPhase(room.gameState);
+        TurnManager.processBeginningQueue(room.gameState);
       }
 
       addLog(
@@ -1155,11 +1199,11 @@ export function registerActionHandlers(
           { playerId: player.id },
         );
 
-        if (
-          room.gameState.phase === TurnPhase.BEGINNING &&
-          !room.gameState.pendingAction
+if (
+          !room.gameState.pendingAction &&
+          room.gameState.phase === TurnPhase.BEGINNING
         ) {
-          TurnManager.nextPhase(room.gameState);
+          TurnManager.processBeginningQueue(room.gameState);
         }
 
         emitGameState(io, room, "game-updated");
@@ -1170,7 +1214,7 @@ export function registerActionHandlers(
         room.gameState.phase === TurnPhase.BEGINNING &&
         !room.gameState.pendingAction
       ) {
-        TurnManager.nextPhase(room.gameState);
+        TurnManager.processBeginningQueue(room.gameState);
       }
 
       addLog(
@@ -1246,7 +1290,7 @@ export function registerActionHandlers(
       room.gameState.pendingAction = undefined;
 
       if (room.gameState.phase === TurnPhase.BEGINNING) {
-        TurnManager.nextPhase(room.gameState);
+        TurnManager.processBeginningQueue(room.gameState);
       } else if (
         room.gameState.phase === TurnPhase.DRAW &&
         pending.reason === "debug_draw"
@@ -1313,7 +1357,7 @@ export function registerActionHandlers(
       room.gameState.pendingAction = undefined;
 
       if (room.gameState.phase === TurnPhase.BEGINNING) {
-        TurnManager.nextPhase(room.gameState);
+        TurnManager.processBeginningQueue(room.gameState);
       }
 
       addLog(
@@ -1367,7 +1411,7 @@ export function registerActionHandlers(
         room.gameState.phase === TurnPhase.BEGINNING &&
         !room.gameState.pendingAction
       ) {
-        TurnManager.nextPhase(room.gameState);
+        TurnManager.processBeginningQueue(room.gameState);
       }
 
       addLog(

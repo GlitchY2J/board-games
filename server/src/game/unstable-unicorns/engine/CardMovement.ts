@@ -58,6 +58,40 @@ export class CardMovement {
   }
 
   /**
+   * Black Knight Unicorn: si una carta del establo de un jugador va a ser
+   * DESTRUÍDA, puede sacrificar a Black Knight Unicorn en su lugar.
+   * Si intercepta, setea el pendingAction correspondiente y devuelve `true`.
+   * Hay que llamarlo ANTES de remover la carta objetivo.
+   */
+  static maybeBlackKnightIntercept(
+    state: GameState,
+    player: Player,
+    card: Card,
+  ): boolean {
+    if (card.id === 'black_knight_unicorn') return false;
+
+    const hasBlackKnight = player.stable.some(
+      (c) => c.id === 'black_knight_unicorn',
+    );
+    if (!hasBlackKnight) return false;
+
+    state.pendingAction = {
+      type: 'select_choice',
+      reason: 'black_knight_unicorn',
+      playerId: player.id,
+      title: '🛡️ Black Knight Unicorn',
+      description: `¿Deseas sacrificar a Black Knight Unicorn para evitar que ${card.name} sea destruido?`,
+      options: [
+        { value: 'yes', text: 'Sí, sacrificar Black Knight' },
+        { value: 'no', text: `No, destruir ${card.name}` },
+      ],
+      targetCardId: card.uid,
+      originalTargetPlayerId: player.id,
+    };
+    return true;
+  }
+
+  /**
    * Destruye o sacrifica una carta del establo mandándola al descarte.
    * Regla Especial: Si la carta es un Baby Unicorn, regresa a la Nursery en lugar del montón de descarte.
    * Regla Especial: Si es un Flying Unicorn, regresa a la mano del jugador.

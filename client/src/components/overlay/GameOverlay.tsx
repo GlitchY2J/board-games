@@ -30,6 +30,7 @@ export default function GameOverlay({
       parts.push(`rem:${action.remainingToDestroy}`);
     if ('remainingPlayerIds' in action)
       parts.push(`first:${action.remainingPlayerIds[0]}`);
+    if ('effectCardId' in action) parts.push(`uid:${action.effectCardId}`);
     return parts.join(':');
   })();
 
@@ -622,7 +623,7 @@ export default function GameOverlay({
               id: `${card.id}_dow_${idx}`,
               value: card.uid,
               title: card.name,
-              subtitle: 'Tu degradación',
+              subtitle: 'Tu downgrade',
               image: card.image,
             })),
           ];
@@ -635,6 +636,100 @@ export default function GameOverlay({
               items={items}
               maxSelection={1}
               confirmText="Sacrificar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'glitter_bomb_sacrifice') {
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+
+          const items = [
+            ...(localPlayer?.stable ?? []).map((card, idx) => ({
+              id: `${card.id}_stable_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu establo',
+              image: card.image,
+            })),
+            ...(localPlayer?.upgrades ?? []).map((card, idx) => ({
+              id: `${card.id}_upg_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu upgrade',
+              image: card.image,
+            })),
+            ...(localPlayer?.downgrades ?? []).map((card, idx) => ({
+              id: `${card.id}_dow_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu downgrade',
+              image: card.image,
+            })),
+          ];
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="✨ Glitter Bomb"
+              subtitle="Elige una carta para SACRIFICAR. Luego destruirás una carta."
+              items={items}
+              maxSelection={1}
+              confirmText="Sacrificar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'glitter_bomb_destroy') {
+          const items: {
+            id: string;
+            value: string;
+            title: string;
+            image: string;
+          }[] = [];
+
+          gameState.players.forEach((p) => {
+            if (p.id === localPlayerId) return;
+            [
+              ...p.stable.map((c) => ({ ...c, zone: 'establo' as const })),
+              ...p.upgrades.map((c) => ({ ...c, zone: 'upgrade' as const })),
+              ...p.downgrades.map((c) => ({
+                ...c,
+                zone: 'downgrade' as const,
+              })),
+            ].forEach((card, idx) => {
+              items.push({
+                id: `${card.id}_${p.id}_${idx}`,
+                value: card.uid,
+                title: `${card.name} — ${p.name} (${card.zone})`,
+                image: card.image,
+              });
+            });
+          });
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="✨ Glitter Bomb"
+              subtitle="Elige una carta de cualquier jugador para DESTRUIR."
+              items={items}
+              maxSelection={1}
+              confirmText="Destruir"
               onConfirm={([cardId]) => {
                 dismiss();
                 socket.emit('select-stable-card', {

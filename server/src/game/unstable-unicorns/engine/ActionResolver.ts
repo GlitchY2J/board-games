@@ -518,6 +518,63 @@ export class ActionResolver {
       return true;
     }
 
+    // Glitter Bomb: sacrificar una carta propia, luego destruir una carta
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'glitter_bomb_sacrifice'
+    ) {
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
+        const i = player[z].findIndex((c) => c.uid === cardId);
+        if (i !== -1) {
+          const [sacrificed] = player[z].splice(i, 1);
+          CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+
+          state.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'glitter_bomb_destroy',
+            sourcePlayerId,
+          };
+          return true;
+        }
+      }
+      return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'glitter_bomb_destroy'
+    ) {
+      for (const p of state.players) {
+        if (p.id === sourcePlayerId) continue;
+        for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
+          const i = p[z].findIndex((c) => c.uid === cardId);
+          if (i !== -1) {
+            const target = p[z][i];
+
+            if (CardMovement.maybeBlackKnightIntercept(state, p, target)) {
+              return true;
+            }
+
+            const [destroyed] = p[z].splice(i, 1);
+            CardMovement.destroyOrSacrifice(state, p, destroyed);
+
+            addLog(
+              state,
+              `${state.players.find((x) => x.id === sourcePlayerId)?.name} destruyó ${destroyed.name} con Glitter Bomb`,
+              { playerId: sourcePlayerId },
+            );
+
+            state.pendingAction = undefined;
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     if (pending.type === 'extremely_destructive_unicorn') {
       if (
         !pending.remainingPlayerIds.includes(sourcePlayerId) ||
@@ -614,6 +671,10 @@ export class ActionResolver {
             (c) => c.uid === actualCardId,
           );
           if (idx !== -1) {
+            const target = targetPlayer.upgrades[idx];
+            if (CardMovement.maybeBlackKnightIntercept(state, targetPlayer, target)) {
+              return true;
+            }
             const [card] = targetPlayer.upgrades.splice(idx, 1);
             CardMovement.destroyOrSacrifice(state, targetPlayer, card);
           }
@@ -662,6 +723,10 @@ export class ActionResolver {
             (c) => c.uid === actualCardId,
           );
           if (idx !== -1) {
+            const target = targetPlayer.upgrades[idx];
+            if (CardMovement.maybeBlackKnightIntercept(state, targetPlayer, target)) {
+              return true;
+            }
             const [card] = targetPlayer.upgrades.splice(idx, 1);
             CardMovement.destroyOrSacrifice(state, targetPlayer, card);
           }
@@ -982,6 +1047,7 @@ export class ActionResolver {
         // Rhinocorn avanza el turno igual si la destrucción fue interceptada
         // (p. ej. protegida por Rainbow Aura), para no dejar el juego colgado.
         state.pendingAction = undefined;
+        state.beginningEffectsQueue = [];
 
         // Pasa a la fase de acción pero sin acciones, obligando a "Terminar Turno"
         if (state.phase === TurnPhase.BEGINNING) {
@@ -1024,6 +1090,7 @@ export class ActionResolver {
         }
 
         if (state.phase === TurnPhase.BEGINNING) {
+          state.beginningEffectsQueue = [];
           state.phase = TurnPhase.ACTION;
           state.actionUsed = true;
         }

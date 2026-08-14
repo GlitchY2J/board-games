@@ -53,7 +53,9 @@ export type PendingAction =
         | "unicorn_swap_steal"
         | "caffeine_overload"
         | "re_target_card"
-        | "targeted_destruction";
+        | "targeted_destruction"
+        | "glitter_bomb_sacrifice"
+        | "glitter_bomb_destroy";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -116,7 +118,9 @@ export type PendingAction =
         | "unicorn_phoenix"
         | "caffeine_overload"
         | "shabby_the_narwhal"
-        | "claw_machine";
+        | "claw_machine"
+        | "glitter_bomb"
+        | "beginning_effect_picker";
       playerId: string;
       title: string;
       description: string;
@@ -125,6 +129,9 @@ export type PendingAction =
       originalTargetPlayerId?: string;
       /** Carta que está "en el aire" mientras se decide (p. ej. Unicorn Phoenix) */
       heldCard?: Card;
+      /** Uid del efecto de inicio de turno que se está resolviendo. Permite distinguir
+       *  varias copias de la misma carta (cada una se activa por separado). */
+      effectCardId?: string;
     }
   | {
       type: "select_discard_card";

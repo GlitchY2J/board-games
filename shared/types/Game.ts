@@ -57,6 +57,9 @@ export interface GameState {
   pendingPlay?: PendingPlay;
   /** Cola LIFO de pasos de flujo pendientes de reanudar cuando termine la acción actual (p. ej. efectos on-enter anidados). */
   pendingResume?: PendingAction[];
+  /** Uids de los efectos de inicio de turno pendientes de resolverse en el turno actual.
+   *  Si hay 2 o más, el jugador elige en qué orden resolverlos. */
+  beginningEffectsQueue?: string[];
   actionUsed: boolean;
   winnerId?: string;
   extraTurn?: boolean;

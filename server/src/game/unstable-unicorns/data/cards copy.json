@@ -1,26 +1,5 @@
 [
   {
-    "id": "targeted_destruction",
-    "name": "Targeted Destruction",
-    "cardType": "magic",
-    "image": "/cards/base/targeted_destruction.png",
-    "description": "SACRIFICE or DESTROY an Upgrade or Downgrade card.",
-    "effect": "targeted_destruction",
-    "copies": 1,
-    "expansion": "base"
-  },
-
-  {
-    "id": "claw_machine",
-    "name": "Claw Machine",
-    "cardType": "upgrade",
-    "image": "/cards/base/claw_machine.png",
-    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD card, then DRAW a card.",
-    "effect": "claw_machine",
-    "copies": 3,
-    "expansion": "base"
-  },
-  {
     "id": "double_dutch",
     "name": "Double Dutch",
     "cardType": "upgrade",
@@ -30,16 +9,7 @@
     "copies": 1,
     "expansion": "base"
   },
-  {
-    "id": "glitter_bomb",
-    "name": "Glitter Bomb",
-    "cardType": "upgrade",
-    "image": "/cards/base/glitter_bomb.png",
-    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card. If you do, DESTROY a card.",
-    "effect": "glitter_bomb",
-    "copies": 2,
-    "expansion": "base"
-  },
+
   {
     "id": "rainbow_lasso",
     "name": "Rainbow Lasso",
