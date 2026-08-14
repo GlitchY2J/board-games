@@ -17,7 +17,7 @@ import { roomManager } from '../roomManagerInstance.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
-import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation } from '../game/cardAnimations.ts';
+import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation } from '../game/cardAnimations.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -310,6 +310,8 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
 
     const { card } = result.data;
     const startedAt = Date.now();
+
+    enqueuePlayAnimation(context.room.code, context.player.id, card);
 
     // Yay: las cartas que juegas no pueden ser Neigh'd → se resuelven de inmediato
     // sin abrir la ventana de Neigh. Se consulta el player del game state, no el

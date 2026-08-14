@@ -1,5 +1,5 @@
 import type { Card } from './models/Card.ts';
-import type { NeighAnimation, DrawAnimation, DiscardAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation } from '../../../shared/types/SocketEvents.ts';
 
 export type CardAnimType = 'sacrifice' | 'destroy';
 
@@ -155,6 +155,41 @@ export function drainDiscardAnimations(roomCode: string): DiscardAnimation[] {
   for (let i = discardBuffer.length - 1; i >= 0; i--) {
     if (discardBuffer[i].roomCode === roomCode) {
       const [item] = discardBuffer.splice(i, 1);
+      drained.push(item);
+    }
+  }
+  return drained.reverse();
+}
+
+interface QueuedPlayAnimation extends PlayAnimation {
+  roomCode: string;
+}
+
+const playBuffer: QueuedPlayAnimation[] = [];
+
+export function enqueuePlayAnimation(
+  roomCode: string,
+  playerId: string,
+  card: Card,
+): void {
+  playBuffer.push({
+    animId: `play-${Math.random().toString(36).slice(2, 8)}`,
+    roomCode,
+    playerId,
+    card: {
+      uid: card.uid,
+      id: card.id,
+      name: card.name,
+      image: card.image,
+    },
+  });
+}
+
+export function drainPlayAnimations(roomCode: string): PlayAnimation[] {
+  const drained: PlayAnimation[] = [];
+  for (let i = playBuffer.length - 1; i >= 0; i--) {
+    if (playBuffer[i].roomCode === roomCode) {
+      const [item] = playBuffer.splice(i, 1);
       drained.push(item);
     }
   }

@@ -8,9 +8,10 @@ import VictoryScreen from '../components/game/VictoryScreen';
 import TurnAnnouncement from '../components/game/TurnAnnouncement';
 import CardDrawEffect from '../components/effects/CardDrawEffect';
 import CardDiscardEffect from '../components/effects/CardDiscardEffect';
+import CardPlayEffect from '../components/effects/CardPlayEffect';
 import CardRemovalAnimation from '../components/effects/CardRemovalAnimation';
 import NeighAnnouncement from '../components/game/NeighAnnouncement';
-import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation } from '../../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface TurnAnnounce {
@@ -36,6 +37,7 @@ export default function Game() {
   const [neighAnims, setNeighAnims] = useState<NeighAnimation[]>([]);
   const [drawAnims, setDrawAnims] = useState<DrawAnimation[]>([]);
   const [discardAnims, setDiscardAnims] = useState<DiscardAnimation[]>([]);
+  const [playAnims, setPlayAnims] = useState<PlayAnimation[]>([]);
 
   const pendingGameStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
@@ -172,10 +174,18 @@ export default function Game() {
       }
     };
 
+    const onPlayAnimations = (animations: PlayAnimation[]) => {
+      if (animations.length > 0) {
+        activeAnimationsCountRef.current += animations.length;
+        setPlayAnims((prev) => [...prev, ...animations]);
+      }
+    };
+
     socket.on('card-animations', onCardAnimations);
     socket.on('neigh-animations', onNeighAnimations);
     socket.on('draw-animations', onDrawAnimations);
     socket.on('discard-animations', onDiscardAnimations);
+    socket.on('play-animations', onPlayAnimations);
 
     return () => {
       socket.off('game-updated');
@@ -184,6 +194,7 @@ export default function Game() {
       socket.off('neigh-animations');
       socket.off('draw-animations');
       socket.off('discard-animations');
+      socket.off('play-animations');
     };
   }, []);
 
@@ -296,11 +307,27 @@ export default function Game() {
     });
   }
 
+  function removePlayAnim(animId: string) {
+    setPlayAnims((prev) => {
+      const next = prev.filter((a) => a.animId !== animId);
+      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+
+      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
+        const pendingState = pendingGameStateRef.current;
+        pendingGameStateRef.current = null;
+        applyGameState(pendingState);
+      }
+
+      return next;
+    });
+  }
+
   const hasActiveAnims =
     removalAnims.length > 0 ||
     neighAnims.length > 0 ||
     drawAnims.length > 0 ||
-    discardAnims.length > 0;
+    discardAnims.length > 0 ||
+    playAnims.length > 0;
 
   return (
     <>
@@ -354,6 +381,14 @@ export default function Game() {
           animation={animation}
           localPlayerId={localPlayer.id}
           onDone={() => removeDiscardAnim(animation.animId)}
+        />
+      ))}
+      {playAnims.map((animation) => (
+        <CardPlayEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={localPlayer.id}
+          onDone={() => removePlayAnim(animation.animId)}
         />
       ))}
     </>

@@ -2,7 +2,7 @@ import type { GameServer } from './socketTypes.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { GameState } from '../game/models/GameState.ts';
 import type { Card } from '../game/models/Card.ts';
-import { drainCardAnimations, drainNeighAnimations, drainDrawAnimations, drainDiscardAnimations } from '../game/cardAnimations.ts';
+import { drainCardAnimations, drainNeighAnimations, drainDrawAnimations, drainDiscardAnimations, drainPlayAnimations } from '../game/cardAnimations.ts';
 
 const CARD_BACK_IMAGE = '/cards/base/card_back.png';
 
@@ -136,6 +136,11 @@ export function emitGameState(
   const discardAnims = drainDiscardAnimations(game.roomCode);
   if (discardAnims.length > 0) {
     io.to(room.code).emit('discard-animations', discardAnims);
+  }
+
+  const playAnims = drainPlayAnimations(game.roomCode);
+  if (playAnims.length > 0) {
+    io.to(room.code).emit('play-animations', playAnims);
   }
 
   for (const roomPlayer of room.players) {

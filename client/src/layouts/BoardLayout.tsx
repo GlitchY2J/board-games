@@ -103,7 +103,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
             const position = positions[opponents.indexOf(opp)];
             if (position !== 'top') return null;
             return (
-              <div key={opp.id} className="player-slot flex-col items-center gap-2">
+              <div key={opp.id} data-player-id={opp.id} className="player-slot flex-col items-center gap-2">
                 <PlayerInfo
                   player={opp}
                   isActive={opp.id === activePlayer.id}
@@ -122,7 +122,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
 
 <div className="middle">
           <div className="center">
-            <div className="center-column">
+            <div className="center-column" data-center-area>
               <div className="center-stack">
                 <CenterArea
                   gameState={gameState}
@@ -144,7 +144,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
         </div>
 
         <div className="player-bottom">
-          <div className="player-slot flex-col items-center gap-2">
+          <div className="player-slot flex-col items-center gap-2" data-player-id={localPlayer.id}>
             <PlayerInfo
               player={localPlayer}
               isActive={isMyTurn}
@@ -163,6 +163,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
             return (
               <div
                 key={opp.id}
+                data-player-id={opp.id}
                 className="player-slot flex-col items-center gap-2"
               >
                 <PlayerInfo

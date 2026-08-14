@@ -134,6 +134,17 @@ export interface DiscardAnimation {
   };
 }
 
+export interface PlayAnimation {
+  animId: string;
+  playerId: string;
+  card: {
+    uid: string;
+    id: string;
+    name: string;
+    image: string;
+  };
+}
+
 export interface ResumeSessionResponse {
   success: boolean;
   playerId?: string;
@@ -152,6 +163,7 @@ export interface ServerToClientEvents {
   'neigh-animations': (animations: NeighAnimation[]) => void;
   'draw-animations': (animations: DrawAnimation[]) => void;
   'discard-animations': (animations: DiscardAnimation[]) => void;
+  'play-animations': (animations: PlayAnimation[]) => void;
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
 }
 

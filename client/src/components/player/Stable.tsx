@@ -13,7 +13,7 @@ export default function Stable({ player }: Props) {
   const hasDowngrades = player.downgrades.length > 0;
 
   return (
-    <div className="flex flex-col gap-2 w-full max-w-3xl">
+    <div className="flex flex-col gap-2 w-full max-w-3xl" data-stable-id={player.id}>
       {/* Fila 1: Unicornios */}
       <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-visible">
         {hasUnicorns ? (
