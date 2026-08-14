@@ -12,7 +12,8 @@ export type PendingAction =
         | "necromancer_unicorn"
         | "seductive_unicorn"
         | "unicorn_on_the_cob"
-        | "unicorn_phoenix";
+        | "unicorn_phoenix"
+        | "claw_machine";
       playerId: string;
       cardsToDiscard: number;
     }
@@ -114,7 +115,8 @@ export type PendingAction =
         | "stabby_the_unicorn"
         | "unicorn_phoenix"
         | "caffeine_overload"
-        | "shabby_the_narwhal";
+        | "shabby_the_narwhal"
+        | "claw_machine";
       playerId: string;
       title: string;
       description: string;

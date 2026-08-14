@@ -815,6 +815,30 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "claw_machine") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "discard",
+            reason: "claw_machine",
+            playerId: player.id,
+            cardsToDiscard: 1,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.nextPhase(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usará Claw Machine para descartar y robar`
+            : `${player.name} omitió el efecto de Claw Machine`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       } else if (pending.reason === "seductive_unicorn") {
         if (choice === "yes") {
           room.gameState.pendingAction = {

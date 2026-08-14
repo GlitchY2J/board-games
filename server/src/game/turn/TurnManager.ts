@@ -118,6 +118,26 @@ export class TurnManager {
       }
     }
 
+    const hasClawMachine = activePlayer.upgrades.some(
+      (c) => c.id === 'claw_machine',
+    );
+
+    if (hasClawMachine && activePlayer.hand.length > 0) {
+      game.pendingAction = {
+        type: 'select_choice',
+        reason: 'claw_machine',
+        playerId: activePlayer.id,
+        title: '🕹️ Claw Machine',
+        description:
+          '¿Deseas DESCARTAR una carta de tu mano y luego ROBAR una carta?',
+        options: [
+          { value: 'yes', text: 'Sí, descartar y robar' },
+          { value: 'no', text: 'No, omitir el efecto' },
+        ],
+      };
+      return true;
+    }
+
     return false;
   }
 

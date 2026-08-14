@@ -721,6 +721,26 @@
     "expansion": "base"
   },
   {
+    "id": "claw_machine",
+    "name": "Claw Machine",
+    "cardType": "upgrade",
+    "image": "/cards/base/claw_machine.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD card, then DRAW a card.",
+    "effect": "claw_machine",
+    "copies": 3,
+    "expansion": "base"
+  },
+  {
+    "id": "glitter_bomb",
+    "name": "Glitter Bomb",
+    "cardType": "upgrade",
+    "image": "/cards/base/glitter_bomb.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card. If you do, DESTROY a card.",
+    "effect": "glitter_bomb",
+    "copies": 2,
+    "expansion": "base"
+  },
+  {
     "id": "rainbow_aura",
     "name": "Rainbow Aura",
     "cardType": "upgrade",

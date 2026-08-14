@@ -106,6 +106,7 @@ export default function GameOverlay({
           necromancer_unicorn: '🧙 Necromancer Unicorn',
           seductive_unicorn: '💋 Seductive Unicorn',
           unicorn_on_the_cob: '🌽 Unicorn On The Cob',
+          claw_machine: '🕹️ Claw Machine',
         };
 
         const isNecromancer = action.reason === 'necromancer_unicorn';

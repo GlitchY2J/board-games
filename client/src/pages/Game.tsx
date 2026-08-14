@@ -44,6 +44,8 @@ export default function Game() {
     null,
   );
 
+  const announcedInitialRef = useRef(false);
+
   const applyGameState = (state: GameState) => {
     setGameState(state);
 
@@ -88,6 +90,17 @@ export default function Game() {
       }
     }
   }, [contextGameState]);
+
+  // El estado inicial llega vía location.state (Lobby) o contexto. Hay que
+  // pasarlo por applyGameState para que el anuncio del primer turno se muestre
+  // inmediatamente, sin esperar al primer game-updated (primer draw).
+  useEffect(() => {
+    if (announcedInitialRef.current) return;
+    if (!gameState) return;
+    announcedInitialRef.current = true;
+    applyGameState(gameState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState]);
 
   useEffect(() => {
     if (!turnAnnounce) return;

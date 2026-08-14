@@ -46,6 +46,20 @@ export class ActionResolver {
 
     state.pendingAction = undefined;
 
+    if (reason === 'claw_machine') {
+      const drawn = state.deck.shift();
+      if (drawn) {
+        enqueueDrawAnimation(state.roomCode, player.id, drawn);
+        player.hand.push(drawn);
+      }
+      addLog(
+        state,
+        `${player.name} descartó una carta y robó otra por Claw Machine`,
+        { playerId },
+      );
+      return true;
+    }
+
     if (isNecromancer) {
       state.pendingAction = {
         type: 'select_discard_card',
