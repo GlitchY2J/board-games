@@ -41,16 +41,7 @@
     "copies": 1,
     "expansion": "base"
   },
-  {
-    "id": "pandamonium",
-    "name": "Pandamonium",
-    "cardType": "downgrade",
-    "image": "/cards/base/pandamonium.png",
-    "description": "All of your Unicorns are considered Pandas. Cards that affect Unicorn cards do not affect your Pandas.",
-    "effect": "pandamonium",
-    "copies": 1,
-    "expansion": "base"
-  },
+
   {
     "id": "sadistic_ritual",
     "name": "Sadistic Ritual",
@@ -58,17 +49,6 @@
     "image": "/cards/base/sadistic_ritual.png",
     "description": "If this card is in your Stable at the beginning of yoru turn, SACRIFICE a Unicorn card, then DRAW a card.",
     "effect": "sadistic_ritual",
-    "copies": 1,
-    "expansion": "base"
-  },
-
-  {
-    "id": "tiny_stable",
-    "name": "Tiny Stable",
-    "cardType": "downgrade",
-    "image": "/cards/base/tiny_stable.png",
-    "description": "If at any time you have mor than 5 Unicorns in your Stable, SACRIFICE a Unicorn card.",
-    "effect": "tiny_stable",
     "copies": 1,
     "expansion": "base"
   }

@@ -405,6 +405,44 @@ export class ActionResolver {
       return false;
     }
 
+    // ──────────────────────────────────────────
+    // Tiny Stable: sacrificar un unicornio propio (efecto continuo obligatorio)
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'tiny_stable'
+    ) {
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
+
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const idx = player.stable.findIndex((c) => c.uid === cardId);
+      if (idx === -1) return false;
+
+      const target = player.stable[idx];
+      if (target.cardType !== 'unicorn') return false;
+      if (isPandamoniumProtected(player, target)) return false;
+
+      const [sacrificed] = player.stable.splice(idx, 1);
+      const intercepted = CardMovement.destroyOrSacrifice(
+        state,
+        player,
+        sacrificed,
+        'sacrifice',
+      );
+
+      // Si el sacrificio abrió su propio efecto interactivo (p. ej. Stabby
+      // The Unicorn), dejarlo activo; el chequeo invariante de Tiny Stable se
+      // re-evalúa en el siguiente emit.
+      if (intercepted && state.pendingAction && state.pendingAction !== pending) {
+        return true;
+      }
+
+      state.pendingAction = undefined;
+      return true;
+    }
+
     // Unicorn Swap: mover un unicornio propio al establo del objetivo
     if (
       pending.type === 'select_stable_card' &&

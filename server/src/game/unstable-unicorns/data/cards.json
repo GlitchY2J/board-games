@@ -801,7 +801,16 @@
     "copies": 1,
     "expansion": "base"
   },
-
+  {
+    "id": "tiny_stable",
+    "name": "Tiny Stable",
+    "cardType": "downgrade",
+    "image": "/cards/base/tiny_stable.png",
+    "description": "If at any time you have mor than 5 Unicorns in your Stable, SACRIFICE a Unicorn card.",
+    "effect": "tiny_stable",
+    "copies": 1,
+    "expansion": "base"
+  },
   {
     "id": "nanny_cam",
     "name": "Nanny Cam",

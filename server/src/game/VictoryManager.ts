@@ -2,6 +2,13 @@ import type { GameState } from './models/GameState.ts';
 import type { Player } from './models/Player.ts';
 import { getStablePower } from './unstable-unicorns/engine/stablePower.ts';
 import { hasPandamonium } from './cards/effects/pandamonium.ts';
+import { hasTinyStable } from './cards/effects/tinyStable.ts';
+
+function canWin(player: Player): boolean {
+  // Pandamonium / Tiny Stable: un jugador no puede ganar mientras tenga
+  // alguna de estas cartas en su establo.
+  return !hasPandamonium(player) && !hasTinyStable(player);
+}
 
 function getUnicornCount(player: Player): number {
   return player.stable.filter((c) => c.cardType === 'unicorn').length;
@@ -22,9 +29,9 @@ export class VictoryManager {
     const target = game.players.length >= 6 ? 6 : 7;
 
     for (const player of game.players) {
-      // Pandamonium: un jugador no puede ganar la partida mientras Pandamonium
-      // esté en su establo.
-      if (hasPandamonium(player)) continue;
+      // Pandamonium / Tiny Stable: un jugador no puede ganar la partida
+      // mientras tenga alguna de estas cartas en su establo.
+      if (!canWin(player)) continue;
 
       if (getStablePower(player) >= target) {
         game.winnerId = player.id;
@@ -39,8 +46,9 @@ export class VictoryManager {
   }
 
   private static resolveDeckOutcome(game: GameState) {
-    // Pandamonium: los jugadores con Pandamonium en su establo no pueden ganar.
-    const eligible = game.players.filter((p) => !hasPandamonium(p));
+    // Pandamonium / Tiny Stable: los jugadores con alguna de estas cartas en
+    // su establo no pueden ganar.
+    const eligible = game.players.filter(canWin);
     if (eligible.length === 0) return;
 
     // Regla 2: gana el jugador con más cartas de unicornio en su establo.

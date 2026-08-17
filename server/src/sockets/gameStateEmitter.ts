@@ -3,6 +3,7 @@ import type { Room } from '../game/models/Room.ts';
 import type { GameState } from '../game/models/GameState.ts';
 import type { Card } from '../game/models/Card.ts';
 import { drainCardAnimations, drainNeighAnimations, drainDrawAnimations, drainDiscardAnimations, drainPlayAnimations } from '../game/cardAnimations.ts';
+import { checkTinyStable } from '../game/cards/effects/tinyStable.ts';
 
 const CARD_BACK_IMAGE = '/cards/base/card_back.png';
 
@@ -117,6 +118,10 @@ export function emitGameState(
   while (!game.pendingAction && game.pendingResume?.length) {
     game.pendingAction = game.pendingResume.pop();
   }
+
+  // Tiny Stable: invariante continuo y obligatorio (sacrificar unicornios si
+  // se supera el límite de 5). Se ejecuta después de cada acción.
+  checkTinyStable(game);
 
   const anims = drainCardAnimations(game.roomCode);
   if (anims.length > 0) {

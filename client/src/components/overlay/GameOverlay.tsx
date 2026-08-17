@@ -1020,6 +1020,43 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'tiny_stable') {
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+          const items = (localPlayer?.stable ?? [])
+            .filter(
+              (c) =>
+                c.cardType === 'unicorn' &&
+                (!localPlayer || !isPandamoniumProtected(localPlayer, c)),
+            )
+            .map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu establo',
+              image: card.image,
+            }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🏠 Tiny Stable"
+              subtitle="Tienes más de 5 unicornios. DEBES sacrificar un unicornio de tu establo."
+              items={items}
+              maxSelection={1}
+              confirmText="Sacrificar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         const target = gameState.players.find(
           (p) => p.id === action.targetPlayerId,
         );

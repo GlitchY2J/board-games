@@ -55,7 +55,8 @@ export type PendingAction =
         | "re_target_card"
         | "targeted_destruction"
         | "glitter_bomb_sacrifice"
-        | "glitter_bomb_destroy";
+        | "glitter_bomb_destroy"
+        | "tiny_stable";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
