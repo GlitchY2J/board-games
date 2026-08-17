@@ -313,7 +313,7 @@ export class ActionResolver {
       const ids = Array.isArray(cardId) ? cardId : [cardId];
 
       let destroyedCount = 0;
-      let interceptedOnce = false;
+      let openedInteractive = false;
 
       for (const uid of ids) {
         let destroyedCard: Card | undefined;
@@ -334,12 +334,10 @@ export class ActionResolver {
         }
 
         if (!destroyedCard || !targetPlayer || !zone) {
-          interceptedOnce = true;
           continue;
         }
 
         if (isImmuneToMagicDestruction(destroyedCard.id)) {
-          interceptedOnce = true;
           continue;
         }
 
@@ -350,18 +348,32 @@ export class ActionResolver {
           targetPlayer,
           removed,
         );
-        if (intercepted) interceptedOnce = true;
+        // Si el efecto onDestroyed abrió su propio pendingAction interactivo
+        // (p. ej. Unicorn Phoenix), hay que preservarlo y reanudar Two For One
+        // después de resolverlo.
+        if (intercepted && state.pendingAction && state.pendingAction !== pending) {
+          openedInteractive = true;
+        }
         destroyedCount++;
       }
 
       const remaining = pending.remainingToDestroy - destroyedCount;
-      if (remaining > 0 && !interceptedOnce) {
-        state.pendingAction = {
-          type: 'two_for_one',
-          sourcePlayerId,
-          phase: 'destroy',
-          remainingToDestroy: remaining,
-        };
+      const destroyStep = {
+        type: 'two_for_one',
+        sourcePlayerId,
+        phase: 'destroy',
+        remainingToDestroy: Math.max(0, remaining),
+      } as const;
+
+      if (openedInteractive) {
+        // Phoenix (u otro efecto interactivo) abrió su propio pendingAction y
+        // se reanuda Two For One después de resolverlo, solo si quedan cartas.
+        if (remaining > 0) {
+          if (!state.pendingResume) state.pendingResume = [];
+          state.pendingResume.push(destroyStep);
+        }
+      } else if (remaining > 0) {
+        state.pendingAction = destroyStep;
       } else {
         state.pendingAction = undefined;
       }
@@ -1071,9 +1083,17 @@ export class ActionResolver {
           destroyed,
         );
 
-        // Rhinocorn avanza el turno igual si la destrucción fue interceptada
-        // (p. ej. protegida por Rainbow Aura), para no dejar el juego colgado.
-        state.pendingAction = undefined;
+        const prevReason = pending.reason;
+        // Si la destrucción abrió un pendingAction interactivo (p. ej. Unicorn
+        // Phoenix), preservarlo en lugar de limpiarlo. Rhinocorn avanza el turno
+        // igual, y el efecto interceptado se resuelve después.
+        if (
+          !state.pendingAction ||
+          !('reason' in state.pendingAction) ||
+          state.pendingAction.reason === prevReason
+        ) {
+          state.pendingAction = undefined;
+        }
         state.beginningEffectsQueue = [];
 
         // Pasa a la fase de acción pero sin acciones, obligando a "Terminar Turno"
