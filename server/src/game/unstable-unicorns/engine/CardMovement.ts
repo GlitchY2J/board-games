@@ -69,6 +69,7 @@ export class CardMovement {
     card: Card,
   ): boolean {
     if (card.id === 'black_knight_unicorn') return false;
+    if (card.cardType !== 'unicorn') return false;
 
     const hasBlackKnight = player.stable.some(
       (c) => c.id === 'black_knight_unicorn',

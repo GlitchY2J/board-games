@@ -615,11 +615,15 @@ export class ActionResolver {
         return false;
       }
 
-      // Si el oponente tiene Black Knight Unicorn en su establo y la carta elegida no es Black Knight Unicorn
+      // Black Knight Unicorn solo protege Unicornios (no Upgrades ni Downgrades)
       const hasBlackKnight = targetPlayer.stable.some(
         (c) => c.id === 'black_knight_unicorn',
       );
-      if (hasBlackKnight && targetCard.id !== 'black_knight_unicorn') {
+      if (
+        targetCard.cardType === 'unicorn' &&
+        hasBlackKnight &&
+        targetCard.id !== 'black_knight_unicorn'
+      ) {
         state.pendingAction = {
           type: 'select_choice',
           reason: 'black_knight_unicorn',

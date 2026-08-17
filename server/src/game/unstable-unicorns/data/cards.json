@@ -781,16 +781,7 @@
     "copies": 1,
     "expansion": "base"
   },
-  {
-    "id": "pandamonium",
-    "name": "Pandamonium",
-    "cardType": "downgrade",
-    "image": "/cards/base/pandamonium.png",
-    "description": "All of your Unicorns are considered Pandas. Cards that affect Unicorn cards do not affect your Pandas.",
-    "effect": "pandamonium",
-    "copies": 1,
-    "expansion": "base"
-  },
+
   {
     "id": "slowdown",
     "name": "Slowdown",
