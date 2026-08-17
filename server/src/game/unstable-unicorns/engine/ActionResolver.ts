@@ -384,15 +384,16 @@ export class ActionResolver {
 
         const idx = targetPlayer[zone].findIndex((c) => c.uid === uid);
         const [removed] = targetPlayer[zone].splice(idx, 1);
-        const intercepted = CardMovement.destroyOrSacrifice(
+        const prevPending = state.pendingAction;
+        CardMovement.destroyOrSacrifice(
           state,
           targetPlayer,
           removed,
         );
         // Si el efecto onDestroyed abrió su propio pendingAction interactivo
-        // (p. ej. Unicorn Phoenix), hay que preservarlo y reanudar Two For One
-        // después de resolverlo.
-        if (intercepted && state.pendingAction && state.pendingAction !== pending) {
+        // (p. ej. Unicorn Phoenix, Stabby The Unicorn), hay que preservarlo y
+        // reanudar Two For One después de resolverlo.
+        if (state.pendingAction !== prevPending) {
           openedInteractive = true;
         }
         destroyedCount++;
@@ -632,6 +633,7 @@ export class ActionResolver {
           const target = player[z][i];
           if (isPandamoniumProtected(player, target)) return false;
           const [sacrificed] = player[z].splice(i, 1);
+          const prevPending = state.pendingAction;
           const intercepted = CardMovement.destroyOrSacrifice(
             state,
             player,
@@ -645,9 +647,10 @@ export class ActionResolver {
             sourcePlayerId,
           } as const;
 
-          // Si la carta sacrificada intercepta (p. ej. Unicorn Phoenix), suspender
-          // la segunda parte de Glitter Bomb y reanudarla al resolver el efecto.
-          if (intercepted) {
+          // Si la carta sacrificada intercepta (p. ej. Unicorn Phoenix) o
+          // abrió su propio pendingAction (p. ej. Stabby The Unicorn),
+          // suspender la segunda parte de Glitter Bomb.
+          if (intercepted || state.pendingAction !== prevPending) {
             if (!state.pendingResume) state.pendingResume = [];
             state.pendingResume.push(destroyStep);
           } else {
@@ -679,14 +682,16 @@ export class ActionResolver {
             }
 
             const [destroyed] = p[z].splice(i, 1);
+            const prevPending = state.pendingAction;
             const intercepted = CardMovement.destroyOrSacrifice(
               state,
               p,
               destroyed,
             );
 
-            // Si la carta intercepta (p. ej. Unicorn Phoenix), NO sobrescribir su pendingAction
-            if (intercepted) {
+            // Si la carta intercepta (p. ej. Unicorn Phoenix) o abrió su propio
+            // pendingAction (p. ej. Stabby The Unicorn), preservarlo.
+            if (intercepted || state.pendingAction !== prevPending) {
               return true;
             }
 
@@ -775,13 +780,16 @@ export class ActionResolver {
       }
 
       const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
+      const prevPending = state.pendingAction;
       const intercepted = CardMovement.destroyOrSacrifice(
         state,
         targetPlayer,
         destroyedCard,
       );
 
-      if (!intercepted) {
+      // Si la destrucción abrió un pendingAction interactivo (p. ej. Stabby
+      // The Unicorn), preservarlo; si no, limpiar el pendingAction.
+      if (state.pendingAction === prevPending && !intercepted) {
         state.pendingAction = undefined;
       }
       return true;
