@@ -1073,14 +1073,21 @@ export class ActionResolver {
       const targetPlayer = state.players.find((p) => p.id === currentTargetId);
       if (!targetPlayer) return false;
 
-      const cardIdx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
-      if (cardIdx === -1) return false;
-
-      if (isPandamoniumProtected(targetPlayer, targetPlayer.stable[cardIdx])) {
-        return false;
+      let zone: 'stable' | 'upgrades' | 'downgrades' | null = null;
+      let card: Card | undefined;
+      for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
+        const i = targetPlayer[z].findIndex((c) => c.uid === cardId);
+        if (i !== -1) {
+          if (z === 'stable' && isPandamoniumProtected(targetPlayer, targetPlayer[z][i])) {
+            return false;
+          }
+          [card] = targetPlayer[z].splice(i, 1);
+          zone = z;
+          break;
+        }
       }
 
-      const [card] = targetPlayer.stable.splice(cardIdx, 1);
+      if (!card || !zone) return false;
 
       // Baby Unicorns van a la Nursery; las demás cartas vuelven a la mano
       CardMovement.returnToHand(state, targetPlayer, card);

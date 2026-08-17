@@ -1177,13 +1177,30 @@ export default function GameOverlay({
 
         const currentTargetId = action.remainingPlayerIds[0];
         const target = gameState.players.find((p) => p.id === currentTargetId);
-        if (!target || target.stable.length === 0) return null;
+        if (
+          !target ||
+          (target.stable.length === 0 &&
+            target.upgrades.length === 0 &&
+            target.downgrades.length === 0)
+        )
+          return null;
 
         const totalPlayers = gameState.players.filter(
-          (p) => p.stable.length > 0,
+          (p) =>
+            p.stable.length > 0 ||
+            p.upgrades.length > 0 ||
+            p.downgrades.length > 0,
         ).length;
         const remaining = action.remainingPlayerIds.length;
         const stepLabel = `Paso ${totalPlayers - remaining + 1} de ${totalPlayers}`;
+
+        const targetCards = [
+          ...target.stable
+            .filter((c) => !isPandamoniumProtected(target, c))
+            .map((c) => ({ ...c, zone: 'Establo' })),
+          ...target.upgrades.map((c) => ({ ...c, zone: 'Upgrade' })),
+          ...target.downgrades.map((c) => ({ ...c, zone: 'Downgrade' })),
+        ];
 
         return (
           <CardSelectionOverlay
@@ -1191,10 +1208,10 @@ export default function GameOverlay({
             key={currentTargetId}
             title="🌪️ Glitter Tornado"
             subtitle={`${stepLabel} — Elige una carta del establo de ${target.name} para regresar a su mano`}
-            items={target.stable.map((card, idx) => ({
+            items={targetCards.map((card, idx) => ({
               id: `${card.id}_${idx}`,
               value: card.uid,
-              title: card.name,
+              title: `${card.name} (${card.zone})`,
               image: card.image,
             }))}
             maxSelection={1}
