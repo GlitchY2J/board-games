@@ -907,6 +907,30 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "stable_artillery") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "discard",
+            reason: "stable_artillery",
+            playerId: player.id,
+            cardsToDiscard: 2,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usará Stable Artillery para descartar 2 y destruir un unicornio`
+            : `${player.name} omitió el efecto de Stable Artillery`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       } else if (pending.reason === "seductive_unicorn") {
         if (choice === "yes") {
           room.gameState.pendingAction = {

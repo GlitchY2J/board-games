@@ -119,6 +119,7 @@ export default function GameOverlay({
           unicorn_on_the_cob: '🌽 Unicorn On The Cob',
           claw_machine: '🕹️ Claw Machine',
           rainbow_lasso: '🌈 Rainbow Lasso',
+          stable_artillery: '🔫 Stable Artillery',
         };
 
         const isNecromancer = action.reason === 'necromancer_unicorn';
@@ -1012,6 +1013,44 @@ export default function GameOverlay({
               items={items}
               maxSelection={1}
               confirmText="Robar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'stable_artillery_destroy') {
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) =>
+              p.stable
+                .filter(
+                  (c) =>
+                    c.cardType === 'unicorn' &&
+                    !isPandamoniumProtected(p, c),
+                )
+                .map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🔫 Stable Artillery"
+              subtitle="Elige un unicornio para DESTRUIR"
+              items={items}
+              maxSelection={1}
+              confirmText="Destruir"
               onConfirm={([cardId]) => {
                 dismiss();
                 socket.emit('select-stable-card', {

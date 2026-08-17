@@ -91,6 +91,19 @@ export class TurnManager {
       uids.push(...lasso.map((c) => c.uid));
     }
 
+    // Stable Artillery: descartar 2 cartas y luego destruir un unicornio de
+    // OTRO jugador (no del propio establo).
+    const artillery = allCards.filter((c) => c.id === 'stable_artillery');
+    if (
+      artillery.length > 0 &&
+      activePlayer.hand.length >= 2 &&
+      game.players.some(
+        (p) => p.id !== activePlayer.id && hasAvailableUnicorn(p),
+      )
+    ) {
+      uids.push(...artillery.map((c) => c.uid));
+    }
+
     return uids;
   }
 
@@ -180,6 +193,21 @@ export class TurnManager {
             '¿Deseas DESCARTAR 3 cartas para luego ROBAR un unicornio de otro jugador?',
           options: [
             { value: 'yes', text: 'Sí, descartar 3 y robar un unicornio' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'stable_artillery':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'stable_artillery',
+          playerId: activePlayer.id,
+          title: '🔫 Stable Artillery',
+          description:
+            '¿Deseas DESCARTAR 2 cartas para luego DESTRUIR un unicornio?',
+          options: [
+            { value: 'yes', text: 'Sí, descartar 2 y destruir un unicornio' },
             { value: 'no', text: 'No, omitir el efecto' },
           ],
           effectCardId: uid,

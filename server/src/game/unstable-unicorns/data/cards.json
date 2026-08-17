@@ -771,6 +771,16 @@
     "expansion": "base"
   },
   {
+    "id": "stable_artillery",
+    "name": "Stable Artillery",
+    "cardType": "upgrade",
+    "image": "/cards/base/stable_artillery.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD 2 cards, then DESTROY a Unicorn card.",
+    "effect": "stable_artillery",
+    "copies": 3,
+    "expansion": "base"
+  },
+  {
     "id": "yay",
     "name": "Yay",
     "cardType": "upgrade",

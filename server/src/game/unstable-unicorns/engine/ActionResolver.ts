@@ -97,6 +97,16 @@ export class ActionResolver {
       return true;
     }
 
+    // Stable Artillery: tras descartar 2 cartas, destruir un unicornio.
+    if (reason === 'stable_artillery') {
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 'stable_artillery_destroy',
+        sourcePlayerId: playerId,
+      };
+      return true;
+    }
+
     if (
       reason === 'hand_limit' ||
       reason === 'good_deal' ||
@@ -1377,6 +1387,43 @@ export class ActionResolver {
       pending.reason === 'stabby_the_unicorn'
     ) {
       for (const targetPlayer of state.players) {
+        const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+        if (idx === -1) continue;
+
+        const card = targetPlayer.stable[idx];
+        if (card.cardType !== 'unicorn') return false;
+
+        if (isPandamoniumProtected(targetPlayer, card)) {
+          return false;
+        }
+
+        const prevReason = pending.reason;
+        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
+
+        if (
+          !state.pendingAction ||
+          !('reason' in state.pendingAction) ||
+          state.pendingAction.reason === prevReason
+        ) {
+          state.pendingAction = undefined;
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    // ──────────────────────────────────────────
+    // Stable Artillery: destruye un unicornio
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'stable_artillery_destroy'
+    ) {
+      for (const targetPlayer of state.players) {
+        if (targetPlayer.id === sourcePlayerId) continue;
+
         const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
         if (idx === -1) continue;
 
