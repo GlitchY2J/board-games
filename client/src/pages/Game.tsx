@@ -176,7 +176,6 @@ export default function Game() {
 
     const onPlayAnimations = (animations: PlayAnimation[]) => {
       if (animations.length > 0) {
-        activeAnimationsCountRef.current += animations.length;
         setPlayAnims((prev) => [...prev, ...animations]);
       }
     };
@@ -308,26 +307,14 @@ export default function Game() {
   }
 
   function removePlayAnim(animId: string) {
-    setPlayAnims((prev) => {
-      const next = prev.filter((a) => a.animId !== animId);
-      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
-
-      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
-        const pendingState = pendingGameStateRef.current;
-        pendingGameStateRef.current = null;
-        applyGameState(pendingState);
-      }
-
-      return next;
-    });
+    setPlayAnims((prev) => prev.filter((a) => a.animId !== animId));
   }
 
   const hasActiveAnims =
     removalAnims.length > 0 ||
     neighAnims.length > 0 ||
     drawAnims.length > 0 ||
-    discardAnims.length > 0 ||
-    playAnims.length > 0;
+    discardAnims.length > 0;
 
   return (
     <>
