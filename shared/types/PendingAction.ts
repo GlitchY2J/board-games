@@ -13,7 +13,8 @@ export type PendingAction =
         | "seductive_unicorn"
         | "unicorn_on_the_cob"
         | "unicorn_phoenix"
-        | "claw_machine";
+        | "claw_machine"
+        | "rainbow_lasso";
       playerId: string;
       cardsToDiscard: number;
     }
@@ -56,7 +57,8 @@ export type PendingAction =
         | "targeted_destruction"
         | "glitter_bomb_sacrifice"
         | "glitter_bomb_destroy"
-        | "tiny_stable";
+        | "tiny_stable"
+        | "rainbow_lasso_steal";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }
@@ -121,7 +123,8 @@ export type PendingAction =
         | "shabby_the_narwhal"
         | "claw_machine"
         | "glitter_bomb"
-        | "beginning_effect_picker";
+        | "beginning_effect_picker"
+        | "rainbow_lasso";
       playerId: string;
       title: string;
       description: string;

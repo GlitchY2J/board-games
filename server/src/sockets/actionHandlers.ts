@@ -883,6 +883,30 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, "game-updated");
+      } else if (pending.reason === "rainbow_lasso") {
+        if (choice === "yes") {
+          room.gameState.pendingAction = {
+            type: "discard",
+            reason: "rainbow_lasso",
+            playerId: player.id,
+            cardsToDiscard: 3,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === "yes"
+            ? `${player.name} usará Rainbow Lasso para descartar 3 y robar un unicornio`
+            : `${player.name} omitió el efecto de Rainbow Lasso`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, "game-updated");
       } else if (pending.reason === "seductive_unicorn") {
         if (choice === "yes") {
           room.gameState.pendingAction = {

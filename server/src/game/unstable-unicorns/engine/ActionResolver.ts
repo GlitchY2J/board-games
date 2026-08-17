@@ -87,6 +87,16 @@ export class ActionResolver {
       return true;
     }
 
+    // Rainbow Lasso: tras descartar 3 cartas, robar un unicornio de otro jugador.
+    if (reason === 'rainbow_lasso') {
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 'rainbow_lasso_steal',
+        sourcePlayerId: playerId,
+      };
+      return true;
+    }
+
     if (
       reason === 'hand_limit' ||
       reason === 'good_deal' ||
@@ -1269,6 +1279,54 @@ export class ActionResolver {
     if (
       pending.type === 'select_stable_card' &&
       pending.reason === 'seductive_unicorn'
+    ) {
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!sourcePlayer) return false;
+
+      for (const targetPlayer of state.players) {
+        if (targetPlayer.id === sourcePlayerId) continue;
+
+        const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+        if (idx === -1) continue;
+
+        const card = targetPlayer.stable[idx];
+        if (card.cardType !== 'unicorn') return false;
+
+        if (isPandamoniumProtected(targetPlayer, card)) {
+          return false;
+        }
+
+        const prevReason = pending.reason;
+        const [stolen] = targetPlayer.stable.splice(idx, 1);
+        const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
+
+        if (!entered) {
+          targetPlayer.stable.push(stolen);
+          return false;
+        }
+
+        // Si la carta robada disparó su propio efecto al entrar al establo,
+        // mantener su pendingAction en lugar de limpiarlo.
+        if (
+          !state.pendingAction ||
+          !('reason' in state.pendingAction) ||
+          state.pendingAction.reason === prevReason
+        ) {
+          state.pendingAction = undefined;
+        }
+
+        return true;
+      }
+
+      return false;
+    }
+
+    // ──────────────────────────────────────────
+    // Rainbow Lasso: roba un unicornio de otro jugador
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'rainbow_lasso_steal'
     ) {
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
       if (!sourcePlayer) return false;

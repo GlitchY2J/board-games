@@ -760,7 +760,16 @@
     "copies": 1,
     "expansion": "base"
   },
-
+  {
+    "id": "rainbow_lasso",
+    "name": "Rainbow Lasso",
+    "cardType": "upgrade",
+    "image": "/cards/base/rainbow_lasso.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD 3 cards, then STEAL a Unicorn card.",
+    "effect": "rainbow_lasso",
+    "copies": 1,
+    "expansion": "base"
+  },
   {
     "id": "yay",
     "name": "Yay",

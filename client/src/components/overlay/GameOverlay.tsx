@@ -118,6 +118,7 @@ export default function GameOverlay({
           seductive_unicorn: '💋 Seductive Unicorn',
           unicorn_on_the_cob: '🌽 Unicorn On The Cob',
           claw_machine: '🕹️ Claw Machine',
+          rainbow_lasso: '🌈 Rainbow Lasso',
         };
 
         const isNecromancer = action.reason === 'necromancer_unicorn';
@@ -969,6 +970,44 @@ export default function GameOverlay({
             <CardSelectionOverlay
               hide={hide}
               title="💋 Seductive Unicorn"
+              subtitle="Elige un unicornio de otro jugador para ROBARLO a tu establo"
+              items={items}
+              maxSelection={1}
+              confirmText="Robar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'rainbow_lasso_steal') {
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) =>
+              p.stable
+                .filter(
+                  (c) =>
+                    c.cardType === 'unicorn' &&
+                    !isPandamoniumProtected(p, c),
+                )
+                .map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🌈 Rainbow Lasso"
               subtitle="Elige un unicornio de otro jugador para ROBARLO a tu establo"
               items={items}
               maxSelection={1}
