@@ -29,13 +29,19 @@ export default function PhaseActionButton({ gameState, autoEnabled = false }: Pr
     }
   }
 
-  if (autoEnabled && isActivePlayer) return null;
+  if (!isActivePlayer) return null;
+
+  // Double Dutch: tras jugar 1 carta (actionPlaysRemaining === 1) el jugador
+  // debe poder terminar el turno manualmente, incluso con el modo automático.
+  const doubleDutchCanEnd =
+    gameState.phase === 'ACTION' && gameState.actionPlaysRemaining === 1;
+
+  if (autoEnabled && !doubleDutchCanEnd) return null;
 
   const showButton =
-    (isActivePlayer &&
-      gameState.phase !== 'ACTION' &&
-      gameState.phase !== 'DRAW') ||
-    (isActivePlayer && gameState.phase === 'ACTION' && gameState.actionUsed);
+    (gameState.phase !== 'ACTION' && gameState.phase !== 'DRAW') ||
+    (gameState.phase === 'ACTION' &&
+      (gameState.actionUsed || gameState.actionPlaysRemaining === 1));
 
   if (!showButton) return null;
 

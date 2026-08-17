@@ -61,6 +61,9 @@ export interface GameState {
    *  Si hay 2 o más, el jugador elige en qué orden resolverlos. */
   beginningEffectsQueue?: string[];
   actionUsed: boolean;
+  /** Double Dutch: número de cartas que el jugador activo aún puede jugar en
+   *  esta fase de acción (2 si eligió "jugar 2"). Undefined = acción normal. */
+  actionPlaysRemaining?: number;
   winnerId?: string;
   extraTurn?: boolean;
   /** Modo debug: permite a cada jugador elegir qué carta del mazo tomar en su fase de robo. Solo el anfitrión lo activa. */

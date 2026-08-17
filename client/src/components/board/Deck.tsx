@@ -13,7 +13,10 @@ export default function Deck({ gameState, isMyTurn, localPlayerId }: Props) {
     isMyTurn &&
     (gameState.phase === 'DRAW' || gameState.phase === 'ACTION') &&
     !gameState.actionUsed &&
-    !gameState.pendingPlay;
+    !gameState.pendingPlay &&
+    // Double Dutch: tras jugar una carta (remaining === 1) ya no se puede robar.
+    (gameState.actionPlaysRemaining === undefined ||
+      gameState.actionPlaysRemaining === 2);
 
   // Draw Card
   function drawActionCard() {

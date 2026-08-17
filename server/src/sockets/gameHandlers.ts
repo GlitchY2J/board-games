@@ -396,6 +396,22 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    // Double Dutch: robar solo es válido si aún no se jugó ninguna carta
+    // (actionPlaysRemaining === 2). Tras jugar una carta, debe jugar otra o
+    // terminar el turno manualmente.
+    if (
+      game.actionPlaysRemaining !== undefined &&
+      game.actionPlaysRemaining !== 2
+    ) {
+      emitGameError(
+        socket,
+        'ACTION_NOT_ALLOWED',
+        'Ya jugaste una carta con Double Dutch; debes jugar otra o terminar el turno.',
+        'draw-action-card',
+      );
+      return;
+    }
+
     if (game.pendingAction) {
       emitGameError(
         socket,
@@ -478,6 +494,8 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
       game.phase = TurnPhase.ACTION;
     } else {
       game.actionUsed = true;
+      // Robar como acción termina la fase de acción (Double Dutch no aplica).
+      game.actionPlaysRemaining = undefined;
     }
 
     addLog(game, `${player.name} robó una carta del mazo`, {

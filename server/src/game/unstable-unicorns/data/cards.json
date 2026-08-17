@@ -731,6 +731,16 @@
     "expansion": "base"
   },
   {
+    "id": "double_dutch",
+    "name": "Double Dutch",
+    "cardType": "upgrade",
+    "image": "/cards/base/double_dutch.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may play 2 cards during your Action phase.",
+    "effect": "double_dutch",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "glitter_bomb",
     "name": "Glitter Bomb",
     "cardType": "upgrade",

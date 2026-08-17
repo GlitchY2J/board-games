@@ -8,6 +8,7 @@ import {
   hasAvailableUnicorn,
   hasAvailableCardToSacrifice,
 } from '../cards/effects/pandamonium.ts';
+import { hasDoubleDutch } from '../cards/effects/doubleDutch.ts';
 
 const END_OF_TURN_EFFECTS = new Set<string>([
   // Add here any card whose effect triggers at the end of your turn
@@ -225,6 +226,26 @@ export class TurnManager {
     }
   }
 
+  /**
+   * Double Dutch: al entrar en la fase de acción, si el jugador activo tiene
+   * Double Dutch en su establo (y aún no usó su acción), se le permiten hasta
+   * 2 jugadas en la fase de acción. No muestra ningún overlay: el jugador puede
+   * robar 1 carta como acción (termina la fase) o jugar cartas de su mano.
+   * Si la fase de acción se saltó (actionUsed ya era true), no hay beneficio.
+   */
+  static applyDoubleDutch(game: GameState): boolean {
+    if (game.phase !== TurnPhase.ACTION) return false;
+    if (game.pendingAction) return false;
+    if (game.actionUsed) return false;
+    if (game.actionPlaysRemaining !== undefined) return false;
+
+    const active = game.players[game.currentPlayer];
+    if (!active || !hasDoubleDutch(active)) return false;
+
+    game.actionPlaysRemaining = 2;
+    return true;
+  }
+
   static activateBeginningTriggers(game: GameState): boolean {
     if (game.phase !== TurnPhase.BEGINNING || game.pendingAction) return false;
 
@@ -257,6 +278,7 @@ export class TurnManager {
     }
 
     game.actionUsed = false;
+    game.actionPlaysRemaining = undefined;
 
     if (game.currentPlayer === 0) {
       game.turn++;

@@ -179,6 +179,16 @@ export class RulesEngine {
 
       state.actionUsed = true;
 
+      // Double Dutch: permite jugar hasta 2 cartas en la fase de acción.
+      if (state.actionPlaysRemaining !== undefined) {
+        state.actionPlaysRemaining -= 1;
+        if (state.actionPlaysRemaining > 0) {
+          state.actionUsed = false;
+        } else {
+          state.actionPlaysRemaining = undefined;
+        }
+      }
+
       return actionSuccess(state);
     } catch (error) {
       console.error('Error ejecutando el efecto de la carta.', error);

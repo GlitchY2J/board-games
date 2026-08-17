@@ -4,6 +4,7 @@ import type { GameState } from '../game/models/GameState.ts';
 import type { Card } from '../game/models/Card.ts';
 import { drainCardAnimations, drainNeighAnimations, drainDrawAnimations, drainDiscardAnimations, drainPlayAnimations } from '../game/cardAnimations.ts';
 import { checkTinyStable } from '../game/cards/effects/tinyStable.ts';
+import { TurnManager } from '../game/turn/TurnManager.ts';
 
 const CARD_BACK_IMAGE = '/cards/base/card_back.png';
 
@@ -122,6 +123,10 @@ export function emitGameState(
   // Tiny Stable: invariante continuo y obligatorio (sacrificar unicornios si
   // se supera el límite de 5). Se ejecuta después de cada acción.
   checkTinyStable(game);
+
+  // Double Dutch: al entrar en la fase de acción, permitir jugar hasta 2
+  // cartas (sin overlay) si el jugador activo tiene Double Dutch.
+  TurnManager.applyDoubleDutch(game);
 
   const anims = drainCardAnimations(game.roomCode);
   if (anims.length > 0) {

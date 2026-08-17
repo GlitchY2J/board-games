@@ -43,6 +43,7 @@ import { resetButton } from '../../../cards/effects/resetButton.ts';
 import { targetedDestruction } from '../../../cards/effects/targetedDestruction.ts';
 import { pandamonium } from '../../../cards/effects/pandamonium.ts';
 import { tinyStable } from '../../../cards/effects/tinyStable.ts';
+import { doubleDutch } from '../../../cards/effects/doubleDutch.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -91,4 +92,5 @@ export const effects: Record<string, CardEffect> = {
   targeted_destruction: targetedDestruction,
   pandamonium,
   tiny_stable: tinyStable,
+  double_dutch: doubleDutch,
 };

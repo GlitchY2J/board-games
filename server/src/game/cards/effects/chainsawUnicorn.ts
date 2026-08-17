@@ -2,10 +2,14 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 
 export const chainsawUnicorn: CardEffect = {
   onEnterStable(state, player) {
-    const hasUpgrades = state.players.some((p) => p.upgrades.length > 0);
+    // Los upgrades solo pueden destruirse en el establo de OTROS jugadores.
+    const hasOtherUpgrades = state.players.some(
+      (p) => p.id !== player.id && p.upgrades.length > 0,
+    );
+    // Los downgrades solo pueden sacrificarse del propio establo.
     const hasMyDowngrades = player.downgrades.length > 0;
 
-    if (!hasUpgrades && !hasMyDowngrades) {
+    if (!hasOtherUpgrades && !hasMyDowngrades) {
       return;
     }
 
