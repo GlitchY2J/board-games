@@ -530,13 +530,27 @@ export class ActionResolver {
         const i = player[z].findIndex((c) => c.uid === cardId);
         if (i !== -1) {
           const [sacrificed] = player[z].splice(i, 1);
-          CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+          const intercepted = CardMovement.destroyOrSacrifice(
+            state,
+            player,
+            sacrificed,
+            'sacrifice',
+          );
 
-          state.pendingAction = {
+          const destroyStep = {
             type: 'select_stable_card',
             reason: 'glitter_bomb_destroy',
             sourcePlayerId,
-          };
+          } as const;
+
+          // Si la carta sacrificada intercepta (p. ej. Unicorn Phoenix), suspender
+          // la segunda parte de Glitter Bomb y reanudarla al resolver el efecto.
+          if (intercepted) {
+            if (!state.pendingResume) state.pendingResume = [];
+            state.pendingResume.push(destroyStep);
+          } else {
+            state.pendingAction = destroyStep;
+          }
           return true;
         }
       }
@@ -559,7 +573,16 @@ export class ActionResolver {
             }
 
             const [destroyed] = p[z].splice(i, 1);
-            CardMovement.destroyOrSacrifice(state, p, destroyed);
+            const intercepted = CardMovement.destroyOrSacrifice(
+              state,
+              p,
+              destroyed,
+            );
+
+            // Si la carta intercepta (p. ej. Unicorn Phoenix), NO sobrescribir su pendingAction
+            if (intercepted) {
+              return true;
+            }
 
             addLog(
               state,
