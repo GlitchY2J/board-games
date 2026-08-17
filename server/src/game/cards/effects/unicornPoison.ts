@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { isImmuneToMagicDestruction } from './magicalKittencorn.ts';
+import { isPandamoniumProtected } from './pandamonium.ts';
 
 export const unicornPoison: CardEffect = {
   onPlay(state, player) {
@@ -7,7 +8,10 @@ export const unicornPoison: CardEffect = {
       (p) =>
         p.id !== player.id &&
         p.stable.some(
-          (c) => c.cardType === 'unicorn' && !isImmuneToMagicDestruction(c.id),
+          (c) =>
+            c.cardType === 'unicorn' &&
+            !isImmuneToMagicDestruction(c.id) &&
+            !isPandamoniumProtected(p, c),
         ),
     );
 

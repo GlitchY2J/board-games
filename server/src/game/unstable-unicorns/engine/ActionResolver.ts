@@ -6,6 +6,7 @@ import type { Card } from '../../models/Card.ts';
 import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
+import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
 
 export class ActionResolver {
@@ -295,6 +296,9 @@ export class ActionResolver {
         }
         if (!sacrificed || !zone) return false;
 
+        // Pandamonium: no se puede sacrificar un unicornio protegido.
+        if (isPandamoniumProtected(player, sacrificed)) return false;
+
         const idx = player[zone].findIndex((c) => c.uid === cardId);
         const [removed] = player[zone].splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, player, removed, 'sacrifice');
@@ -350,6 +354,11 @@ export class ActionResolver {
         }
 
         if (isImmuneToMagicDestruction(destroyedCard.id)) {
+          continue;
+        }
+
+        // Pandamonium: no se puede destruir un unicornio protegido.
+        if (isPandamoniumProtected(targetPlayer, destroyedCard)) {
           continue;
         }
 
@@ -410,6 +419,10 @@ export class ActionResolver {
       const idx = sourcePlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx === -1) return false;
 
+      if (isPandamoniumProtected(sourcePlayer, sourcePlayer.stable[idx])) {
+        return false;
+      }
+
       const [moved] = sourcePlayer.stable.splice(idx, 1);
       CardMovement.enterStable(state, targetPlayer, moved);
 
@@ -456,6 +469,10 @@ export class ActionResolver {
 
       const idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx === -1) return false;
+
+      if (isPandamoniumProtected(targetPlayer, targetPlayer.stable[idx])) {
+        return false;
+      }
 
       const [stolen] = targetPlayer.stable.splice(idx, 1);
       CardMovement.enterStable(state, sourcePlayer, stolen);
@@ -521,6 +538,7 @@ export class ActionResolver {
         const i = player[z].findIndex((c) => c.uid === cardId);
         if (i !== -1) {
           sacrificed = player[z][i];
+          if (isPandamoniumProtected(player, sacrificed)) return false;
           player[z].splice(i, 1);
           zone = z;
           break;
@@ -553,6 +571,8 @@ export class ActionResolver {
       for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
         const i = player[z].findIndex((c) => c.uid === cardId);
         if (i !== -1) {
+          const target = player[z][i];
+          if (isPandamoniumProtected(player, target)) return false;
           const [sacrificed] = player[z].splice(i, 1);
           const intercepted = CardMovement.destroyOrSacrifice(
             state,
@@ -591,6 +611,10 @@ export class ActionResolver {
           const i = p[z].findIndex((c) => c.uid === cardId);
           if (i !== -1) {
             const target = p[z][i];
+
+            if (isPandamoniumProtected(p, target)) {
+              return false;
+            }
 
             if (CardMovement.maybeBlackKnightIntercept(state, p, target)) {
               return true;
@@ -656,6 +680,11 @@ export class ActionResolver {
       if (idx === -1) return false;
 
       const targetCard = targetPlayer.stable[idx];
+
+      // Pandamonium: no se puede destruir un unicornio protegido.
+      if (isPandamoniumProtected(targetPlayer, targetCard)) {
+        return false;
+      }
 
       // Magical Kittencorn no puede ser destruido por Magic cards
       if (isImmuneToMagicDestruction(targetCard.id)) {
@@ -820,6 +849,9 @@ export class ActionResolver {
 
       let idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
+        if (isPandamoniumProtected(targetPlayer, targetPlayer.stable[idx])) {
+          return false;
+        }
         [removedCard] = targetPlayer.stable.splice(idx, 1);
       } else {
         idx = targetPlayer.upgrades.findIndex((c) => c.uid === cardId);
@@ -863,6 +895,9 @@ export class ActionResolver {
 
       let idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
+        if (isPandamoniumProtected(targetPlayer, targetPlayer.stable[idx])) {
+          return false;
+        }
         [removedCard] = targetPlayer.stable.splice(idx, 1);
       } else {
         idx = targetPlayer.upgrades.findIndex((c) => c.uid === cardId);
@@ -896,6 +931,10 @@ export class ActionResolver {
 
       const idx = sourcePlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx === -1) return false;
+
+      if (isPandamoniumProtected(sourcePlayer, sourcePlayer.stable[idx])) {
+        return false;
+      }
 
       const [sacrificedCard] = sourcePlayer.stable.splice(idx, 1);
       const intercepted = CardMovement.destroyOrSacrifice(
@@ -962,6 +1001,9 @@ export class ActionResolver {
 
         cardIdx = p.stable.findIndex((c) => c.uid === cardId);
         if (cardIdx !== -1) {
+          if (isPandamoniumProtected(p, p.stable[cardIdx])) {
+            return false;
+          }
           targetPlayer = p;
           [stolenCard] = p.stable.splice(cardIdx, 1);
           break;
@@ -995,6 +1037,10 @@ export class ActionResolver {
 
       const cardIdx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (cardIdx === -1) return false;
+
+      if (isPandamoniumProtected(targetPlayer, targetPlayer.stable[cardIdx])) {
+        return false;
+      }
 
       const [card] = targetPlayer.stable.splice(cardIdx, 1);
 
@@ -1035,6 +1081,10 @@ export class ActionResolver {
 
       const card = targetPlayer.stable[cardIdx];
       if (card.cardType !== 'unicorn') return false;
+
+      if (isPandamoniumProtected(targetPlayer, card)) {
+        return false;
+      }
 
       const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
       CardMovement.destroyOrSacrifice(
@@ -1088,6 +1138,10 @@ export class ActionResolver {
         const card = targetPlayer.stable[idx];
         if (card.cardType !== 'unicorn') return false;
 
+        if (isPandamoniumProtected(targetPlayer, card)) {
+          return false;
+        }
+
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         const intercepted = CardMovement.destroyOrSacrifice(
           state,
@@ -1134,6 +1188,10 @@ export class ActionResolver {
         const card = targetPlayer.stable[idx];
         if (card.cardType !== 'unicorn') return false;
 
+        if (isPandamoniumProtected(targetPlayer, card)) {
+          return false;
+        }
+
         const prevReason = pending.reason;
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
@@ -1179,6 +1237,10 @@ export class ActionResolver {
         const card = targetPlayer.stable[idx];
         if (card.cardType !== 'unicorn') return false;
 
+        if (isPandamoniumProtected(targetPlayer, card)) {
+          return false;
+        }
+
         const prevReason = pending.reason;
         const [stolen] = targetPlayer.stable.splice(idx, 1);
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
@@ -1217,6 +1279,10 @@ export class ActionResolver {
 
         const card = targetPlayer.stable[idx];
         if (card.cardType !== 'unicorn') return false;
+
+        if (isPandamoniumProtected(targetPlayer, card)) {
+          return false;
+        }
 
         const prevReason = pending.reason;
         const [destroyed] = targetPlayer.stable.splice(idx, 1);

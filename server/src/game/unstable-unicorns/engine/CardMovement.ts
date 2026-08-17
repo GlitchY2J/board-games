@@ -3,6 +3,7 @@ import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
 import { effects } from './effects/index.ts';
 import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.ts';
+import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 
 export function hasUpgrade(player: Player, id: string): boolean {
   return player.upgrades.some((c) => c.id === id);
@@ -103,6 +104,10 @@ export class CardMovement {
     card: Card,
     animType: CardAnimType = 'destroy',
   ): boolean {
+    // Pandamonium: los unicornios de un establo protegido no pueden ser
+    // destruidos ni sacrificados por nadie.
+    if (isPandamoniumProtected(player, card)) return true;
+
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
       state.nursery.push(card);
       return false;

@@ -1,8 +1,9 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { hasAvailableCardToSacrifice } from './pandamonium.ts';
 
 export const twoForOne: CardEffect = {
   onPlay(state, player) {
-    if (player.stable.length === 0) return;
+    if (!hasAvailableCardToSacrifice(player)) return;
     state.pendingAction = {
       type: 'two_for_one',
       sourcePlayerId: player.id,

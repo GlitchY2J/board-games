@@ -4,6 +4,10 @@ import { CardRepository } from '../unstable-unicorns/CardRepository.ts';
 import { VictoryManager } from '../VictoryManager.ts';
 import { enqueueDrawAnimation } from '../cardAnimations.ts';
 import { addLog } from '../../sockets/gameLog.ts';
+import {
+  hasAvailableUnicorn,
+  hasAvailableCardToSacrifice,
+} from '../cards/effects/pandamonium.ts';
 
 const END_OF_TURN_EFFECTS = new Set<string>([
   // Add here any card whose effect triggers at the end of your turn
@@ -42,12 +46,6 @@ export class TurnManager {
 
     const uids: string[] = [];
 
-    const hasSomethingToSacrifice =
-      activePlayer.stable.length +
-        activePlayer.upgrades.length +
-        activePlayer.downgrades.length >
-      0;
-
     const allCards = [
       ...activePlayer.stable,
       ...activePlayer.upgrades,
@@ -56,10 +54,16 @@ export class TurnManager {
 
     // Se recogen TODAS las copias (por uid): cada copia de un upgrade puede
     // activarse por separado (p. ej. dos Glitter Bomb → dos efectos).
-    uids.push(...allCards.filter((c) => c.id === 'rhinocorn').map((c) => c.uid));
+    const rhinocorn = allCards.filter((c) => c.id === 'rhinocorn');
+    if (
+      rhinocorn.length > 0 &&
+      game.players.some((p) => p.id !== activePlayer.id && hasAvailableUnicorn(p))
+    ) {
+      uids.push(...rhinocorn.map((c) => c.uid));
+    }
 
     const caffeine = allCards.filter((c) => c.id === 'caffeine_overload');
-    if (caffeine.length > 0 && hasSomethingToSacrifice) {
+    if (caffeine.length > 0 && hasAvailableCardToSacrifice(activePlayer)) {
       uids.push(...caffeine.map((c) => c.uid));
     }
 
@@ -69,7 +73,7 @@ export class TurnManager {
     }
 
     const glitter = allCards.filter((c) => c.id === 'glitter_bomb');
-    if (glitter.length > 0 && hasSomethingToSacrifice) {
+    if (glitter.length > 0 && hasAvailableCardToSacrifice(activePlayer)) {
       uids.push(...glitter.map((c) => c.uid));
     }
 

@@ -1,14 +1,11 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { hasAvailableUnicorn } from './pandamonium.ts';
 
 export const unicornSwap: CardEffect = {
   onPlay(state, player) {
-    const hasOwnUnicorn = player.stable.some(
-      (c) => c.cardType === 'unicorn',
-    );
+    const hasOwnUnicorn = hasAvailableUnicorn(player);
     const hasOpponent = state.players.some(
-      (p) =>
-        p.id !== player.id &&
-        p.stable.some((c) => c.cardType === 'unicorn'),
+      (p) => p.id !== player.id && hasAvailableUnicorn(p),
     );
 
     if (hasOwnUnicorn && hasOpponent) {

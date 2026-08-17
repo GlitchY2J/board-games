@@ -1,12 +1,11 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { hasAvailableUnicorn } from './pandamonium.ts';
 
 export const seductiveUnicorn: CardEffect = {
   onEnterStable(state, player) {
     const canDiscard = player.hand.length > 0;
     const canSteal = state.players.some(
-      (p) =>
-        p.id !== player.id &&
-        p.stable.some((c) => c.cardType === 'unicorn'),
+      (p) => p.id !== player.id && hasAvailableUnicorn(p),
     );
 
     if (!canDiscard || !canSteal) return;

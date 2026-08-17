@@ -1,10 +1,9 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { hasAvailableUnicorn } from './pandamonium.ts';
 
 export const stabbyTheUnicorn: CardEffect = {
   onDestroyed(state, _card, player) {
-    const canDestroy = state.players.some((p) =>
-      p.stable.some((c) => c.cardType === 'unicorn'),
-    );
+    const canDestroy = state.players.some((p) => hasAvailableUnicorn(p));
 
     if (!canDestroy) return;
 

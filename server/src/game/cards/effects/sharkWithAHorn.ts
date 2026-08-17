@@ -1,9 +1,17 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { isPandamoniumProtected } from './pandamonium.ts';
 
 export const sharkWithAHorn: CardEffect = {
-  onEnterStable(state, player) {
+  onEnterStable(state, player, card) {
+    // No contar al propio Shark (se sacrifica): busca un unicornio disponible
+    // (no protegido por Pandamonium) para destruir.
     const canDestroy = state.players.some((p) =>
-      p.stable.some((c) => c.cardType === 'unicorn'),
+      p.stable.some(
+        (c) =>
+          c.cardType === 'unicorn' &&
+          c.uid !== card.uid &&
+          !isPandamoniumProtected(p, c),
+      ),
     );
 
     if (!canDestroy) return;

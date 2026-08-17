@@ -1,10 +1,9 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { hasAvailableUnicorn } from './pandamonium.ts';
 
 export const darkAngelUnicorn: CardEffect = {
   onEnterStable(state, player, card) {
-    const canSacrifice = player.stable.some(
-      (c) => c.cardType === 'unicorn',
-    );
+    const canSacrifice = hasAvailableUnicorn(player);
 
     if (!canSacrifice) return;
 
