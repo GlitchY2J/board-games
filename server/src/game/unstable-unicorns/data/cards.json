@@ -645,7 +645,7 @@
     "name": "Re-Target",
     "cardType": "magic",
     "image": "/cards/base/re_target.png",
-    "description": "Move and Upgrade or Downgrade card from any player's Stable to any other player's Stable.",
+    "description": "Move an Upgrade or Downgrade card from any player's Stable to another player's Stable (cannot target your own Stable).",
     "effect": "re_target",
     "copies": 2,
     "expansion": "base"
@@ -795,7 +795,7 @@
     "name": "Blinding Light",
     "cardType": "downgrade",
     "image": "/cards/base/blinding_light.png",
-    "description": "Triggered effects of your Unicorn cards do not activate.",
+    "description": "Effects of your Unicorn cards (except Baby Unicorns) do not activate. Baby Unicorn cards that would be returned to hand, destroyed, or sacrificed are instead returned to the Nursery.",
     "effect": "blinding_light",
     "copies": 1,
     "expansion": "base"

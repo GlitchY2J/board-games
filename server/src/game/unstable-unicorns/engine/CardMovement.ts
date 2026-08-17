@@ -34,10 +34,12 @@ export class CardMovement {
     player.stable.push(card);
 
     // Blinding Light: bloquea la activación de efectos de tus Unicornios
+    // (los Baby Unicorn son inmunes).
     if (
       !hasDowngrade(player, 'blinding_light') &&
       card.effect &&
-      card.cardType === 'unicorn'
+      card.cardType === 'unicorn' &&
+      card.unicornClass !== 'baby'
     ) {
       const effect = effects[card.effect];
       effect?.onEnterStable?.(state, player, card);
@@ -131,9 +133,11 @@ export class CardMovement {
     }
 
     // Blinding Light: bloquea la activación de efectos al destruir/sacrificar
-    // tus Unicornios.
+    // tus Unicornios (los Baby Unicorn son inmunes).
     const blindingLightActive =
-      card.cardType === 'unicorn' && hasDowngrade(player, 'blinding_light');
+      card.cardType === 'unicorn' &&
+      card.unicornClass !== 'baby' &&
+      hasDowngrade(player, 'blinding_light');
 
     if (card.effect && !blindingLightActive) {
       const effect = effects[card.effect];

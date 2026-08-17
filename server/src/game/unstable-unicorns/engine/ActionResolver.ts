@@ -236,6 +236,14 @@ export class ActionResolver {
         return false;
       }
 
+      // Debe existir al menos un destino válido (distinto del lanzador y del
+      // origen). En partidas de 2 jugadores, solo se puede mover desde el
+      // propio establo.
+      const hasValidDest = state.players.some(
+        (p) => p.id !== sourcePlayerId && p.id !== targetPlayerId,
+      );
+      if (!hasValidDest) return false;
+
       state.pendingAction = {
         type: 'select_stable_card',
         reason: 're_target_card',
@@ -249,6 +257,15 @@ export class ActionResolver {
       const card = pending.card;
       const destPlayer = state.players.find((p) => p.id === targetPlayerId);
       if (!destPlayer || !card) return false;
+
+      // No puede moverse al propio establo del lanzador ni al mismo jugador
+      // de origen.
+      if (
+        targetPlayerId === sourcePlayerId ||
+        targetPlayerId === pending.fromPlayerId
+      ) {
+        return false;
+      }
 
       if (card.cardType === 'upgrade') {
         destPlayer.upgrades.push(card);

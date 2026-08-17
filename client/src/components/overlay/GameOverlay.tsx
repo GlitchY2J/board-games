@@ -180,9 +180,18 @@ export default function GameOverlay({
 
         const eligiblePlayers = gameState.players.filter((p) => {
           if (isPlayDowngrade) return true;
-          if (isReTargetDestination) return true;
+          if (isReTargetDestination) {
+            // No puede moverse al propio establo ni al jugador de origen
+            return p.id !== localPlayerId && p.id !== action.fromPlayerId;
+          }
           if (isReTargetSource) {
-            return p.upgrades.length > 0 || p.downgrades.length > 0;
+            if (!(p.upgrades.length > 0 || p.downgrades.length > 0)) return false;
+            // Solo es fuente válida si existe al menos un destino posible
+            // (distinto del lanzador y del jugador candidato a fuente).
+            return gameState.players.some(
+              (other) =>
+                other.id !== localPlayerId && other.id !== p.id,
+            );
           }
           if (p.id === localPlayerId) return false;
           if (needsHand) return p.hand.length > 0;
