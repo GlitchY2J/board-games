@@ -337,13 +337,25 @@ export default function GameOverlay({
             (p) => p.id === localPlayerId,
           );
           if (localPlayer) {
-            items = localPlayer.stable.map((card, idx) => ({
-              id: `${card.id}_${idx}`,
-              value: card.uid,
-              title: card.name,
-              subtitle: 'Tu establo',
-              image: card.image,
-            }));
+            const zones: Array<[string, typeof localPlayer.stable]> = [
+              ['stable', localPlayer.stable],
+              ['upgrade', localPlayer.upgrades],
+              ['downgrade', localPlayer.downgrades],
+            ];
+            items = zones.flatMap(([zone, cards]) =>
+              cards.map((card, idx) => ({
+                id: `${card.id}_${zone}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                subtitle:
+                  zone === 'stable'
+                    ? 'Tu establo'
+                    : zone === 'upgrade'
+                      ? 'Tu upgrade'
+                      : 'Tu downgrade',
+                image: card.image,
+              })),
+            );
           }
         } else {
           items = gameState.players

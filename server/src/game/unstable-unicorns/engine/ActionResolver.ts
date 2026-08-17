@@ -281,11 +281,23 @@ export class ActionResolver {
         const player = state.players.find((p) => p.id === sourcePlayerId);
         if (!player) return false;
 
-        const idx = player.stable.findIndex((c) => c.uid === cardId);
-        if (idx === -1) return false;
+        // El sacrificio puede ser cualquier carta del establo: unicornio,
+        // upgrade o downgrade.
+        let sacrificed: Card | undefined;
+        let zone: 'stable' | 'upgrades' | 'downgrades' | null = null;
+        for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
+          const i = player[z].findIndex((c) => c.uid === cardId);
+          if (i !== -1) {
+            sacrificed = player[z][i];
+            zone = z;
+            break;
+          }
+        }
+        if (!sacrificed || !zone) return false;
 
-        const [sacrificed] = player.stable.splice(idx, 1);
-        CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+        const idx = player[zone].findIndex((c) => c.uid === cardId);
+        const [removed] = player[zone].splice(idx, 1);
+        CardMovement.destroyOrSacrifice(state, player, removed, 'sacrifice');
 
         const nextPending = state.pendingAction;
         if (nextPending && nextPending !== pending) {
