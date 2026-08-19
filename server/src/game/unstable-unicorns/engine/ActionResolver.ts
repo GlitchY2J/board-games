@@ -2,6 +2,7 @@ import type { GameState } from '../../models/GameState.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
 import { TurnPhase } from '../../turn/TurnPhase.ts';
 import { CardMovement } from './CardMovement.ts';
+import { EffectStack } from './EffectStack.ts';
 import type { Card } from '../../models/Card.ts';
 import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
@@ -342,25 +343,15 @@ export class ActionResolver {
         const [removed] = player[zone].splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, player, removed, 'sacrifice');
 
-        const nextPending = state.pendingAction;
-        if (nextPending && nextPending !== pending) {
-          // El sacrificio disparó un efecto onDestroyed interactivo (p. ej.
-          // Stabby The Unicorn). Encolar la fase 'destroy' para reanudarla después.
-          if (!state.pendingResume) state.pendingResume = [];
-          state.pendingResume.push({
-            type: 'two_for_one',
-            sourcePlayerId,
-            phase: 'destroy',
-            remainingToDestroy: 2,
-          });
-        } else {
-          state.pendingAction = {
-            type: 'two_for_one',
-            sourcePlayerId,
-            phase: 'destroy',
-            remainingToDestroy: 2,
-          };
-        }
+        // Resolución LIFO centralizada: si el sacrificio disparó un efecto
+        // onDestroyed interactivo (p. ej. Stabby The Unicorn), la fase 'destroy'
+        // se suspende en la pila y se reanuda después del efecto hijo.
+        EffectStack.advance(state, pending, {
+          type: 'two_for_one',
+          sourcePlayerId,
+          phase: 'destroy',
+          remainingToDestroy: 2,
+        });
         return true;
       }
 
@@ -513,11 +504,9 @@ export class ActionResolver {
 
       drawForSadisticRitual(state, player);
 
-      // Si el sacrificio abrió otro pendingAction (p. ej. Barbed Wire), se
-      // preserva; si no, se cierra la selección del sacrificio.
-      if (state.pendingAction === pending || !state.pendingAction) {
-        state.pendingAction = undefined;
-      }
+      // Resolución LIFO centralizada: si el sacrificio abrió un efecto hijo
+      // (p. ej. Barbed Wire), se mantiene activo; si no, se cierra el sacrificio.
+      EffectStack.finish(state, pending);
 
       return true;
     }
@@ -542,35 +531,22 @@ export class ActionResolver {
 
       const [moved] = sourcePlayer.stable.splice(idx, 1);
       maybeTriggerBarbedWireLeave(state, sourcePlayer);
-      CardMovement.enterStable(state, targetPlayer, moved);
 
-      // Si el efecto on-enter de la carta entrante abrió su propio pendingAction
-      // interactivo (p. ej. Seductive Unicorn), priorizarlo; el steal se reanuda después.
-      const nextPending = state.pendingAction;
-      if (
-        nextPending &&
-        nextPending !== pending &&
-        !(
-          nextPending.type === 'select_stable_card' &&
-          'reason' in nextPending &&
-          nextPending.reason === 'unicorn_swap_steal'
-        )
-      ) {
-        if (!state.pendingResume) state.pendingResume = [];
-        state.pendingResume.push({
+      // Resolución LIFO centralizada: si el on-enter de la carta movida abre su
+      // propio efecto hijo (p. ej. Seductive Unicorn), el paso de robo
+      // (unicorn_swap_steal) se suspende en la pila y se reanuda después.
+      CardMovement.enterStable(
+        state,
+        targetPlayer,
+        moved,
+        {
           type: 'select_stable_card',
           reason: 'unicorn_swap_steal',
           sourcePlayerId,
           targetPlayerId: pending.targetPlayerId,
-        });
-      } else {
-        state.pendingAction = {
-          type: 'select_stable_card',
-          reason: 'unicorn_swap_steal',
-          sourcePlayerId,
-          targetPlayerId: pending.targetPlayerId,
-        };
-      }
+        },
+      );
+
       return true;
     }
 
@@ -594,13 +570,13 @@ export class ActionResolver {
 
       const [stolen] = targetPlayer.stable.splice(idx, 1);
       maybeTriggerBarbedWireLeave(state, targetPlayer);
+      const prevPending = state.pendingAction;
       CardMovement.enterStable(state, sourcePlayer, stolen);
 
-      // Si el on-enter del unicornio robado abrió su propio pendingAction interactivo,
-      // dejarlo activo; de lo contrario cierra el flujo.
-      if (state.pendingAction === pending || !state.pendingAction) {
-        state.pendingAction = undefined;
-      }
+      // Resolución LIFO centralizada: si el on-enter del unicornio robado abrió
+      // su propio efecto hijo interactivo, se mantiene activo; si no, termina el
+      // paso actual (el emisor reanudará la pila LIFO si hay continuaciones).
+      EffectStack.finish(state, prevPending);
 
       return true;
     }
@@ -1089,25 +1065,15 @@ export class ActionResolver {
         return true;
       }
 
-      const nextPending = state.pendingAction;
-      if (nextPending && nextPending !== pending) {
-        // El sacrificio disparó un efecto onDestroyed interactivo (p. ej.
-        // Stabby The Unicorn). Encolar el siguiente paso para reanudarlo después.
-        if (!state.pendingResume) state.pendingResume = [];
-        state.pendingResume.push({
-          type: 'select_discard_card',
-          reason: 'dark_angel_unicorn',
-          playerId: sourcePlayerId,
-          cardType: 'unicorn',
-        });
-      } else {
-        state.pendingAction = {
-          type: 'select_discard_card',
-          reason: 'dark_angel_unicorn',
-          playerId: sourcePlayerId,
-          cardType: 'unicorn',
-        };
-      }
+            // Resolución LIFO centralizada: si el sacrificio disparó un efecto
+      // onDestroyed interactivo (p. ej. Stabby The Unicorn), el siguiente paso
+      // se suspende en la pila y se reanuda después del efecto hijo.
+      EffectStack.advance(state, pending, {
+        type: 'select_discard_card',
+        reason: 'dark_angel_unicorn',
+        playerId: sourcePlayerId,
+        cardType: 'unicorn',
+      });
       return true;
     }
 
@@ -1247,15 +1213,12 @@ export class ActionResolver {
       );
 
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
-      const onDestroyedOpened =
-        state.pendingAction && state.pendingAction !== pending;
+      const onDestroyedOpened = EffectStack.childOpened(state, pending);
 
       if (resolvedPlayerIds.length >= pending.remainingPlayerIds.length) {
         // Último jugador: cerrar el flujo. Si el sacrificio abrió un efecto
         // onDestroyed interactivo (p. ej. Stabby), mantenerlo activo.
-        if (!onDestroyedOpened) {
-          state.pendingAction = undefined;
-        }
+        EffectStack.finish(state, pending);
       } else {
         const nextStep = {
           ...pending,
@@ -1263,12 +1226,7 @@ export class ActionResolver {
           remainingPlayerIds: pending.remainingPlayerIds,
           resolvedPlayerIds,
         } as typeof pending;
-        if (onDestroyedOpened) {
-          if (!state.pendingResume) state.pendingResume = [];
-          state.pendingResume.push(nextStep);
-        } else {
-          state.pendingAction = nextStep;
-        }
+        EffectStack.advance(state, pending, nextStep);
       }
 
       return true;
@@ -1301,17 +1259,10 @@ export class ActionResolver {
           destroyed,
         );
 
-        const prevReason = pending.reason;
-        // Si la destrucción abrió un pendingAction interactivo (p. ej. Unicorn
-        // Phoenix), preservarlo en lugar de limpiarlo. Rhinocorn avanza el turno
-        // igual, y el efecto interceptado se resuelve después.
-        if (
-          !state.pendingAction ||
-          !('reason' in state.pendingAction) ||
-          state.pendingAction.reason === prevReason
-        ) {
-          state.pendingAction = undefined;
-        }
+        // Resolución LIFO centralizada: si la destrucción abrió un efecto hijo
+        // interactivo (p. ej. Unicorn Phoenix), se mantiene activo y se resuelve
+        // después. Rhinocorn avanza el turno igual.
+        EffectStack.finish(state, pending);
         state.beginningEffectsQueue = [];
 
         // Pasa a la fase de acción pero sin acciones, obligando a "Terminar Turno"
@@ -1344,19 +1295,12 @@ export class ActionResolver {
           return false;
         }
 
-        const prevReason = pending.reason;
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
 
-        // Si la carta destruida disparó su propio efecto (p. ej. Stabby The
-        // Unicorn), mantener su pendingAction en lugar de limpiarlo.
-        if (
-          !state.pendingAction ||
-          !('reason' in state.pendingAction) ||
-          state.pendingAction.reason === prevReason
-        ) {
-          state.pendingAction = undefined;
-        }
+        // Resolución LIFO centralizada: si la carta destruida disparó su propio
+        // efecto (p. ej. Stabby The Unicorn), se mantiene activo.
+        EffectStack.finish(state, pending);
 
         if (state.phase === TurnPhase.BEGINNING) {
           state.beginningEffectsQueue = [];
@@ -1393,7 +1337,6 @@ export class ActionResolver {
           return false;
         }
 
-        const prevReason = pending.reason;
         const [stolen] = targetPlayer.stable.splice(idx, 1);
         maybeTriggerBarbedWireLeave(state, targetPlayer);
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
@@ -1403,15 +1346,9 @@ export class ActionResolver {
           return false;
         }
 
-        // Si la carta robada disparó su propio efecto al entrar al establo,
-        // mantener su pendingAction en lugar de limpiarlo.
-        if (
-          !state.pendingAction ||
-          !('reason' in state.pendingAction) ||
-          state.pendingAction.reason === prevReason
-        ) {
-          state.pendingAction = undefined;
-        }
+        // Resolución LIFO centralizada: si la carta robada abrió un efecto hijo
+        // interactivo al entrar, se mantiene activo; si no, termina el paso.
+        EffectStack.finish(state, pending);
 
         return true;
       }
@@ -1442,7 +1379,6 @@ export class ActionResolver {
           return false;
         }
 
-        const prevReason = pending.reason;
         const [stolen] = targetPlayer.stable.splice(idx, 1);
         maybeTriggerBarbedWireLeave(state, targetPlayer);
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
@@ -1452,15 +1388,9 @@ export class ActionResolver {
           return false;
         }
 
-        // Si la carta robada disparó su propio efecto al entrar al establo,
-        // mantener su pendingAction en lugar de limpiarlo.
-        if (
-          !state.pendingAction ||
-          !('reason' in state.pendingAction) ||
-          state.pendingAction.reason === prevReason
-        ) {
-          state.pendingAction = undefined;
-        }
+        // Resolución LIFO centralizada: si la carta robada abrió un efecto hijo
+        // interactivo al entrar, se mantiene activo; si no, termina el paso.
+        EffectStack.finish(state, pending);
 
         return true;
       }
@@ -1486,17 +1416,12 @@ export class ActionResolver {
           return false;
         }
 
-        const prevReason = pending.reason;
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
 
-        if (
-          !state.pendingAction ||
-          !('reason' in state.pendingAction) ||
-          state.pendingAction.reason === prevReason
-        ) {
-          state.pendingAction = undefined;
-        }
+        // Resolución LIFO centralizada: si la destrucción abrió un efecto hijo
+        // interactivo (p. ej. Stabby), se mantiene activo.
+        EffectStack.finish(state, pending);
         return true;
       }
 
@@ -1523,17 +1448,12 @@ export class ActionResolver {
           return false;
         }
 
-        const prevReason = pending.reason;
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
 
-        if (
-          !state.pendingAction ||
-          !('reason' in state.pendingAction) ||
-          state.pendingAction.reason === prevReason
-        ) {
-          state.pendingAction = undefined;
-        }
+        // Resolución LIFO centralizada: si la destrucción abrió un efecto hijo
+        // interactivo (p. ej. Stabby), se mantiene activo.
+        EffectStack.finish(state, pending);
         return true;
       }
 

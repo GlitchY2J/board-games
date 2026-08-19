@@ -1,7 +1,9 @@
 import type { Card } from '../../models/Card.ts';
 import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
+import type { PendingAction } from '../../models/PendingAction.ts';
 import { effects } from './effects/index.ts';
+import { EffectStack } from './EffectStack.ts';
 import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.ts';
 import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import {
@@ -25,8 +27,18 @@ export class CardMovement {
   /**
    * Coloca una carta de Unicornio en el establo de un jugador y dispara sus efectos de entrada.
    * Retorna `false` si no puede entrar (p. ej. bloqueado por Queen Bee Unicorn).
+   *
+   * `continuation`: si el efecto on-enter de la carta entrante abre un efecto hijo
+   * interactivo (nuevo pendingAction), la continuación del llamador se SUSPENDE en la
+   * pila LIFO y se reanudará cuando el efecto hijo termine. Si no abre ningún efecto
+   * hijo, la continuación se convierte directamente en el pendingAction activo.
    */
-  static enterStable(state: GameState, player: Player, card: Card): boolean {
+  static enterStable(
+    state: GameState,
+    player: Player,
+    card: Card,
+    continuation?: PendingAction,
+  ): boolean {
     if (
       card.cardType === 'unicorn' &&
       card.unicornClass === 'basic' &&
@@ -41,6 +53,8 @@ export class CardMovement {
     // entrada de este unicornio podría provocar que Barbed Wire abandone el
     // establo; aun así la carta debe descartarse (el efecto es simultáneo).
     const hadBarbedWire = hasDowngrade(player, 'barbed_wire');
+
+    const prevPending = state.pendingAction;
 
     // Blinding Light: bloquea la activación de efectos de tus Unicornios
     // (los Baby Unicorn son inmunes).
@@ -58,6 +72,16 @@ export class CardMovement {
     // (aunque su entrada lo haga abandonar), debe descartar una carta.
     if (hadBarbedWire) {
       triggerBarbedWireDiscard(state, player);
+    }
+
+    // Resolución LIFO: si el efecto on-enter abrió un efecto hijo interactivo y el
+    // llamador tenía continuación, se suspende para reanudarla después del hijo.
+    if (continuation) {
+      if (EffectStack.childOpened(state, prevPending)) {
+        EffectStack.suspend(state, continuation);
+      } else {
+        state.pendingAction = continuation;
+      }
     }
 
     return true;

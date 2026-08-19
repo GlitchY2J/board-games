@@ -1,6 +1,7 @@
 import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { EffectStack } from '../../unstable-unicorns/engine/EffectStack.ts';
 
 export const BARBED_WIRE_ID = 'barbed_wire';
 
@@ -34,8 +35,7 @@ export function triggerBarbedWireDiscard(
       );
       return;
     }
-    if (!state.pendingResume) state.pendingResume = [];
-    state.pendingResume.push(existing);
+    EffectStack.suspend(state, existing);
   }
 
   state.pendingAction = {

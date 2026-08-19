@@ -2,6 +2,7 @@ import type { Player } from '../../models/Player.ts';
 import type { GameState } from '../../models/GameState.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { getStablePower } from '../../unstable-unicorns/engine/stablePower.ts';
+import { EffectStack } from '../../unstable-unicorns/engine/EffectStack.ts';
 import { hasPandamonium } from './pandamonium.ts';
 
 export const TINY_STABLE_ID = 'tiny_stable';
@@ -49,8 +50,7 @@ export function checkTinyStable(game: GameState): boolean {
     // Preservar cualquier acción pendiente/encadenada para reanudarla después
     // del sacrificio obligatorio.
     if (game.pendingAction) {
-      if (!game.pendingResume) game.pendingResume = [];
-      game.pendingResume.push(game.pendingAction);
+      EffectStack.suspend(game, game.pendingAction);
     }
 
     game.pendingAction = makeTinyStableAction(player.id);
