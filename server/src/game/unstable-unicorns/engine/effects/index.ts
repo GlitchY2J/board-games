@@ -45,6 +45,7 @@ import { pandamonium } from '../../../cards/effects/pandamonium.ts';
 import { tinyStable } from '../../../cards/effects/tinyStable.ts';
 import { doubleDutch } from '../../../cards/effects/doubleDutch.ts';
 import { barbedWire } from '../../../cards/effects/barbedWire.ts';
+import { sadisticRitual } from '../../../cards/effects/sadisticRitual.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -95,4 +96,5 @@ export const effects: Record<string, CardEffect> = {
   tiny_stable: tinyStable,
   double_dutch: doubleDutch,
   barbed_wire: barbedWire,
+  sadistic_ritual: sadisticRitual,
 };

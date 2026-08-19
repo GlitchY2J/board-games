@@ -61,7 +61,8 @@ export type PendingAction =
         | "glitter_bomb_destroy"
         | "tiny_stable"
         | "rainbow_lasso_steal"
-        | "stable_artillery_destroy";
+        | "stable_artillery_destroy"
+        | "sadistic_ritual";
       sourcePlayerId: string;
       targetPlayerId?: string;
     }

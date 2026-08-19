@@ -832,6 +832,16 @@
     "expansion": "base"
   },
   {
+    "id": "sadistic_ritual",
+    "name": "Sadistic Ritual",
+    "cardType": "downgrade",
+    "image": "/cards/base/sadistic_ritual.png",
+    "description": "If this card is in your Stable at the beginning of yoru turn, SACRIFICE a Unicorn card, then DRAW a card.",
+    "effect": "sadistic_ritual",
+    "copies": 1,
+    "expansion": "base"
+  },
+  {
     "id": "slowdown",
     "name": "Slowdown",
     "cardType": "downgrade",

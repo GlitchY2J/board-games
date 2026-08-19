@@ -8,6 +8,7 @@ import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
 import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import { maybeTriggerBarbedWireLeave } from '../../cards/effects/barbedWire.ts';
+import { drawForSadisticRitual } from '../../cards/effects/sadisticRitual.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
 
 export class ActionResolver {
@@ -481,6 +482,43 @@ export class ActionResolver {
       if (state.pendingAction === pending || !state.pendingAction) {
         state.pendingAction = undefined;
       }
+      return true;
+    }
+
+    // ──────────────────────────────────────────
+    // Sadistic Ritual: sacrificar un unicornio propio y luego robar una carta
+    // (al inicio del turno). El sacrificio es obligatorio; sin sacrificio no hay
+    // robo. Si el sacrificio dispara otro efecto (p. ej. Barbed Wire), la roba
+    // ocurre igual en la fase de inicio de turno y el descarte se resuelve
+    // después.
+    // ──────────────────────────────────────────
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'sadistic_ritual'
+    ) {
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
+
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const idx = player.stable.findIndex((c) => c.uid === cardId);
+      if (idx === -1) return false;
+
+      const target = player.stable[idx];
+      if (target.cardType !== 'unicorn') return false;
+      if (isPandamoniumProtected(player, target)) return false;
+
+      const [sacrificed] = player.stable.splice(idx, 1);
+      CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+
+      drawForSadisticRitual(state, player);
+
+      // Si el sacrificio abrió otro pendingAction (p. ej. Barbed Wire), se
+      // preserva; si no, se cierra la selección del sacrificio.
+      if (state.pendingAction === pending || !state.pendingAction) {
+        state.pendingAction = undefined;
+      }
+
       return true;
     }
 

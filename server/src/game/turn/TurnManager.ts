@@ -104,6 +104,14 @@ export class TurnManager {
       uids.push(...artillery.map((c) => c.uid));
     }
 
+    // Sadistic Ritual: sacrificar un unicornio propio y luego robar una carta.
+    // Solo se encola si hay un unicornio disponible para sacrificar; si no hay
+    // unicornio, no se puede cumplir la exigencia y no se roba carta.
+    const sadistic = allCards.filter((c) => c.id === 'sadistic_ritual');
+    if (sadistic.length > 0 && hasAvailableUnicorn(activePlayer)) {
+      uids.push(...sadistic.map((c) => c.uid));
+    }
+
     return uids;
   }
 
@@ -211,6 +219,16 @@ export class TurnManager {
             { value: 'no', text: 'No, omitir el efecto' },
           ],
           effectCardId: uid,
+        };
+        return true;
+      case 'sadistic_ritual':
+        // El sacrificio es OBLIGATORIO: no hay confirmación sí/no, se pasa
+        // directamente a elegir qué unicornio sacrificar. Si se sacrifica, se
+        // roba una carta después.
+        game.pendingAction = {
+          type: 'select_stable_card',
+          reason: 'sadistic_ritual',
+          sourcePlayerId: activePlayer.id,
         };
         return true;
       default:
