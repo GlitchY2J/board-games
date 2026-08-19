@@ -19,6 +19,12 @@ export function isBasicUnicornEntryBlocked(
 ): boolean {
   const ownerId = getQueenBeeOwnerId(state);
   if (!ownerId) return false;
+
+  // Blinding Light anula el efecto continuo de Queen Bee mientras esté en el
+  // mismo establo: los demás jugadores sí pueden jugar unicornios básicos.
+  const owner = state.players.find((p) => p.id === ownerId);
+  if (owner?.downgrades.some((c) => c.id === 'blinding_light')) return false;
+
   return targetPlayerId !== ownerId;
 }
 

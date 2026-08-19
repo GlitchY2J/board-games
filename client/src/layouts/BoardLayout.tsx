@@ -68,9 +68,17 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
       ? ['top', 'top', 'bottom']
       : ['top', 'top'];
 
-  const queenBeeOwnerId = gameState.players.find((p) =>
+  const queenBeeOwner = gameState.players.find((p) =>
     p.stable.some((c) => c.id === 'queen_bee_unicorn'),
-  )?.id;
+  );
+
+  // Blinding Light anula el efecto continuo de Queen Bee: si la propietaria
+  // tiene Blinding Light en su establo, los demás pueden jugar básicos.
+  const queenBeeOwnerId =
+    queenBeeOwner &&
+    !queenBeeOwner.downgrades.some((c) => c.id === 'blinding_light')
+      ? queenBeeOwner.id
+      : undefined;
 
   const blockedBasicUnicornIds = new Set(
     queenBeeOwnerId !== undefined && queenBeeOwnerId !== localPlayer.id

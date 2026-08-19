@@ -223,7 +223,7 @@
     "id": "narwhal",
     "name": "Narwhal",
     "cardType": "unicorn",
-    "unicornClass": "magical",
+    "unicornClass": "basic",
     "image": "/cards/base/narwhal.png",
     "description": "This card has no special powers, but it sure is cute!",
     "effect": null,
