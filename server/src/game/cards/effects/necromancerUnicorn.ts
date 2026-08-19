@@ -2,8 +2,11 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 
 export const necromancerUnicorn: CardEffect = {
   onEnterStable(state, player, card) {
+    // Excluir la carta que está entrando: durante onEnterStable todavía está en
+    // la mano y desaparecerá al completar la entrada, así que no puede contar
+    // como una de las 2 cartas a descartar.
     const discardable = player.hand.filter(
-      (c) => c.cardType === 'unicorn',
+      (c) => c.cardType === 'unicorn' && c.uid !== card.uid,
     ).length;
 
     const discardHasUnicorns = state.discard.some(

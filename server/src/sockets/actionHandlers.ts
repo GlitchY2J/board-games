@@ -2,6 +2,7 @@ import type { GameServer, GameSocket } from './socketTypes.ts';
 
 import { ActionResolver } from '../game/unstable-unicorns/engine/ActionResolver.ts';
 import { CardMovement } from '../game/unstable-unicorns/engine/CardMovement.ts';
+import { EffectStack } from '../game/unstable-unicorns/engine/EffectStack.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
 import { TurnPhase } from '../game/turn/TurnPhase.ts';
 import { emitGameError, getSocketGameContext } from './socketContext.ts';
@@ -1058,13 +1059,30 @@ export function registerActionHandlers(
         const heldCard = pending.heldCard;
 
         if (choice === 'yes' && heldCard) {
-          player.stable.push(heldCard);
-          room.gameState.pendingAction = {
-            type: 'discard',
-            reason: 'unicorn_phoenix',
-            playerId: player.id,
-            cardsToDiscard: 1,
-          };
+          // Usar enterStable para que se disparen los efectos on-enter del
+          // unicornio revivido (p. ej. Alluring Narwhal), igual que cualquier
+          // otra entrada a un establo. Blinding Light se respeta dentro de enterStable.
+          const revived = CardMovement.enterStable(room.gameState, player, heldCard);
+          if (revived) {
+            // Resolución LIFO: si el on-enter abrió su propio efecto hijo, el paso
+            // de descarte de Phoenix se suspende y se reanuda después del hijo.
+            EffectStack.advance(room.gameState, pending, {
+              type: 'discard',
+              reason: 'unicorn_phoenix',
+              playerId: player.id,
+              cardsToDiscard: 1,
+            });
+          } else {
+            // Entrada bloqueada (p. ej. Queen Bee): es un revival de una carta que
+            // ya estaba en el establo, así que se coloca directamente sin efectos.
+            player.stable.push(heldCard);
+            room.gameState.pendingAction = {
+              type: 'discard',
+              reason: 'unicorn_phoenix',
+              playerId: player.id,
+              cardsToDiscard: 1,
+            };
+          }
         } else {
           if (heldCard) {
             enqueueCardAnimation(
