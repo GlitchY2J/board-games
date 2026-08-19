@@ -1,7 +1,7 @@
 import './CardFan.css';
 import PlayingCard from './PlayingCard.tsx';
 import type { GameState } from '../../types/GameState.ts';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Play, X } from 'lucide-react';
 import { useCardPreview } from '../../context/CardPreviewContext';
@@ -16,11 +16,44 @@ interface Props {
   pendingPlay: boolean;
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
+  onSelectionChange?(selected: boolean): void;
 }
 
-export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendingPlay, blockedCardIds, onPlay }: Props) {
+export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendingPlay, blockedCardIds, onPlay, onSelectionChange }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const { hidePreview } = useCardPreview();
+
+  // Notificar al padre si hay una carta seleccionada (para que la tecla
+  // Espacio no robe mientras se confirma el juego de una carta).
+  useEffect(() => {
+    onSelectionChange?.(selectedCardId !== null);
+  }, [selectedCardId, onSelectionChange]);
+
+  // Enter = aceptar/confirmar el juego de la carta seleccionada.
+  useEffect(() => {
+    if (!selectedCardId) return;
+    if (pendingPlay) return;
+    const selectedId = selectedCardId;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      }
+      if (e.isComposing) return;
+      if (e.code !== 'Enter') return;
+
+      const selected = cards.find((c) => c.uid === selectedId);
+      if (!selected) return;
+      if (isBlocked(selectedId) || isNeigh(selected)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      onPlay(selectedId);
+      setSelectedCardId(null);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedCardId, cards, onPlay, pendingPlay]);
 
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;

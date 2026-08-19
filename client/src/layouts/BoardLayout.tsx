@@ -14,7 +14,7 @@ import { RotateCcw, LogOut, Bot, Bug } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -29,6 +29,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [autoEnabled, setAutoEnabled] = useState(false);
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
+  const cardSelectedRef = useRef(false);
 
   if (!localPlayer) return;
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
@@ -94,6 +95,38 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
     ...blockedBasicUnicornIds,
     ...blockedUpgradeIds,
   ]);
+  const localPlayerId = localPlayer.id;
+
+  // Tecla Espacio = robar carta (equivalente a hacer clic en el mazo).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      }
+      if (e.isComposing) return;
+      if (e.code !== 'Space') return;
+
+      const canDraw =
+        isMyTurn &&
+        (gameState.phase === 'DRAW' || gameState.phase === 'ACTION') &&
+        !gameState.actionUsed &&
+        !gameState.pendingPlay &&
+        (gameState.actionPlaysRemaining === undefined ||
+          gameState.actionPlaysRemaining === 2);
+
+      // No robar mientras el modal de confirmación de una carta está abierto.
+      if (!canDraw || cardSelectedRef.current) return;
+
+      e.preventDefault();
+      socket.emit('draw-action-card', {
+        roomCode: gameState.roomCode,
+        playerId: localPlayerId,
+      });
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isMyTurn, gameState, localPlayerId]);
 
   return (
     <div className="board-layout">
@@ -256,6 +289,9 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           pendingPlay={!!gameState.pendingPlay}
           blockedCardIds={blockedCardIds}
           onPlay={onPlay}
+          onSelectionChange={(selected) => {
+            cardSelectedRef.current = selected;
+          }}
         />
       </div>
     </div>

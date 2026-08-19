@@ -16,6 +16,7 @@ export type GameErrorCode =
   | 'CARD_NOT_FOUND'
   | 'DECK_EMPTY'
   | 'ACTION_NOT_ALLOWED'
+  | 'EMPTY_CHAT'
   | 'INTERNAL_ERROR';
 
 export type GameActionName =
@@ -39,6 +40,7 @@ export type GameActionName =
   | 'neigh-accept'
   | 'play-neigh'
   | 'toggle-debug-mode'
+  | 'send-chat'
   | 'unknown';
 
 export interface GameError {

@@ -1,6 +1,7 @@
 import type { GameState } from './Game.ts';
 import type { GameError } from './GameError.ts';
 import type { Room } from './Room.ts';
+import type { ChatMessage } from './Game.ts';
 
 export interface JoinRoomPayload {
   roomCode: string;
@@ -90,6 +91,16 @@ export interface LeaveRoomPayload {
   roomCode: string;
 }
 
+export interface SendChatPayload {
+  roomCode: string;
+  text: string;
+}
+
+export interface ChatMessageEvent {
+  roomCode: string;
+  message: ChatMessage;
+}
+
 export type CardAnimType = 'sacrifice' | 'destroy';
 
 export interface CardAnimation {
@@ -165,6 +176,7 @@ export interface ServerToClientEvents {
   'discard-animations': (animations: DiscardAnimation[]) => void;
   'play-animations': (animations: PlayAnimation[]) => void;
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
+  'chat-message': (payload: ChatMessageEvent) => void;
 }
 
 export interface ClientToServerEvents {
@@ -248,4 +260,7 @@ export interface ClientToServerEvents {
     payload: ResumeSessionPayload,
     callback: (response: ResumeSessionResponse) => void,
   ) => void;
+
+  // Chat
+  'send-chat': (payload: SendChatPayload) => void;
 }

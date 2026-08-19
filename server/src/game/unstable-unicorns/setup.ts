@@ -70,5 +70,6 @@ export function createGameState(room: Room): GameState {
     phase: TurnPhase.BEGINNING,
     actionUsed: false,
     log: [],
+    chat: [],
   };
 }

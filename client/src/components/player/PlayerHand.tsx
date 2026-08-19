@@ -14,6 +14,7 @@ interface Props {
   pendingPlay: boolean;
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
+  onSelectionChange?(selected: boolean): void;
 }
 
 export default function PlayerHand({
@@ -25,6 +26,7 @@ export default function PlayerHand({
   pendingPlay,
   blockedCardIds,
   onPlay,
+  onSelectionChange,
 }: Props) {
   return (
     <div className="player-hand">
@@ -37,6 +39,7 @@ export default function PlayerHand({
           pendingPlay={pendingPlay}
           blockedCardIds={blockedCardIds}
           onPlay={onPlay}
+          onSelectionChange={onSelectionChange}
         />
       ) : (
         <HiddenHand cardCount={player.hand.length} />

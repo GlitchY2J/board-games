@@ -18,6 +18,7 @@ import type { Room } from '../game/models/Room.ts';
 import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
 import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation } from '../game/cardAnimations.ts';
+import type { ChatMessage } from '../../../shared/types/Game.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -172,6 +173,7 @@ export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerToggleDebugMode(io, socket);
   registerNeighAccept(io, socket);
   registerPlayNeigh(io, socket);
+  registerSendChat(io, socket);
 }
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -817,5 +819,53 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
     emitGameState(io, room, 'game-updated');
 
     startPendingTimer(io, room, startedAt);
+  });
+}
+
+let chatSeq = 0;
+
+function registerSendChat(io: GameServer, socket: GameSocket): void {
+  socket.on('send-chat', ({ roomCode, text }) => {
+    const context = getSocketGameContext(socket, roomCode);
+
+    if (!context) {
+      return;
+    }
+
+    const { game, player, room } = context;
+
+    const cleaned = text.trim().slice(0, 500);
+
+    if (!cleaned) {
+      emitGameError(
+        socket,
+        'EMPTY_CHAT',
+        'El mensaje no puede estar vacío.',
+        'send-chat',
+      );
+      return;
+    }
+
+    if (!game.chat) {
+      game.chat = [];
+    }
+
+    const message: ChatMessage = {
+      id: `chat-${Date.now()}-${++chatSeq}`,
+      playerId: player.id,
+      playerName: player.name,
+      text: cleaned,
+      timestamp: Date.now(),
+    };
+
+    game.chat.push(message);
+
+    // Evitar que el historial de chat crezca sin límite.
+    if (game.chat.length > 200) {
+      game.chat.splice(0, game.chat.length - 200);
+    }
+
+    io.to(room.code).emit('chat-message', { roomCode, message });
+    emitGameState(io, room, 'game-updated');
   });
 }

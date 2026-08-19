@@ -43,6 +43,14 @@ export interface GameLogEntry {
   timestamp: number;
 }
 
+export interface ChatMessage {
+  id: string;
+  playerId: string;
+  playerName: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface GameState {
   roomCode: string;
   started: boolean;
@@ -69,4 +77,6 @@ export interface GameState {
   /** Modo debug: permite a cada jugador elegir qué carta del mazo tomar en su fase de robo. Solo el anfitrión lo activa. */
   debugMode?: boolean;
   log: GameLogEntry[];
+  /** Mensajes de chat entre jugadores (cronológicos: el más reciente al final). */
+  chat?: ChatMessage[];
 }
