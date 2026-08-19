@@ -188,7 +188,12 @@ export class CardMovement {
       const effect = effects[card.effect];
       const intercepted = effect?.onDestroyed?.(state, card, player);
       if (intercepted) {
-        maybeTriggerBarbedWireLeave(state, player);
+        // Interceptado (p. ej. Unicorn Phoenix): la carta NUNCA abandona el
+        // establo, así que se restaura su posición sin disparar efectos de
+        // salida (p. ej. Barbed Wire).
+        if (!player.stable.some((c) => c.uid === card.uid)) {
+          player.stable.push(card);
+        }
         return true;
       }
     }
