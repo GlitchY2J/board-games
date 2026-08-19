@@ -7,6 +7,7 @@ import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
 import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
+import { maybeTriggerBarbedWireLeave } from '../../cards/effects/barbedWire.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
 
 export class ActionResolver {
@@ -477,7 +478,9 @@ export class ActionResolver {
         return true;
       }
 
-      state.pendingAction = undefined;
+      if (state.pendingAction === pending || !state.pendingAction) {
+        state.pendingAction = undefined;
+      }
       return true;
     }
 
@@ -500,6 +503,7 @@ export class ActionResolver {
       }
 
       const [moved] = sourcePlayer.stable.splice(idx, 1);
+      maybeTriggerBarbedWireLeave(state, sourcePlayer);
       CardMovement.enterStable(state, targetPlayer, moved);
 
       // Si el efecto on-enter de la carta entrante abrió su propio pendingAction
@@ -551,6 +555,7 @@ export class ActionResolver {
       }
 
       const [stolen] = targetPlayer.stable.splice(idx, 1);
+      maybeTriggerBarbedWireLeave(state, targetPlayer);
       CardMovement.enterStable(state, sourcePlayer, stolen);
 
       // Si el on-enter del unicornio robado abrió su propio pendingAction interactivo,
@@ -632,7 +637,9 @@ export class ActionResolver {
         }
       }
 
-      state.pendingAction = undefined;
+      if (state.pendingAction === pending || !state.pendingAction) {
+        state.pendingAction = undefined;
+      }
       return true;
     }
 
@@ -998,7 +1005,9 @@ export class ActionResolver {
 
       CardMovement.returnToHand(state, targetPlayer, removedCard);
 
-      state.pendingAction = undefined;
+      if (state.pendingAction === pending || !state.pendingAction) {
+        state.pendingAction = undefined;
+      }
       return true;
     }
 
@@ -1089,6 +1098,7 @@ export class ActionResolver {
           }
           targetPlayer = p;
           [stolenCard] = p.stable.splice(cardIdx, 1);
+          maybeTriggerBarbedWireLeave(state, p);
           break;
         }
       }
@@ -1099,7 +1109,9 @@ export class ActionResolver {
       if (!sourcePlayer) return false;
 
       sourcePlayer.upgrades.push(stolenCard);
-      state.pendingAction = undefined;
+      if (state.pendingAction === pending || !state.pendingAction) {
+        state.pendingAction = undefined;
+      }
 
       addLog(
         state,
@@ -1137,16 +1149,28 @@ export class ActionResolver {
       // Baby Unicorns van a la Nursery; las demás cartas vuelven a la mano
       CardMovement.returnToHand(state, targetPlayer, card);
 
+      const nextStep = {
+        type: 'glitter_tornado',
+        sourcePlayerId,
+        remainingPlayerIds: rest,
+      } as const;
+
+      // Si la carta devuelta disparó Barbed Wire (discard pendiente), preservar
+      // el discard y encolar el siguiente paso del tornado para reanudarlo.
+      if (state.pendingAction !== pending) {
+        if (!state.pendingResume) state.pendingResume = [];
+        if (rest.length > 0) {
+          state.pendingResume.push(nextStep);
+        }
+        return true;
+      }
+
       if (rest.length === 0) {
         // Todos los establos procesados → limpiar acción pendiente
         state.pendingAction = undefined;
       } else {
         // Avanzar a la siguiente persona en la cola
-        state.pendingAction = {
-          type: 'glitter_tornado',
-          sourcePlayerId,
-          remainingPlayerIds: rest,
-        };
+        state.pendingAction = nextStep;
       }
       return true;
     }
@@ -1333,6 +1357,7 @@ export class ActionResolver {
 
         const prevReason = pending.reason;
         const [stolen] = targetPlayer.stable.splice(idx, 1);
+        maybeTriggerBarbedWireLeave(state, targetPlayer);
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
 
         if (!entered) {
@@ -1381,6 +1406,7 @@ export class ActionResolver {
 
         const prevReason = pending.reason;
         const [stolen] = targetPlayer.stable.splice(idx, 1);
+        maybeTriggerBarbedWireLeave(state, targetPlayer);
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
 
         if (!entered) {
@@ -1543,7 +1569,9 @@ export class ActionResolver {
       return false;
     }
 
-    state.pendingAction = undefined;
+    if (state.pendingAction === pending || !state.pendingAction) {
+      state.pendingAction = undefined;
+    }
     return true;
   }
 

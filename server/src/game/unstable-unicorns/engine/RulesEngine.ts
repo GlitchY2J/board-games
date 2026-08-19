@@ -112,6 +112,21 @@ export class RulesEngine {
       );
     }
 
+    // Barbed Wire: jugar un unicornio exige descartar una carta. La carta que
+    // se está jugando aún está en la mano, así que solo se puede descartar si
+    // hay al menos otra carta en la mano. Si no, no se puede jugar el unicornio.
+    if (
+      playedCard.cardType === 'unicorn' &&
+      player.downgrades.some((c) => c.id === 'barbed_wire') &&
+      player.hand.length <= 1
+    ) {
+      return actionFailure(
+        'ACTION_NOT_ALLOWED',
+        'Barbed Wire exige descartar una carta para jugar un unicornio.',
+        'play-card',
+      );
+    }
+
     return actionSuccess({ card: playedCard });
   }
 

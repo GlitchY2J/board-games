@@ -15,7 +15,8 @@ export type PendingAction =
         | "unicorn_phoenix"
         | "claw_machine"
         | "rainbow_lasso"
-        | "stable_artillery";
+        | "stable_artillery"
+        | "barbed_wire";
       playerId: string;
       cardsToDiscard: number;
     }

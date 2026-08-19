@@ -120,6 +120,7 @@ export default function GameOverlay({
           claw_machine: '🕹️ Claw Machine',
           rainbow_lasso: '🌈 Rainbow Lasso',
           stable_artillery: '🔫 Stable Artillery',
+          barbed_wire: '🌵 Barbed Wire',
         };
 
         const isNecromancer = action.reason === 'necromancer_unicorn';

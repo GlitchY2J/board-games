@@ -790,6 +790,17 @@
     "copies": 2,
     "expansion": "base"
   },
+
+  {
+    "id": "barbed_wire",
+    "name": "Barbed Wire",
+    "cardType": "downgrade",
+    "image": "/cards/base/barbed_wire.png",
+    "description": "Each time a Unicorn card enters or leaves your Stable, DISCARD a card.",
+    "effect": "barbed_wire",
+    "copies": 1,
+    "expansion": "base"
+  },
   {
     "id": "blinding_light",
     "name": "Blinding Light",

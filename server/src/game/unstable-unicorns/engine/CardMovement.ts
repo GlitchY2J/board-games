@@ -4,6 +4,10 @@ import type { Player } from '../../models/Player.ts';
 import { effects } from './effects/index.ts';
 import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.ts';
 import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
+import {
+  maybeTriggerBarbedWireLeave,
+  triggerBarbedWireDiscard,
+} from '../../cards/effects/barbedWire.ts';
 
 export function hasUpgrade(player: Player, id: string): boolean {
   return player.upgrades.some((c) => c.id === id);
@@ -33,6 +37,11 @@ export class CardMovement {
 
     player.stable.push(card);
 
+    // Barbed Wire: se captura ANTES de resolver los efectos on-enter porque la
+    // entrada de este unicornio podría provocar que Barbed Wire abandone el
+    // establo; aun así la carta debe descartarse (el efecto es simultáneo).
+    const hadBarbedWire = hasDowngrade(player, 'barbed_wire');
+
     // Blinding Light: bloquea la activación de efectos de tus Unicornios
     // (los Baby Unicorn son inmunes).
     if (
@@ -45,6 +54,12 @@ export class CardMovement {
       effect?.onEnterStable?.(state, player, card);
     }
 
+    // Barbed Wire: al entrar un unicornio, si el jugador tiene Barbed Wire
+    // (aunque su entrada lo haga abandonar), debe descartar una carta.
+    if (hadBarbedWire) {
+      triggerBarbedWireDiscard(state, player);
+    }
+
     return true;
   }
 
@@ -53,6 +68,10 @@ export class CardMovement {
    * Regla Especial: Si la carta es un Baby Unicorn, regresa a la Nursery en lugar de a la mano.
    */
   static returnToHand(state: GameState, player: Player, card: Card): void {
+    if (card.cardType === 'unicorn') {
+      maybeTriggerBarbedWireLeave(state, player);
+    }
+
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
       state.nursery.push(card);
     } else {
@@ -111,6 +130,7 @@ export class CardMovement {
     if (isPandamoniumProtected(player, card)) return true;
 
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
+      maybeTriggerBarbedWireLeave(state, player);
       state.nursery.push(card);
       return false;
     }
@@ -128,6 +148,7 @@ export class CardMovement {
     }
 
     if (card.id.includes('flying_unicorn') || card.effect === 'llamacorn') {
+      maybeTriggerBarbedWireLeave(state, player);
       player.hand.push(card);
       return false;
     }
@@ -142,7 +163,14 @@ export class CardMovement {
     if (card.effect && !blindingLightActive) {
       const effect = effects[card.effect];
       const intercepted = effect?.onDestroyed?.(state, card, player);
-      if (intercepted) return true;
+      if (intercepted) {
+        maybeTriggerBarbedWireLeave(state, player);
+        return true;
+      }
+    }
+
+    if (card.cardType === 'unicorn') {
+      maybeTriggerBarbedWireLeave(state, player);
     }
 
     enqueueCardAnimation(state.roomCode, animType, player.id, card);
