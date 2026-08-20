@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
+import { TurnManager } from '../../turn/TurnManager.ts';
 
 export const changeOfLuck: CardEffect = {
   onPlay(state, player) {
@@ -24,6 +25,8 @@ export const changeOfLuck: CardEffect = {
         playerId: player.id,
         cardsToDiscard,
       };
+    } else {
+      TurnManager.nextPhase(state);
     }
   },
 };

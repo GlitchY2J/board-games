@@ -363,7 +363,10 @@ export class TurnManager {
       game.turn++;
     }
     game.phase = TurnPhase.BEGINNING;
-    this.skipBeginningIfNoTriggers(game);
+    const presented = this.activateBeginningTriggers(game);
+    if (!presented) {
+      this.skipBeginningIfNoTriggers(game);
+    }
 
     const startingPlayer = game.players[game.currentPlayer];
 
