@@ -4,7 +4,7 @@ import { socket } from '../services/socket';
 import { useGame } from '../context/GameContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Copy, Check, Users, Crown, Loader2, ArrowLeft } from 'lucide-react';
+import { Copy, Check, Users, Crown, Loader2, ArrowLeft, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Player {
@@ -20,6 +20,7 @@ interface Room {
   game: string;
   hostId: string;
   players: Player[];
+  expansions?: string[];
 }
 
 export default function Lobby() {
@@ -124,6 +125,14 @@ export default function Lobby() {
   const handleConfirmStart = () => {
     if (!room) return;
     socket.emit('confirm-start-game', room.code);
+  };
+
+  const handleToggleExpansion = (expansionId: string) => {
+    if (!room || !isHost) return;
+    socket.emit('toggle-expansion', {
+      roomCode: room.code,
+      expansionId,
+    });
   };
 
   const handleCopyCode = () => {
@@ -296,6 +305,78 @@ export default function Lobby() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Sección de Expansiones */}
+        <div className="mb-8 border-t border-slate-900 pt-6">
+          <div className="flex justify-between items-center mb-4 px-2">
+            <span className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+              <Sparkles size={16} className="text-amber-400" />
+              Expansiones del Juego
+            </span>
+            <span className="text-[10px] font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
+              {room.expansions?.length || 0} activas
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {/* Rainbow Apocalypse */}
+            {(() => {
+              const isRainbowActive = room.expansions?.includes('rainbow_apocalypse');
+              return (
+                <div
+                  onClick={() => isHost && handleToggleExpansion('rainbow_apocalypse')}
+                  className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                    isHost ? 'cursor-pointer hover:border-slate-700' : 'cursor-default'
+                  } ${
+                    isRainbowActive
+                      ? 'bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border-amber-500/40 shadow-lg shadow-amber-500/5'
+                      : 'bg-slate-900/30 border-slate-800/40 opacity-75'
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shrink-0 border ${
+                        isRainbowActive
+                          ? 'bg-gradient-to-br from-amber-400 to-rose-400 text-slate-950 border-amber-300 shadow-sm'
+                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                      }`}
+                    >
+                      🌈
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-200 block">
+                          Rainbow Apocalypse
+                        </span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20">
+                          Expansión
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-400 block mt-0.5">
+                        Añade las cartas de la expansión Rainbow Apocalypse al mazo.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Toggle Switch */}
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <div
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        isRainbowActive ? 'bg-amber-400' : 'bg-slate-800 border border-slate-700'
+                      }`}
+                    >
+                      <div
+                        className={`bg-slate-950 w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          isRainbowActive ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 

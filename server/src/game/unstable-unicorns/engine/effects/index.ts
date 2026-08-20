@@ -46,9 +46,13 @@ import { tinyStable } from '../../../cards/effects/tinyStable.ts';
 import { doubleDutch } from '../../../cards/effects/doubleDutch.ts';
 import { barbedWire } from '../../../cards/effects/barbedWire.ts';
 import { sadisticRitual } from '../../../cards/effects/sadisticRitual.ts';
+import { adorableFlyingUnicorn } from '../../../cards/effects/adorableFlyingUnicorn.ts';
+import { angelUnicorn } from '../../../cards/effects/angelUnicorn.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
+  adorable_flying_unicorn: adorableFlyingUnicorn,
+  angel_unicorn: angelUnicorn,
   alluring_narwhal: AlluringNarwhal,
   changeOfLuck,
   backKick,

@@ -68,6 +68,7 @@ export class RoomManager {
       game,
       hostId: host.id,
       players: [host],
+      expansions: [],
     };
     this.rooms.set(room.code, room);
 
@@ -121,6 +122,24 @@ export class RoomManager {
     if (!room) return;
 
     room.gameState = gameState;
+  }
+
+  // Toggle expansión en sala
+  toggleExpansion(code: string, expansionId: string): Room | null {
+    const room = this.rooms.get(code);
+    if (!room) return null;
+
+    if (!room.expansions) {
+      room.expansions = [];
+    }
+
+    if (room.expansions.includes(expansionId)) {
+      room.expansions = room.expansions.filter((id) => id !== expansionId);
+    } else {
+      room.expansions.push(expansionId);
+    }
+
+    return room;
   }
 
   // Verificar si la sala existe

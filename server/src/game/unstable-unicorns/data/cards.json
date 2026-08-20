@@ -890,5 +890,82 @@
     "effect": "super_neigh",
     "copies": 1,
     "expansion": "base"
+  },
+  {
+    "id": "baby_unicorn_flowers",
+    "name": "Baby Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "baby",
+    "image": "/cards/rainbow apocalypse/baby_unicorn_flowers.png",
+    "description": "If this card would be sacrificed, destroyed or returned to your hand, return it to the Nursery instead.",
+    "effect": null,
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "baby_unicorn_sparkles",
+    "name": "Baby Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "baby",
+    "image": "/cards/rainbow apocalypse/baby_unicorn_sparkles.png",
+    "description": "If this card would be sacrificed, destroyed or returned to your hand, return it to the Nursery instead.",
+    "effect": null,
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "horse_with_an_ice_cream_cone",
+    "name": "Horse With An Ice Cream Cone",
+    "cardType": "unicorn",
+    "unicornClass": "basic",
+    "image": "/cards/rainbow apocalypse/horse_with_an_ice_cream_cone.png",
+    "description": "Ice cream always saves the day.",
+    "effect": null,
+    "copies": 3,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "innocent_bunnicorn",
+    "name": "Innocent Bunnicorn",
+    "cardType": "unicorn",
+    "unicornClass": "basic",
+    "image": "/cards/rainbow apocalypse/innocent_bunnicorn.png",
+    "description": "Look, Mom! I'm a unicorn!.",
+    "effect": null,
+    "copies": 3,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "adorable_flying_unicorn",
+    "name": "Adorable Flying Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/adorable_flying_unicorn.png",
+    "description": "When this card enters your Stable, each player (including you) must SACRIFICE a card. If this card is sacrificed or destroyed, return it to your hand.",
+    "effect": "adorable_flying_unicorn",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "angel_unicorn",
+    "name": "Angel Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/angel_unicorn.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE this card, then bring a Unicorn card from the discard pile into your Stable.",
+    "effect": "angel_unicorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "cotton_candy_llamacorn",
+    "name": "Cotton Candy Llamacorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/cotton_candy_llamacorn.png",
+    "description": "When this card enters your Stable, each player (including you) must SACRIFICE a Unicorn card, then DRAW a card.",
+    "effect": "cotton_candy_llamacorn",
+    "copies": 1,
+    "expansion": "rainbow"
   }
 ]

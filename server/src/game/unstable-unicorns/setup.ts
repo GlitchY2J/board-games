@@ -8,7 +8,7 @@ import { TurnPhase } from '../turn/TurnPhase.ts';
 import { TurnManager } from '../turn/TurnManager.ts';
 
 export function createGameState(room: Room): GameState {
-  const deck = CardRepository.load();
+  const deck = CardRepository.load(room.expansions);
   const { nursery, deck: gameDeck } = extractNursery(deck);
   const deckManager = new DeckManager(gameDeck);
 

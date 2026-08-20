@@ -78,7 +78,7 @@ export default function GameOverlay({
                 <h2>💥 Extremely Destructive Unicorn</h2>
                 <p>
                   {step.remainingPlayerIds.length >
-                  step.resolvedPlayerIds.length
+                    step.resolvedPlayerIds.length
                     ? 'Esperando sacrificios de otros jugadores...'
                     : 'Resolviendo efecto...'}
                 </p>
@@ -277,11 +277,11 @@ export default function GameOverlay({
             onCancel={
               isUnicornPoison || isAnnoyingFlying || isMermaid
                 ? () => {
-                    dismiss();
-                    socket.emit('cancel-action', {
-                      roomCode: gameState.roomCode,
-                    });
-                  }
+                  dismiss();
+                  socket.emit('cancel-action', {
+                    roomCode: gameState.roomCode,
+                  });
+                }
                 : undefined
             }
           />
@@ -372,17 +372,17 @@ export default function GameOverlay({
                     !isPandamoniumProtected(localPlayer, c),
                 )
                 .map((card, idx) => ({
-                id: `${card.id}_${zone}_${idx}`,
-                value: card.uid,
-                title: card.name,
-                subtitle:
-                  zone === 'stable'
-                    ? 'Tu establo'
-                    : zone === 'upgrade'
-                      ? 'Tu upgrade'
-                      : 'Tu downgrade',
-                image: card.image,
-              })),
+                  id: `${card.id}_${zone}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle:
+                    zone === 'stable'
+                      ? 'Tu establo'
+                      : zone === 'upgrade'
+                        ? 'Tu upgrade'
+                        : 'Tu downgrade',
+                  image: card.image,
+                })),
             );
           }
         } else {
@@ -1192,15 +1192,15 @@ export default function GameOverlay({
 
         const cardsToSelect = isUnicornPoison
           ? target.stable.filter(
-              (c) =>
-                c.id !== 'magical_kittencorn' &&
-                !isPandamoniumProtected(target, c),
-            )
+            (c) =>
+              c.id !== 'magical_kittencorn' &&
+              !isPandamoniumProtected(target, c),
+          )
           : [
-              ...target.stable.filter((c) => !isPandamoniumProtected(target, c)),
-              ...target.upgrades,
-              ...target.downgrades,
-            ];
+            ...target.stable.filter((c) => !isPandamoniumProtected(target, c)),
+            ...target.upgrades,
+            ...target.downgrades,
+          ];
 
         return (
           <CardSelectionOverlay
@@ -1461,7 +1461,7 @@ export default function GameOverlay({
                 <h2>💥 Extremely Destructive Unicorn</h2>
                 <p>
                   {action.remainingPlayerIds.length >
-                  action.resolvedPlayerIds.length
+                    action.resolvedPlayerIds.length
                     ? 'Esperando sacrificios de otros jugadores...'
                     : 'Resolviendo efecto...'}
                 </p>
@@ -1485,6 +1485,78 @@ export default function GameOverlay({
                 title: card.name,
                 image: card.image,
               }))}
+            maxSelection={1}
+            confirmText="Sacrificar"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
+      case 'adorable_flying_unicorn': {
+        const targetPlayer = gameState.players.find(
+          (p) => p.id === localPlayerId,
+        );
+        const needsToResolve =
+          action.remainingPlayerIds.includes(localPlayerId) &&
+          !action.resolvedPlayerIds.includes(localPlayerId);
+
+        if (!targetPlayer) return null;
+
+        if (!needsToResolve) {
+          return (
+            <div className="overlay-backdrop">
+              <div className="card-selection-window choice-window">
+                <h2>🦄 Adorable Flying Unicorn</h2>
+                <p>
+                  {action.remainingPlayerIds.length >
+                  action.resolvedPlayerIds.length
+                    ? 'Esperando sacrificios de otros jugadores...'
+                    : 'Resolviendo efecto...'}
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        const zones: Array<[string, typeof targetPlayer.stable]> = [
+          ['stable', targetPlayer.stable],
+          ['upgrade', targetPlayer.upgrades],
+          ['downgrade', targetPlayer.downgrades],
+        ];
+
+        const items = zones.flatMap(([zone, cards]) =>
+          cards
+            .filter(
+              (c) =>
+                zone !== 'stable' ||
+                !isPandamoniumProtected(targetPlayer, c),
+            )
+            .map((card, idx) => ({
+              id: `${card.id}_${zone}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle:
+                zone === 'stable'
+                  ? 'Tu establo'
+                  : zone === 'upgrade'
+                    ? 'Tu upgrade'
+                    : 'Tu downgrade',
+              image: card.image,
+            })),
+        );
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="🦄 Adorable Flying Unicorn"
+            subtitle="Debes sacrificar 1 carta de tu establo (unicornio, upgrade o downgrade)."
+            items={items}
             maxSelection={1}
             confirmText="Sacrificar"
             onConfirm={([cardId]) => {
@@ -1549,6 +1621,7 @@ export default function GameOverlay({
         const isNecromancer = action.reason === 'necromancer_unicorn';
         const isSwiftFlyingUnicorn = action.reason === 'swift_flying_unicorn';
         const isKissOfLife = action.reason === 'kiss_of_life';
+        const isAngelUnicorn = action.reason === 'angel_unicorn';
 
         const eligibleCards = gameState.discard.filter(
           (card) =>
@@ -1564,17 +1637,19 @@ export default function GameOverlay({
           <CardSelectionOverlay
             hide={hide}
             title={
-              isMagicalFlyingUnicorn
-                ? '🦄 Magical Flying Unicorn'
-                : isMajesticFlyingUnicorn
-                  ? '🦄 Majestic Flying Unicorn'
-                  : isSwiftFlyingUnicorn
-                    ? '🕊️ Swifty Flying Unicorn'
-                    : isNecromancer
-                      ? '🧙 Necromancer Unicorn'
-                      : isKissOfLife
-                        ? '💋 Kiss Of Life'
-                        : '😈 Dark Angel Unicorn'
+              isAngelUnicorn
+                ? '👼 Angel Unicorn'
+                : isMagicalFlyingUnicorn
+                  ? '🦄 Magical Flying Unicorn'
+                  : isMajesticFlyingUnicorn
+                    ? '🦄 Majestic Flying Unicorn'
+                    : isSwiftFlyingUnicorn
+                      ? '🕊️ Swifty Flying Unicorn'
+                      : isNecromancer
+                        ? '🧙 Necromancer Unicorn'
+                        : isKissOfLife
+                          ? '💋 Kiss Of Life'
+                          : '😈 Dark Angel Unicorn'
             }
             subtitle={
               isMagicalFlyingUnicorn
@@ -1632,17 +1707,17 @@ export default function GameOverlay({
 
         const items = isDebugDraw
           ? gameState.deck.map((card, idx) => ({
-              id: `${card.id}_${idx}`,
-              value: card.uid,
-              title: card.name,
-              image: card.image,
-            }))
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }))
           : action.candidates.map((card, idx) => ({
-              id: `${card.id}_${idx}`,
-              value: card.uid,
-              title: card.name,
-              image: card.image,
-            }));
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }));
 
         return (
           <CardSelectionOverlay

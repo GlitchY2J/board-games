@@ -98,6 +98,11 @@ export type PendingAction =
       resolvedPlayerIds: string[];
     }
   | {
+      type: "adorable_flying_unicorn";
+      remainingPlayerIds: string[]; // cola de jugadores que deben sacrificar una carta
+      resolvedPlayerIds: string[];
+    }
+  | {
       type: "two_for_one";
       sourcePlayerId: string;
       phase: "sacrifice" | "destroy";
@@ -112,7 +117,7 @@ export type PendingAction =
         | "classy_narwhal"
         | "the_great_narwhal"
         | "dark_angel_unicorn"
-| "magical_flying_unicorn"
+        | "magical_flying_unicorn"
         | "majestic_flying_unicorn"
         | "mother_goose_unicorn"
         | "necromancer_unicorn"
@@ -129,7 +134,8 @@ export type PendingAction =
         | "glitter_bomb"
         | "beginning_effect_picker"
         | "rainbow_lasso"
-        | "stable_artillery";
+        | "stable_artillery"
+        | "angel_unicorn";
       playerId: string;
       title: string;
       description: string;
@@ -144,7 +150,7 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life";
+      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
     }

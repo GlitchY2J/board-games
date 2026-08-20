@@ -310,7 +310,8 @@ export class ActionResolver {
       pending.type !== 'two_for_one' &&
       pending.type !== 'glitter_tornado' &&
       pending.type !== 'alluring_narwhal' &&
-      pending.type !== 'extremely_destructive_unicorn'
+      pending.type !== 'extremely_destructive_unicorn' &&
+      pending.type !== 'adorable_flying_unicorn'
     ) {
       return false;
     }
@@ -593,9 +594,9 @@ export class ActionResolver {
 
       const card = Array.isArray(cardId)
         ? fromPlayer.upgrades.find((c) => c.uid === cardId[0]) ||
-          fromPlayer.downgrades.find((c) => c.uid === cardId[0])
+        fromPlayer.downgrades.find((c) => c.uid === cardId[0])
         : fromPlayer.upgrades.find((c) => c.uid === cardId) ||
-          fromPlayer.downgrades.find((c) => c.uid === cardId);
+        fromPlayer.downgrades.find((c) => c.uid === cardId);
 
       if (!card) return false;
 
@@ -747,7 +748,10 @@ export class ActionResolver {
       return false;
     }
 
-    if (pending.type === 'extremely_destructive_unicorn') {
+    if (
+      pending.type === 'extremely_destructive_unicorn' ||
+      pending.type === 'adorable_flying_unicorn'
+    ) {
       if (
         !pending.remainingPlayerIds.includes(sourcePlayerId) ||
         pending.resolvedPlayerIds.includes(sourcePlayerId)
@@ -1065,7 +1069,7 @@ export class ActionResolver {
         return true;
       }
 
-            // Resolución LIFO centralizada: si el sacrificio disparó un efecto
+      // Resolución LIFO centralizada: si el sacrificio disparó un efecto
       // onDestroyed interactivo (p. ej. Stabby The Unicorn), el siguiente paso
       // se suspende en la pila y se reanuda después del efecto hijo.
       EffectStack.advance(state, pending, {
@@ -1223,6 +1227,64 @@ export class ActionResolver {
         const nextStep = {
           ...pending,
           type: 'extremely_destructive_unicorn',
+          remainingPlayerIds: pending.remainingPlayerIds,
+          resolvedPlayerIds,
+        } as typeof pending;
+        EffectStack.advance(state, pending, nextStep);
+      }
+
+      return true;
+    }
+
+    // ──────────────────────────────────────────
+    // Adorable Flying Unicorn: cada jugador sacrifica 1 carta de su establo
+    // ──────────────────────────────────────────
+    if (pending.type === 'adorable_flying_unicorn') {
+      const targetPlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!targetPlayer) return false;
+
+      if (!pending.remainingPlayerIds.includes(sourcePlayerId)) {
+        return false;
+      }
+
+      if (pending.resolvedPlayerIds.includes(sourcePlayerId)) {
+        return false;
+      }
+
+      let sacrificed: Card | undefined;
+      let zone: 'stable' | 'upgrades' | 'downgrades' | null = null;
+      for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
+        const i = targetPlayer[z].findIndex((c) => c.uid === cardId);
+        if (i !== -1) {
+          sacrificed = targetPlayer[z][i];
+          zone = z;
+          break;
+        }
+      }
+
+      if (!sacrificed || !zone) return false;
+
+      if (isPandamoniumProtected(targetPlayer, sacrificed)) {
+        return false;
+      }
+
+      const idx = targetPlayer[zone].findIndex((c) => c.uid === cardId);
+      const [removed] = targetPlayer[zone].splice(idx, 1);
+      CardMovement.destroyOrSacrifice(
+        state,
+        targetPlayer,
+        removed,
+        'sacrifice',
+      );
+
+      const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
+
+      if (resolvedPlayerIds.length >= pending.remainingPlayerIds.length) {
+        EffectStack.finish(state, pending);
+      } else {
+        const nextStep = {
+          ...pending,
+          type: 'adorable_flying_unicorn',
           remainingPlayerIds: pending.remainingPlayerIds,
           resolvedPlayerIds,
         } as typeof pending;

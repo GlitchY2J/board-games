@@ -6,5 +6,6 @@ export interface Room {
   game: string;
   hostId: string;
   players: Player[];
+  expansions?: string[];
   gameState?: GameState;
 }

@@ -208,4 +208,21 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
 
     console.log(`Sesión recuperada: ${player.name} (${socket.id})`);
   });
+
+  socket.on('toggle-expansion', ({ roomCode, expansionId }) => {
+    const room = roomManager.getRoom(roomCode);
+    if (!room) return;
+
+    // Solo el host puede cambiar expansiones
+    const player = room.players.find((p) => p.socketId === socket.id);
+    if (!player || player.id !== room.hostId) return;
+
+    // No permitir cambiar si el juego ya inició
+    if (room.gameState?.started) return;
+
+    const updatedRoom = roomManager.toggleExpansion(roomCode, expansionId);
+    if (updatedRoom) {
+      io.to(updatedRoom.code).emit('room-updated', updatedRoom);
+    }
+  });
 }

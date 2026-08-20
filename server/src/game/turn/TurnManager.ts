@@ -117,6 +117,15 @@ export class TurnManager {
       uids.push(...sadistic.map((c) => c.uid));
     }
 
+    const angel = allCards.filter((c) => c.id === 'angel_unicorn');
+    if (
+      angel.length > 0 &&
+      game.discard.some((c) => c.cardType === 'unicorn') &&
+      angel.some((c) => !isEffectBlockedByBlindingLight(activePlayer, c))
+    ) {
+      uids.push(...angel.map((c) => c.uid));
+    }
+
     return uids;
   }
 
@@ -234,6 +243,21 @@ export class TurnManager {
           type: 'select_stable_card',
           reason: 'sadistic_ritual',
           sourcePlayerId: activePlayer.id,
+        };
+        return true;
+      case 'angel_unicorn':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'angel_unicorn',
+          playerId: activePlayer.id,
+          title: '👼 Angel Unicorn',
+          description:
+            '¿Deseas SACRIFICAR esta carta para luego traer un unicornio del descarte a tu establo?',
+          options: [
+            { value: 'yes', text: 'Sí, sacrificar y traer unicornio' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
         };
         return true;
       default:

@@ -42,7 +42,7 @@ function makeGame(players: Player[]): GameState {
       card('basic_unicorn_red'),
       card('basic_unicorn_blue'),
       card('basic_unicorn_green'),
-      card('basic_unicorn_pink'),
+      card('basic_unicorn_yellow'),
     ],
     nursery: [],
     discard: [],

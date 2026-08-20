@@ -641,6 +641,55 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'angel_unicorn') {
+        if (choice === 'yes') {
+          const uid = pending.effectCardId;
+          const idx = player.stable.findIndex(
+            (c) => (uid ? c.uid === uid : c.id === 'angel_unicorn'),
+          );
+          if (idx !== -1) {
+            const [angelCard] = player.stable.splice(idx, 1);
+            CardMovement.destroyOrSacrifice(
+              room.gameState,
+              player,
+              angelCard,
+              'sacrifice',
+            );
+          }
+
+          const unicornsInDiscard = room.gameState.discard.some(
+            (card) => card.cardType === 'unicorn',
+          );
+
+          if (unicornsInDiscard) {
+            room.gameState.pendingAction = {
+              type: 'select_discard_card',
+              reason: 'angel_unicorn',
+              playerId: player.id,
+              cardType: 'unicorn',
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.processBeginningQueue(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} sacrificó a Angel Unicorn`
+            : `${player.name} omitió el efecto de Angel Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'magical_flying_unicorn') {
         if (choice === 'yes') {
           const magicInDiscard = room.gameState.discard.some(
@@ -1198,7 +1247,8 @@ export function registerActionHandlers(
         pending.reason !== 'majestic_flying_unicorn' &&
         pending.reason !== 'necromancer_unicorn' &&
         pending.reason !== 'swift_flying_unicorn' &&
-        pending.reason !== 'kiss_of_life'
+        pending.reason !== 'kiss_of_life' &&
+        pending.reason !== 'angel_unicorn'
       )
         return;
 

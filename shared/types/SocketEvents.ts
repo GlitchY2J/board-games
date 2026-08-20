@@ -51,6 +51,11 @@ export interface CancelActionPayload {
   roomCode: string;
 }
 
+export interface ToggleExpansionPayload {
+  roomCode: string;
+  expansionId: string;
+}
+
 export interface SelectChoicePayload {
   roomCode: string;
   choice: string;
@@ -191,6 +196,9 @@ export interface ClientToServerEvents {
 
   // Leave Room
   'leave-room': (payload: LeaveRoomPayload) => void;
+
+  // Toggle Expansion
+  'toggle-expansion': (payload: ToggleExpansionPayload) => void;
 
   // Start Game
   'start-game': (roomCode: string) => void;
