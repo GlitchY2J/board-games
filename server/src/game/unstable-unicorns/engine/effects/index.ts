@@ -48,11 +48,14 @@ import { barbedWire } from '../../../cards/effects/barbedWire.ts';
 import { sadisticRitual } from '../../../cards/effects/sadisticRitual.ts';
 import { adorableFlyingUnicorn } from '../../../cards/effects/adorableFlyingUnicorn.ts';
 import { angelUnicorn } from '../../../cards/effects/angelUnicorn.ts';
+import { cottonCandyUnicorn } from '../../../cards/effects/cottonCandyUnicorn.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
   adorable_flying_unicorn: adorableFlyingUnicorn,
   angel_unicorn: angelUnicorn,
+  cotton_candy_unicorn: cottonCandyUnicorn,
+  cotton_candy_llamacorn: cottonCandyUnicorn,
   alluring_narwhal: AlluringNarwhal,
   changeOfLuck,
   backKick,

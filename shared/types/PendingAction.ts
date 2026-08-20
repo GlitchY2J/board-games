@@ -103,6 +103,12 @@ export type PendingAction =
       resolvedPlayerIds: string[];
     }
   | {
+      type: "cotton_candy_unicorn";
+      sourcePlayerId: string;
+      remainingPlayerIds: string[]; // cola de jugadores que deben sacrificar un unicornio
+      resolvedPlayerIds: string[];
+    }
+  | {
       type: "two_for_one";
       sourcePlayerId: string;
       phase: "sacrifice" | "destroy";

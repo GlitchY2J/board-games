@@ -311,7 +311,8 @@ export class ActionResolver {
       pending.type !== 'glitter_tornado' &&
       pending.type !== 'alluring_narwhal' &&
       pending.type !== 'extremely_destructive_unicorn' &&
-      pending.type !== 'adorable_flying_unicorn'
+      pending.type !== 'adorable_flying_unicorn' &&
+      pending.type !== 'cotton_candy_unicorn'
     ) {
       return false;
     }
@@ -750,7 +751,8 @@ export class ActionResolver {
 
     if (
       pending.type === 'extremely_destructive_unicorn' ||
-      pending.type === 'adorable_flying_unicorn'
+      pending.type === 'adorable_flying_unicorn' ||
+      pending.type === 'cotton_candy_unicorn'
     ) {
       if (
         !pending.remainingPlayerIds.includes(sourcePlayerId) ||
@@ -1285,6 +1287,73 @@ export class ActionResolver {
         const nextStep = {
           ...pending,
           type: 'adorable_flying_unicorn',
+          remainingPlayerIds: pending.remainingPlayerIds,
+          resolvedPlayerIds,
+        } as typeof pending;
+        EffectStack.advance(state, pending, nextStep);
+      }
+
+      return true;
+    }
+
+    // ──────────────────────────────────────────
+    // Cotton Candy Unicorn: cada jugador sacrifica 1 unicornio; al finalizar, quien la jugó roba 1 carta
+    // ──────────────────────────────────────────
+    if (pending.type === 'cotton_candy_unicorn') {
+      const targetPlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!targetPlayer) return false;
+
+      if (!pending.remainingPlayerIds.includes(sourcePlayerId)) {
+        return false;
+      }
+
+      if (pending.resolvedPlayerIds.includes(sourcePlayerId)) {
+        return false;
+      }
+
+      const cardIdx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
+      if (cardIdx === -1) return false;
+
+      const card = targetPlayer.stable[cardIdx];
+      if (card.cardType !== 'unicorn') return false;
+
+      if (isPandamoniumProtected(targetPlayer, card)) {
+        return false;
+      }
+
+      const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
+      CardMovement.destroyOrSacrifice(
+        state,
+        targetPlayer,
+        sacrificed,
+        'sacrifice',
+      );
+
+      const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
+
+      if (resolvedPlayerIds.length >= pending.remainingPlayerIds.length) {
+        const sourcePlayer = state.players.find(
+          (p) => p.id === pending.sourcePlayerId,
+        );
+        if (sourcePlayer) {
+          const drawn = state.deck.shift();
+          if (drawn) {
+            enqueueDrawAnimation(state.roomCode, sourcePlayer.id, drawn);
+            sourcePlayer.hand.push(drawn);
+          }
+          addLog(
+            state,
+            `${sourcePlayer.name} robó 1 carta por efecto de Cotton Candy Unicorn`,
+            { playerId: sourcePlayer.id },
+          );
+        }
+
+        EffectStack.finish(state, pending);
+      } else {
+        const nextStep = {
+          ...pending,
+          type: 'cotton_candy_unicorn',
+          sourcePlayerId: pending.sourcePlayerId,
           remainingPlayerIds: pending.remainingPlayerIds,
           resolvedPlayerIds,
         } as typeof pending;

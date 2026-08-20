@@ -1570,6 +1570,64 @@ export default function GameOverlay({
         );
       }
 
+      case 'cotton_candy_unicorn': {
+        const targetPlayer = gameState.players.find(
+          (p) => p.id === localPlayerId,
+        );
+        const needsToResolve =
+          action.remainingPlayerIds.includes(localPlayerId) &&
+          !action.resolvedPlayerIds.includes(localPlayerId);
+
+        if (!targetPlayer) return null;
+
+        if (!needsToResolve) {
+          return (
+            <div className="overlay-backdrop">
+              <div className="card-selection-window choice-window">
+                <h2>🍬 Cotton Candy Unicorn</h2>
+                <p>
+                  {action.remainingPlayerIds.length >
+                  action.resolvedPlayerIds.length
+                    ? 'Esperando sacrificios de otros jugadores...'
+                    : 'Resolviendo efecto...'}
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        const items = targetPlayer.stable
+          .filter(
+            (c) =>
+              c.cardType === 'unicorn' &&
+              !isPandamoniumProtected(targetPlayer, c),
+          )
+          .map((card, idx) => ({
+            id: `${card.id}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            image: card.image,
+          }));
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="🍬 Cotton Candy Unicorn"
+            subtitle="Debes sacrificar 1 unicornio de tu establo."
+            items={items}
+            maxSelection={1}
+            confirmText="Sacrificar"
+            onConfirm={([cardId]) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId,
+              });
+            }}
+          />
+        );
+      }
+
       // ───────────────────────────────────
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
