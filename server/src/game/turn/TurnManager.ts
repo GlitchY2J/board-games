@@ -68,8 +68,11 @@ export class TurnManager {
       uids.push(...caffeine.map((c) => c.uid));
     }
 
+    // Claw Machine es un efecto opcional ("you may"). Se ofrece siempre que el
+    // upgrade esté en el establo; si al aceptar la mano no tiene carta para
+    // descartar, se resuelve sin efecto en lugar de suprimir la oferta.
     const claw = allCards.filter((c) => c.id === 'claw_machine');
-    if (claw.length > 0 && activePlayer.hand.length > 0) {
+    if (claw.length > 0) {
       uids.push(...claw.map((c) => c.uid));
     }
 
@@ -78,12 +81,13 @@ export class TurnManager {
       uids.push(...glitter.map((c) => c.uid));
     }
 
-    // Rainbow Lasso: descartar 3 cartas y luego robar un unicornio. Solo si
-    // tiene suficientes cartas en la mano y hay un unicornio ajeno disponible.
+    // Rainbow Lasso: descartar 3 cartas y luego robar un unicornio. Efecto
+    // opcional; se ofrece siempre que el upgrade esté en el establo y haya un
+    // unicornio ajeno disponible. Si la mano no llega a 3 cartas al aceptar,
+    // se resuelve sin efecto.
     const lasso = allCards.filter((c) => c.id === 'rainbow_lasso');
     if (
       lasso.length > 0 &&
-      activePlayer.hand.length >= 3 &&
       game.players.some(
         (p) => p.id !== activePlayer.id && hasAvailableUnicorn(p),
       )
@@ -92,11 +96,10 @@ export class TurnManager {
     }
 
     // Stable Artillery: descartar 2 cartas y luego destruir un unicornio de
-    // OTRO jugador (no del propio establo).
+    // OTRO jugador (no del propio establo). Igual que Lasso: opcional.
     const artillery = allCards.filter((c) => c.id === 'stable_artillery');
     if (
       artillery.length > 0 &&
-      activePlayer.hand.length >= 2 &&
       game.players.some(
         (p) => p.id !== activePlayer.id && hasAvailableUnicorn(p),
       )

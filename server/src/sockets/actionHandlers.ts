@@ -840,7 +840,12 @@ export function registerActionHandlers(
 
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'claw_machine') {
-        if (choice === 'yes') {
+        const used =
+          choice === 'yes' &&
+          (room.gameState.players.find((p) => p.id === player.id)?.hand
+            .length ?? 0) >= 1;
+
+        if (used) {
           room.gameState.pendingAction = {
             type: 'discard',
             reason: 'claw_machine',
@@ -856,9 +861,9 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          choice === 'yes'
+          used
             ? `${player.name} usará Claw Machine para descartar y robar`
-            : `${player.name} omitió el efecto de Claw Machine`,
+            : `${player.name} no pudo usar Claw Machine (sin cartas para descartar)`,
           { playerId: player.id },
         );
 
@@ -887,7 +892,12 @@ export function registerActionHandlers(
 
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'rainbow_lasso') {
-        if (choice === 'yes') {
+        const used =
+          choice === 'yes' &&
+          (room.gameState.players.find((p) => p.id === player.id)?.hand
+            .length ?? 0) >= 3;
+
+        if (used) {
           room.gameState.pendingAction = {
             type: 'discard',
             reason: 'rainbow_lasso',
@@ -903,15 +913,20 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          choice === 'yes'
+          used
             ? `${player.name} usará Rainbow Lasso para descartar 3 y robar un unicornio`
-            : `${player.name} omitió el efecto de Rainbow Lasso`,
+            : `${player.name} no pudo usar Rainbow Lasso (no tiene 3 cartas)`,
           { playerId: player.id },
         );
 
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'stable_artillery') {
-        if (choice === 'yes') {
+        const used =
+          choice === 'yes' &&
+          (room.gameState.players.find((p) => p.id === player.id)?.hand
+            .length ?? 0) >= 2;
+
+        if (used) {
           room.gameState.pendingAction = {
             type: 'discard',
             reason: 'stable_artillery',
@@ -927,9 +942,9 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          choice === 'yes'
+          used
             ? `${player.name} usará Stable Artillery para descartar 2 y destruir un unicornio`
-            : `${player.name} omitió el efecto de Stable Artillery`,
+            : `${player.name} no pudo usar Stable Artillery (no tiene 2 cartas)`,
           { playerId: player.id },
         );
 

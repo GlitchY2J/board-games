@@ -43,6 +43,28 @@
   color: #6ee7b7;
 }
 
+/* Resaltado breve del mensaje más reciente */
+.chat-msg-latest {
+  animation: chatLatestGlow 2.2s ease-out forwards;
+  border-radius: 8px;
+  padding: 2px 6px;
+  margin: -2px -6px;
+}
+
+@keyframes chatLatestGlow {
+  0% {
+    background-color: rgba(96, 165, 250, 0.35);
+    box-shadow: 0 0 12px rgba(96, 165, 250, 0.35);
+  }
+  70% {
+    background-color: rgba(96, 165, 250, 0.18);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
 .chat-name {
   flex-shrink: 0;
   padding: 0 6px;

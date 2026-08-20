@@ -4,13 +4,14 @@ import { socket } from '../services/socket';
 import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
 import PhasePanel from '../components/game/PhasePanel';
+import Chat from '../components/game/Chat';
 import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
 import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
-import { RotateCcw, LogOut, Bot, Bug } from 'lucide-react';
+import { RotateCcw, LogOut, Bot, Bug, MessageSquare, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
@@ -28,6 +29,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
   const { deactivate } = useGame();
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [autoEnabled, setAutoEnabled] = useState(false);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
   const cardSelectedRef = useRef(false);
 
@@ -162,25 +164,30 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
         </div>
 
 <div className="middle">
-          <div className="center">
-            <div className="center-column" data-center-area>
-              <div className="center-stack">
-                <CenterArea
-                  gameState={gameState}
-                  isMyTurn={isMyTurn}
-                  localPlayerId={localPlayer.id}
-                />
-                {isMyTurn && gameState.phase === 'DRAW' && (
-                  <span className="draw-hint">Roba una carta</span>
-                )}
-                {isMyTurn &&
-                  gameState.phase === 'ACTION' &&
-                  !gameState.actionUsed &&
-                  !gameState.pendingPlay && (
-                    <span className="draw-hint">Juega o roba una carta</span>
+          <div className="center-wrap">
+            <div className="center">
+              <div className="center-column" data-center-area>
+                <div className="center-stack">
+                  <CenterArea
+                    gameState={gameState}
+                    isMyTurn={isMyTurn}
+                    localPlayerId={localPlayer.id}
+                  />
+                  {isMyTurn && gameState.phase === 'DRAW' && (
+                    <span className="draw-hint">Roba una carta</span>
                   )}
+                  {isMyTurn &&
+                    gameState.phase === 'ACTION' &&
+                    !gameState.actionUsed &&
+                    !gameState.pendingPlay && (
+                      <span className="draw-hint">Juega o roba una carta</span>
+                    )}
+                </div>
               </div>
             </div>
+          </div>
+          <div className="chat-side">
+            <Chat gameState={gameState} />
           </div>
         </div>
 
@@ -280,6 +287,27 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
             navigate('/');
           }}
         />
+      )}
+      <button
+        className="mobile-chat-toggle"
+        title="Chat"
+        onClick={() => setMobileChatOpen((v) => !v)}
+      >
+        <MessageSquare size={18} />
+      </button>
+      {mobileChatOpen && (
+        <div className="mobile-chat-panel">
+          <div className="mobile-chat-panel-inner">
+            <Chat gameState={gameState} />
+          </div>
+          <button
+            className="mobile-chat-close"
+            title="Cerrar chat"
+            onClick={() => setMobileChatOpen(false)}
+          >
+            <X size={16} />
+          </button>
+        </div>
       )}
       <div className="phase-panel-anchor">
         <PhasePanel gameState={gameState} />

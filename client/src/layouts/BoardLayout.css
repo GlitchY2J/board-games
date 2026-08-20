@@ -33,12 +33,74 @@
   align-items: center;
   justify-content: center;
   padding: 16px 0;
+  gap: 24px;
+}
+
+/* El área central ocupa todo el ancho disponible y se centra en el espacio que
+   queda a la izquierda del chat, desplazándose para hacerle sitio. */
+.center-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chat a la derecha del área central: ocupa su propio espacio en el flujo.
+   Altura fija igual a la del área central para que ambos queden alineados. */
+.chat-side {
+  flex-shrink: 0;
+  width: 280px;
+  max-width: 30vw;
+  z-index: 15;
+  height: 256px;
+}
+
+.chat-side .chat-panel {
+  width: 100%;
+  height: 100%;
+  margin-top: 0;
+}
+
+.chat-side .chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ─── Chat móvil: botón flotante + panel desplegable (oculto en desktop) ─── */
+.mobile-chat-toggle {
+  display: none;
+}
+
+.mobile-chat-panel {
+  display: none;
 }
 
 .center {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* Placeholder "Vacío" del discard: mismo tamaño que una carta medium. */
+.discard-placeholder {
+  width: 100px;
+  aspect-ratio: 600 / 818;
+  border-radius: 8px;
+  border: 1px dashed rgba(30, 41, 59, 0.8);
+  background: rgba(2, 6, 23, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
 }
 
 .player-bottom {
@@ -241,6 +303,13 @@
   .center-column {
     gap: 20px;
   }
+  .discard-placeholder {
+    width: 84px;
+  }
+  .chat-side {
+    right: 12px;
+    width: 220px;
+  }
 }
 
 /* ───────── Móvil ≤ 640px ───────── */
@@ -283,6 +352,65 @@
   .center-stack > .flex {
     gap: 8px !important;
     padding: 6px !important;
+  }
+  .chat-side {
+    display: none;
+  }
+  .discard-placeholder {
+    width: 64px;
+  }
+  /* Botón flotante para abrir el chat en móvil */
+  .mobile-chat-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 16px;
+    bottom: 64px;
+    z-index: 60;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #60a5fa;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+  /* Panel flotante del chat en móvil */
+  .mobile-chat-panel {
+    display: block;
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: 112px;
+    z-index: 70;
+    max-height: 55vh;
+    animation: phasePanelExpand 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .mobile-chat-panel-inner .chat-panel {
+    width: 100%;
+    height: 100%;
+    max-height: 55vh;
+    margin-top: 0;
+  }
+  .mobile-chat-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    background: rgba(239, 68, 68, 0.08);
+    color: #f87171;
+    cursor: pointer;
   }
   .draw-hint {
     font-size: 10px;

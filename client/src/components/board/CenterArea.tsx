@@ -75,7 +75,7 @@ export default function CenterArea({
                 plain
               />
             ) : (
-              <div className="w-[110px] h-[154px] rounded-2xl border border-dashed border-slate-800/80 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center text-slate-600 text-xs font-bold select-none uppercase tracking-wider">
+              <div className="discard-placeholder">
                 Vacío
               </div>
             )}

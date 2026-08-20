@@ -5,7 +5,6 @@ import { socket } from '../../services/socket';
 import { Info, X } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import './PhasePanel.css';
-import Chat from './Chat';
 
 interface Props {
   gameState: GameState;
@@ -169,7 +168,6 @@ export default function PhasePanel({ gameState }: Props) {
                 )}
               </div>
             </div>
-            <Chat gameState={gameState} />
           </div>
       )}
     </div>

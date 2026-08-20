@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState } from '../../types/GameState';
 import { socket } from '../../services/socket';
 import { Send } from 'lucide-react';
+import { cn } from '../../lib/cn';
 import './Chat.css';
 
 interface Props {
@@ -33,10 +34,10 @@ export default function Chat({ gameState }: Props) {
     return map;
   }, [gameState.players]);
 
-  // Auto-scroll: el chat muestra los mensajes más recientes primero (arriba).
+  // Auto-scroll al final: los mensajes más recientes se posicionan abajo.
   useEffect(() => {
     if (listRef.current) {
-      listRef.current.scrollTop = 0;
+      listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages.length]);
 
@@ -51,11 +52,19 @@ export default function Chat({ gameState }: Props) {
     <div className="chat-panel">
       <div className="chat-header">Chat</div>
       <div ref={listRef} className="chat-list">
-        {[...messages].reverse().map((m) => {
+        {messages.map((m, i) => {
           const c = colors.get(m.playerId) ?? COLORS[0];
           const isMine = m.playerId === localPlayer?.id;
+          const isLatest = i === messages.length - 1;
           return (
-            <div key={m.id} className={isMine ? 'chat-msg chat-msg-mine' : 'chat-msg'}>
+            <div
+              key={m.id}
+              className={cn(
+                'chat-msg',
+                isMine && 'chat-msg-mine',
+                isLatest && 'chat-msg-latest',
+              )}
+            >
               <span
                 className="chat-name"
                 style={{ color: c.text, backgroundColor: c.bg, border: `1px solid ${c.border}` }}

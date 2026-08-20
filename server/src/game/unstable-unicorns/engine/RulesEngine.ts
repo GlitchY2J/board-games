@@ -130,6 +130,26 @@ export class RulesEngine {
     return actionSuccess({ card: playedCard });
   }
 
+  /**
+   * Consume una jugada de la fase de acción. Sin Double Dutch, marca la acción
+   * como usada y la fase de acción termina. Con Double Dutch
+   * (actionPlaysRemaining > 0), decrementa el contador y permite seguir jugando.
+   * Usado tanto al resolver una carta jugada como al resolver una negada.
+   */
+  static consumeActionPlay(state: GameState): void {
+    state.actionUsed = true;
+
+    // Double Dutch: permite jugar hasta 2 cartas en la fase de acción.
+    if (state.actionPlaysRemaining !== undefined) {
+      state.actionPlaysRemaining -= 1;
+      if (state.actionPlaysRemaining > 0) {
+        state.actionUsed = false;
+      } else {
+        state.actionPlaysRemaining = undefined;
+      }
+    }
+  }
+
   static resolvePlay(
     state: GameState,
     playerId: string,
@@ -192,17 +212,7 @@ export class RulesEngine {
         player.hand.splice(finalHandIndex, 1);
       }
 
-      state.actionUsed = true;
-
-      // Double Dutch: permite jugar hasta 2 cartas en la fase de acción.
-      if (state.actionPlaysRemaining !== undefined) {
-        state.actionPlaysRemaining -= 1;
-        if (state.actionPlaysRemaining > 0) {
-          state.actionUsed = false;
-        } else {
-          state.actionPlaysRemaining = undefined;
-        }
-      }
+      this.consumeActionPlay(state);
 
       return actionSuccess(state);
     } catch (error) {

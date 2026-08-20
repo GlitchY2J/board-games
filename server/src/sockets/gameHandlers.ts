@@ -140,7 +140,9 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       }
     }
 
-    game.actionUsed = true;
+    // La carta negada aún consume una jugada de la fase de acción. Si hay
+    // Double Dutch activo, el jugador conserva su segunda jugada.
+    RulesEngine.consumeActionPlay(game);
 
     addLog(
       game,
