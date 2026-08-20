@@ -46,6 +46,17 @@
   justify-content: center;
 }
 
+/* Orden de turno a la izquierda del área central */
+.turn-order-side {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 170px;
+  max-width: 22vw;
+  z-index: 15;
+}
+
 /* Chat a la derecha del área central: posicionado a un lado para no desplazar el centro */
 .chat-side {
   position: absolute;
@@ -311,6 +322,10 @@
   .discard-placeholder {
     width: 84px;
   }
+  .turn-order-side {
+    left: 0;
+    width: 190px;
+  }
   .chat-side {
     right: 12px;
     width: 220px;
@@ -357,6 +372,9 @@
   .center-stack > .flex {
     gap: 8px !important;
     padding: 6px !important;
+  }
+  .turn-order-side {
+    display: none;
   }
   .chat-side {
     display: none;

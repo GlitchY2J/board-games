@@ -5,6 +5,7 @@ import './BoardLayout.css';
 import CenterArea from '../components/board/CenterArea';
 import PhasePanel from '../components/game/PhasePanel';
 import Chat from '../components/game/Chat';
+import TurnOrder from '../components/game/TurnOrder';
 import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
 import GameOverlay from '../components/overlay/GameOverlay';
@@ -162,7 +163,10 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           })}
         </div>
 
-<div className="middle">
+        <div className="middle">
+          <div className="turn-order-side">
+            <TurnOrder gameState={gameState} localPlayerId={localPlayer.id} />
+          </div>
           <div className="center-wrap">
             <div className="center">
               <div className="center-column" data-center-area>
