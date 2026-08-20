@@ -44,3 +44,15 @@ export async function joinRoom(data: {
 
   return response.json();
 }
+
+// Obtener info de sala (para avatares ocupados, etc.)
+export async function getRoomInfo(roomCode: string) {
+  const response = await fetch(`${API}/rooms/${roomCode.toUpperCase()}`);
+
+  if (!response.ok) {
+    throw new Error('Sala no encontrada');
+  }
+
+  return response.json();
+}
+

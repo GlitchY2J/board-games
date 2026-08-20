@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
-import { joinRoom } from '../services/api';
+import { joinRoom, getRoomInfo } from '../services/api';
 import { saveSession } from '../services/session';
 import { useGame } from '../context/GameContext';
 import Button from '../components/ui/Button';
@@ -16,6 +16,38 @@ export default function JoinRoom() {
   const [playerName, setPlayerName] = useState('');
   const [avatar, setAvatar] = useState('');
   const [loading, setLoading] = useState(false);
+  const [takenAvatars, setTakenAvatars] = useState<string[]>([]);
+
+  useEffect(() => {
+    const code = roomCode.trim().toUpperCase();
+    if (code.length < 2) {
+      setTakenAvatars([]);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchTaken = async () => {
+      try {
+        const info = await getRoomInfo(code);
+        if (isMounted && info?.takenAvatars) {
+          setTakenAvatars(info.takenAvatars);
+          if (info.takenAvatars.includes(avatar)) {
+            setAvatar('');
+          }
+        }
+      } catch {
+        if (isMounted) {
+          setTakenAvatars([]);
+        }
+      }
+    };
+
+    const timer = setTimeout(fetchTaken, 250);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [roomCode, avatar]);
 
   async function handleJoin() {
     if (!roomCode.trim()) {
@@ -126,7 +158,12 @@ export default function JoinRoom() {
             />
           </div>
 
-          <AvatarPicker value={avatar} onChange={setAvatar} accent="cyan" />
+          <AvatarPicker
+            value={avatar}
+            onChange={setAvatar}
+            accent="cyan"
+            takenAvatars={takenAvatars}
+          />
 
           <Button
             onClick={handleJoin}

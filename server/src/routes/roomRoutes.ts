@@ -43,4 +43,25 @@ router.post('/join', (req, res) => {
   res.json({ room, playerId: player?.id, sessionToken: player?.sessionToken });
 });
 
+router.get('/:code', (req, res) => {
+  const room = roomManager.getRoom(req.params.code.toUpperCase());
+
+  if (!room) {
+    return res.status(404).json({
+      error: 'Sala no encontrada',
+    });
+  }
+
+  const takenAvatars = room.players
+    .map((player) => player.avatar)
+    .filter(Boolean);
+
+  res.json({
+    code: room.code,
+    game: room.game,
+    playerCount: room.players.length,
+    takenAvatars,
+  });
+});
+
 export default router;

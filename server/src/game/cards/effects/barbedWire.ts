@@ -1,7 +1,7 @@
 import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
-import { EffectStack } from '../../unstable-unicorns/engine/EffectStack.ts';
+import type { PendingAction } from '../../models/PendingAction.ts';
 
 export const BARBED_WIRE_ID = 'barbed_wire';
 
@@ -22,28 +22,63 @@ export function triggerBarbedWireDiscard(
 ): void {
   if (player.hand.length === 0) return;
 
-  const existing = state.pendingAction;
-  if (existing) {
-    if (
-      existing.type === 'discard' &&
-      existing.reason === 'barbed_wire' &&
-      existing.playerId === player.id
-    ) {
-      existing.cardsToDiscard = Math.min(
-        existing.cardsToDiscard + 1,
-        player.hand.length,
-      );
-      return;
-    }
-    EffectStack.suspend(state, existing);
-  }
-
-  state.pendingAction = {
+  const bwAction: PendingAction = {
     type: 'discard',
     reason: 'barbed_wire',
     playerId: player.id,
     cardsToDiscard: 1,
   };
+
+  const existing = state.pendingAction;
+
+  // Si ya hay un descarte pendiente de Barbed Wire para este mismo jugador,
+  // simplemente incrementar el contador (sin crear una acción adicional).
+  if (
+    existing &&
+    existing.type === 'discard' &&
+    existing.reason === 'barbed_wire' &&
+    existing.playerId === player.id
+  ) {
+    existing.cardsToDiscard = Math.min(
+      existing.cardsToDiscard + 1,
+      player.hand.length,
+    );
+    return;
+  }
+
+  // Verificar si en la pila de reanudación ya hay un descarte de Barbed Wire
+  // para este jugador, para acumularlo en lugar de duplicarlo.
+  if (state.pendingResume?.length) {
+    const queued = state.pendingResume.find(
+      (a) =>
+        a.type === 'discard' &&
+        a.reason === 'barbed_wire' &&
+        a.playerId === player.id,
+    );
+    if (queued) {
+      (queued as typeof bwAction).cardsToDiscard = Math.min(
+        (queued as typeof bwAction).cardsToDiscard + 1,
+        player.hand.length,
+      );
+      return;
+    }
+  }
+
+  // Si NO hay ninguna acción pendiente activa, Barbed Wire se convierte en la
+  // acción activa inmediatamente.
+  if (!existing) {
+    state.pendingAction = bwAction;
+    return;
+  }
+
+  // Si hay una acción activa (p. ej. la acción que acaba de destruir/sacrificar
+  // una carta), NO la suspendemos porque ya está siendo resuelta (la carta ya
+  // fue removida del establo). Suspenderla causaría que se re-ejecute al
+  // reanudarla, disparando Barbed Wire de nuevo en un bucle infinito.
+  // En su lugar, apilamos el descarte de Barbed Wire en pendingResume para que
+  // se ejecute UNA VEZ que la acción actual termine limpiamente.
+  if (!state.pendingResume) state.pendingResume = [];
+  state.pendingResume.push(bwAction);
 }
 
 /**
