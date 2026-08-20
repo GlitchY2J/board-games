@@ -79,11 +79,25 @@ export default function PhasePanel({ gameState }: Props) {
     return groups;
   }, [logEntries]);
 
+  // Auto-scroll hacia abajo para mostrar siempre las acciones más recientes al final
   useEffect(() => {
-    if (logRef.current) {
-      logRef.current.scrollTop = logRef.current.scrollHeight;
-    }
-  }, [logEntries.length]);
+    if (!open) return;
+
+    const scrollToBottom = () => {
+      if (logRef.current) {
+        logRef.current.scrollTop = logRef.current.scrollHeight;
+      }
+    };
+
+    scrollToBottom();
+    const frameId = requestAnimationFrame(scrollToBottom);
+    const timeoutId = setTimeout(scrollToBottom, 50);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timeoutId);
+    };
+  }, [logEntries.length, open]);
 
   const getPhaseColor = (phase: string) => {
     switch (phase) {

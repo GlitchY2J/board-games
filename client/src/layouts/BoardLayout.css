@@ -30,29 +30,30 @@
 
 .middle {
   flex: 1;
+  position: relative;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px 0;
-  gap: 24px;
 }
 
-/* El área central ocupa todo el ancho disponible y se centra en el espacio que
-   queda a la izquierda del chat, desplazándose para hacerle sitio. */
+/* El área central ocupa todo el ancho disponible y se centra perfectamente en la pantalla */
 .center-wrap {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Chat a la derecha del área central: ocupa su propio espacio en el flujo.
-   Altura fija igual a la del área central para que ambos queden alineados. */
+/* Chat a la derecha del área central: posicionado a un lado para no desplazar el centro */
 .chat-side {
-  flex-shrink: 0;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: 280px;
-  max-width: 30vw;
+  max-width: 28vw;
   z-index: 15;
   height: 256px;
 }
