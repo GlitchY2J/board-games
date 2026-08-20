@@ -197,14 +197,9 @@ export default function Game() {
     };
   }, []);
 
-  if (!gameState) {
-    return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4">
-        <Loader2 className="animate-spin text-emerald-400" size={40} />
-        <p className="text-sm text-slate-400 font-medium">Cargando partida...</p>
-      </div>
-    );
-  }
+  const activePlayer = gameState?.players[gameState.currentPlayer];
+  const localPlayer = gameState?.players.find((p) => p.socketId === socket.id);
+  const isMyTurn = !!activePlayer && activePlayer.socketId === socket.id;
 
   useEffect(() => {
     if (!gameState) return;
@@ -214,17 +209,35 @@ export default function Game() {
     }
   }, [gameState, deactivate]);
 
-  const activePlayer = gameState.players[gameState.currentPlayer];
-  const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
+  // Ejecutar automáticamente los efectos de inicio de turno después del anuncio de turno
+  useEffect(() => {
+    if (!gameState || !isMyTurn) return;
+    if (gameState.phase !== 'BEGINNING') return;
+    if (turnAnnounce) return; // Esperar a que termine la animación de anuncio de turno
+    if (gameState.pendingAction || gameState.pendingPlay) return;
+
+    socket.emit('next-phase', gameState.roomCode);
+  }, [
+    gameState,
+    isMyTurn,
+    turnAnnounce,
+  ]);
+
+  if (!gameState) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-emerald-400" size={40} />
+        <p className="text-sm text-slate-400 font-medium">Cargando partida...</p>
+      </div>
+    );
+  }
 
   if (!localPlayer) {
     return <h2>Jugador no encontrado.</h2>;
   }
 
   const isHost = contextIsHost || localPlayer.id === roomFromContext?.hostId;
-
   const gs: GameState = gameState;
-  const isMyTurn = activePlayer.socketId === socket.id;
 
   function play(cardId: string) {
     if (!localPlayer) {

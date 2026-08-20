@@ -9,6 +9,7 @@ import {
   hasAvailableCardToSacrifice,
 } from '../cards/effects/pandamonium.ts';
 import { hasDoubleDutch } from '../cards/effects/doubleDutch.ts';
+import { isEffectBlockedByBlindingLight } from '../cards/effects/blindingLight.ts';
 
 const END_OF_TURN_EFFECTS = new Set<string>([
   // Add here any card whose effect triggers at the end of your turn
@@ -58,7 +59,8 @@ export class TurnManager {
     const rhinocorn = allCards.filter((c) => c.id === 'rhinocorn');
     if (
       rhinocorn.length > 0 &&
-      game.players.some((p) => p.id !== activePlayer.id && hasAvailableUnicorn(p))
+      game.players.some((p) => p.id !== activePlayer.id && hasAvailableUnicorn(p)) &&
+      rhinocorn.some((c) => !isEffectBlockedByBlindingLight(activePlayer, c))
     ) {
       uids.push(...rhinocorn.map((c) => c.uid));
     }

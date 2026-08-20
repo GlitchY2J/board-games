@@ -16,7 +16,7 @@ export default function PlayerBoard({
   return (
     <div
       data-player-id={player.id}
-      className={`player-board relative rounded-2xl glass-panel bg-slate-950/30 border p-3 transition-all duration-300 flex-col items-center gap-4`}
+      className={`player-board relative rounded-2xl glass-panel border p-3 transition-all duration-300 flex-col items-center gap-4`}
       style={{
         width: '100%',
         minWidth: '0',

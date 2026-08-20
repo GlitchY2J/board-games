@@ -5,6 +5,7 @@ import { DeckManager } from '../DeckManager.ts';
 import { CardRepository } from './CardRepository.ts';
 import { Player } from '../models/Player.ts';
 import { TurnPhase } from '../turn/TurnPhase.ts';
+import { TurnManager } from '../turn/TurnManager.ts';
 
 export function createGameState(room: Room): GameState {
   const deck = CardRepository.load();
@@ -58,7 +59,7 @@ export function createGameState(room: Room): GameState {
     }
   }
 
-  return {
+  const gameState: GameState = {
     roomCode: room.code,
     started: true,
     turn: 1,
@@ -72,4 +73,8 @@ export function createGameState(room: Room): GameState {
     log: [],
     chat: [],
   };
+
+  TurnManager.skipBeginningIfNoTriggers(gameState);
+
+  return gameState;
 }

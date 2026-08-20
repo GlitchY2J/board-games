@@ -10,6 +10,7 @@ import {
   maybeTriggerBarbedWireLeave,
   triggerBarbedWireDiscard,
 } from '../../cards/effects/barbedWire.ts';
+import { isEffectBlockedByBlindingLight } from '../../cards/effects/blindingLight.ts';
 
 export function hasUpgrade(player: Player, id: string): boolean {
   return player.upgrades.some((c) => c.id === id);
@@ -58,12 +59,7 @@ export class CardMovement {
 
     // Blinding Light: bloquea la activación de efectos de tus Unicornios
     // (los Baby Unicorn son inmunes).
-    if (
-      !hasDowngrade(player, 'blinding_light') &&
-      card.effect &&
-      card.cardType === 'unicorn' &&
-      card.unicornClass !== 'baby'
-    ) {
+    if (!isEffectBlockedByBlindingLight(player, card) && card.effect) {
       const effect = effects[card.effect];
       effect?.onEnterStable?.(state, player, card);
     }
@@ -179,10 +175,7 @@ export class CardMovement {
 
     // Blinding Light: bloquea la activación de efectos al destruir/sacrificar
     // tus Unicornios (los Baby Unicorn son inmunes).
-    const blindingLightActive =
-      card.cardType === 'unicorn' &&
-      card.unicornClass !== 'baby' &&
-      hasDowngrade(player, 'blinding_light');
+    const blindingLightActive = isEffectBlockedByBlindingLight(player, card);
 
     if (card.effect && !blindingLightActive) {
       const effect = effects[card.effect];

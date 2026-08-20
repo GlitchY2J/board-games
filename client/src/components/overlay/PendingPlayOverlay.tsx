@@ -65,8 +65,11 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, hide = fa
     localPlayer?.hand.some((c) => c.effect === 'neigh') ?? false;
   const hasSuperNeigh =
     localPlayer?.hand.some((c) => c.effect === 'super_neigh') ?? false;
+  const hasBlindingLight =
+    localPlayer?.downgrades.some((c) => c.id === 'blinding_light') ?? false;
   const hasGinormousUnicorn =
-    localPlayer?.stable.some((card) => card.id === 'ginormous_unicorn') ?? false;
+    (localPlayer?.stable.some((card) => card.id === 'ginormous_unicorn') ?? false) &&
+    !hasBlindingLight;
   const hasSlowdown =
     localPlayer?.downgrades.some((card) => card.id === 'slowdown') ?? false;
   const hasAccepted = pending.acceptedIds.includes(localPlayerId);

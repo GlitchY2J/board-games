@@ -1,6 +1,7 @@
 import type { GameState } from '../../models/GameState.ts';
 import type { Card } from '../../models/Card.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { hasBlindingLight } from './blindingLight.ts';
 
 export const QUEEN_BEE_ID = 'queen_bee_unicorn';
 
@@ -23,7 +24,7 @@ export function isBasicUnicornEntryBlocked(
   // Blinding Light anula el efecto continuo de Queen Bee mientras esté en el
   // mismo establo: los demás jugadores sí pueden jugar unicornios básicos.
   const owner = state.players.find((p) => p.id === ownerId);
-  if (owner?.downgrades.some((c) => c.id === 'blinding_light')) return false;
+  if (owner && hasBlindingLight(owner)) return false;
 
   return targetPlayerId !== ownerId;
 }

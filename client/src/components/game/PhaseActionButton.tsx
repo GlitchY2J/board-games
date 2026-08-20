@@ -35,9 +35,9 @@ export default function PhaseActionButton({ gameState, autoEnabled = false }: Pr
       if (autoEnabled && !doubleDutchCanEnd) return;
 
       const showButton =
-        (gameState.phase !== 'ACTION' && gameState.phase !== 'DRAW') ||
         (gameState.phase === 'ACTION' &&
-          (gameState.actionUsed || gameState.actionPlaysRemaining === 1));
+          (gameState.actionUsed || gameState.actionPlaysRemaining === 1)) ||
+        gameState.phase === 'END';
 
       if (!showButton) return;
 
@@ -51,8 +51,6 @@ export default function PhaseActionButton({ gameState, autoEnabled = false }: Pr
 
   function getButtonText() {
     switch (gameState.phase) {
-      case 'BEGINNING':
-        return 'Comenzar Turno';
       case 'ACTION':
         return 'Terminar Turno';
       case 'END':
@@ -72,9 +70,9 @@ export default function PhaseActionButton({ gameState, autoEnabled = false }: Pr
   if (autoEnabled && !doubleDutchCanEnd) return null;
 
   const showButton =
-    (gameState.phase !== 'ACTION' && gameState.phase !== 'DRAW') ||
     (gameState.phase === 'ACTION' &&
-      (gameState.actionUsed || gameState.actionPlaysRemaining === 1));
+      (gameState.actionUsed || gameState.actionPlaysRemaining === 1)) ||
+    gameState.phase === 'END';
 
   if (!showButton) return null;
 

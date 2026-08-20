@@ -44,7 +44,6 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
     if (gameState.pendingAction || gameState.pendingPlay) return;
 
     const canAutoAdvance =
-      gameState.phase === 'BEGINNING' ||
       gameState.phase === 'END' ||
       (gameState.phase === 'ACTION' && gameState.actionUsed);
 

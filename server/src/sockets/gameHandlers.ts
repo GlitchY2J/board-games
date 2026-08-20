@@ -19,6 +19,7 @@ import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
 import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation } from '../game/cardAnimations.ts';
 import type { ChatMessage } from '../../../shared/types/Game.ts';
+import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -743,7 +744,12 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
 
     if (!gamePlayer) return;
 
-    if (gamePlayer.stable.some((card) => NO_NEIGH_CARDS.has(card.id))) {
+    // Blinding Light neutraliza el efecto de Ginormous Unicorn: mientras esté
+    // en tu establo, puedes volver a jugar Neigh.
+    if (
+      gamePlayer.stable.some((card) => NO_NEIGH_CARDS.has(card.id)) &&
+      !hasBlindingLight(gamePlayer)
+    ) {
       emitGameError(
         socket,
         'ACTION_NOT_ALLOWED',
