@@ -94,6 +94,13 @@ export type PendingAction =
       resolvedPlayerIds: string[]; // jugadores que ya descartaron
     }
   | {
+      type: "frenchiecorn";
+      sourcePlayerId: string;
+      remainingPlayerIds: string[];
+      resolvedPlayerIds: string[];
+      discardedCardIds: string[];
+    }
+  | {
       type: "extremely_destructive_unicorn";
       remainingPlayerIds: string[]; // cola de jugadores que deben sacrificar un unicornio
       resolvedPlayerIds: string[];
@@ -158,9 +165,10 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-       reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn" | "extremely_fertile_unicorn";
+       reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn" | "extremely_fertile_unicorn" | "frenchiecorn";
       playerId: string;
-      cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
+       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
+       discardedCardIds?: string[];
     }
   | {
       type: "select_deck_card";

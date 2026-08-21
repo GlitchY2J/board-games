@@ -1409,6 +1409,58 @@ export default function GameOverlay({
       }
 
       // ───────────────────────────────────
+      // FRENCHIECORN — cada rival descarta 1 carta
+      // ───────────────────────────────────
+      case 'frenchiecorn': {
+        const needsToDiscard =
+          action.remainingPlayerIds.includes(localPlayerId) &&
+          !action.resolvedPlayerIds.includes(localPlayerId);
+        const alreadyDiscarded = action.resolvedPlayerIds.includes(localPlayerId);
+        const isSource = action.sourcePlayerId === localPlayerId;
+
+        if (!needsToDiscard && !alreadyDiscarded && !isSource) return null;
+
+        if (!needsToDiscard) {
+          return (
+            <div className="overlay-backdrop" role="status" aria-live="polite">
+              <div className="card-selection-window choice-window">
+                <h2>🐶 Frenchiecorn</h2>
+                <p>Esperando a que los demás jugadores descarten sus cartas...</p>
+              </div>
+            </div>
+          );
+        }
+
+        const player = gameState.players.find((p) => p.id === localPlayerId);
+        if (!player) return null;
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            key={localPlayerId}
+            title="🐶 Frenchiecorn"
+            subtitle="Debes descartar 1 carta de tu mano. Al terminar, su dueño podrá elegir una carta descartada."
+            items={player.hand.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={1}
+            confirmText="Descartar"
+            onConfirm={(cardIds) => {
+              dismiss();
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds,
+              });
+            }}
+          />
+        );
+      }
+
+      // ───────────────────────────────────
       // EXTREMELY DESTRUCTIVE UNICORN
       // ───────────────────────────────────
       case 'extremely_destructive_unicorn': {
@@ -1632,7 +1684,8 @@ export default function GameOverlay({
         const addsToHand =
           action.reason === 'magical_flying_unicorn' ||
           action.reason === 'majestic_flying_unicorn' ||
-          action.reason === 'swift_flying_unicorn';
+          action.reason === 'swift_flying_unicorn' ||
+          action.reason === 'frenchiecorn';
 
         const isMagicalFlyingUnicorn =
           action.reason === 'magical_flying_unicorn';
@@ -1642,10 +1695,12 @@ export default function GameOverlay({
         const isSwiftFlyingUnicorn = action.reason === 'swift_flying_unicorn';
         const isKissOfLife = action.reason === 'kiss_of_life';
         const isAngelUnicorn = action.reason === 'angel_unicorn';
+        const isFrenchiecorn = action.reason === 'frenchiecorn';
 
         const eligibleCards = gameState.discard.filter(
           (card) =>
             (!action.cardType || card.cardType === action.cardType) &&
+            (!isFrenchiecorn || action.discardedCardIds?.includes(card.uid)) &&
             (action.reason !== 'dark_angel_unicorn' ||
               card.id !== 'dark_angel_unicorn') &&
             (!isSwiftFlyingUnicorn ||
@@ -1669,6 +1724,8 @@ export default function GameOverlay({
                         ? '🧙 Necromancer Unicorn'
                         : isKissOfLife
                           ? '💋 Kiss Of Life'
+                          : isFrenchiecorn
+                            ? '🐶 Frenchiecorn'
                           : '😈 Dark Angel Unicorn'
             }
             subtitle={
@@ -1676,8 +1733,10 @@ export default function GameOverlay({
                 ? 'Elige una carta de Magia del descarte para añadirla a tu mano'
                 : isMajesticFlyingUnicorn
                   ? 'Elige un unicornio del descarte para añadirlo a tu mano'
-                  : isSwiftFlyingUnicorn
+                : isSwiftFlyingUnicorn
                     ? 'Elige un Neigh del descarte para añadirlo a tu mano'
+                    : isFrenchiecorn
+                      ? 'Elige una de las cartas descartadas por los demás jugadores para añadirla a tu mano'
                     : 'Elige un unicornio del descarte para traerlo a tu establo'
             }
             items={eligibleCards.map((card, idx) => ({

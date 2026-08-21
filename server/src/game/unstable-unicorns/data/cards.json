@@ -1000,5 +1000,16 @@
     "effect": "frenchiecorn",
     "copies": 1,
     "expansion": "rainbow"
+  },
+  {
+    "id": "glitter_unicorn",
+    "name": "Glitter Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/glitter_unicorn.png",
+    "description": "When this card enters your Stable, you may bring an Upgrade card from your hand into your Stable.",
+    "effect": "glitter_unicorn",
+    "copies": 1,
+    "expansion": "rainbow"
   }
 ]

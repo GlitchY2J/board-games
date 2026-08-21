@@ -81,6 +81,12 @@ export function registerActionHandlers(
           player.id,
           cardIds,
         );
+      } else if (game.pendingAction.type === 'frenchiecorn') {
+        resolved = ActionResolver.handleFrenchiecornDiscard(
+          game,
+          player.id,
+          cardIds,
+        );
       } else {
         resolved = ActionResolver.handleDiscard(game, player.id, cardIds);
       }
@@ -1285,8 +1291,9 @@ export function registerActionHandlers(
         pending.reason !== 'necromancer_unicorn' &&
         pending.reason !== 'swift_flying_unicorn' &&
         pending.reason !== 'kiss_of_life' &&
-        pending.reason !== 'angel_unicorn' &&
-        pending.reason !== 'extremely_fertile_unicorn'
+         pending.reason !== 'angel_unicorn' &&
+         pending.reason !== 'extremely_fertile_unicorn' &&
+         pending.reason !== 'frenchiecorn'
       )
         return;
 
@@ -1305,6 +1312,19 @@ export function registerActionHandlers(
           socket,
           'INVALID_SELECTION',
           'La carta seleccionada no es válida.',
+          'select-discard-card',
+        );
+        return;
+      }
+
+      if (
+        pending.reason === 'frenchiecorn' &&
+        !pending.discardedCardIds?.includes(selectedCard.uid)
+      ) {
+        emitGameError(
+          socket,
+          'INVALID_SELECTION',
+          'Solo puedes elegir una carta descartada por Frenchiecorn.',
           'select-discard-card',
         );
         return;
@@ -1330,7 +1350,8 @@ export function registerActionHandlers(
       if (
         pending.reason === 'magical_flying_unicorn' ||
         pending.reason === 'majestic_flying_unicorn' ||
-        pending.reason === 'swift_flying_unicorn'
+        pending.reason === 'swift_flying_unicorn' ||
+        pending.reason === 'frenchiecorn'
       ) {
         player.hand.push(removed);
 

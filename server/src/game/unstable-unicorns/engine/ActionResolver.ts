@@ -1795,4 +1795,56 @@ export class ActionResolver {
 
     return true;
   }
+
+  static handleFrenchiecornDiscard(
+    state: GameState,
+    playerId: string,
+    cardIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'frenchiecorn' ||
+      !pending.remainingPlayerIds.includes(playerId)
+    ) {
+      return false;
+    }
+
+    if (cardIds.length !== 1) return false;
+
+    const player = state.players.find((candidate) => candidate.id === playerId);
+    if (!player) return false;
+
+    const idx = player.hand.findIndex((card) => card.uid === cardIds[0]);
+    if (idx === -1) return false;
+
+    const [discarded] = player.hand.splice(idx, 1);
+    enqueueDiscardAnimation(state.roomCode, player.id, discarded);
+    state.discard.push(discarded);
+
+    const remainingPlayerIds = pending.remainingPlayerIds.filter(
+      (id) => id !== playerId,
+    );
+    const resolvedPlayerIds = [...pending.resolvedPlayerIds, playerId];
+    const discardedCardIds = [...pending.discardedCardIds, discarded.uid];
+
+    if (remainingPlayerIds.length > 0) {
+      state.pendingAction = {
+        type: 'frenchiecorn',
+        sourcePlayerId: pending.sourcePlayerId,
+        remainingPlayerIds,
+        resolvedPlayerIds,
+        discardedCardIds,
+      };
+    } else {
+      state.pendingAction = {
+        type: 'select_discard_card',
+        reason: 'frenchiecorn',
+        playerId: pending.sourcePlayerId,
+        discardedCardIds,
+      };
+    }
+
+    return true;
+  }
 }
