@@ -13,8 +13,9 @@ export type PendingAction =
         | "seductive_unicorn"
         | "unicorn_on_the_cob"
         | "unicorn_phoenix"
-        | "claw_machine"
-        | "rainbow_lasso"
+         | "claw_machine"
+         | "extremely_fertile_unicorn"
+         | "rainbow_lasso"
         | "stable_artillery"
         | "barbed_wire";
       playerId: string;
@@ -136,8 +137,9 @@ export type PendingAction =
         | "unicorn_phoenix"
         | "caffeine_overload"
         | "shabby_the_narwhal"
-        | "claw_machine"
-        | "glitter_bomb"
+         | "claw_machine"
+         | "extremely_fertile_unicorn"
+         | "glitter_bomb"
         | "beginning_effect_picker"
         | "rainbow_lasso"
         | "stable_artillery"
@@ -156,7 +158,7 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn";
+       reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn" | "extremely_fertile_unicorn";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
     }
@@ -174,7 +176,7 @@ export type PendingAction =
     }
   | {
       type: "select_nursery_card";
-      reason: "mother_goose_unicorn";
+       reason: "mother_goose_unicorn" | "extremely_fertile_unicorn";
       playerId: string;
     }
   | {

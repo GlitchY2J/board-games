@@ -8,10 +8,11 @@ import type { Room } from '../src/game/models/Room.ts';
 import { TurnPhase } from '../src/game/turn/TurnPhase.ts';
 import { TurnManager } from '../src/game/turn/TurnManager.ts';
 import { createGameState } from '../src/game/unstable-unicorns/setup.ts';
+import { ActionResolver } from '../src/game/unstable-unicorns/engine/ActionResolver.ts';
 
 let n = 0;
 function card(id: string): Card {
-  const c = CardRepository.load().find((x) => x.id === id);
+  const c = CardRepository.load(['rainbow_apocalypse']).find((x) => x.id === id);
   if (!c) throw new Error(`carta no encontrada: ${id}`);
   n += 1;
   return { ...c, uid: `${id}__test${n}` };
@@ -85,6 +86,34 @@ test('activateBeginningTriggers: presenta el efecto individual y genera pendingA
   assert.equal(presented, true);
   assert.equal(state.pendingAction?.type, 'select_choice');
   assert.equal(state.pendingAction?.reason, 'glitter_bomb');
+});
+
+test('Extremely Fertile Unicorn: descarta una carta y permite elegir un Baby de la Nursery', () => {
+  const p1 = makePlayer('P1');
+  const fertile = card('extremely_fertile_unicorn');
+  const discardable = card('basic_unicorn_red');
+  p1.stable = [fertile];
+  p1.hand = [discardable];
+  const p2 = makePlayer('P2');
+  const state = makeGame([p1, p2]);
+  const baby = card('baby_unicorn_red');
+  state.nursery = [baby];
+
+  assert.equal(TurnManager.activateBeginningTriggers(state), true);
+  assert.equal(state.pendingAction?.type, 'select_choice');
+  assert.equal(state.pendingAction?.reason, 'extremely_fertile_unicorn');
+
+  state.pendingAction = {
+    type: 'discard',
+    reason: 'extremely_fertile_unicorn',
+    playerId: p1.id,
+    cardsToDiscard: 1,
+  };
+  assert.equal(ActionResolver.handleDiscard(state, p1.id, [discardable.uid]), true);
+  assert.equal(state.pendingAction?.type, 'select_nursery_card');
+  assert.equal(state.pendingAction?.reason, 'extremely_fertile_unicorn');
+  assert.equal(p1.hand.length, 0);
+  assert.equal(state.discard.some((c) => c.uid === discardable.uid), true);
 });
 
 test('activateBeginningTriggers: presenta beginning_effect_picker si hay 2+ efectos disponibles', () => {

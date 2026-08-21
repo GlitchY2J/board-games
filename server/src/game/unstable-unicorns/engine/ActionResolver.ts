@@ -100,6 +100,21 @@ export class ActionResolver {
       return true;
     }
 
+    if (reason === 'extremely_fertile_unicorn') {
+      if (
+        state.nursery.some(
+          (card) => card.cardType === 'unicorn' && card.unicornClass === 'baby',
+        )
+      ) {
+        state.pendingAction = {
+          type: 'select_nursery_card',
+          reason: 'extremely_fertile_unicorn',
+          playerId,
+        };
+      }
+      return true;
+    }
+
     // Stable Artillery: tras descartar 2 cartas, destruir un unicornio.
     if (reason === 'stable_artillery') {
       state.pendingAction = {
@@ -1271,10 +1286,6 @@ export class ActionResolver {
 
       if (!sacrificed || !zone) return false;
 
-      if (isPandamoniumProtected(targetPlayer, sacrificed)) {
-        return false;
-      }
-
       const idx = targetPlayer[zone].findIndex((c) => c.uid === cardId);
       const [removed] = targetPlayer[zone].splice(idx, 1);
       CardMovement.destroyOrSacrifice(
@@ -1282,6 +1293,7 @@ export class ActionResolver {
         targetPlayer,
         removed,
         'sacrifice',
+        false,
       );
 
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];

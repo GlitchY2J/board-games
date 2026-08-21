@@ -120,6 +120,7 @@ export default function GameOverlay({
           seductive_unicorn: '💋 Seductive Unicorn',
           unicorn_on_the_cob: '🌽 Unicorn On The Cob',
           claw_machine: '🕹️ Claw Machine',
+          extremely_fertile_unicorn: '🌱 Extremely Fertile Unicorn',
           rainbow_lasso: '🌈 Rainbow Lasso',
           stable_artillery: '🔫 Stable Artillery',
           barbed_wire: '🌵 Barbed Wire',
@@ -1497,23 +1498,18 @@ export default function GameOverlay({
         ];
 
         const items = zones.flatMap(([zone, cards]) =>
-          cards
-            .filter(
-              (c) =>
-                zone !== 'stable' || !isPandamoniumProtected(targetPlayer, c),
-            )
-            .map((card, idx) => ({
-              id: `${card.id}_${zone}_${idx}`,
-              value: card.uid,
-              title: card.name,
-              subtitle:
-                zone === 'stable'
-                  ? 'Tu establo'
-                  : zone === 'upgrade'
-                    ? 'Tu upgrade'
-                    : 'Tu downgrade',
-              image: card.image,
-            })),
+          cards.map((card, idx) => ({
+            id: `${card.id}_${zone}_${idx}`,
+            value: card.uid,
+            title: card.name,
+            subtitle:
+              zone === 'stable'
+                ? 'Tu establo'
+                : zone === 'upgrade'
+                  ? 'Tu upgrade'
+                  : 'Tu downgrade',
+            image: card.image,
+          })),
         );
 
         return (
@@ -1768,6 +1764,9 @@ export default function GameOverlay({
       case 'select_nursery_card': {
         if (action.playerId !== localPlayerId) return null;
 
+        const isExtremelyFertile =
+          action.reason === 'extremely_fertile_unicorn';
+
         const babies = gameState.nursery.filter(
           (card) => card.cardType === 'unicorn' && card.unicornClass === 'baby',
         );
@@ -1775,7 +1774,11 @@ export default function GameOverlay({
         return (
           <CardSelectionOverlay
             hide={hide}
-            title="🦢 Mother Goose Unicorn"
+            title={
+              isExtremelyFertile
+                ? '🌱 Extremely Fertile Unicorn'
+                : '🦢 Mother Goose Unicorn'
+            }
             subtitle="Elige un Baby Unicorn de la Nursery para traerlo a tu establo"
             items={babies.map((card, idx) => ({
               id: `${card.id}_${idx}`,

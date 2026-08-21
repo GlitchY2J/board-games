@@ -795,6 +795,42 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'extremely_fertile_unicorn') {
+        if (choice === 'yes') {
+          const hasBaby = room.gameState.nursery.some(
+            (card) =>
+              card.cardType === 'unicorn' && card.unicornClass === 'baby',
+          );
+
+          if (player.hand.length > 0 && hasBaby) {
+            room.gameState.pendingAction = {
+              type: 'discard',
+              reason: 'extremely_fertile_unicorn',
+              playerId: player.id,
+              cardsToDiscard: 1,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.processBeginningQueue(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usará Extremely Fertile Unicorn`
+            : `${player.name} omitió el efecto de Extremely Fertile Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'necromancer_unicorn') {
         if (choice === 'yes') {
           room.gameState.pendingAction = {
@@ -1181,7 +1217,8 @@ export function registerActionHandlers(
         !pending ||
         pending.type !== 'select_nursery_card' ||
         pending.playerId !== player.id ||
-        pending.reason !== 'mother_goose_unicorn'
+        pending.reason !== 'mother_goose_unicorn' &&
+        pending.reason !== 'extremely_fertile_unicorn'
       ) {
         return;
       }
@@ -1248,7 +1285,8 @@ export function registerActionHandlers(
         pending.reason !== 'necromancer_unicorn' &&
         pending.reason !== 'swift_flying_unicorn' &&
         pending.reason !== 'kiss_of_life' &&
-        pending.reason !== 'angel_unicorn'
+        pending.reason !== 'angel_unicorn' &&
+        pending.reason !== 'extremely_fertile_unicorn'
       )
         return;
 

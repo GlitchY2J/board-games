@@ -126,6 +126,20 @@ export class TurnManager {
       uids.push(...angel.map((c) => c.uid));
     }
 
+    // Extremely Fertile Unicorn: descartar una carta para traer un Baby
+    // Unicorn de la Nursery. Solo se ofrece si ambos pasos son posibles.
+    const fertile = allCards.filter((c) => c.id === 'extremely_fertile_unicorn');
+    if (
+      fertile.length > 0 &&
+      activePlayer.hand.length > 0 &&
+      game.nursery.some(
+        (c) => c.cardType === 'unicorn' && c.unicornClass === 'baby',
+      ) &&
+      fertile.some((c) => !isEffectBlockedByBlindingLight(activePlayer, c))
+    ) {
+      uids.push(...fertile.map((c) => c.uid));
+    }
+
     return uids;
   }
 
@@ -238,6 +252,21 @@ export class TurnManager {
           options: [
             { value: 'yes', text: 'Sí, descartar 2 y destruir un unicornio' },
             { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'extremely_fertile_unicorn':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'extremely_fertile_unicorn',
+          playerId: activePlayer.id,
+          title: '🌱 Extremely Fertile Unicorn',
+          description:
+            '¿Deseas descartar una carta para traer un Baby Unicorn de la Nursery a tu establo?',
+          options: [
+            { value: 'yes', text: 'Sí, descartar y traer Baby Unicorn' },
+            { value: 'no', text: 'No, omitir efecto' },
           ],
           effectCardId: uid,
         };

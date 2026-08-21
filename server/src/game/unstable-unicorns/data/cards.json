@@ -967,5 +967,38 @@
     "effect": "cotton_candy_llamacorn",
     "copies": 1,
     "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_extremely_destructive_unicorn",
+    "name": "Extremely Destructive Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/extremely_destructive_unicorn.png",
+    "description": "When this card enters your Stable, each player (including you) must SACRIFICE a Unicorn card.",
+    "effect": "extremely_destructive_unicorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "extremely_fertile_unicorn",
+    "name": "Extremely Fertile Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/extremely_fertile_unicorn.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD a card, then bring a Baby Unicorn card from the Nursery into your Stable.",
+    "effect": "extremely_fertile_unicorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "frenchiecorn",
+    "name": "Frenchiecorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/frenchiecorn.png",
+    "description": "When this card enters your STABLE, each other player must DISCARD a card. Choose one fo the discarded cards and add it to your hand.",
+    "effect": "frenchiecorn",
+    "copies": 1,
+    "expansion": "rainbow"
   }
 ]
