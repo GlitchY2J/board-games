@@ -36,6 +36,12 @@ export type PendingAction =
       cardsToDiscard: number;
     }
   | {
+      type: "select_players";
+      reason: "unicorn_rainbow_princess";
+      sourcePlayerId: string;
+      playerIds: string[];
+    }
+  | {
       type: "select_player";
       reason:
         | "back_kick"
@@ -167,6 +173,7 @@ export type PendingAction =
          | "glitter_bomb"
          | "unicorn_of_death"
          | "unicorn_of_war"
+         | "unicorn_rainbow_princess"
         | "beginning_effect_picker"
         | "rainbow_lasso"
         | "stable_artillery"

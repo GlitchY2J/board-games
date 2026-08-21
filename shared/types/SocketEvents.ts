@@ -37,6 +37,11 @@ export interface SelectPlayerPayload {
   playerId: string;
 }
 
+export interface SelectPlayersPayload {
+  roomCode: string;
+  playerIds: string[];
+}
+
 export interface SelectStableCardPayload {
   roomCode: string;
   cardId: string | string[];
@@ -217,6 +222,7 @@ export interface ClientToServerEvents {
 
   // Select Player
   'select-player': (payload: SelectPlayerPayload) => void;
+  'select-players': (payload: SelectPlayersPayload) => void;
 
   // Select Stable Card
   'select-stable-card': (payload: SelectStableCardPayload) => void;

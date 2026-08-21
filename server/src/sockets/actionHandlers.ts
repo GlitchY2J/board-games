@@ -15,6 +15,10 @@ import {
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
 import { nextUnicornOfWarChoice } from '../game/cards/effects/unicornOfWar.ts';
+import {
+  drawRainbowPrincessCards,
+  nextRainbowPrincessChoice,
+} from '../game/cards/effects/unicornRainbowPrincess.ts';
 
 export function registerActionHandlers(
   io: GameServer,
@@ -22,6 +26,7 @@ export function registerActionHandlers(
 ): void {
   registerDiscardCards(io, socket);
   registerSelectPlayer(io, socket);
+  registerSelectPlayers(io, socket);
   registerSelectStableCard(io, socket);
   registerSelectHandCard(io, socket);
   registerCancelAction(io, socket);
@@ -164,6 +169,23 @@ export function registerActionHandlers(
 
         emitGameState(io, room, 'game-updated');
       }
+    });
+  }
+
+  function registerSelectPlayers(io: GameServer, socket: GameSocket): void {
+    socket.on('select-players', ({ roomCode, playerIds }) => {
+      const context = getSocketGameContext(socket, roomCode);
+      if (!context) return;
+
+      const { game, player, room } = context;
+      const resolved = ActionResolver.handleSelectPlayers(
+        game,
+        player.id,
+        playerIds,
+      );
+      if (!resolved) return;
+
+      emitGameState(io, room, 'game-updated');
     });
   }
 
@@ -428,6 +450,25 @@ export function registerActionHandlers(
           );
         }
 
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'unicorn_rainbow_princess') {
+        if (choice === 'yes') {
+          const selectedPlayer = room.gameState.players.find(
+            (candidate) => candidate.id === player.id,
+          );
+          if (selectedPlayer) {
+            drawRainbowPrincessCards(room.gameState, selectedPlayer, 1);
+          }
+        }
+
+        room.gameState.pendingAction = nextRainbowPrincessChoice(
+          room.gameState,
+          pending.sourcePlayerId ?? player.id,
+          pending.remainingPlayerIds ?? [],
+        );
         emitGameState(io, room, 'game-updated');
         return;
       }

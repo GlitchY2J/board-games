@@ -14,8 +14,40 @@ import { addLog } from '../../../sockets/gameLog.ts';
 import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 import { nextUnicornOfWarChoice } from '../../cards/effects/unicornOfWar.ts';
+import {
+  drawRainbowPrincessCards,
+  nextRainbowPrincessChoice,
+} from '../../cards/effects/unicornRainbowPrincess.ts';
 
 export class ActionResolver {
+  static handleSelectPlayers(
+    state: GameState,
+    sourcePlayerId: string,
+    playerIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'select_players' ||
+      pending.sourcePlayerId !== sourcePlayerId ||
+      new Set(playerIds).size !== playerIds.length ||
+      playerIds.some((id) => !pending.playerIds.includes(id))
+    ) {
+      return false;
+    }
+
+    const player = state.players.find((candidate) => candidate.id === sourcePlayerId);
+    if (!player) return false;
+
+    drawRainbowPrincessCards(state, player, playerIds.length);
+    state.pendingAction = nextRainbowPrincessChoice(
+      state,
+      sourcePlayerId,
+      playerIds,
+    );
+    return true;
+  }
+
   static handlePestilenceDiscardCount(
     state: GameState,
     playerId: string,

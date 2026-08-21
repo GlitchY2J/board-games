@@ -9,6 +9,8 @@ import {
   unicornOfWar,
 } from '../src/game/cards/effects/unicornOfWar.ts';
 import { isImmuneToDestruction } from '../src/game/cards/effects/theTiniestUnicorn.ts';
+import { unicornRainbowPrincess } from '../src/game/cards/effects/unicornRainbowPrincess.ts';
+import { ActionResolver } from '../src/game/unstable-unicorns/engine/ActionResolver.ts';
 
 test('The Tiniest Unicorn es inmune a destrucciones de Unicornio o Upgrade', () => {
   assert.equal(isImmuneToUnicornOrUpgradeDestruction('the_tiniest_unicorn'), true);
@@ -94,4 +96,29 @@ test('Unicorn of War ofrece objetivos de otros establos y es inmune a destrucciÃ
   assert.equal(hasUnicornOfWarTarget(state, 'player-1'), true);
   assert.equal(isImmuneToDestruction('unicorn_of_war'), true);
   assert.equal(state.pendingAction?.reason, 'unicorn_of_war');
+});
+
+test('Unicorn Rainbow Princess roba por cada jugador elegido y ofrece robo adicional', () => {
+  const state = {
+    roomCode: 'TEST',
+    deck: [{ uid: 'draw-1' }],
+    discard: [],
+    pendingAction: undefined,
+    players: [
+      { id: 'player-1', hand: [] },
+      { id: 'player-2', hand: [] },
+    ],
+  } as never;
+
+  unicornRainbowPrincess.onEnterStable?.(
+    state,
+    { id: 'player-1' } as never,
+    {} as never,
+  );
+
+  assert.equal(state.pendingAction?.type, 'select_players');
+  assert.equal(ActionResolver.handleSelectPlayers(state, 'player-1', ['player-2']), true);
+  assert.equal(state.players[0].hand.length, 1);
+  assert.equal(state.pendingAction?.reason, 'unicorn_rainbow_princess');
+  assert.equal(state.pendingAction?.playerId, 'player-2');
 });

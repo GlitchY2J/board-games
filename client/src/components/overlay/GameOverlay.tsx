@@ -195,6 +195,38 @@ export default function GameOverlay({
       // ───────────────────────────────────
       // SELECCIONAR JUGADOR OBJETIVO
       // ───────────────────────────────────
+      case 'select_players': {
+        if (action.sourcePlayerId !== localPlayerId) return null;
+
+        const items = gameState.players
+          .filter((player) => action.playerIds.includes(player.id))
+          .map((player) => ({
+            id: player.id,
+            title: player.id === localPlayerId ? `${player.name} (Tú)` : player.name,
+            avatar: player.avatar || undefined,
+            subtitle: `${player.hand.length} carta(s) en mano`,
+          }));
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="👑 Unicorn Rainbow Princess"
+            subtitle="Elige cualquier cantidad de jugadores. Robarás una carta por cada jugador elegido y ellos podrán robar otra carta."
+            items={items}
+            maxSelection={items.length}
+            minSelection={0}
+            confirmText="Confirmar jugadores"
+            onConfirm={(playerIds) => {
+              dismiss();
+              socket.emit('select-players', {
+                roomCode: gameState.roomCode,
+                playerIds,
+              });
+            }}
+          />
+        );
+      }
+
       case 'select_player': {
         if (action.sourcePlayerId !== localPlayerId) return null;
 
