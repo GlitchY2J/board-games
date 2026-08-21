@@ -36,7 +36,9 @@ export class ActionResolver {
       return false;
     }
 
-    const player = state.players.find((candidate) => candidate.id === sourcePlayerId);
+    const player = state.players.find(
+      (candidate) => candidate.id === sourcePlayerId,
+    );
     if (!player) return false;
 
     drawRainbowPrincessCards(state, player, playerIds.length);
@@ -80,13 +82,17 @@ export class ActionResolver {
 
     const remainingPlayerIds = state.players
       .filter(
-        (candidate) =>
-          candidate.id !== playerId && candidate.hand.length > 0,
+        (candidate) => candidate.id !== playerId && candidate.hand.length > 0,
       )
       .map((candidate) => candidate.id);
 
     state.pendingAction = undefined;
-    ActionResolver.advancePestilence(state, playerId, remainingPlayerIds, cardIds.length);
+    ActionResolver.advancePestilence(
+      state,
+      playerId,
+      remainingPlayerIds,
+      cardIds.length,
+    );
     return true;
   }
 
@@ -137,7 +143,9 @@ export class ActionResolver {
   ): void {
     while (remainingPlayerIds.length > 0) {
       const playerId = remainingPlayerIds[0];
-      const player = state.players.find((candidate) => candidate.id === playerId);
+      const player = state.players.find(
+        (candidate) => candidate.id === playerId,
+      );
       const amount = Math.min(cardsToDiscard, player?.hand.length ?? 0);
       remainingPlayerIds = remainingPlayerIds.slice(1);
 
@@ -481,7 +489,8 @@ export class ActionResolver {
       pending.reason === 'unicorn_of_war_destroy'
     ) {
       const targetPlayer = state.players.find(
-        (player) => player.id !== sourcePlayerId &&
+        (player) =>
+          player.id !== sourcePlayerId &&
           player.stable.some((card) => card.uid === cardId),
       );
       if (!targetPlayer) return false;
@@ -513,7 +522,12 @@ export class ActionResolver {
 
       const [destroyed] = targetPlayer.stable.splice(idx, 1);
       const previousPending = state.pendingAction;
-      CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed, 'destroy');
+      CardMovement.destroyOrSacrifice(
+        state,
+        targetPlayer,
+        destroyed,
+        'destroy',
+      );
 
       if (state.pendingAction !== previousPending) {
         if (next) {
@@ -918,7 +932,9 @@ export class ActionResolver {
       for (const targetPlayer of state.players) {
         if (targetPlayer.id === sourcePlayerId) continue;
 
-        const idx = targetPlayer.stable.findIndex((card) => card.uid === cardId);
+        const idx = targetPlayer.stable.findIndex(
+          (card) => card.uid === cardId,
+        );
         if (idx === -1) continue;
 
         const target = targetPlayer.stable[idx];
@@ -931,12 +947,43 @@ export class ActionResolver {
         }
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
-        CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed, 'destroy');
+        CardMovement.destroyOrSacrifice(
+          state,
+          targetPlayer,
+          destroyed,
+          'destroy',
+        );
         EffectStack.finish(state, pending);
         return true;
       }
 
       return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'zombie_unicorn'
+    ) {
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const idx = player.stable.findIndex(
+        (card) =>
+          card.uid === cardId &&
+          card.cardType === 'unicorn' &&
+          !isPandamoniumProtected(player, card),
+      );
+      if (idx === -1) return false;
+
+      const [sacrificed] = player.stable.splice(idx, 1);
+      CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+      state.pendingAction = {
+        type: 'select_discard_card',
+        reason: 'zombie_unicorn',
+        playerId: sourcePlayerId,
+        cardType: 'unicorn',
+      };
+      return true;
     }
 
     // Glitter Bomb: sacrificar una carta propia, luego destruir una carta

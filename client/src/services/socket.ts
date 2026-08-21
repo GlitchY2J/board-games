@@ -5,7 +5,7 @@ import type {
 } from '../../../shared/types/SocketEvents.ts';
 
 export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-  'http://localhost:3000',
+  'http://10.30.11.88:3000',
   {
     autoConnect: false,
     transports: ['websocket'],

@@ -128,6 +128,15 @@ export class TurnManager {
       uids.push(...sadistic.map((c) => c.uid));
     }
 
+    const zombie = allCards.filter((c) => c.id === 'zombie_unicorn');
+    if (
+      zombie.length > 0 &&
+      hasAvailableUnicorn(activePlayer) &&
+      game.discard.some((card) => card.cardType === 'unicorn')
+    ) {
+      uids.push(...zombie.map((c) => c.uid));
+    }
+
     const angel = allCards.filter((c) => c.id === 'angel_unicorn');
     if (
       angel.length > 0 &&
@@ -307,6 +316,21 @@ export class TurnManager {
           sourcePlayerId: activePlayer.id,
         };
         return true;
+      case 'zombie_unicorn':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'zombie_unicorn',
+          playerId: activePlayer.id,
+          title: '🧟 Zombie Unicorn',
+          description:
+            '¿Deseas descartar un unicornio para traer un unicornio del descarte? Si lo haces, tu turno terminará inmediatamente.',
+          options: [
+            { value: 'yes', text: 'Sí, descartar y traer un unicornio' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
       case 'angel_unicorn':
         game.pendingAction = {
           type: 'select_choice',
@@ -468,6 +492,10 @@ export class TurnManager {
         { playerId: startingPlayer.id },
       );
     }
+  }
+
+  static endTurnImmediately(game: GameState): void {
+    this.passTurn(game);
   }
 
   static skipEndIfNoTriggers(game: GameState): void {

@@ -617,6 +617,30 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'zombie_unicorn') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'zombie_unicorn',
+            sourcePlayerId: player.id,
+            targetPlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usará Zombie Unicorn`
+            : `${player.name} omitió el efecto de Zombie Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'classy_narwhal') {
         if (choice === 'yes') {
           const candidates = room.gameState.deck.filter(
@@ -1391,6 +1415,7 @@ export function registerActionHandlers(
         pending.reason !== 'swift_flying_unicorn' &&
         pending.reason !== 'kiss_of_life' &&
          pending.reason !== 'angel_unicorn' &&
+         pending.reason !== 'zombie_unicorn' &&
          pending.reason !== 'extremely_fertile_unicorn' &&
          pending.reason !== 'frenchiecorn'
       )
@@ -1483,6 +1508,17 @@ export function registerActionHandlers(
           TurnManager.processBeginningQueue(room.gameState);
         }
 
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'zombie_unicorn') {
+        addLog(
+          room.gameState,
+          `${player.name} trajo ${broughtFromDiscard.name} al establo por Zombie Unicorn y terminó su turno`,
+          { playerId: player.id },
+        );
+        TurnManager.endTurnImmediately(room.gameState);
         emitGameState(io, room, 'game-updated');
         return;
       }

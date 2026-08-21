@@ -116,6 +116,17 @@ test('Extremely Fertile Unicorn: descarta una carta y permite elegir un Baby de 
   assert.equal(state.discard.some((c) => c.uid === discardable.uid), true);
 });
 
+test('Zombie Unicorn: se ofrece al inicio solo si puede sacrificar y recuperar un unicornio', () => {
+  const p1 = makePlayer('P1');
+  p1.stable = [card('zombie_unicorn'), card('basic_unicorn_red')];
+  const p2 = makePlayer('P2');
+  const state = makeGame([p1, p2]);
+  state.discard = [card('basic_unicorn_blue')];
+
+  assert.equal(TurnManager.activateBeginningTriggers(state), true);
+  assert.equal(state.pendingAction?.reason, 'zombie_unicorn');
+});
+
 test('activateBeginningTriggers: presenta beginning_effect_picker si hay 2+ efectos disponibles', () => {
   const p1 = makePlayer('P1');
   p1.upgrades = [card('glitter_bomb'), card('claw_machine')];

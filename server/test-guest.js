@@ -8,7 +8,7 @@ if (!roomCode) {
   process.exit(1);
 }
 
-const socket = io('http://localhost:3000', {
+const socket = io('http://10.30.11.88:3000', {
   transports: ['websocket'],
   autoConnect: false,
 });
@@ -18,7 +18,7 @@ socket.on('connect', async () => {
 
   // Unirse a la sala via HTTP
   try {
-    const response = await fetch('http://localhost:3000/rooms/join', {
+    const response = await fetch('http://10.30.11.88:3000/rooms/join', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

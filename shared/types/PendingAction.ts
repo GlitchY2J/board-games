@@ -83,7 +83,8 @@ export type PendingAction =
          | "unicorn_of_death_sacrifice"
          | "unicorn_of_death_destroy"
          | "unicorn_of_war_destroy"
-        | "tiny_stable"
+         | "zombie_unicorn"
+         | "tiny_stable"
         | "rainbow_lasso_steal"
         | "stable_artillery_destroy"
         | "sadistic_ritual";
@@ -174,10 +175,11 @@ export type PendingAction =
          | "unicorn_of_death"
          | "unicorn_of_war"
          | "unicorn_rainbow_princess"
+         | "zombie_unicorn"
         | "beginning_effect_picker"
         | "rainbow_lasso"
         | "stable_artillery"
-        | "angel_unicorn";
+         | "angel_unicorn";
       playerId: string;
       title: string;
       description: string;
@@ -194,7 +196,7 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-       reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn" | "extremely_fertile_unicorn" | "frenchiecorn";
+        reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn" | "extremely_fertile_unicorn" | "frenchiecorn" | "zombie_unicorn";
       playerId: string;
        cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
        discardedCardIds?: string[];

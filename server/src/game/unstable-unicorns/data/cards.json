@@ -1108,7 +1108,7 @@
     "image": "/cards/rainbow apocalypse/unicorn_rainbow_princess.png",
     "description": "When this card enters your Stable, choose any number of players. DRAW cards equal to the number of chosen players. Each chosen player may DRAW a card.",
     "effect": "unicorn_rainbow_princess",
-    "copies": 2,
+    "copies": 1,
     "expansion": "rainbow"
   },
   {
