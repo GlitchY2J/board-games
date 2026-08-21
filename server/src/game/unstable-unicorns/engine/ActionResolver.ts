@@ -1302,7 +1302,8 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
-    // Cotton Candy Unicorn: cada jugador sacrifica 1 unicornio; al finalizar, quien la jugó roba 1 carta
+    // Cotton Candy Unicorn: cada jugador sacrifica 1 unicornio; al finalizar,
+    // cada jugador que sacrificó roba 1 carta.
     // ──────────────────────────────────────────
     if (pending.type === 'cotton_candy_unicorn') {
       const targetPlayer = state.players.find((p) => p.id === sourcePlayerId);
@@ -1337,19 +1338,21 @@ export class ActionResolver {
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
 
       if (resolvedPlayerIds.length >= pending.remainingPlayerIds.length) {
-        const sourcePlayer = state.players.find(
-          (p) => p.id === pending.sourcePlayerId,
-        );
-        if (sourcePlayer) {
+        for (const resolvedPlayerId of resolvedPlayerIds) {
+          const resolvedPlayer = state.players.find(
+            (p) => p.id === resolvedPlayerId,
+          );
+          if (!resolvedPlayer) continue;
+
           const drawn = state.deck.shift();
           if (drawn) {
-            enqueueDrawAnimation(state.roomCode, sourcePlayer.id, drawn);
-            sourcePlayer.hand.push(drawn);
+            enqueueDrawAnimation(state.roomCode, resolvedPlayer.id, drawn);
+            resolvedPlayer.hand.push(drawn);
           }
           addLog(
             state,
-            `${sourcePlayer.name} robó 1 carta por efecto de Cotton Candy Unicorn`,
-            { playerId: sourcePlayer.id },
+            `${resolvedPlayer.name} robó 1 carta por efecto de Cotton Candy Unicorn`,
+            { playerId: resolvedPlayer.id },
           );
         }
 

@@ -40,6 +40,8 @@ export default function GameOverlay({
       parts.push(`rem:${action.remainingToDestroy}`);
     if ('remainingPlayerIds' in action)
       parts.push(`first:${action.remainingPlayerIds[0]}`);
+    if ('resolvedPlayerIds' in action)
+      parts.push(`resolved:${action.resolvedPlayerIds.join(',')}`);
     if ('effectCardId' in action) parts.push(`uid:${action.effectCardId}`);
     return parts.join(':');
   })();
@@ -1540,18 +1542,19 @@ export default function GameOverlay({
         const needsToResolve =
           action.remainingPlayerIds.includes(localPlayerId) &&
           !action.resolvedPlayerIds.includes(localPlayerId);
+        const remainingSacrifices =
+          action.remainingPlayerIds.length - action.resolvedPlayerIds.length;
 
         if (!targetPlayer) return null;
 
         if (!needsToResolve) {
           return (
-            <div className="overlay-backdrop">
+            <div className="overlay-backdrop" role="status" aria-live="polite">
               <div className="card-selection-window choice-window">
                 <h2>🍬 Cotton Candy Unicorn</h2>
                 <p>
-                  {action.remainingPlayerIds.length >
-                  action.resolvedPlayerIds.length
-                    ? 'Esperando sacrificios de otros jugadores...'
+                  {remainingSacrifices > 0
+                    ? `Esperando a que ${remainingSacrifices === 1 ? 'otro jugador termine' : `otros ${remainingSacrifices} jugadores terminen`} de sacrificar...`
                     : 'Resolviendo efecto...'}
                 </p>
               </div>
