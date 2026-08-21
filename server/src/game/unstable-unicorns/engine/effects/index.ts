@@ -15,6 +15,7 @@ import { frenchiecorn } from '../../../cards/effects/frenchiecorn.ts';
 import { glitterUnicorn } from '../../../cards/effects/glitterUnicorn.ts';
 import { theTiniestUnicorn } from '../../../cards/effects/theTiniestUnicorn.ts';
 import { unicornOfDeath } from '../../../cards/effects/unicornOfDeath.ts';
+import { unicornOfFamine } from '../../../cards/effects/unicornOfFamine.ts';
 import { darkAngelUnicorn } from '../../../cards/effects/darkAngelUnicorn.ts';
 import { ginormousUnicorn } from '../../../cards/effects/ginormousUnicorn.ts';
 import { extremelyDestructiveUnicorn } from '../../../cards/effects/extremelyDestructiveUnicorn.ts';
@@ -78,6 +79,7 @@ export const effects: Record<string, CardEffect> = {
   glitter_unicorn: glitterUnicorn,
   the_tiniest_unicorn: theTiniestUnicorn,
   unicorn_of_death: unicornOfDeath,
+  unicorn_of_famine: unicornOfFamine,
   dark_angel_unicorn: darkAngelUnicorn,
   ginormous_unicorn: ginormousUnicorn,
   extremely_destructive_unicorn: extremelyDestructiveUnicorn,

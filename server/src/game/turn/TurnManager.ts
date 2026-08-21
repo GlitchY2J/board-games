@@ -11,6 +11,7 @@ import {
 import { hasDoubleDutch } from '../cards/effects/doubleDutch.ts';
 import { isEffectBlockedByBlindingLight } from '../cards/effects/blindingLight.ts';
 import { hasUnicornOfDeathTarget } from '../cards/effects/unicornOfDeath.ts';
+import { getHandLimit } from '../cards/effects/unicornOfFamine.ts';
 
 const END_OF_TURN_EFFECTS = new Set<string>([
   // Add here any card whose effect triggers at the end of your turn
@@ -474,12 +475,13 @@ export class TurnManager {
 
     const activePlayer = game.players[game.currentPlayer];
 
-    if (activePlayer.hand.length > 7) {
+    const handLimit = getHandLimit(game);
+    if (activePlayer.hand.length > handLimit) {
       game.pendingAction = {
         type: 'discard',
         reason: 'hand_limit',
         playerId: activePlayer.id,
-        cardsToDiscard: activePlayer.hand.length - 7,
+        cardsToDiscard: activePlayer.hand.length - handLimit,
       };
       return;
     }
@@ -531,12 +533,13 @@ export class TurnManager {
       case TurnPhase.END:
         const currentPlayer = game.players[game.currentPlayer];
 
-        if (currentPlayer.hand.length > 7) {
+        const handLimit = getHandLimit(game);
+        if (currentPlayer.hand.length > handLimit) {
           game.pendingAction = {
             type: 'discard',
             reason: 'hand_limit',
             playerId: currentPlayer.id,
-            cardsToDiscard: currentPlayer.hand.length - 7,
+            cardsToDiscard: currentPlayer.hand.length - handLimit,
           };
           return;
         }
