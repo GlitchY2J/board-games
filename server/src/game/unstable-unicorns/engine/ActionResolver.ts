@@ -338,12 +338,15 @@ export class ActionResolver {
         }
         if (!sacrificed || !zone) return false;
 
-        // Pandamonium: no se puede sacrificar un unicornio protegido.
-        if (isPandamoniumProtected(player, sacrificed)) return false;
-
         const idx = player[zone].findIndex((c) => c.uid === cardId);
         const [removed] = player[zone].splice(idx, 1);
-        CardMovement.destroyOrSacrifice(state, player, removed, 'sacrifice');
+        CardMovement.destroyOrSacrifice(
+          state,
+          player,
+          removed,
+          'sacrifice',
+          false,
+        );
 
         // Resolución LIFO centralizada: si el sacrificio disparó un efecto
         // onDestroyed interactivo (p. ej. Stabby The Unicorn), la fase 'destroy'
@@ -389,11 +392,6 @@ export class ActionResolver {
           continue;
         }
 
-        // Pandamonium: no se puede destruir un unicornio protegido.
-        if (isPandamoniumProtected(targetPlayer, destroyedCard)) {
-          continue;
-        }
-
         const idx = targetPlayer[zone].findIndex((c) => c.uid === uid);
         const [removed] = targetPlayer[zone].splice(idx, 1);
         const prevPending = state.pendingAction;
@@ -401,6 +399,8 @@ export class ActionResolver {
           state,
           targetPlayer,
           removed,
+          'destroy',
+          false,
         );
         // Si el efecto onDestroyed abrió su propio pendingAction interactivo
         // (p. ej. Unicorn Phoenix, Stabby The Unicorn), hay que preservarlo y
@@ -468,7 +468,11 @@ export class ActionResolver {
       // Si el sacrificio abrió su propio efecto interactivo (p. ej. Stabby
       // The Unicorn), dejarlo activo; el chequeo invariante de Tiny Stable se
       // re-evalúa en el siguiente emit.
-      if (intercepted && state.pendingAction && state.pendingAction !== pending) {
+      if (
+        intercepted &&
+        state.pendingAction &&
+        state.pendingAction !== pending
+      ) {
         return true;
       }
 
@@ -537,17 +541,12 @@ export class ActionResolver {
       // Resolución LIFO centralizada: si el on-enter de la carta movida abre su
       // propio efecto hijo (p. ej. Seductive Unicorn), el paso de robo
       // (unicorn_swap_steal) se suspende en la pila y se reanuda después.
-      CardMovement.enterStable(
-        state,
-        targetPlayer,
-        moved,
-        {
-          type: 'select_stable_card',
-          reason: 'unicorn_swap_steal',
-          sourcePlayerId,
-          targetPlayerId: pending.targetPlayerId,
-        },
-      );
+      CardMovement.enterStable(state, targetPlayer, moved, {
+        type: 'select_stable_card',
+        reason: 'unicorn_swap_steal',
+        sourcePlayerId,
+        targetPlayerId: pending.targetPlayerId,
+      });
 
       return true;
     }
@@ -595,9 +594,9 @@ export class ActionResolver {
 
       const card = Array.isArray(cardId)
         ? fromPlayer.upgrades.find((c) => c.uid === cardId[0]) ||
-        fromPlayer.downgrades.find((c) => c.uid === cardId[0])
+          fromPlayer.downgrades.find((c) => c.uid === cardId[0])
         : fromPlayer.upgrades.find((c) => c.uid === cardId) ||
-        fromPlayer.downgrades.find((c) => c.uid === cardId);
+          fromPlayer.downgrades.find((c) => c.uid === cardId);
 
       if (!card) return false;
 
@@ -635,7 +634,6 @@ export class ActionResolver {
         const i = player[z].findIndex((c) => c.uid === cardId);
         if (i !== -1) {
           sacrificed = player[z][i];
-          if (isPandamoniumProtected(player, sacrificed)) return false;
           player[z].splice(i, 1);
           zone = z;
           break;
@@ -643,7 +641,13 @@ export class ActionResolver {
       }
       if (!sacrificed || !zone) return false;
 
-      CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+      CardMovement.destroyOrSacrifice(
+        state,
+        player,
+        sacrificed,
+        'sacrifice',
+        false,
+      );
 
       for (let i = 0; i < 2; i++) {
         const drawn = state.deck.shift();
@@ -671,7 +675,6 @@ export class ActionResolver {
         const i = player[z].findIndex((c) => c.uid === cardId);
         if (i !== -1) {
           const target = player[z][i];
-          if (isPandamoniumProtected(player, target)) return false;
           const [sacrificed] = player[z].splice(i, 1);
           const prevPending = state.pendingAction;
           const intercepted = CardMovement.destroyOrSacrifice(
@@ -679,6 +682,7 @@ export class ActionResolver {
             player,
             sacrificed,
             'sacrifice',
+            false,
           );
 
           const destroyStep = {
@@ -713,10 +717,6 @@ export class ActionResolver {
           if (i !== -1) {
             const target = p[z][i];
 
-            if (isPandamoniumProtected(p, target)) {
-              return false;
-            }
-
             if (CardMovement.maybeBlackKnightIntercept(state, p, target)) {
               return true;
             }
@@ -727,6 +727,8 @@ export class ActionResolver {
               state,
               p,
               destroyed,
+              'destroy',
+              false,
             );
 
             // Si la carta intercepta (p. ej. Unicorn Phoenix) o abrió su propio
@@ -862,7 +864,13 @@ export class ActionResolver {
           );
           if (idx !== -1) {
             const target = targetPlayer.upgrades[idx];
-            if (CardMovement.maybeBlackKnightIntercept(state, targetPlayer, target)) {
+            if (
+              CardMovement.maybeBlackKnightIntercept(
+                state,
+                targetPlayer,
+                target,
+              )
+            ) {
               return true;
             }
             const [card] = targetPlayer.upgrades.splice(idx, 1);
@@ -914,7 +922,13 @@ export class ActionResolver {
           );
           if (idx !== -1) {
             const target = targetPlayer.upgrades[idx];
-            if (CardMovement.maybeBlackKnightIntercept(state, targetPlayer, target)) {
+            if (
+              CardMovement.maybeBlackKnightIntercept(
+                state,
+                targetPlayer,
+                target,
+              )
+            ) {
               return true;
             }
             const [card] = targetPlayer.upgrades.splice(idx, 1);
@@ -959,9 +973,6 @@ export class ActionResolver {
 
       let idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
-        if (isPandamoniumProtected(targetPlayer, targetPlayer.stable[idx])) {
-          return false;
-        }
         [removedCard] = targetPlayer.stable.splice(idx, 1);
       } else {
         idx = targetPlayer.upgrades.findIndex((c) => c.uid === cardId);
@@ -1005,9 +1016,6 @@ export class ActionResolver {
 
       let idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
-        if (isPandamoniumProtected(targetPlayer, targetPlayer.stable[idx])) {
-          return false;
-        }
         [removedCard] = targetPlayer.stable.splice(idx, 1);
       } else {
         idx = targetPlayer.upgrades.findIndex((c) => c.uid === cardId);
@@ -1145,9 +1153,6 @@ export class ActionResolver {
       for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
         const i = targetPlayer[z].findIndex((c) => c.uid === cardId);
         if (i !== -1) {
-          if (z === 'stable' && isPandamoniumProtected(targetPlayer, targetPlayer[z][i])) {
-            return false;
-          }
           [card] = targetPlayer[z].splice(i, 1);
           zone = z;
           break;

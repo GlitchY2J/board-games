@@ -144,10 +144,11 @@ export class CardMovement {
     player: Player,
     card: Card,
     animType: CardAnimType = 'destroy',
+    pandamoniumApplies = true,
   ): boolean {
     // Pandamonium: los unicornios de un establo protegido no pueden ser
     // destruidos ni sacrificados por nadie.
-    if (isPandamoniumProtected(player, card)) return true;
+    if (pandamoniumApplies && isPandamoniumProtected(player, card)) return true;
 
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
       maybeTriggerBarbedWireLeave(state, player);

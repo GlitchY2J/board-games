@@ -78,7 +78,7 @@ export default function GameOverlay({
                 <h2>💥 Extremely Destructive Unicorn</h2>
                 <p>
                   {step.remainingPlayerIds.length >
-                    step.resolvedPlayerIds.length
+                  step.resolvedPlayerIds.length
                     ? 'Esperando sacrificios de otros jugadores...'
                     : 'Resolviendo efecto...'}
                 </p>
@@ -186,12 +186,12 @@ export default function GameOverlay({
             return p.id !== localPlayerId && p.id !== action.fromPlayerId;
           }
           if (isReTargetSource) {
-            if (!(p.upgrades.length > 0 || p.downgrades.length > 0)) return false;
+            if (!(p.upgrades.length > 0 || p.downgrades.length > 0))
+              return false;
             // Solo es fuente válida si existe al menos un destino posible
             // (distinto del lanzador y del jugador candidato a fuente).
             return gameState.players.some(
-              (other) =>
-                other.id !== localPlayerId && other.id !== p.id,
+              (other) => other.id !== localPlayerId && other.id !== p.id,
             );
           }
           if (p.id === localPlayerId) return false;
@@ -277,11 +277,11 @@ export default function GameOverlay({
             onCancel={
               isUnicornPoison || isAnnoyingFlying || isMermaid
                 ? () => {
-                  dismiss();
-                  socket.emit('cancel-action', {
-                    roomCode: gameState.roomCode,
-                  });
-                }
+                    dismiss();
+                    socket.emit('cancel-action', {
+                      roomCode: gameState.roomCode,
+                    });
+                  }
                 : undefined
             }
           />
@@ -365,24 +365,18 @@ export default function GameOverlay({
               ['downgrade', localPlayer.downgrades],
             ];
             items = zones.flatMap(([zone, cards]) =>
-              cards
-                .filter(
-                  (c) =>
-                    zone !== 'stable' ||
-                    !isPandamoniumProtected(localPlayer, c),
-                )
-                .map((card, idx) => ({
-                  id: `${card.id}_${zone}_${idx}`,
-                  value: card.uid,
-                  title: card.name,
-                  subtitle:
-                    zone === 'stable'
-                      ? 'Tu establo'
-                      : zone === 'upgrade'
-                        ? 'Tu upgrade'
-                        : 'Tu downgrade',
-                  image: card.image,
-                })),
+              cards.map((card, idx) => ({
+                id: `${card.id}_${zone}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                subtitle:
+                  zone === 'stable'
+                    ? 'Tu establo'
+                    : zone === 'upgrade'
+                      ? 'Tu upgrade'
+                      : 'Tu downgrade',
+                image: card.image,
+              })),
             );
           }
         } else {
@@ -395,19 +389,13 @@ export default function GameOverlay({
                 ['downgrade', p.downgrades],
               ];
               return zones.flatMap(([zone, cards]) =>
-                cards
-                  .filter(
-                    (c) =>
-                      zone !== 'stable' ||
-                      !isPandamoniumProtected(p, c),
-                  )
-                  .map((card, idx) => ({
-                    id: `${card.id}_${p.id}_${zone}_${idx}`,
-                    value: card.uid,
-                    title: card.name,
-                    subtitle: `Establo de ${p.name}`,
-                    image: card.image,
-                  })),
+                cards.map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${zone}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
               );
             });
         }
@@ -618,8 +606,7 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(p, c),
+                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -655,18 +642,13 @@ export default function GameOverlay({
           );
 
           const items = [
-            ...(localPlayer?.stable ?? [])
-              .filter(
-                (c) =>
-                  !localPlayer || !isPandamoniumProtected(localPlayer, c),
-              )
-              .map((card, idx) => ({
-                id: `${card.id}_stable_${idx}`,
-                value: card.uid,
-                title: card.name,
-                subtitle: 'Tu establo',
-                image: card.image,
-              })),
+            ...(localPlayer?.stable ?? []).map((card, idx) => ({
+              id: `${card.id}_stable_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu establo',
+              image: card.image,
+            })),
             ...(localPlayer?.upgrades ?? []).map((card, idx) => ({
               id: `${card.id}_upg_${idx}`,
               value: card.uid,
@@ -708,18 +690,13 @@ export default function GameOverlay({
           );
 
           const items = [
-            ...(localPlayer?.stable ?? [])
-              .filter(
-                (c) =>
-                  !localPlayer || !isPandamoniumProtected(localPlayer, c),
-              )
-              .map((card, idx) => ({
-                id: `${card.id}_stable_${idx}`,
-                value: card.uid,
-                title: card.name,
-                subtitle: 'Tu establo',
-                image: card.image,
-              })),
+            ...(localPlayer?.stable ?? []).map((card, idx) => ({
+              id: `${card.id}_stable_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu establo',
+              image: card.image,
+            })),
             ...(localPlayer?.upgrades ?? []).map((card, idx) => ({
               id: `${card.id}_upg_${idx}`,
               value: card.uid,
@@ -766,9 +743,7 @@ export default function GameOverlay({
           gameState.players.forEach((p) => {
             if (p.id === localPlayerId) return;
             [
-              ...p.stable
-                .filter((c) => !isPandamoniumProtected(p, c))
-                .map((c) => ({ ...c, zone: 'establo' as const })),
+              ...p.stable.map((c) => ({ ...c, zone: 'establo' as const })),
               ...p.upgrades.map((c) => ({ ...c, zone: 'upgrade' as const })),
               ...p.downgrades.map((c) => ({
                 ...c,
@@ -889,8 +864,7 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(p, c),
+                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -927,8 +901,7 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(p, c),
+                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -965,8 +938,7 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(p, c),
+                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -1003,8 +975,7 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(p, c),
+                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -1041,8 +1012,7 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(p, c),
+                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -1192,15 +1162,11 @@ export default function GameOverlay({
 
         const cardsToSelect = isUnicornPoison
           ? target.stable.filter(
-            (c) =>
-              c.id !== 'magical_kittencorn' &&
-              !isPandamoniumProtected(target, c),
-          )
-          : [
-            ...target.stable.filter((c) => !isPandamoniumProtected(target, c)),
-            ...target.upgrades,
-            ...target.downgrades,
-          ];
+              (c) =>
+                c.id !== 'magical_kittencorn' &&
+                !isPandamoniumProtected(target, c),
+            )
+          : [...target.stable, ...target.upgrades, ...target.downgrades];
 
         return (
           <CardSelectionOverlay
@@ -1320,9 +1286,7 @@ export default function GameOverlay({
         const stepLabel = `Paso ${totalPlayers - remaining + 1} de ${totalPlayers}`;
 
         const targetCards = [
-          ...target.stable
-            .filter((c) => !isPandamoniumProtected(target, c))
-            .map((c) => ({ ...c, zone: 'Establo' })),
+          ...target.stable.map((c) => ({ ...c, zone: 'Establo' })),
           ...target.upgrades.map((c) => ({ ...c, zone: 'Upgrade' })),
           ...target.downgrades.map((c) => ({ ...c, zone: 'Downgrade' })),
         ];
@@ -1461,7 +1425,7 @@ export default function GameOverlay({
                 <h2>💥 Extremely Destructive Unicorn</h2>
                 <p>
                   {action.remainingPlayerIds.length >
-                    action.resolvedPlayerIds.length
+                  action.resolvedPlayerIds.length
                     ? 'Esperando sacrificios de otros jugadores...'
                     : 'Resolviendo efecto...'}
                 </p>
@@ -1534,8 +1498,7 @@ export default function GameOverlay({
           cards
             .filter(
               (c) =>
-                zone !== 'stable' ||
-                !isPandamoniumProtected(targetPlayer, c),
+                zone !== 'stable' || !isPandamoniumProtected(targetPlayer, c),
             )
             .map((card, idx) => ({
               id: `${card.id}_${zone}_${idx}`,
@@ -1765,17 +1728,17 @@ export default function GameOverlay({
 
         const items = isDebugDraw
           ? gameState.deck.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }))
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))
           : action.candidates.map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            image: card.image,
-          }));
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }));
 
         return (
           <CardSelectionOverlay
