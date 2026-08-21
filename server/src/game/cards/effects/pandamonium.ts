@@ -27,8 +27,11 @@ export function hasAvailableUnicorn(player: Player): boolean {
 /** True si el jugador tiene alguna carta de su establo (unicornio, upgrade o
  *  downgrade) que pueda sacrificar/destruir, es decir, que no esté protegida. */
 export function hasAvailableCardToSacrifice(player: Player): boolean {
+  // Pandamonium solo protege frente a efectos que específicamente afectan
+  // "Unicorn cards". Un efecto que diga "a card" puede afectar también
+  // a los Unicornios/Pandas de este establo.
   return (
-    player.stable.some((c) => !isPandamoniumProtected(player, c)) ||
+    player.stable.length > 0 ||
     player.upgrades.length > 0 ||
     player.downgrades.length > 0
   );

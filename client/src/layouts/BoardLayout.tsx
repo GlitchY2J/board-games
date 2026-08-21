@@ -12,11 +12,13 @@ import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
+import PlayerNotification from '../components/player/PlayerNotification';
 import { RotateCcw, LogOut, Bot, Bug, MessageSquare, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { useState, useEffect, useRef } from 'react';
+
 interface Props {
   gameState: GameState;
   isMyTurn: boolean;
@@ -25,16 +27,48 @@ interface Props {
   hidePendingPlay?: boolean;
 }
 
-export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hidePendingPlay = false }: Props) {
+export default function BoardLayout({
+  gameState,
+  isMyTurn,
+  isHost,
+  onPlay,
+  hidePendingPlay = false,
+}: Props) {
   const navigate = useNavigate();
   const { deactivate } = useGame();
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [autoEnabled, setAutoEnabled] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [playerNotification, setPlayerNotification] = useState<string | null>(
+    null,
+  );
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
   const cardSelectedRef = useRef(false);
+  const notificationTimerRef = useRef<number | null>(null);
+
+  function showPlayerNotification(message: string) {
+    setPlayerNotification(message);
+
+    if (notificationTimerRef.current !== null) {
+      window.clearTimeout(notificationTimerRef.current);
+    }
+
+    notificationTimerRef.current = window.setTimeout(() => {
+      setPlayerNotification(null);
+      notificationTimerRef.current = null;
+    }, 2200);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (notificationTimerRef.current !== null) {
+        window.clearTimeout(notificationTimerRef.current);
+      }
+    };
+  }, []);
 
   if (!localPlayer) return;
+
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
   const totalPlayers = gameState.players.length;
   const activePlayer = gameState.players[gameState.currentPlayer];
@@ -66,16 +100,12 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
   ]);
 
   const positions: ('top' | 'bottom')[] =
-    totalPlayers === 4
-      ? ['top', 'top', 'bottom']
-      : ['top', 'top'];
+    totalPlayers === 4 ? ['top', 'top', 'bottom'] : ['top', 'top'];
 
   const queenBeeOwner = gameState.players.find((p) =>
     p.stable.some((c) => c.id === 'queen_bee_unicorn'),
   );
 
-  // Blinding Light anula el efecto continuo de Queen Bee: si la propietaria
-  // tiene Blinding Light en su establo, los demás pueden jugar básicos.
   const queenBeeOwnerId =
     queenBeeOwner &&
     !queenBeeOwner.downgrades.some((c) => c.id === 'blinding_light')
@@ -107,13 +137,13 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
   ]);
   const localPlayerId = localPlayer.id;
 
-  // Tecla Espacio = robar carta (equivalente a hacer clic en el mazo).
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement) {
         const tag = e.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       }
+
       if (e.isComposing) return;
       if (e.code !== 'Space') return;
 
@@ -125,7 +155,6 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
         (gameState.actionPlaysRemaining === undefined ||
           gameState.actionPlaysRemaining === 2);
 
-      // No robar mientras el modal de confirmación de una carta está abierto.
       if (!canDraw || cardSelectedRef.current) return;
 
       e.preventDefault();
@@ -134,6 +163,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
         playerId: localPlayerId,
       });
     }
+
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isMyTurn, gameState, localPlayerId]);
@@ -145,72 +175,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           {opponents.map((opp) => {
             const position = positions[opponents.indexOf(opp)];
             if (position !== 'top') return null;
-            return (
-              <div key={opp.id} data-player-id={opp.id} className="player-slot flex-col items-center gap-2">
-                <PlayerInfo
-                  player={opp}
-                  isActive={opp.id === activePlayer.id}
-                  status={getPlayerStatus(gameState, opp.id)}
-                  localPlayerId={localPlayer.id}
-                />
-                <PlayerBoard
-                  player={opp}
-                  isLocalPlayer={false}
-                  isMyTurn={opp.id === activePlayer.id}
-                />
-              </div>
-            );
-          })}
-        </div>
 
-        <div className="middle">
-          <div className="turn-order-side">
-            <TurnOrder gameState={gameState} localPlayerId={localPlayer.id} />
-          </div>
-          <div className="center-wrap">
-            <div className="center">
-              <div className="center-column" data-center-area>
-                <div className="center-stack">
-                  <CenterArea
-                    gameState={gameState}
-                    isMyTurn={isMyTurn}
-                    localPlayerId={localPlayer.id}
-                  />
-                  {isMyTurn && gameState.phase === 'DRAW' && (
-                    <span className="draw-hint">Roba una carta</span>
-                  )}
-                  {isMyTurn &&
-                    gameState.phase === 'ACTION' &&
-                    !gameState.actionUsed &&
-                    !gameState.pendingPlay && (
-                      <span className="draw-hint">Juega o roba una carta</span>
-                    )}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="chat-side">
-            <Chat gameState={gameState} />
-          </div>
-        </div>
-
-        <div className="player-bottom">
-          <div className="player-slot flex-col items-center gap-2" data-player-id={localPlayer.id}>
-            <PlayerInfo
-              player={localPlayer}
-              isActive={isMyTurn}
-              status={getPlayerStatus(gameState, localPlayer.id)}
-              localPlayerId={localPlayer.id}
-            />
-            <PlayerBoard
-              player={localPlayer}
-              isLocalPlayer
-              isMyTurn={isMyTurn}
-            />
-          </div>
-          {opponents.map((opp) => {
-            const position = positions[opponents.indexOf(opp)];
-            if (position !== 'bottom') return null;
             return (
               <div
                 key={opp.id}
@@ -231,39 +196,134 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
               </div>
             );
           })}
+        </div>
 
-          {/* {gameState.pendingAction?.type === 'discard' &&
-            gameState.pendingAction.playerId === localPlayer.id && (
-              <DiscardToHandLimit
-                gameState={gameState}
-                playerId={localPlayer.id}
-              />
-            )} */}
+        <div className="middle">
+          <div className="turn-order-side">
+            <TurnOrder gameState={gameState} localPlayerId={localPlayer.id} />
+          </div>
+
+          <div className="center-wrap">
+            <div className="center">
+              <div className="center-column" data-center-area>
+                <div className="center-stack">
+                  <CenterArea
+                    gameState={gameState}
+                    isMyTurn={isMyTurn}
+                    localPlayerId={localPlayer.id}
+                  />
+
+                  {isMyTurn && gameState.phase === 'DRAW' && (
+                    <span className="draw-hint">Roba una carta</span>
+                  )}
+
+                  {isMyTurn &&
+                    gameState.phase === 'ACTION' &&
+                    !gameState.actionUsed &&
+                    !gameState.pendingPlay && (
+                      <span className="draw-hint">Juega o roba una carta</span>
+                    )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="chat-side">
+            <Chat gameState={gameState} />
+          </div>
+        </div>
+
+        <div className="player-bottom">
+          <div
+            className="player-slot flex-col items-center gap-2"
+            data-player-id={localPlayer.id}
+          >
+            {playerNotification && (
+              <PlayerNotification message={playerNotification} />
+            )}
+
+            <PlayerInfo
+              player={localPlayer}
+              isActive={isMyTurn}
+              status={getPlayerStatus(gameState, localPlayer.id)}
+              localPlayerId={localPlayer.id}
+            />
+
+            <PlayerBoard
+              player={localPlayer}
+              isLocalPlayer
+              isMyTurn={isMyTurn}
+            />
+          </div>
+
+          {opponents.map((opp) => {
+            const position = positions[opponents.indexOf(opp)];
+            if (position !== 'bottom') return null;
+
+            return (
+              <div
+                key={opp.id}
+                data-player-id={opp.id}
+                className="player-slot flex-col items-center gap-2"
+              >
+                <PlayerInfo
+                  player={opp}
+                  isActive={opp.id === activePlayer.id}
+                  status={getPlayerStatus(gameState, opp.id)}
+                  localPlayerId={localPlayer.id}
+                />
+                <PlayerBoard
+                  player={opp}
+                  isLocalPlayer={false}
+                  isMyTurn={opp.id === activePlayer.id}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
-      <GameOverlay gameState={gameState} localPlayerId={localPlayer.id} hide={hidePendingPlay} />
-      <PendingPlayOverlay gameState={gameState} localPlayerId={localPlayer.id} hide={hidePendingPlay} />
+
+      <GameOverlay
+        gameState={gameState}
+        localPlayerId={localPlayer.id}
+        hide={hidePendingPlay}
+      />
+
+      <PendingPlayOverlay
+        gameState={gameState}
+        localPlayerId={localPlayer.id}
+        hide={hidePendingPlay}
+      />
+
       <div className="corner-controls">
         <button
           className={`ctrl-button ctrl-neutral${autoEnabled ? ' auto-on' : ''}`}
-          title={autoEnabled ? 'Desactivar modo automático' : 'Activar modo automático'}
+          title={
+            autoEnabled ? 'Desactivar modo automático' : 'Activar modo automático'
+          }
           onClick={() => setAutoEnabled((v) => !v)}
         >
           <Bot size={16} />
         </button>
+
         {isHost && (
           <button
-            className={`ctrl-button ctrl-neutral${gameState.debugMode ? ' auto-on' : ''}`}
+            className={`ctrl-button ctrl-neutral${
+              gameState.debugMode ? ' auto-on' : ''
+            }`}
             title={
               gameState.debugMode
                 ? 'Desactivar modo debug'
                 : 'Activar modo debug (elegir carta del mazo en la fase de robo)'
             }
-            onClick={() => socket.emit('toggle-debug-mode', gameState.roomCode)}
+            onClick={() =>
+              socket.emit('toggle-debug-mode', gameState.roomCode)
+            }
           >
             <Bug size={16} />
           </button>
         )}
+
         {isHost && (
           <button
             className="ctrl-button ctrl-reset"
@@ -273,6 +333,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
             <RotateCcw size={16} />
           </button>
         )}
+
         <button
           className="ctrl-button ctrl-leave"
           title="Salir de la partida"
@@ -281,6 +342,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           <LogOut size={16} />
         </button>
       </div>
+
       {leaveOpen && (
         <LeaveConfirm
           onCancel={() => setLeaveOpen(false)}
@@ -291,6 +353,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           }}
         />
       )}
+
       <button
         className="mobile-chat-toggle"
         title="Chat"
@@ -298,6 +361,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
       >
         <MessageSquare size={18} />
       </button>
+
       {mobileChatOpen && (
         <div className="mobile-chat-panel">
           <div className="mobile-chat-panel-inner">
@@ -312,12 +376,15 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           </button>
         </div>
       )}
+
       <div className="phase-panel-anchor">
         <PhasePanel gameState={gameState} />
       </div>
+
       <div className="phase-action-anchor">
         <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
       </div>
+
       <div className="bottom-hand" data-hand>
         <PlayerHand
           player={localPlayer}
@@ -328,6 +395,7 @@ export default function BoardLayout({ gameState, isMyTurn, isHost, onPlay, hideP
           pendingPlay={!!gameState.pendingPlay}
           blockedCardIds={blockedCardIds}
           onPlay={onPlay}
+          onInvalidAction={showPlayerNotification}
           onSelectionChange={(selected) => {
             cardSelectedRef.current = selected;
           }}

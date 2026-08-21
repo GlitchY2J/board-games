@@ -13,6 +13,7 @@ interface Props {
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
   onSelectionChange?(selected: boolean): void;
+  onInvalidAction?(message: string): void;
 }
 
 export default function LocalHand({
@@ -24,9 +25,8 @@ export default function LocalHand({
   blockedCardIds,
   onPlay,
   onSelectionChange,
+  onInvalidAction,
 }: Props) {
-  // const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-
   return (
     <CardFan
       cards={player.hand}
@@ -37,6 +37,7 @@ export default function LocalHand({
       blockedCardIds={blockedCardIds}
       onPlay={onPlay}
       onSelectionChange={onSelectionChange}
+      onInvalidAction={onInvalidAction}
     />
   );
 }

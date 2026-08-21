@@ -15,6 +15,7 @@ interface Props {
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
   onSelectionChange?(selected: boolean): void;
+  onInvalidAction?(message: string): void;
 }
 
 export default function PlayerHand({
@@ -27,6 +28,7 @@ export default function PlayerHand({
   blockedCardIds,
   onPlay,
   onSelectionChange,
+  onInvalidAction,
 }: Props) {
   return (
     <div className="player-hand">
@@ -40,6 +42,7 @@ export default function PlayerHand({
           blockedCardIds={blockedCardIds}
           onPlay={onPlay}
           onSelectionChange={onSelectionChange}
+          onInvalidAction={onInvalidAction}
         />
       ) : (
         <HiddenHand cardCount={player.hand.length} />
