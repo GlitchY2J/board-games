@@ -17,43 +17,78 @@ interface Props {
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
   onSelectionChange?(selected: boolean): void;
+  onInvalidAction?(message: string): void;
 }
 
-export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendingPlay, blockedCardIds, onPlay, onSelectionChange }: Props) {
+export default function CardFan({
+  cards,
+  isMyTurn,
+  gamePhase,
+  actionUsed,
+  pendingPlay,
+  blockedCardIds,
+  onPlay,
+  onSelectionChange,
+  onInvalidAction,
+}: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const { hidePreview } = useCardPreview();
 
-  // Notificar al padre si hay una carta seleccionada (para que la tecla
-  // Espacio no robe mientras se confirma el juego de una carta).
   useEffect(() => {
     onSelectionChange?.(selectedCardId !== null);
   }, [selectedCardId, onSelectionChange]);
 
-  // Enter = aceptar/confirmar el juego de la carta seleccionada.
   useEffect(() => {
     if (!selectedCardId) return;
     if (pendingPlay) return;
+
     const selectedId = selectedCardId;
+
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement) {
         const tag = e.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       }
+
       if (e.isComposing) return;
       if (e.code !== 'Enter') return;
 
       const selected = cards.find((c) => c.uid === selectedId);
       if (!selected) return;
-      if (isBlocked(selectedId) || isNeigh(selected)) return;
+
+      if (actionUsed) {
+        onInvalidAction?.('Ya jugaste una carta este turno');
+        return;
+      }
+
+      if (isBlocked(selectedId)) {
+        onInvalidAction?.(blockedReason(selected));
+        return;
+      }
+
+      if (isNeigh(selected)) {
+        onInvalidAction?.(
+          'Neigh solo puede jugarse como respuesta a la carta de otro jugador',
+        );
+        return;
+      }
 
       e.preventDefault();
       e.stopPropagation();
       onPlay(selectedId);
       setSelectedCardId(null);
     }
+
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [selectedCardId, cards, onPlay, pendingPlay]);
+  }, [
+    selectedCardId,
+    cards,
+    onPlay,
+    pendingPlay,
+    actionUsed,
+    onInvalidAction,
+  ]);
 
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
@@ -62,11 +97,14 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
     if (card.cardType === 'upgrade') {
       return 'Broken Stable impide que juegues cartas de Upgrade.';
     }
+
     if (card.cardType === 'unicorn' && card.unicornClass === 'basic') {
       return 'Queen Bee Unicorn impide que los unicornios básicos entren a tu establo.';
     }
-    return '';
+
+    return 'No puedes jugar esta carta ahora.';
   };
+
   const isNeigh = (card: CardType) =>
     card.effect === 'neigh' || card.effect === 'super_neigh';
 
@@ -82,6 +120,7 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
           const total = cards.length;
           const middle = (total - 1) / 2;
           const rotation = (index - middle) * 5;
+
           return (
             <div
               key={card.uid}
@@ -92,25 +131,42 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                 name={card.name}
                 image={card.image}
                 size="large"
-                disabled={
-                  !isMyTurn ||
-                  gamePhase !== 'ACTION' ||
-                  isBlocked(card.uid) ||
-                  isNeigh(card)
-                }
+                disabled={false}
                 selected={selectedCardId === card.uid}
                 onClick={() => {
-                  if (!isMyTurn) return;
+                  if (!isMyTurn) {
+                    onInvalidAction?.('No es tu turno');
+                    return;
+                  }
 
-                  if (gamePhase !== 'ACTION') return;
+                  if (gamePhase !== 'ACTION') {
+                    onInvalidAction?.(
+                      'Solo puedes jugar cartas durante tu fase de acción',
+                    );
+                    return;
+                  }
 
-                  if (actionUsed) return;
+                  if (actionUsed) {
+                    onInvalidAction?.('Ya jugaste una carta este turno');
+                    return;
+                  }
 
-                  if (pendingPlay) return;
+                  if (pendingPlay) {
+                    onInvalidAction?.('Hay otra carta esperando a resolverse');
+                    return;
+                  }
 
-                  if (isBlocked(card.uid)) return;
+                  if (isBlocked(card.uid)) {
+                    onInvalidAction?.(blockedReason(card));
+                    return;
+                  }
 
-                  if (isNeigh(card)) return;
+                  if (isNeigh(card)) {
+                    onInvalidAction?.(
+                      'Neigh solo puede jugarse como respuesta a la carta de otro jugador',
+                    );
+                    return;
+                  }
 
                   selectCard(card.uid);
                 }}
@@ -146,6 +202,7 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                   <X size={14} />
                   Cancelar
                 </button>
+
                 {isBlocked(selectedCardId) ? (
                   <p className="text-xs text-slate-400 font-medium max-w-[200px] text-center">
                     {blockedReason(selectedCard)}
@@ -159,6 +216,20 @@ export default function CardFan({ cards, isMyTurn, gamePhase, actionUsed, pendin
                   <button
                     className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10"
                     onClick={() => {
+                      if (actionUsed) {
+                        onInvalidAction?.('Ya jugaste una carta este turno');
+                        setSelectedCardId(null);
+                        return;
+                      }
+
+                      if (pendingPlay) {
+                        onInvalidAction?.(
+                          'Hay otra carta esperando a resolverse',
+                        );
+                        setSelectedCardId(null);
+                        return;
+                      }
+
                       onPlay(selectedCardId);
                       setSelectedCardId(null);
                     }}
