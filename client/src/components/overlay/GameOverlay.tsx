@@ -294,6 +294,36 @@ export default function GameOverlay({
       case 'select_hand_card': {
         if (action.sourcePlayerId !== localPlayerId) return null;
 
+        if (action.reason === 'glitter_unicorn') {
+          const player = gameState.players.find((p) => p.id === localPlayerId);
+          if (!player) return null;
+
+          const upgrades = player.hand.filter((card) => card.cardType === 'upgrade');
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="✨ Glitter Unicorn"
+              subtitle="Elige una carta de Upgrade de tu mano para colocarla en tu establo"
+              items={upgrades.map((card, idx) => ({
+                id: `${card.id}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                image: card.image,
+              }))}
+              maxSelection={1}
+              confirmText="Jugar Upgrade"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-hand-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         const target = gameState.players.find(
           (p) => p.id === action.targetPlayerId,
         );

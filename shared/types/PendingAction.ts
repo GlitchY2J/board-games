@@ -69,7 +69,7 @@ export type PendingAction =
     }
   | {
       type: "select_hand_card";
-      reason: "blatant_thievery" | "americorn";
+      reason: "blatant_thievery" | "americorn" | "glitter_unicorn";
       sourcePlayerId: string;
       targetPlayerId: string;
     }

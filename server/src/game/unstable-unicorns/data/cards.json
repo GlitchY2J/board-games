@@ -346,7 +346,7 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/base/llamacorn.png",
-    "description": "When this card enters your Stable, each player must DISCARD a card. Shuffle the discard pile into the deck.",
+    "description": "When this card enters your Stable, each player must DISCARD a card.",
     "effect": "llamacorn",
     "copies": 1,
     "expansion": "base"
@@ -368,7 +368,7 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/base/magical_kittencorn.png",
-    "description": "This card cannot be destroyed or otherwise affected by Magic cards.",
+    "description": "This card cannot be destroyed by Magic cards.",
     "effect": "magical_kittencorn",
     "copies": 1,
     "expansion": "base"
@@ -1009,6 +1009,39 @@
     "image": "/cards/rainbow apocalypse/glitter_unicorn.png",
     "description": "When this card enters your Stable, you may bring an Upgrade card from your hand into your Stable.",
     "effect": "glitter_unicorn",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_llamacorn",
+    "name": "Llamacorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/llamacorn.png",
+    "description": "When this card enters your Stable, each player must DISCARD a card.",
+    "effect": "llamacorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_magical_kittencorn",
+    "name": "Magical Kittencorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/magical_kittencorn.png",
+    "description": "This card cannot be destroyed by Magic cards.",
+    "effect": "magical_kittencorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "the_tiniest_unicorn",
+    "name": "The Tiniest Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/the_tiniest_unicorn.png",
+    "description": "This card cannot be destroyed by effects of Unicorn or Upgrade cards.",
+    "effect": "the_tiniest_unicorn",
     "copies": 1,
     "expansion": "rainbow"
   }

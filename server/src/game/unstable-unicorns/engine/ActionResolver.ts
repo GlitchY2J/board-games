@@ -1640,6 +1640,20 @@ export class ActionResolver {
 
     if (!targetPlayer || !sourcePlayer) return false;
 
+    if (pending.reason === 'glitter_unicorn') {
+      if (targetPlayer.id !== sourcePlayer.id) return false;
+
+      const cardIdx = sourcePlayer.hand.findIndex((c) => c.uid === cardId);
+      if (cardIdx === -1 || sourcePlayer.hand[cardIdx].cardType !== 'upgrade') {
+        return false;
+      }
+
+      const [upgrade] = sourcePlayer.hand.splice(cardIdx, 1);
+      sourcePlayer.upgrades.push(upgrade);
+      state.pendingAction = undefined;
+      return true;
+    }
+
     const cardIdx = targetPlayer.hand.findIndex((c) => c.uid === cardId);
     if (cardIdx === -1) return false;
 
