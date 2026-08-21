@@ -214,14 +214,18 @@ export default function BoardLayout({
                   />
 
                   {isMyTurn && gameState.phase === 'DRAW' && (
-                    <span className="draw-hint">Roba una carta</span>
+                    <span className="draw-hint">
+                      Presiona <kbd className="space-key">Space</kbd> para robar una carta
+                    </span>
                   )}
 
                   {isMyTurn &&
                     gameState.phase === 'ACTION' &&
                     !gameState.actionUsed &&
                     !gameState.pendingPlay && (
-                      <span className="draw-hint">Juega o roba una carta</span>
+                      <span className="draw-hint">
+                        Juega una carta o presiona <kbd className="space-key">Space</kbd> para robar
+                      </span>
                     )}
                 </div>
               </div>

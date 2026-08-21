@@ -38,6 +38,67 @@ export default function CardFan({
     onSelectionChange?.(selectedCardId !== null);
   }, [selectedCardId, onSelectionChange]);
 
+  useEffect(() => {
+    if (!selectedCardId) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.isComposing) return;
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setSelectedCardId(null);
+        return;
+      }
+
+      if (event.key.toLowerCase() !== 'a') return;
+
+      const confirmButton = document.querySelector<HTMLElement>(
+        '[data-card-confirm]',
+      );
+      if (!confirmButton) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      confirmButton.click();
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedCardId]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (selectedCardId || event.isComposing) return;
+
+      if (event.target instanceof HTMLElement) {
+        const tag = event.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      }
+
+      const keyIndex =
+        event.key === '0' ? 9 : Number.parseInt(event.key, 10) - 1;
+      if (
+        Number.isNaN(keyIndex) ||
+        keyIndex < 0 ||
+        keyIndex >= cards.length ||
+        keyIndex > 9
+      )
+        return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Reutiliza el mismo flujo del clic para mantener todas las validaciones.
+      document
+        .querySelector<HTMLElement>(`[data-card-hotkey="${keyIndex}"]`)
+        ?.querySelector<HTMLElement>('.playing-card')
+        ?.click();
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [cards.length, selectedCardId]);
+
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
 
@@ -68,13 +129,20 @@ export default function CardFan({
           const total = cards.length;
           const middle = (total - 1) / 2;
           const rotation = (index - middle) * 5;
+          const hotkey = index < 9 ? index + 1 : index === 9 ? 0 : null;
 
           return (
             <div
               key={card.uid}
               className="fan-card"
+              data-card-hotkey={index}
               style={{ transform: `rotate(${rotation}deg)`, zIndex: index }}
             >
+              {hotkey !== null && (
+                <span className="card-hotkey" aria-hidden="true">
+                  {hotkey}
+                </span>
+              )}
               <PlayingCard
                 name={card.name}
                 image={card.image}
@@ -162,6 +230,7 @@ export default function CardFan({
                   </p>
                 ) : (
                   <button
+                    data-card-confirm
                     className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10"
                     onClick={() => {
                       if (actionUsed) {

@@ -159,6 +159,25 @@
   user-select: none;
 }
 
+.space-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 3px 9px;
+  margin: 0 3px;
+  color: #d1fae5;
+  background: rgba(6, 78, 59, 0.7);
+  border: 1px solid rgba(167, 243, 208, 0.45);
+  border-bottom-width: 3px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: none;
+}
+
 @keyframes drawHintPulse {
   0%,
   100% {
