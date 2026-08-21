@@ -65,7 +65,7 @@
   transform: translateY(-50%);
   width: 280px;
   max-width: 28vw;
-  z-index: 15;
+  z-index: 10001;
   height: 256px;
 }
 
@@ -409,7 +409,7 @@
     left: 8px;
     right: 8px;
     bottom: 112px;
-    z-index: 70;
+    z-index: 10001;
     max-height: 55vh;
     animation: phasePanelExpand 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }

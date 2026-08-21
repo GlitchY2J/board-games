@@ -365,7 +365,11 @@ export default function BoardLayout({
       {mobileChatOpen && (
         <div className="mobile-chat-panel">
           <div className="mobile-chat-panel-inner">
-            <Chat gameState={gameState} />
+            <Chat
+              gameState={gameState}
+              initialOpen
+              onClose={() => setMobileChatOpen(false)}
+            />
           </div>
           <button
             className="mobile-chat-close"

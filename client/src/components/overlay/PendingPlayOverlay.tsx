@@ -20,29 +20,6 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, hide = fa
     return () => clearInterval(interval);
   }, [pending]);
 
-  // Enter = aceptar que el otro jugador juegue la carta (pasar sin Neigh).
-  // Solo aplica cuando la jugada NO es nuestra y aún no hemos aceptado.
-  useEffect(() => {
-    const pendingPlay = gameState.pendingPlay;
-    if (!pendingPlay) return;
-    if (pendingPlay.playerId === localPlayerId) return;
-    if (pendingPlay.acceptedIds.includes(localPlayerId)) return;
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLElement) {
-        const tag = e.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      }
-      if (e.isComposing) return;
-      if (e.code !== 'Enter') return;
-      e.preventDefault();
-      e.stopPropagation();
-      socket.emit('neigh-accept', { roomCode: gameState.roomCode });
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [gameState, localPlayerId]);
-
   if (!pending) return null;
 
   const isMyPlay = pending.playerId === localPlayerId;

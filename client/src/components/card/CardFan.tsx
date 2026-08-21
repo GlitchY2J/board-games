@@ -38,58 +38,6 @@ export default function CardFan({
     onSelectionChange?.(selectedCardId !== null);
   }, [selectedCardId, onSelectionChange]);
 
-  useEffect(() => {
-    if (!selectedCardId) return;
-    if (pendingPlay) return;
-
-    const selectedId = selectedCardId;
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLElement) {
-        const tag = e.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      }
-
-      if (e.isComposing) return;
-      if (e.code !== 'Enter') return;
-
-      const selected = cards.find((c) => c.uid === selectedId);
-      if (!selected) return;
-
-      if (actionUsed) {
-        onInvalidAction?.('Ya jugaste una carta este turno');
-        return;
-      }
-
-      if (isBlocked(selectedId)) {
-        onInvalidAction?.(blockedReason(selected));
-        return;
-      }
-
-      if (isNeigh(selected)) {
-        onInvalidAction?.(
-          'Neigh solo puede jugarse como respuesta a la carta de otro jugador',
-        );
-        return;
-      }
-
-      e.preventDefault();
-      e.stopPropagation();
-      onPlay(selectedId);
-      setSelectedCardId(null);
-    }
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [
-    selectedCardId,
-    cards,
-    onPlay,
-    pendingPlay,
-    actionUsed,
-    onInvalidAction,
-  ]);
-
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
 
