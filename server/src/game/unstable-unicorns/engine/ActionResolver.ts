@@ -1517,6 +1517,7 @@ export class ActionResolver {
 
         const [stolen] = targetPlayer.stable.splice(idx, 1);
         maybeTriggerBarbedWireLeave(state, targetPlayer);
+        const prevPending = state.pendingAction;
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
 
         if (!entered) {
@@ -1524,10 +1525,14 @@ export class ActionResolver {
           return false;
         }
 
-        // Resolución LIFO centralizada: si la carta robada abrió un efecto hijo
-        // interactivo al entrar, se mantiene activo; si no, termina el paso.
-        EffectStack.finish(state, pending);
+        // Rainbow Lasso ya terminó en el momento en que roba el unicornio.
+        // Si el unicornio abre un efecto interactivo al entrar, ese efecto
+        // debe resolverse sin reanudar Rainbow Lasso después.
+        if (state.pendingAction !== prevPending) {
+          return true;
+        }
 
+        state.pendingAction = undefined;
         return true;
       }
 

@@ -144,6 +144,13 @@ export class TurnManager {
     ].find((c) => c.uid === uid);
     if (!card) return false;
 
+    // Marcar el efecto como consumido al iniciarlo. Esto evita que una
+    // interacción hija (por ejemplo, traer una carta del descarte) vuelva a
+    // presentar el mismo efecto de inicio de turno.
+    game.beginningEffectsQueue = (game.beginningEffectsQueue ?? []).filter(
+      (effectUid) => effectUid !== uid,
+    );
+
     switch (card.id) {
       case 'rhinocorn':
         game.pendingAction = {
@@ -352,6 +359,10 @@ export class TurnManager {
   static activateBeginningTriggers(game: GameState): boolean {
     if (game.phase !== TurnPhase.BEGINNING || game.pendingAction) return false;
 
+    // Construir la cola una sola vez por fase evita volver a ofrecer un efecto
+    // ya consumido cuando termina una interacción hija.
+    if (game.beginningEffectsQueue !== undefined) return false;
+
     const activePlayer = game.players[game.currentPlayer];
     if (!activePlayer) return false;
 
@@ -382,6 +393,7 @@ export class TurnManager {
 
     game.actionUsed = false;
     game.actionPlaysRemaining = undefined;
+    game.beginningEffectsQueue = undefined;
 
     if (game.currentPlayer === 0) {
       game.turn++;
