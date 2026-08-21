@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { isImmuneToUnicornOrUpgradeDestruction } from '../src/game/cards/effects/theTiniestUnicorn.ts';
 import { hasUnicornOfDeathTarget } from '../src/game/cards/effects/unicornOfDeath.ts';
 import { getHandLimit } from '../src/game/cards/effects/unicornOfFamine.ts';
+import { unicornOfPestilence } from '../src/game/cards/effects/unicornOfPestilence.ts';
 
 test('The Tiniest Unicorn es inmune a destrucciones de Unicornio o Upgrade', () => {
   assert.equal(isImmuneToUnicornOrUpgradeDestruction('the_tiniest_unicorn'), true);
@@ -41,4 +42,21 @@ test('Unicorn of Famine reduce el límite de mano de todos los jugadores', () =>
 
   assert.equal(getHandLimit(state), 2);
   assert.equal(getHandLimit({ players: [{ stable: [] }] } as never), 7);
+});
+
+test('Unicorn of Pestilence permite elegir cualquier cantidad de cartas, incluyendo cero', () => {
+  const state = { pendingAction: undefined } as never;
+  const player = {
+    id: 'player-1',
+    hand: [{ uid: 'card-1' }, { uid: 'card-2' }],
+  } as never;
+
+  unicornOfPestilence.onEnterStable?.(state, player, {} as never);
+
+  assert.deepEqual(state.pendingAction, {
+    type: 'select_discard_count',
+    reason: 'unicorn_of_pestilence',
+    playerId: 'player-1',
+    maxCards: 2,
+  });
 });

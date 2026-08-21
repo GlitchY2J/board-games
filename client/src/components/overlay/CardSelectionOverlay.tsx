@@ -16,6 +16,7 @@ interface Props {
   subtitle?: string;
   items: SelectionItem[];
   maxSelection: number;
+  minSelection?: number;
   confirmText?: string;
   hide?: boolean;
   onConfirm(cardIds: string[]): void;
@@ -27,6 +28,7 @@ export default function CardSelectionOverlay({
   subtitle,
   items,
   maxSelection,
+  minSelection = maxSelection,
   confirmText = 'Confirmar',
   hide = false,
   onConfirm,
@@ -57,8 +59,8 @@ export default function CardSelectionOverlay({
   }
 
   const canConfirm = useMemo(
-    () => selected.length === maxSelection,
-    [selected, maxSelection],
+    () => selected.length >= minSelection && selected.length <= maxSelection,
+    [selected, minSelection, maxSelection],
   );
 
   const selectedValues = useMemo(() => {

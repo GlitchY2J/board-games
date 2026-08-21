@@ -14,6 +14,115 @@ import { addLog } from '../../../sockets/gameLog.ts';
 import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 
 export class ActionResolver {
+  static handlePestilenceDiscardCount(
+    state: GameState,
+    playerId: string,
+    cardIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'select_discard_count' ||
+      pending.playerId !== playerId ||
+      cardIds.length > pending.maxCards
+    ) {
+      return false;
+    }
+
+    const player = state.players.find((candidate) => candidate.id === playerId);
+    if (!player || new Set(cardIds).size !== cardIds.length) return false;
+
+    for (const cardId of cardIds) {
+      const idx = player.hand.findIndex((card) => card.uid === cardId);
+      if (idx === -1) return false;
+    }
+
+    for (const cardId of cardIds) {
+      const idx = player.hand.findIndex((card) => card.uid === cardId);
+      const [discarded] = player.hand.splice(idx, 1);
+      enqueueDiscardAnimation(state.roomCode, player.id, discarded);
+      state.discard.push(discarded);
+    }
+
+    const remainingPlayerIds = state.players
+      .filter(
+        (candidate) =>
+          candidate.id !== playerId && candidate.hand.length > 0,
+      )
+      .map((candidate) => candidate.id);
+
+    state.pendingAction = undefined;
+    ActionResolver.advancePestilence(state, playerId, remainingPlayerIds, cardIds.length);
+    return true;
+  }
+
+  static handlePestilenceDiscard(
+    state: GameState,
+    playerId: string,
+    cardIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'pestilence_discard' ||
+      pending.playerId !== playerId ||
+      cardIds.length !== pending.cardsToDiscard
+    ) {
+      return false;
+    }
+
+    const player = state.players.find((candidate) => candidate.id === playerId);
+    if (!player || new Set(cardIds).size !== cardIds.length) return false;
+
+    for (const cardId of cardIds) {
+      const idx = player.hand.findIndex((card) => card.uid === cardId);
+      if (idx === -1) return false;
+    }
+
+    for (const cardId of cardIds) {
+      const idx = player.hand.findIndex((card) => card.uid === cardId);
+      const [discarded] = player.hand.splice(idx, 1);
+      enqueueDiscardAnimation(state.roomCode, player.id, discarded);
+      state.discard.push(discarded);
+    }
+
+    ActionResolver.advancePestilence(
+      state,
+      pending.sourcePlayerId,
+      pending.remainingPlayerIds.filter((id) => id !== playerId),
+      pending.cardsToDiscard,
+    );
+    return true;
+  }
+
+  private static advancePestilence(
+    state: GameState,
+    sourcePlayerId: string,
+    remainingPlayerIds: string[],
+    cardsToDiscard: number,
+  ): void {
+    while (remainingPlayerIds.length > 0) {
+      const playerId = remainingPlayerIds[0];
+      const player = state.players.find((candidate) => candidate.id === playerId);
+      const amount = Math.min(cardsToDiscard, player?.hand.length ?? 0);
+      remainingPlayerIds = remainingPlayerIds.slice(1);
+
+      if (amount > 0) {
+        state.pendingAction = {
+          type: 'pestilence_discard',
+          reason: 'unicorn_of_pestilence',
+          sourcePlayerId,
+          playerId,
+          remainingPlayerIds,
+          cardsToDiscard: amount,
+        };
+        return;
+      }
+    }
+
+    state.pendingAction = undefined;
+  }
+
   static handleDiscard(
     state: GameState,
     playerId: string,

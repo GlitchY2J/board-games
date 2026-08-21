@@ -2,6 +2,20 @@ import type { Card } from "./Card.ts";
 
 export type PendingAction =
   | {
+      type: "select_discard_count";
+      reason: "unicorn_of_pestilence";
+      playerId: string;
+      maxCards: number;
+    }
+  | {
+      type: "pestilence_discard";
+      reason: "unicorn_of_pestilence";
+      sourcePlayerId: string;
+      playerId: string;
+      remainingPlayerIds: string[];
+      cardsToDiscard: number;
+    }
+  | {
       type: "discard";
       reason:
         | "hand_limit"

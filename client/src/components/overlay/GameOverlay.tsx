@@ -106,6 +106,37 @@ export default function GameOverlay({
       // ───────────────────────────────────
       // DESCARTE DE CARTAS
       // ───────────────────────────────────
+      case 'select_discard_count': {
+        const player = gameState.players.find((p) => p.id === localPlayerId);
+        if (!player || action.playerId !== localPlayerId) return null;
+
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="☠️ Unicorn of Pestilence"
+            subtitle="Elige cualquier número de cartas para descartar, incluyendo cero. Los demás jugadores descartarán la misma cantidad."
+            items={player.hand.map((card, idx) => ({
+              id: `${card.id}_${idx}`,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={action.maxCards}
+            minSelection={0}
+            confirmText="Confirmar descarte"
+            onConfirm={(cardIds) => {
+              dismiss();
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds,
+              });
+            }}
+          />
+        );
+      }
+
+      case 'pestilence_discard':
       case 'discard': {
         const player = gameState.players.find((p) => p.id === localPlayerId);
         if (!player || action.playerId !== localPlayerId) return null;
@@ -124,6 +155,7 @@ export default function GameOverlay({
           rainbow_lasso: '🌈 Rainbow Lasso',
           stable_artillery: '🔫 Stable Artillery',
           barbed_wire: '🌵 Barbed Wire',
+          unicorn_of_pestilence: '☠️ Unicorn of Pestilence',
         };
 
         const isNecromancer = action.reason === 'necromancer_unicorn';

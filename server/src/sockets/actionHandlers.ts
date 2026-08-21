@@ -69,7 +69,19 @@ export function registerActionHandlers(
 
       let resolved = false;
 
-      if (game.pendingAction.type === 'mystical_vortex') {
+      if (game.pendingAction.type === 'select_discard_count') {
+        resolved = ActionResolver.handlePestilenceDiscardCount(
+          game,
+          player.id,
+          cardIds,
+        );
+      } else if (game.pendingAction.type === 'pestilence_discard') {
+        resolved = ActionResolver.handlePestilenceDiscard(
+          game,
+          player.id,
+          cardIds,
+        );
+      } else if (game.pendingAction.type === 'mystical_vortex') {
         resolved = ActionResolver.handleMysticalVortexDiscard(
           game,
           player.id,
