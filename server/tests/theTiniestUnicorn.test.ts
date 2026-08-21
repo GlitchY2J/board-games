@@ -4,6 +4,11 @@ import { isImmuneToUnicornOrUpgradeDestruction } from '../src/game/cards/effects
 import { hasUnicornOfDeathTarget } from '../src/game/cards/effects/unicornOfDeath.ts';
 import { getHandLimit } from '../src/game/cards/effects/unicornOfFamine.ts';
 import { unicornOfPestilence } from '../src/game/cards/effects/unicornOfPestilence.ts';
+import {
+  hasUnicornOfWarTarget,
+  unicornOfWar,
+} from '../src/game/cards/effects/unicornOfWar.ts';
+import { isImmuneToDestruction } from '../src/game/cards/effects/theTiniestUnicorn.ts';
 
 test('The Tiniest Unicorn es inmune a destrucciones de Unicornio o Upgrade', () => {
   assert.equal(isImmuneToUnicornOrUpgradeDestruction('the_tiniest_unicorn'), true);
@@ -59,4 +64,34 @@ test('Unicorn of Pestilence permite elegir cualquier cantidad de cartas, incluye
     playerId: 'player-1',
     maxCards: 2,
   });
+});
+
+test('Unicorn of War ofrece objetivos de otros establos y es inmune a destrucción', () => {
+  const state = {
+    pendingAction: undefined,
+    players: [
+      {
+        id: 'player-1',
+        stable: [{ id: 'unicorn_of_war' }],
+        upgrades: [],
+        downgrades: [],
+      },
+      {
+        id: 'player-2',
+        stable: [{ id: 'basic_unicorn_red', cardType: 'unicorn' }],
+        upgrades: [],
+        downgrades: [],
+      },
+    ],
+  } as never;
+
+  unicornOfWar.onEnterStable?.(
+    state,
+    { id: 'player-1' } as never,
+    {} as never,
+  );
+
+  assert.equal(hasUnicornOfWarTarget(state, 'player-1'), true);
+  assert.equal(isImmuneToDestruction('unicorn_of_war'), true);
+  assert.equal(state.pendingAction?.reason, 'unicorn_of_war');
 });

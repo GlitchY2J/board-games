@@ -76,12 +76,14 @@ export type PendingAction =
          | "glitter_bomb_destroy"
          | "unicorn_of_death_sacrifice"
          | "unicorn_of_death_destroy"
+         | "unicorn_of_war_destroy"
         | "tiny_stable"
         | "rainbow_lasso_steal"
         | "stable_artillery_destroy"
         | "sadistic_ritual";
-      sourcePlayerId: string;
-      targetPlayerId?: string;
+       sourcePlayerId: string;
+       targetPlayerId?: string;
+       remainingPlayerIds?: string[];
     }
   | {
       type: "select_hand_card";
@@ -164,6 +166,7 @@ export type PendingAction =
          | "extremely_fertile_unicorn"
          | "glitter_bomb"
          | "unicorn_of_death"
+         | "unicorn_of_war"
         | "beginning_effect_picker"
         | "rainbow_lasso"
         | "stable_artillery"
@@ -174,6 +177,8 @@ export type PendingAction =
       options: { value: string; text: string }[];
       targetCardId?: string;
       originalTargetPlayerId?: string;
+      sourcePlayerId?: string;
+      remainingPlayerIds?: string[];
       /** Carta que está "en el aire" mientras se decide (p. ej. Unicorn Phoenix) */
       heldCard?: Card;
       /** Uid del efecto de inicio de turno que se está resolviendo. Permite distinguir

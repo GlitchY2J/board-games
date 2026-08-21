@@ -38,7 +38,7 @@ export default function GameOverlay({
     if ('phase' in action) parts.push(`phase:${action.phase}`);
     if ('remainingToDestroy' in action)
       parts.push(`rem:${action.remainingToDestroy}`);
-    if ('remainingPlayerIds' in action)
+    if ('remainingPlayerIds' in action && action.remainingPlayerIds)
       parts.push(`first:${action.remainingPlayerIds[0]}`);
     if ('resolvedPlayerIds' in action)
       parts.push(`resolved:${action.resolvedPlayerIds.join(',')}`);
@@ -689,6 +689,46 @@ export default function GameOverlay({
               hide={hide}
               title="🦏 Rhinocorn"
               subtitle="Elige un unicornio de OTRO jugador para DESTRUIR. Pasarás a la fase de acción sin acciones."
+              items={items}
+              maxSelection={1}
+              confirmText="Destruir"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'unicorn_of_war_destroy') {
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) =>
+              p.stable
+                .filter(
+                  (card) =>
+                    card.cardType === 'unicorn' &&
+                    !isPandamoniumProtected(p, card) &&
+                    card.id !== 'the_tiniest_unicorn' &&
+                    card.id !== 'unicorn_of_war',
+                )
+                .map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="⚔️ Unicorn of War"
+              subtitle="Elige un unicornio de otro jugador para DESTRUIR."
               items={items}
               maxSelection={1}
               confirmText="Destruir"

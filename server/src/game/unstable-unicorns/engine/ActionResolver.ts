@@ -12,6 +12,8 @@ import { maybeTriggerBarbedWireLeave } from '../../cards/effects/barbedWire.ts';
 import { drawForSadisticRitual } from '../../cards/effects/sadisticRitual.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
 import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
+import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
+import { nextUnicornOfWarChoice } from '../../cards/effects/unicornOfWar.ts';
 
 export class ActionResolver {
   static handlePestilenceDiscardCount(
@@ -440,6 +442,56 @@ export class ActionResolver {
       pending.type !== 'cotton_candy_unicorn'
     ) {
       return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_of_war_destroy'
+    ) {
+      const targetPlayer = state.players.find(
+        (player) => player.id !== sourcePlayerId &&
+          player.stable.some((card) => card.uid === cardId),
+      );
+      if (!targetPlayer) return false;
+
+      const idx = targetPlayer.stable.findIndex((card) => card.uid === cardId);
+      const target = targetPlayer.stable[idx];
+      if (
+        !target ||
+        target.cardType !== 'unicorn' ||
+        isPandamoniumProtected(targetPlayer, target) ||
+        isImmuneToDestruction(target.id)
+      ) {
+        return false;
+      }
+
+      const next = nextUnicornOfWarChoice(
+        state,
+        pending.sourcePlayerId,
+        pending.remainingPlayerIds ?? [],
+      );
+
+      if (CardMovement.maybeBlackKnightIntercept(state, targetPlayer, target)) {
+        if (next) {
+          if (!state.pendingResume) state.pendingResume = [];
+          state.pendingResume.push(next);
+        }
+        return true;
+      }
+
+      const [destroyed] = targetPlayer.stable.splice(idx, 1);
+      const previousPending = state.pendingAction;
+      CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed, 'destroy');
+
+      if (state.pendingAction !== previousPending) {
+        if (next) {
+          if (!state.pendingResume) state.pendingResume = [];
+          state.pendingResume.push(next);
+        }
+      } else {
+        state.pendingAction = next;
+      }
+      return true;
     }
 
     if (pending.type === 'two_for_one') {

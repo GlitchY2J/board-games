@@ -14,6 +14,7 @@ import {
   enqueueDrawAnimation,
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
+import { nextUnicornOfWarChoice } from '../game/cards/effects/unicornOfWar.ts';
 
 export function registerActionHandlers(
   io: GameServer,
@@ -403,6 +404,28 @@ export function registerActionHandlers(
         );
         if (!started) {
           TurnManager.processBeginningQueue(room.gameState);
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'unicorn_of_war') {
+        const remainingPlayerIds = pending.remainingPlayerIds ?? [];
+
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'unicorn_of_war_destroy',
+            sourcePlayerId: player.id,
+            remainingPlayerIds,
+          };
+        } else {
+          room.gameState.pendingAction = nextUnicornOfWarChoice(
+            room.gameState,
+            pending.sourcePlayerId ?? player.id,
+            remainingPlayerIds,
+          );
         }
 
         emitGameState(io, room, 'game-updated');

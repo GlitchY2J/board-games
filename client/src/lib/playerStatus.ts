@@ -10,7 +10,8 @@ export function getPlayerStatus(
     const isActor =
       ('playerId' in pending && pending.playerId === playerId) ||
       ('sourcePlayerId' in pending && pending.sourcePlayerId === playerId) ||
-      ('remainingPlayerIds' in pending && pending.remainingPlayerIds[0] === playerId);
+      ('remainingPlayerIds' in pending &&
+        pending.remainingPlayerIds?.[0] === playerId);
 
     if (isActor) {
       switch (pending.type) {

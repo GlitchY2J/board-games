@@ -1088,5 +1088,38 @@
     "effect": "unicorn_of_war",
     "copies": 1,
     "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_unicorn_phoenix",
+    "name": "Unicorn Phoenix",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_phoenix.png",
+    "description": "If this card would be sacrificed or destroyed, you may DISCARD a card instead.",
+    "effect": "unicorn_phoenix",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_rainbow_princess",
+    "name": "Unicorn Rainbow Princess",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_rainbow_princess.png",
+    "description": "When this card enters your Stable, choose any number of players. DRAW cards equal to the number of chosen players. Each chosen player may DRAW a card.",
+    "effect": "unicorn_rainbow_princess",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "zombie_unicorn",
+    "name": "Zombie Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/zombie_unicorn.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD a Unicorn card, then bring a Unicorn card from the discard pile into your Stable. If you do immediately end your turn.",
+    "effect": "zombie_unicorn",
+    "copies": 2,
+    "expansion": "rainbow"
   }
 ]
