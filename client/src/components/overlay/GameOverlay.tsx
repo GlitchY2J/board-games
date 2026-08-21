@@ -639,7 +639,9 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
+                   c.cardType === 'unicorn' &&
+                     !isPandamoniumProtected(p, c) &&
+                     c.id !== 'the_tiniest_unicorn',
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -783,6 +785,8 @@ export default function GameOverlay({
                 zone: 'downgrade' as const,
               })),
             ].forEach((card, idx) => {
+              if (card.id === 'the_tiniest_unicorn') return;
+
               items.push({
                 id: `${card.id}_${p.id}_${idx}`,
                 value: card.uid,
@@ -897,7 +901,9 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
+                   c.cardType === 'unicorn' &&
+                     !isPandamoniumProtected(p, c) &&
+                     c.id !== 'the_tiniest_unicorn',
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -934,7 +940,9 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
+                   c.cardType === 'unicorn' &&
+                     !isPandamoniumProtected(p, c) &&
+                     c.id !== 'the_tiniest_unicorn',
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -971,7 +979,9 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
+                   c.cardType === 'unicorn' &&
+                     !isPandamoniumProtected(p, c) &&
+                     c.id !== 'the_tiniest_unicorn',
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,

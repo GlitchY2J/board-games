@@ -1044,5 +1044,27 @@
     "effect": "the_tiniest_unicorn",
     "copies": 1,
     "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_of_death",
+    "name": "Unicorn Of Death",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_of_death.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a Unicorn card, then DESTROY a Unicorn card.",
+    "effect": "unicorn_of_death",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_of_famine",
+    "name": "Unicorn Of Famine",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_of_famine.png",
+    "description": "Each player's hand limit (including yours) is reduced by 5 cards.",
+    "effect": "unicorn_of_famine",
+    "copies": 1,
+    "expansion": "rainbow"
   }
 ]

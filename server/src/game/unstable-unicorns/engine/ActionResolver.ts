@@ -11,6 +11,7 @@ import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import { maybeTriggerBarbedWireLeave } from '../../cards/effects/barbedWire.ts';
 import { drawForSadisticRitual } from '../../cards/effects/sadisticRitual.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
+import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 
 export class ActionResolver {
   static handleDiscard(
@@ -732,6 +733,10 @@ export class ActionResolver {
           if (i !== -1) {
             const target = p[z][i];
 
+            if (isImmuneToUnicornOrUpgradeDestruction(target.id)) {
+              return false;
+            }
+
             if (CardMovement.maybeBlackKnightIntercept(state, p, target)) {
               return true;
             }
@@ -1403,6 +1408,8 @@ export class ActionResolver {
           return false;
         }
 
+        if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
+
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         const intercepted = CardMovement.destroyOrSacrifice(
           state,
@@ -1445,6 +1452,8 @@ export class ActionResolver {
         if (isPandamoniumProtected(targetPlayer, card)) {
           return false;
         }
+
+        if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
@@ -1572,6 +1581,8 @@ export class ActionResolver {
           return false;
         }
 
+        if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
+
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
 
@@ -1603,6 +1614,8 @@ export class ActionResolver {
         if (isPandamoniumProtected(targetPlayer, card)) {
           return false;
         }
+
+        if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
