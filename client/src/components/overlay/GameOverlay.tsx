@@ -671,6 +671,78 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'unicorn_of_death_sacrifice') {
+          const localPlayer = gameState.players.find(
+            (p) => p.id === localPlayerId,
+          );
+          const items = (localPlayer?.stable ?? [])
+            .filter((card) => card.cardType === 'unicorn')
+            .map((card, idx) => ({
+              id: `${card.id}_stable_${idx}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Tu establo',
+              image: card.image,
+            }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="💀 Unicorn of Death"
+              subtitle="Elige un unicornio de tu establo para SACRIFICAR. Luego destruirás un unicornio de otro establo."
+              items={items}
+              maxSelection={1}
+              confirmText="Sacrificar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'unicorn_of_death_destroy') {
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((p) =>
+              p.stable
+                .filter(
+                  (card) =>
+                    card.cardType === 'unicorn' &&
+                    !isPandamoniumProtected(p, card) &&
+                    card.id !== 'the_tiniest_unicorn',
+                )
+                .map((card, idx) => ({
+                  id: `${card.id}_${p.id}_${idx}`,
+                  value: card.uid,
+                  title: card.name,
+                  subtitle: `Establo de ${p.name}`,
+                  image: card.image,
+                })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="💀 Unicorn of Death"
+              subtitle="Elige un unicornio de OTRO jugador para DESTRUIR."
+              items={items}
+              maxSelection={1}
+              confirmText="Destruir"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'caffeine_overload') {
           const localPlayer = gameState.players.find(
             (p) => p.id === localPlayerId,

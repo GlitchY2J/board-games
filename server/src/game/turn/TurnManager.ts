@@ -10,6 +10,7 @@ import {
 } from '../cards/effects/pandamonium.ts';
 import { hasDoubleDutch } from '../cards/effects/doubleDutch.ts';
 import { isEffectBlockedByBlindingLight } from '../cards/effects/blindingLight.ts';
+import { hasUnicornOfDeathTarget } from '../cards/effects/unicornOfDeath.ts';
 
 const END_OF_TURN_EFFECTS = new Set<string>([
   // Add here any card whose effect triggers at the end of your turn
@@ -81,6 +82,15 @@ export class TurnManager {
     const glitter = allCards.filter((c) => c.id === 'glitter_bomb');
     if (glitter.length > 0 && hasAvailableCardToSacrifice(activePlayer)) {
       uids.push(...glitter.map((c) => c.uid));
+    }
+
+    const unicornOfDeath = allCards.filter((c) => c.id === 'unicorn_of_death');
+    if (
+      unicornOfDeath.length > 0 &&
+      hasAvailableUnicorn(activePlayer) &&
+      hasUnicornOfDeathTarget(game, activePlayer.id)
+    ) {
+      uids.push(...unicornOfDeath.map((c) => c.uid));
     }
 
     // Rainbow Lasso: descartar 3 cartas y luego robar un unicornio. Efecto
@@ -251,6 +261,21 @@ export class TurnManager {
             '¿Deseas DESCARTAR 2 cartas para luego DESTRUIR un unicornio?',
           options: [
             { value: 'yes', text: 'Sí, descartar 2 y destruir un unicornio' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'unicorn_of_death':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'unicorn_of_death',
+          playerId: activePlayer.id,
+          title: '💀 Unicorn of Death',
+          description:
+            '¿Deseas SACRIFICAR un unicornio de tu establo para luego DESTRUIR un unicornio de otro establo?',
+          options: [
+            { value: 'yes', text: 'Sí, sacrificar y destruir' },
             { value: 'no', text: 'No, omitir el efecto' },
           ],
           effectCardId: uid,

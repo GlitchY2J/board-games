@@ -1066,5 +1066,27 @@
     "effect": "unicorn_of_famine",
     "copies": 1,
     "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_of_pestilence",
+    "name": "Unicorn Of Pestilence",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_of_pestilence.png",
+    "description": "When this card enters your Stable, DISCARD any number of cards. Each other player must DISCARD the same number of cards.",
+    "effect": "unicorn_of_pestilence",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_of_war",
+    "name": "Unicorn Of War",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_of_war.png",
+    "description": "When this card enters your Stable, each player (including you) may DESTROY a Unicorn card. This card cannot be destroyed.",
+    "effect": "unicorn_of_war",
+    "copies": 1,
+    "expansion": "rainbow"
   }
 ]

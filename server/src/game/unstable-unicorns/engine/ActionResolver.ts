@@ -679,6 +679,73 @@ export class ActionResolver {
       return true;
     }
 
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_of_death_sacrifice'
+    ) {
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const idx = player.stable.findIndex(
+        (card) =>
+          card.uid === cardId &&
+          card.cardType === 'unicorn' &&
+          !isPandamoniumProtected(player, card),
+      );
+      if (idx === -1) return false;
+
+      const [sacrificed] = player.stable.splice(idx, 1);
+      const destroyStep = {
+        type: 'select_stable_card',
+        reason: 'unicorn_of_death_destroy',
+        sourcePlayerId,
+      } as const;
+      const previousPending = state.pendingAction;
+      const intercepted = CardMovement.destroyOrSacrifice(
+        state,
+        player,
+        sacrificed,
+        'sacrifice',
+        false,
+      );
+
+      if (intercepted || state.pendingAction !== previousPending) {
+        if (!state.pendingResume) state.pendingResume = [];
+        state.pendingResume.push(destroyStep);
+      } else {
+        state.pendingAction = destroyStep;
+      }
+      return true;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_of_death_destroy'
+    ) {
+      for (const targetPlayer of state.players) {
+        if (targetPlayer.id === sourcePlayerId) continue;
+
+        const idx = targetPlayer.stable.findIndex((card) => card.uid === cardId);
+        if (idx === -1) continue;
+
+        const target = targetPlayer.stable[idx];
+        if (
+          target.cardType !== 'unicorn' ||
+          isPandamoniumProtected(targetPlayer, target) ||
+          isImmuneToUnicornOrUpgradeDestruction(target.id)
+        ) {
+          return false;
+        }
+
+        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed, 'destroy');
+        EffectStack.finish(state, pending);
+        return true;
+      }
+
+      return false;
+    }
+
     // Glitter Bomb: sacrificar una carta propia, luego destruir una carta
     if (
       pending.type === 'select_stable_card' &&

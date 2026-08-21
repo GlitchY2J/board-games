@@ -982,6 +982,29 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'unicorn_of_death') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'unicorn_of_death_sacrifice',
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usará Unicorn of Death para sacrificar y destruir`
+            : `${player.name} omitió el efecto de Unicorn of Death`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'rainbow_lasso') {
         const used =
           choice === 'yes' &&
