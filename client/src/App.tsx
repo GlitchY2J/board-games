@@ -3,6 +3,7 @@ import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import CreateRoom from './pages/CreateRoom';
 import Lobby from './pages/Lobby';
+import StartingGame from './pages/StartingGame';
 import Game from './pages/Game';
 import Settings from './pages/Settings';
 import { useEffect } from 'react';
@@ -24,21 +25,21 @@ export default function App() {
     const path = location.pathname;
 
     if (status === 'none') {
-      if (path === '/game' || path === '/lobby') {
+      if (path === '/game' || path === '/lobby' || path === '/starting') {
         navigate('/', { replace: true });
       }
       return;
     }
 
     if (gameState?.started) {
-      if (path !== '/game') {
+      if (path !== '/game' && path !== '/starting' && path !== '/lobby') {
         navigate('/game', { replace: true });
       }
     } else if (room) {
-      if (path !== '/lobby' && path !== '/game') {
+      if (path !== '/lobby' && path !== '/starting' && path !== '/game') {
         navigate('/lobby', { replace: true });
       }
-    } else if (path === '/game' || path === '/lobby') {
+    } else if (path === '/game' || path === '/lobby' || path === '/starting') {
       navigate('/', { replace: true });
     }
   }, [status, gameState, room, location.pathname, navigate]);
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/create" element={<CreateRoom />} />
           <Route path="/join" element={<JoinRoom />} />
           <Route path="/lobby" element={<Lobby />} />
+          <Route path="/starting" element={<StartingGame />} />
           <Route path="/game" element={<Game />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
