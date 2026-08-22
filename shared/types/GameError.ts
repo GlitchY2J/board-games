@@ -24,6 +24,7 @@ export type GameErrorCode =
   | 'INVALID_GAME_EXPANSION'
   | 'NOT_ENOUGH_PLAYERS'
   | 'TOO_MANY_PLAYERS'
+  | 'PLAYERS_IN_GAME'
   | 'INTERNAL_ERROR';
 
 export type GameActionName =

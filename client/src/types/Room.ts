@@ -1,1 +1,1 @@
-export type { Room } from '../../../shared/types/Room.ts';
+export type { PublicRoom as Room } from '../../../shared/types/PublicRoom.ts';

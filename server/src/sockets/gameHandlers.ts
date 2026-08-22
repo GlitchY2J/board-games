@@ -174,6 +174,7 @@ export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerNextPhase(io, socket);
   registerEndTurn(io, socket);
   registerRestartGame(io, socket);
+  registerConfirmRestartGame(io, socket);
   registerToggleDebugMode(io, socket);
   registerNeighAccept(io, socket);
   registerPlayNeigh(io, socket);
@@ -209,11 +210,11 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    if (room.gameState?.started) {
+    if (room.gameState?.started && room.gameState.players.length > 0) {
       emitGameError(
         socket,
-        'GAME_ALREADY_STARTED',
-        'La partida ya está iniciada.',
+        'PLAYERS_IN_GAME',
+        'No se puede iniciar una nueva partida mientras haya jugadores en la partida actual.',
         'start-game',
       );
       return;
@@ -680,15 +681,53 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
 
     room.players = shuffleArray(room.players);
 
+    const order = room.players.map((p) => ({
+      id: p.id,
+      name: p.name,
+      avatar: p.avatar,
+    }));
+
+    io.to(room.code).emit('turn-order-assigned', order);
+
+    console.log(`Nuevo orden de turnos asignado para reinicio en ${roomCode}`);
+  });
+}
+
+function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
+  socket.on('confirm-restart-game', (roomCode: string) => {
+    const context = getSocketPlayerContext(socket, roomCode);
+
+    if (!context) return;
+
+    const { room, player } = context;
+    if (room.hostId !== player.id) {
+      emitGameError(
+        socket,
+        'NOT_HOST',
+        'Solo el anfitrión puede confirmar el reinicio.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    if (!room.gameState?.started) {
+      emitGameError(
+        socket,
+        'GAME_NOT_STARTED',
+        'No hay una partida iniciada para reiniciar.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
+
     room.gameState = createGameState(room);
-
     room.gameState.pendingAction = undefined;
-
     room.gameState.winnerId = undefined;
-
     room.gameState.actionUsed = false;
 
-    addLog(room.gameState, 'Partida iniciada');
+    addLog(room.gameState, 'Partida reiniciada');
 
     const firstPlayer = room.gameState.players[room.gameState.currentPlayer];
     if (firstPlayer) {
@@ -700,9 +739,7 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
     }
 
     TurnManager.skipBeginningIfNoTriggers(room.gameState);
-
     emitGameState(io, room, 'game-restarted');
-
     console.log(`Partida reiniciada: ${roomCode}`);
   });
 }

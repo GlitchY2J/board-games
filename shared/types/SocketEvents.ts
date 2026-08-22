@@ -1,8 +1,8 @@
 import type { GameState } from './Game.ts';
 import type { GameError } from './GameError.ts';
-import type { Room } from './Room.ts';
 import type { ChatMessage } from './Game.ts';
 import type { RoomSettings } from './GameDefinition.ts';
+import type { PublicRoom } from './PublicRoom.ts';
 
 export interface JoinRoomPayload {
   roomCode: string;
@@ -94,7 +94,7 @@ export interface PlayNeighPayload {
 
 export interface RoomCreateResponse {
   success: boolean;
-  room?: Room;
+  room?: PublicRoom;
   error?: string;
 }
 
@@ -175,13 +175,13 @@ export interface PlayAnimation {
 export interface ResumeSessionResponse {
   success: boolean;
   playerId?: string;
-  room?: Room;
+  room?: PublicRoom;
   gameState?: GameState;
   error?: string;
 }
 
 export interface ServerToClientEvents {
-  'room-updated': (room: Room) => void;
+  'room-updated': (room: PublicRoom) => void;
   'game-started': (gameState: GameState) => void;
   'game-updated': (gameState: GameState) => void;
   'game-restarted': (gameState: GameState) => void;
@@ -207,6 +207,7 @@ export interface ClientToServerEvents {
 
   // Leave Room
   'leave-room': (payload: LeaveRoomPayload) => void;
+  'leave-game': (payload: LeaveRoomPayload) => void;
 
   // Toggle Expansion
   'toggle-expansion': (payload: ToggleExpansionPayload) => void;
@@ -217,6 +218,7 @@ export interface ClientToServerEvents {
 
   // Confirm Start Game (after turn order is shown)
   'confirm-start-game': (roomCode: string) => void;
+  'confirm-restart-game': (roomCode: string) => void;
 
   // Play Card
   'play-card': (payload: PlayCardPayload) => void;

@@ -61,6 +61,7 @@ export function createGameStateForPlayer(
       : game.deck.map((_, index) => createHiddenCard(`hidden-deck-${index}`)),
     players: game.players.map((player) => {
       const isViewer = player.id === viewerId;
+      const { sessionToken: _sessionToken, ...publicPlayer } = player;
 
       const canSeeHand = canViewerSeeTargetHand(game, viewerId, player.id);
 
@@ -73,7 +74,7 @@ export function createGameStateForPlayer(
         game.pendingAction?.targetPlayerId === player.id;
 
       return {
-        ...player,
+        ...publicPlayer,
         hand:
           isViewer || canSeeHand
             ? player.hand.map((card) => ({
@@ -96,7 +97,7 @@ export function createGameStateForPlayer(
         stable: player.stable.map((card) => ({ ...card })),
         upgrades: player.upgrades.map((card) => ({ ...card })),
         downgrades: player.downgrades.map((card) => ({ ...card })),
-      };
+      } as typeof player;
     }),
     nursery: game.nursery.map((card) => ({ ...card })),
     discard: game.discard.map((card) => ({ ...card })),

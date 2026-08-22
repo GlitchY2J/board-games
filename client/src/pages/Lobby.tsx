@@ -3,12 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
 import { useGame } from '../context/GameContext';
 import { getGame, getGames } from '../services/api';
-import type { Room } from '../../../shared/types/Room.ts';
+import type { PublicRoom as Room } from '../../../shared/types/PublicRoom.ts';
 import type { GameDefinition, RoomSettings } from '../../../shared/types/GameDefinition.ts';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { Copy, Check, Users, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Lobby() {
   const location = useLocation();
@@ -28,6 +28,7 @@ export default function Lobby() {
   const playerName: string = contextPlayerName || (location.state?.playerName ?? '');
   const playerId: string = contextPlayerId || (location.state?.playerId ?? '');
   const isHost: boolean = contextIsHost || (location.state?.isHost ?? false);
+  const canEditSettings = isHost;
 
   useEffect(() => {
     if (contextRoom) {
@@ -36,13 +37,11 @@ export default function Lobby() {
   }, [contextRoom]);
 
   const [copied, setCopied] = useState(false);
-  const [turnOrder, setTurnOrder] = useState<{ id: string; name: string; avatar?: string }[] | null>(null);
-  const [shuffling, setShuffling] = useState(false);
-  const [isVisualShuffling, setIsVisualShuffling] = useState(false);
   const [games, setGames] = useState<GameDefinition[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
   const [versionMenuOpen, setVersionMenuOpen] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -51,7 +50,7 @@ export default function Lobby() {
     let active = true;
 
     const gameId = room?.settings?.gameId ?? room?.game ?? null;
-    const catalogRequest = isHost
+    const catalogRequest = canEditSettings
       ? getGames()
       : gameId
         ? getGame(gameId).then((game) => [game])
@@ -74,7 +73,7 @@ export default function Lobby() {
     return () => {
       active = false;
     };
-  }, [isHost, room?.game, room?.settings?.gameId]);
+  }, [canEditSettings, room?.game, room?.settings?.gameId]);
 
   useEffect(() => {
     if (!room) return;
@@ -98,34 +97,16 @@ export default function Lobby() {
       setRoom(updatedRoom);
     };
 
-    const onGameStarted = (gameState: any) => {
-      navigate('/game', {
-        state: {
-          gameState,
-          playerId,
-        },
-      });
-    };
-
     const onTurnOrderAssigned = (players: { id: string; name: string; avatar?: string }[]) => {
-      setShuffling(false);
-      setIsVisualShuffling(true);
-      setTurnOrder(players); // Set immediately so the modal renders
-      
-      // Delay finishing the shuffle animation
-      setTimeout(() => {
-        setIsVisualShuffling(false);
-      }, 2000);
+      navigate('/starting', { state: { turnOrder: players } });
     };
 
     socket.on('room-updated', onRoomUpdated);
-    socket.on('game-started', onGameStarted);
     socket.on('turn-order-assigned', onTurnOrderAssigned);
 
     return () => {
       socket.off('connect', emitJoinRoom);
       socket.off('room-updated', onRoomUpdated);
-      socket.off('game-started', onGameStarted);
       socket.off('turn-order-assigned', onTurnOrderAssigned);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -133,18 +114,6 @@ export default function Lobby() {
   const handleStartGame = () => {
     if (!room) return;
     socket.emit('start-game', room.code);
-  };
-
-  const handleShuffleAgain = () => {
-    if (!room) return;
-    setShuffling(true);
-    setIsVisualShuffling(true);
-    socket.emit('start-game', room.code);
-  };
-
-  const handleConfirmStart = () => {
-    if (!room) return;
-    socket.emit('confirm-start-game', room.code);
   };
 
   const getRoomSettings = (): RoomSettings => {
@@ -163,7 +132,7 @@ export default function Lobby() {
   };
 
   const handleUpdateSettings = (settings: RoomSettings) => {
-    if (!room || !isHost) return;
+    if (!room || !canEditSettings) return;
     socket.emit('update-room-settings', {
       roomCode: room.code,
       settings,
@@ -171,11 +140,9 @@ export default function Lobby() {
   };
 
   const handleSelectGame = (game: GameDefinition) => {
-    if (!game.available) return;
-
     handleUpdateSettings({
       gameId: game.id,
-      versionId: game.versions.find((version) => version.available)?.id ?? null,
+      versionId: game.versions[0]?.id ?? null,
       expansionIds: [],
     });
   };
@@ -226,6 +193,14 @@ export default function Lobby() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleLeaveRoom = () => {
+    if (!room) return;
+
+    socket.emit('leave-room', { roomCode: room.code });
+    deactivate();
+    navigate('/');
+  };
+
   // Genera un gradiente sutil único para el avatar basado en el nombre del jugador
   const getAvatarGradient = (name: string) => {
     const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -249,6 +224,8 @@ export default function Lobby() {
   }
 
   const connectedPlayers = room.players.filter((p) => p.connected);
+  const playersInGame = connectedPlayers.filter((player) => player.inGame);
+  const availablePlayers = connectedPlayers.filter((player) => !player.inGame);
   const roomSettings = getRoomSettings();
   const selectedGame = games.find((game) => game.id === roomSettings.gameId);
   const selectedVersion = selectedGame?.versions.find(
@@ -259,17 +236,18 @@ export default function Lobby() {
       expansion.available &&
       (!expansion.versionIds || (selectedVersion && expansion.versionIds.includes(selectedVersion.id))),
   ) ?? [];
-  const visibleExpansions = isHost
+  const visibleExpansions = canEditSettings
     ? availableExpansions
     : availableExpansions.filter((expansion) =>
         roomSettings.expansionIds.includes(expansion.id),
       );
   const canStart = Boolean(
-    isHost &&
+    canEditSettings &&
       selectedGame?.available &&
       selectedVersion?.available &&
-      connectedPlayers.length >= selectedGame.minPlayers &&
-      connectedPlayers.length <= selectedGame.maxPlayers,
+      playersInGame.length === 0 &&
+      availablePlayers.length >= selectedGame.minPlayers &&
+      availablePlayers.length <= selectedGame.maxPlayers,
   );
 
   return (
@@ -280,9 +258,7 @@ export default function Lobby() {
       <Card className="w-full max-w-5xl relative z-10">
         <button
           onClick={() => {
-            socket.emit('leave-room', { roomCode: room.code });
-            deactivate();
-            navigate('/');
+            setShowLeaveConfirm(true);
           }}
           className="absolute top-8 left-8 text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 text-sm font-medium"
         >
@@ -338,7 +314,7 @@ export default function Lobby() {
               Jugadores Conectados
             </span>
             <span className="text-xs font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
-              {connectedPlayers.length} / {selectedGame?.maxPlayers ?? '—'}
+              {availablePlayers.length} disponibles / {selectedGame?.maxPlayers ?? '—'}
             </span>
           </div>
 
@@ -370,8 +346,12 @@ export default function Lobby() {
                     <span className="text-sm font-bold text-slate-200 block">
                       {player.name} {player.id === playerId && '(tú)'}
                     </span>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
-                      {player.id === room.hostId ? 'Creador de la sala' : 'Invitado'}
+                    <span className={`text-[10px] block mt-0.5 ${player.inGame ? 'text-amber-400' : 'text-slate-400'}`}>
+                      {player.inGame
+                        ? 'En partida...'
+                        : player.id === room.hostId
+                          ? 'Creador de la sala'
+                          : 'Disponible'}
                     </span>
                   </div>
                 </div>
@@ -383,7 +363,11 @@ export default function Lobby() {
                       Host
                     </span>
                   )}
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500/50"></span>
+                  <span className={`w-2 h-2 rounded-full animate-pulse shadow-sm ${
+                    player.inGame
+                      ? 'bg-amber-400 shadow-amber-400/50'
+                      : 'bg-emerald-500 shadow-emerald-500/50'
+                  }`}></span>
                 </div>
               </div>
             ))}
@@ -396,7 +380,7 @@ export default function Lobby() {
             <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">
               Configuración de partida
             </span>
-            {!isHost && (
+            {!canEditSettings && (
               <span className="text-[10px] text-slate-500 uppercase tracking-wider">
                 Solo el host puede editar
               </span>
@@ -414,7 +398,7 @@ export default function Lobby() {
             </p>
           ) : (
             <>
-              {isHost ? (
+              {canEditSettings ? (
                 <div>
                   <div className="flex items-center gap-2 mb-3 px-2">
                     <Sparkles size={16} className="text-cyan-400" />
@@ -429,7 +413,7 @@ export default function Lobby() {
                         <button
                           key={game.id}
                           type="button"
-                          disabled={!game.available}
+                          disabled={false}
                           onClick={() => handleSelectGame(game)}
                           className={`w-full text-left p-4 rounded-2xl border transition-all ${
                             isSelected
@@ -438,7 +422,7 @@ export default function Lobby() {
                           } ${
                             game.available
                               ? 'cursor-pointer hover:border-cyan-400/40'
-                              : 'cursor-default opacity-60'
+                              : 'cursor-pointer opacity-60 hover:border-slate-600'
                           }`}
                         >
                           <div className="flex items-start justify-between gap-4">
@@ -487,7 +471,7 @@ export default function Lobby() {
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">
                     Versión
                   </label>
-                  {isHost ? (
+                  {canEditSettings ? (
                     <div className="relative">
                       <button
                         type="button"
@@ -566,7 +550,7 @@ export default function Lobby() {
                   </div>
                   {visibleExpansions.length === 0 ? (
                     <p className="rounded-2xl border border-slate-800/50 bg-slate-900/30 px-4 py-3 text-xs text-slate-500">
-                      {isHost
+                      {canEditSettings
                         ? 'Este juego no tiene expansiones disponibles para la versión seleccionada.'
                         : 'No hay expansiones activas.'}
                     </p>
@@ -578,13 +562,13 @@ export default function Lobby() {
                           <button
                             key={expansion.id}
                             type="button"
-                            disabled={!isHost}
+                            disabled={!canEditSettings}
                             onClick={() => handleToggleExpansion(expansion.id)}
                             className={`w-full flex items-center justify-between gap-4 p-4 rounded-2xl border text-left transition-all ${
                               active
                                 ? 'bg-amber-500/10 border-amber-500/40'
                                 : 'bg-slate-900/30 border-slate-800/40'
-                            } ${isHost ? 'cursor-pointer hover:border-amber-400/40' : 'cursor-default'}`}
+                            } ${canEditSettings ? 'cursor-pointer hover:border-amber-400/40' : 'cursor-default'}`}
                           >
                             <span>
                               <span className="text-sm font-bold text-slate-200 block">
@@ -616,12 +600,20 @@ export default function Lobby() {
               <Button fullWidth disabled>
                 Selecciona un juego para continuar
               </Button>
-            ) : connectedPlayers.length < selectedGame.minPlayers ? (
+            ) : !selectedGame.available ? (
+              <Button fullWidth disabled>
+                Este juego estará disponible próximamente
+              </Button>
+            ) : playersInGame.length > 0 ? (
+              <Button fullWidth disabled>
+                Esperando a que todos vuelvan al lobby ({playersInGame.length} en partida)
+              </Button>
+            ) : availablePlayers.length < selectedGame.minPlayers ? (
               <Button fullWidth disabled>
                 <Loader2 className="animate-spin mr-2 inline" size={14} />
-                Esperando jugadores ({connectedPlayers.length}/{selectedGame.minPlayers})...
+                Esperando jugadores ({availablePlayers.length}/{selectedGame.minPlayers})...
               </Button>
-            ) : connectedPlayers.length > selectedGame.maxPlayers ? (
+            ) : availablePlayers.length > selectedGame.maxPlayers ? (
               <Button fullWidth disabled>
                 Demasiados jugadores para este juego
               </Button>
@@ -643,196 +635,15 @@ export default function Lobby() {
         </div>
       </Card>
 
-      {/* Interfaz de asignación de turnos */}
-      {turnOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-6">
-          <Card className="w-full max-w-md relative z-10">
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full text-xs font-semibold tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 uppercase">
-                <Users size={12} />
-                Orden de Turnos
-              </div>
-              <h2 className="text-2xl font-extrabold tracking-tight">
-                {isVisualShuffling ? 'Barajando turnos...' : 'Se han asignado los turnos'}
-              </h2>
-              <p className="text-slate-400 text-sm mt-2">
-                {isVisualShuffling 
-                  ? 'Decidiendo el orden de juego al azar...' 
-                  : 'El orden fue barajado al azar. El primer jugador comienza la partida.'}
-              </p>
-            </div>
-
-            <div className="mb-8 min-h-[260px] flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                {isVisualShuffling ? (
-                  <motion.div
-                    key="shuffling-deck"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="relative w-full h-48 flex items-center justify-center"
-                  >
-                    {[...Array(Math.min(4, turnOrder.length))].map((_, idx) => {
-                      const playerInfo = turnOrder[idx % turnOrder.length];
-                      return (
-                        <motion.div
-                          key={idx}
-                          className="absolute w-60 h-32 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4 shadow-2xl flex flex-col justify-between"
-                          style={{
-                            zIndex: 10 + idx,
-                          }}
-                          animate={{
-                            x: idx % 2 === 0 
-                              ? [0, -110, 10, 0] 
-                              : [0, 110, -10, 0],
-                            y: [0, -4 * idx, 0],
-                            scale: [1, 1.03, 0.97, 1],
-                            rotate: [idx % 2 === 0 ? -2 : 2, idx % 2 === 0 ? -10 : 10, 0],
-                          }}
-                          transition={{
-                            duration: 0.7,
-                            repeat: Infinity,
-                            repeatType: "loop",
-                            delay: idx * 0.12,
-                            ease: "easeInOut"
-                          }}
-                        >
-                          <div className="flex items-center gap-3">
-                            {playerInfo?.avatar ? (
-                              <div className="w-9 h-9 rounded-xl overflow-hidden border border-slate-600/40 shrink-0">
-                                <img
-                                  src={`/avatars/${playerInfo.avatar}.png`}
-                                  alt={playerInfo.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                className={`w-9 h-9 rounded-xl bg-gradient-to-br ${getAvatarGradient(
-                                  playerInfo?.name || 'Player'
-                                )} flex items-center justify-center text-slate-950 font-black text-xs uppercase shadow-inner`}
-                              >
-                                {(playerInfo?.name || 'PL').substring(0, 2)}
-                              </div>
-                            )}
-                            <div className="text-left">
-                              <span className="text-sm font-bold text-slate-200 block truncate max-w-[120px]">
-                                {playerInfo?.name}
-                              </span>
-                              <span className="text-[9px] text-cyan-400 font-medium block animate-pulse">
-                                Barajando...
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between items-center mt-3">
-                            <div className="h-1 w-20 bg-slate-800 rounded-full overflow-hidden">
-                              <div className="h-full bg-cyan-500 animate-pulse w-full"></div>
-                            </div>
-                            <span className="text-[10px] font-bold text-slate-600 tracking-wider">
-                              ?
-                            </span>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="turn-order-list"
-                    initial="hidden"
-                    animate="visible"
-                    variants={{
-                      visible: {
-                        transition: {
-                          staggerChildren: 0.1,
-                        }
-                      }
-                    }}
-                    className="space-y-3 w-full"
-                  >
-                    {turnOrder.map((p, index) => (
-                      <motion.div
-                        key={p.id}
-                        variants={{
-                          hidden: { opacity: 0, y: 15, scale: 0.98 },
-                          visible: { opacity: 1, y: 0, scale: 1 }
-                        }}
-                        transition={{ type: 'spring', stiffness: 120, damping: 14 }}
-                        className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50 transition-all hover:border-slate-700/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-slate-950 font-black text-sm shadow-inner ${
-                              index === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-slate-700'
-                            }`}
-                          >
-                            {index + 1}
-                          </span>
-                          {p.avatar ? (
-                            <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-600/40 shrink-0">
-                              <img
-                                src={`/avatars/${p.avatar}.png`}
-                                alt={p.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div
-                              className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarGradient(
-                                p.name
-                              )} flex items-center justify-center text-slate-950 font-black text-xs uppercase shadow-inner`}
-                            >
-                              {p.name.substring(0, 2)}
-                            </div>
-                          )}
-                          <span className="text-sm font-bold text-slate-100">
-                            {p.name} {p.id === playerId && '(tú)'}
-                          </span>
-                        </div>
-                        <span
-                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                            index === 0
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                              : 'text-slate-500'
-                          }`}
-                        >
-                          {index === 0 ? 'Empieza' : `${index + 1}° jugador`}
-                        </span>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="border-t border-slate-900 pt-6 flex flex-col items-center gap-3">
-              {isHost && (
-                <>
-                  <Button onClick={handleConfirmStart} fullWidth disabled={shuffling || isVisualShuffling}>
-                    {shuffling || isVisualShuffling ? 'Barajando...' : 'Confirmar y comenzar'}
-                  </Button>
-                  <button
-                    onClick={handleShuffleAgain}
-                    disabled={shuffling || isVisualShuffling}
-                    className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-xs font-semibold cursor-pointer disabled:opacity-50"
-                  >
-                    <Loader2 className={shuffling || isVisualShuffling ? 'animate-spin' : ''} size={14} />
-                    Barajar de nuevo
-                  </button>
-                </>
-              )}
-              {!isHost && (
-                <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold py-2">
-                  <Loader2 className="animate-spin text-amber-400" size={14} />
-                  {isVisualShuffling 
-                    ? 'Barajando turnos...' 
-                    : 'Esperando que el creador confirme el orden...'}
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
+      {showLeaveConfirm && (
+        <LeaveConfirm
+          title="¿Abandonar el lobby?"
+          description="Si abandonas el lobby, dejarás de participar en esta sala."
+          onConfirm={handleLeaveRoom}
+          onCancel={() => setShowLeaveConfirm(false)}
+        />
       )}
+
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { roomManager } from '../roomManagerInstance.ts';
+import { createPublicRoom } from '../sockets/publicRoom.ts';
 
 const router = Router();
 
@@ -16,7 +17,11 @@ router.post('/create', (req, res) => {
 
   const host = room.players.find((player) => player.id === room.hostId);
 
-  res.json({ room, playerId: host?.id, sessionToken: host?.sessionToken });
+  res.json({
+    room: createPublicRoom(room),
+    playerId: host?.id,
+    sessionToken: host?.sessionToken,
+  });
 });
 
 router.post('/join', (req, res) => {
@@ -40,7 +45,11 @@ router.post('/join', (req, res) => {
     });
   }
 
-  res.json({ room, playerId: player?.id, sessionToken: player?.sessionToken });
+  res.json({
+    room: createPublicRoom(room),
+    playerId: player?.id,
+    sessionToken: player?.sessionToken,
+  });
 });
 
 router.get('/:code', (req, res) => {

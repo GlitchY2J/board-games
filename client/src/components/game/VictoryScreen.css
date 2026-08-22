@@ -82,6 +82,32 @@
   transition: all 0.2s ease;
 }
 
+.victory-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.victory-actions .victory-button {
+  width: 100%;
+  margin-top: 0;
+}
+
+.victory-button-secondary {
+  background: rgba(71, 85, 105, 0.35);
+  border-color: rgba(148, 163, 184, 0.25);
+  color: #cbd5e1;
+  box-shadow: none;
+}
+
+.victory-button-secondary:hover {
+  background: rgba(71, 85, 105, 0.55);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.35);
+}
+
 .victory-button:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 30px rgba(16, 185, 129, 0.5);

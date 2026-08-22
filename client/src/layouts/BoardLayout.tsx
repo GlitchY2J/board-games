@@ -15,7 +15,6 @@ import PlayerInfo from '../components/player/PlayerInfo';
 import PlayerNotification from '../components/player/PlayerNotification';
 import { RotateCcw, LogOut, Bot, Bug, MessageSquare, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useGame } from '../context/GameContext';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { useState, useEffect, useRef } from 'react';
 
@@ -35,7 +34,6 @@ export default function BoardLayout({
   hidePendingPlay = false,
 }: Props) {
   const navigate = useNavigate();
-  const { deactivate } = useGame();
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [autoEnabled, setAutoEnabled] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
@@ -332,7 +330,9 @@ export default function BoardLayout({
           <button
             className="ctrl-button ctrl-reset"
             title="Reiniciar partida"
-            onClick={() => socket.emit('restart-game', gameState.roomCode)}
+            onClick={() => {
+              socket.emit('restart-game', gameState.roomCode);
+            }}
           >
             <RotateCcw size={16} />
           </button>
@@ -351,9 +351,8 @@ export default function BoardLayout({
         <LeaveConfirm
           onCancel={() => setLeaveOpen(false)}
           onConfirm={() => {
-            socket.emit('leave-room', { roomCode: gameState.roomCode });
-            deactivate();
-            navigate('/');
+            socket.emit('leave-game', { roomCode: gameState.roomCode });
+            navigate('/lobby');
           }}
         />
       )}

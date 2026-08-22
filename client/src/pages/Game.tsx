@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
 import { useGame } from '../context/GameContext';
 import type { GameState } from '../types/GameState';
@@ -23,6 +23,7 @@ interface TurnAnnounce {
 
 export default function Game() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { gameState: contextGameState, isHost: contextIsHost, room: roomFromContext, deactivate } = useGame();
 
   const [gameState, setGameState] = useState<GameState | null>(
@@ -111,6 +112,15 @@ export default function Game() {
   }, [turnAnnounce]);
 
   useEffect(() => {
+    const onTurnOrderAssigned = (players: { id: string; name: string; avatar?: string }[]) => {
+      navigate('/starting', {
+        state: {
+          restart: true,
+          turnOrder: players,
+        },
+      });
+    };
+
     socket.on('game-updated', (state: GameState) => {
       if (activeAnimationsCountRef.current > 0) {
         pendingGameStateRef.current = state;
@@ -126,6 +136,8 @@ export default function Game() {
       activeAnimationsCountRef.current = 0;
       applyGameState(state);
     });
+
+    socket.on('turn-order-assigned', onTurnOrderAssigned);
 
     const onCardAnimations = (animations: CardAnimation[]) => {
       const found = animations
@@ -189,13 +201,14 @@ export default function Game() {
     return () => {
       socket.off('game-updated');
       socket.off('game-restarted');
+      socket.off('turn-order-assigned', onTurnOrderAssigned);
       socket.off('card-animations');
       socket.off('neigh-animations');
       socket.off('draw-animations');
       socket.off('discard-animations');
       socket.off('play-animations');
     };
-  }, []);
+  }, [navigate]);
 
   const activePlayer = gameState?.players[gameState.currentPlayer];
   const localPlayer = gameState?.players.find((p) => p.socketId === socket.id);
@@ -257,6 +270,11 @@ export default function Game() {
   function restartGame() {
     console.log('Solicitando reinicio...');
     socket.emit('restart-game', gs.roomCode);
+  }
+
+  function leaveToLobby() {
+    socket.emit('leave-game', { roomCode: gs.roomCode });
+    navigate('/lobby');
   }
 
   function removeRemovalAnim(animId: string) {
@@ -342,6 +360,7 @@ export default function Game() {
         <VictoryScreen
           gameState={gameState}
           onRestart={restartGame}
+          onLeaveLobby={leaveToLobby}
           isHost={isHost}
         />
       )}
