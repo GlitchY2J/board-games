@@ -1,5 +1,4 @@
 import type { GameServer, GameSocket } from './socketTypes.ts';
-import { createGameState } from '../game/unstable-unicorns/setup.ts';
 import { RulesEngine } from '../game/unstable-unicorns/engine/RulesEngine.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
 import { TurnPhase } from '../game/turn/TurnPhase.ts';
@@ -269,7 +268,18 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
 
     if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
 
-    room.gameState = createGameState(room);
+    const engine = gameRegistry.getEngine(room.settings?.gameId ?? room.game);
+    if (!engine) {
+      emitGameError(
+        socket,
+        'GAME_NOT_AVAILABLE',
+        'El motor de este juego todavía no está disponible.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    room.gameState = engine.createState(room);
 
     addLog(room.gameState, 'Partida iniciada');
 
@@ -722,7 +732,18 @@ function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
 
     if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
 
-    room.gameState = createGameState(room);
+    const engine = gameRegistry.getEngine(room.settings?.gameId ?? room.game);
+    if (!engine) {
+      emitGameError(
+        socket,
+        'GAME_NOT_AVAILABLE',
+        'El motor de este juego todavía no está disponible.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    room.gameState = engine.createState(room);
     room.gameState.pendingAction = undefined;
     room.gameState.winnerId = undefined;
     room.gameState.actionUsed = false;

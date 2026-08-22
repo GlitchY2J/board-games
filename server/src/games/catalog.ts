@@ -1,5 +1,6 @@
 import type { GameDefinition } from '../../../shared/types/GameDefinition.ts';
 import { GameRegistry } from './GameRegistry.ts';
+import { unstableUnicornsEngine } from './engines/unstableUnicornsEngine.ts';
 
 export const unstableUnicorns: GameDefinition = {
   id: 'unstable-unicorns',
@@ -35,14 +36,15 @@ export const explodingKittens: GameDefinition = {
   description: 'Evita explotar, usa tus cartas y sobrevive hasta el final.',
   minPlayers: 2,
   maxPlayers: 5,
-  available: false,
+  // Temporary: Exploding Kittens currently uses the Unstable Unicorns engine.
+  available: true,
   versions: [
     {
       id: 'exploding-kittens-base',
       gameId: 'exploding-kittens',
       name: 'Juego base',
       description: 'La edición base de Exploding Kittens.',
-      available: false,
+      available: true,
     },
   ],
   expansions: [],
@@ -50,5 +52,5 @@ export const explodingKittens: GameDefinition = {
 
 export const gameRegistry = new GameRegistry();
 
-gameRegistry.register(unstableUnicorns);
-gameRegistry.register(explodingKittens);
+gameRegistry.register(unstableUnicorns, unstableUnicornsEngine);
+gameRegistry.register(explodingKittens, unstableUnicornsEngine);
