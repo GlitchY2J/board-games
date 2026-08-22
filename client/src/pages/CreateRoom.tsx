@@ -14,33 +14,33 @@ export default function CreateRoom() {
   const { activate } = useGame();
   const [hostName, setHostName] = useState('');
   const [avatar, setAvatar] = useState('');
-  const [game] = useState('unstable-unicorns');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   async function handleCreate() {
     if (!hostName.trim()) {
-      alert('Por favor, ingresa tu nombre.');
+      setError('Por favor, ingresa tu nombre.');
       return;
     }
 
+    setError('');
     setLoading(true);
     try {
       if (!socket.id) {
-        alert('Conectando con el servidor, intenta de nuevo en un momento.');
+        setError('Conectando con el servidor, intenta de nuevo en un momento.');
         setLoading(false);
         return;
       }
 
       const response = await createRoom({
         hostName: hostName.trim(),
-        game,
         socketId: socket.id,
         avatar,
       });
       const { room, playerId, sessionToken } = response;
 
       if (!playerId || !sessionToken) {
-        alert('El servidor no devolvió una sesión válida.');
+        setError('El servidor no devolvió una sesión válida.');
         setLoading(false);
         return;
       }
@@ -62,8 +62,8 @@ export default function CreateRoom() {
           isHost: true,
         },
       });
-    } catch {
-      alert('Error creando la sala');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error creando la sala');
     } finally {
       setLoading(false);
     }
@@ -107,17 +107,23 @@ export default function CreateRoom() {
 
           <AvatarPicker value={avatar} onChange={setAvatar} accent="emerald" />
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Juego Seleccionado
-            </label>
-            <div className="w-full px-4 py-3.5 rounded-2xl bg-slate-950/20 border border-slate-800/40 text-slate-400 text-sm select-none flex items-center justify-between">
-              <span>Unstable Unicorns (Base)</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold uppercase">
-                Activo
-              </span>
-            </div>
+          <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3.5">
+            <p className="text-xs font-semibold text-cyan-300 uppercase tracking-wider">
+              Configuración de la sala
+            </p>
+            <p className="text-sm text-slate-400 mt-1">
+              El juego y sus expansiones se elegirán en el lobby después de crear la sala.
+            </p>
           </div>
+
+          {error && (
+            <p
+              role="alert"
+              className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"
+            >
+              {error}
+            </p>
+          )}
 
           <Button
             onClick={handleCreate}

@@ -4,15 +4,15 @@ import { roomManager } from '../roomManagerInstance.ts';
 const router = Router();
 
 router.post('/create', (req, res) => {
-  const { hostName, game, socketId, avatar } = req.body;
+  const { hostName, socketId, avatar } = req.body;
 
-  if (!hostName || !game || !socketId) {
+  if (!hostName || !socketId) {
     return res.status(400).json({
       error: 'Datos incompletos',
     });
   }
 
-  const room = roomManager.createRoom(hostName, game, socketId, avatar);
+  const room = roomManager.createRoom(hostName, null, socketId, avatar);
 
   const host = room.players.find((player) => player.id === room.hostId);
 

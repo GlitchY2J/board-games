@@ -11,7 +11,7 @@ export interface JoinRoomPayload {
 
 export interface CreateRoomPayload {
   hostName: string;
-  game: string;
+  game?: string;
   avatar?: string;
 }
 

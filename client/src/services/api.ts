@@ -3,7 +3,6 @@ const API = "http://localhost:3000";
 // Crear sala
 export async function createRoom(data: {
   hostName: string;
-  game: string;
   socketId: string;
   avatar: string;
 }) {

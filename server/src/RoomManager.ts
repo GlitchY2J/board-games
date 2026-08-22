@@ -46,7 +46,7 @@ export class RoomManager {
   // Crear Sala
   createRoom(
     hostName: string,
-    game: string,
+    game: string | null,
     socketId: string,
     avatar?: string,
   ): Room {
@@ -65,10 +65,16 @@ export class RoomManager {
 
     const room: Room = {
       code: generateRoomCode(),
-      game,
+      // Keep the legacy fields while the lobby migrates to settings.
+      game: game ?? '',
       hostId: host.id,
       players: [host],
       expansions: [],
+      settings: {
+        gameId: game,
+        versionId: null,
+        expansionIds: [],
+      },
     };
     this.rooms.set(room.code, room);
 
