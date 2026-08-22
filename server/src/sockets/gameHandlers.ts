@@ -20,6 +20,7 @@ import { VictoryManager } from '../game/VictoryManager.ts';
 import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation } from '../game/cardAnimations.ts';
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
+import { gameRegistry } from '../games/catalog.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -218,6 +219,8 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    if (!validateRoomConfiguration(socket, room, 'start-game')) return;
+
     // Asignar el orden de turnos al azar
     room.players = shuffleArray(room.players);
 
@@ -263,6 +266,8 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
+
     room.gameState = createGameState(room);
 
     addLog(room.gameState, 'Partida iniciada');
@@ -282,6 +287,62 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
 
     console.log(`Partida iniciada: ${room.code}`);
   });
+}
+
+function validateRoomConfiguration(
+  socket: GameSocket,
+  room: Room,
+  action: 'start-game' | 'confirm-start-game',
+): boolean {
+  const gameId = room.settings?.gameId ?? room.game;
+  const game = gameRegistry.getById(gameId);
+
+  if (!game || !game.available) {
+    emitGameError(
+      socket,
+      'GAME_NOT_AVAILABLE',
+      'Selecciona un juego disponible antes de iniciar la partida.',
+      action,
+    );
+    return false;
+  }
+
+  const versionId = room.settings?.versionId;
+  if (versionId) {
+    const version = game.versions.find((candidate) => candidate.id === versionId);
+    if (!version?.available) {
+      emitGameError(
+        socket,
+        'INVALID_GAME_VERSION',
+        'La versión seleccionada no está disponible.',
+        action,
+      );
+      return false;
+    }
+  }
+
+  const connectedPlayers = room.players.filter((player) => player.connected).length;
+  if (connectedPlayers < game.minPlayers) {
+    emitGameError(
+      socket,
+      'NOT_ENOUGH_PLAYERS',
+      `Se necesitan al menos ${game.minPlayers} jugadores para iniciar.`,
+      action,
+    );
+    return false;
+  }
+
+  if (connectedPlayers > game.maxPlayers) {
+    emitGameError(
+      socket,
+      'TOO_MANY_PLAYERS',
+      `Este juego permite como máximo ${game.maxPlayers} jugadores.`,
+      action,
+    );
+    return false;
+  }
+
+  return true;
 }
 
 function registerPlayCard(io: GameServer, socket: GameSocket): void {

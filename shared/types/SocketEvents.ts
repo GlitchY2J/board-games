@@ -2,6 +2,7 @@ import type { GameState } from './Game.ts';
 import type { GameError } from './GameError.ts';
 import type { Room } from './Room.ts';
 import type { ChatMessage } from './Game.ts';
+import type { RoomSettings } from './GameDefinition.ts';
 
 export interface JoinRoomPayload {
   roomCode: string;
@@ -59,6 +60,11 @@ export interface CancelActionPayload {
 export interface ToggleExpansionPayload {
   roomCode: string;
   expansionId: string;
+}
+
+export interface UpdateRoomSettingsPayload {
+  roomCode: string;
+  settings: RoomSettings;
 }
 
 export interface SelectChoicePayload {
@@ -204,6 +210,7 @@ export interface ClientToServerEvents {
 
   // Toggle Expansion
   'toggle-expansion': (payload: ToggleExpansionPayload) => void;
+  'update-room-settings': (payload: UpdateRoomSettingsPayload) => void;
 
   // Start Game
   'start-game': (roomCode: string) => void;

@@ -6,6 +6,7 @@ import { Room } from '../game/models/Room.ts';
 import { Player } from '../game/models/Player.ts';
 import { Card } from '../game/models/Card.ts';
 import { GameState } from '../game/models/GameState.ts';
+import { gameRegistry } from '../games/catalog.ts';
 
 function sendCardsOnLeave(game: GameState, cards: Card[]): void {
   for (const card of cards) {
@@ -221,6 +222,79 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     if (room.gameState?.started) return;
 
     const updatedRoom = roomManager.toggleExpansion(roomCode, expansionId);
+    if (updatedRoom) {
+      io.to(updatedRoom.code).emit('room-updated', updatedRoom);
+    }
+  });
+
+  socket.on('update-room-settings', ({ roomCode, settings }) => {
+    const room = roomManager.getRoom(roomCode);
+    if (!room) return;
+
+    const player = room.players.find((candidate) => candidate.socketId === socket.id);
+    if (!player || player.id !== room.hostId) return;
+
+    if (room.gameState?.started) {
+      socket.emit('game-error', {
+        code: 'ROOM_ALREADY_STARTED',
+        message: 'La configuración no puede cambiarse después de iniciar la partida.',
+        action: 'update-room-settings',
+      });
+      return;
+    }
+
+    if (settings.gameId === null) {
+      if (settings.versionId !== null || settings.expansionIds.length > 0) {
+        socket.emit('game-error', {
+          code: 'INVALID_ROOM_SETTINGS',
+          message: 'No puedes seleccionar una versión o expansión sin elegir un juego.',
+          action: 'update-room-settings',
+        });
+        return;
+      }
+    } else {
+      const game = gameRegistry.getById(settings.gameId);
+      const version = settings.versionId
+        ? game?.versions.find((candidate) => candidate.id === settings.versionId)
+        : undefined;
+
+      if (!game || !game.available) {
+        socket.emit('game-error', {
+          code: 'GAME_NOT_AVAILABLE',
+          message: 'El juego seleccionado todavía no está disponible.',
+          action: 'update-room-settings',
+        });
+        return;
+      }
+
+      if (!version || !version.available) {
+        socket.emit('game-error', {
+          code: 'INVALID_GAME_VERSION',
+          message: 'La versión seleccionada no es válida.',
+          action: 'update-room-settings',
+        });
+        return;
+      }
+
+      const validExpansions = settings.expansionIds.every((expansionId) => {
+        const expansion = game.expansions.find((candidate) => candidate.id === expansionId);
+        return (
+          expansion?.available === true &&
+          (!expansion.versionIds || expansion.versionIds.includes(version.id))
+        );
+      });
+
+      if (!validExpansions) {
+        socket.emit('game-error', {
+          code: 'INVALID_GAME_EXPANSION',
+          message: 'Una o más expansiones no son compatibles con el juego seleccionado.',
+          action: 'update-room-settings',
+        });
+        return;
+      }
+    }
+
+    const updatedRoom = roomManager.updateRoomSettings(roomCode, settings);
     if (updatedRoom) {
       io.to(updatedRoom.code).emit('room-updated', updatedRoom);
     }

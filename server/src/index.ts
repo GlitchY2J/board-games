@@ -3,6 +3,7 @@ import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import roomRoutes from "./routes/roomRoutes.ts";
+import gameRoutes from "./routes/gameRoutes.ts";
 import { initializeSocket } from "./socket.ts";
 import type {
   ClientToServerEvents,
@@ -14,6 +15,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/rooms", roomRoutes);
+app.use("/games", gameRoutes);
 
 const server = http.createServer(app);
 

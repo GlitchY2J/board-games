@@ -1,3 +1,5 @@
+import type { GameDefinition } from "../../../shared/types/GameDefinition.ts";
+
 const API = "http://localhost:3000";
 
 // Crear sala
@@ -50,6 +52,26 @@ export async function getRoomInfo(roomCode: string) {
 
   if (!response.ok) {
     throw new Error("Sala no encontrada");
+  }
+
+  return response.json();
+}
+
+export async function getGames(): Promise<GameDefinition[]> {
+  const response = await fetch(`${API}/games`);
+
+  if (!response.ok) {
+    throw new Error("Error obteniendo los juegos");
+  }
+
+  return response.json();
+}
+
+export async function getGame(gameId: string): Promise<GameDefinition> {
+  const response = await fetch(`${API}/games/${encodeURIComponent(gameId)}`);
+
+  if (!response.ok) {
+    throw new Error("Juego no encontrado");
   }
 
   return response.json();
