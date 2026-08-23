@@ -18,6 +18,7 @@ interface Props {
   onPlay(cardId: string): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
+  compact?: boolean;
 }
 
 export default function CardFan({
@@ -30,6 +31,7 @@ export default function CardFan({
   onPlay,
   onSelectionChange,
   onInvalidAction,
+  compact = false,
 }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const { hidePreview } = useCardPreview();
@@ -124,7 +126,7 @@ export default function CardFan({
 
   return (
     <>
-      <div className="card-fan">
+      <div className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}`}>
         {cards.map((card, index) => {
           const total = cards.length;
           const middle = (total - 1) / 2;

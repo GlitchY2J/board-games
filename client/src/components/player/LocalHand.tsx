@@ -14,6 +14,7 @@ interface Props {
   onPlay(cardId: string): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
+  compact?: boolean;
 }
 
 export default function LocalHand({
@@ -26,6 +27,7 @@ export default function LocalHand({
   onPlay,
   onSelectionChange,
   onInvalidAction,
+  compact,
 }: Props) {
   return (
     <CardFan
@@ -38,6 +40,7 @@ export default function LocalHand({
       onPlay={onPlay}
       onSelectionChange={onSelectionChange}
       onInvalidAction={onInvalidAction}
+      compact={compact}
     />
   );
 }

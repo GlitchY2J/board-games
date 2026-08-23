@@ -16,6 +16,7 @@ interface Props {
   onPlay(cardId: string): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
+  compact?: boolean;
 }
 
 export default function PlayerHand({
@@ -29,6 +30,7 @@ export default function PlayerHand({
   onPlay,
   onSelectionChange,
   onInvalidAction,
+  compact,
 }: Props) {
   return (
     <div className="player-hand">
@@ -43,6 +45,7 @@ export default function PlayerHand({
           onPlay={onPlay}
           onSelectionChange={onSelectionChange}
           onInvalidAction={onInvalidAction}
+          compact={compact}
         />
       ) : (
         <HiddenHand cardCount={player.hand.length} />

@@ -434,6 +434,7 @@ export default function BoardLayout({
           blockedCardIds={blockedCardIds}
           onPlay={onPlay}
           onInvalidAction={showPlayerNotification}
+          compact={gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens'}
           onSelectionChange={(selected) => {
             cardSelectedRef.current = selected;
           }}

@@ -39,6 +39,22 @@
   margin-left: 0;
 }
 
+.card-fan-compact {
+  height: 230px;
+}
+
+.card-fan-compact .fan-card {
+  margin-left: -72px;
+}
+
+.card-fan-compact .fan-card:first-child {
+  margin-left: 0;
+}
+
+.card-fan-compact .playing-card.large {
+  width: 112px;
+}
+
 .fan-card:hover {
   transform: translateY(-35px) scale(1.12) !important;
   z-index: 999;
