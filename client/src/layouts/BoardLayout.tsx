@@ -191,6 +191,7 @@ export default function BoardLayout({
                   status={getPlayerStatus(gameState, opp.id, gameId)}
                   localPlayerId={localPlayer.id}
                   gameId={gameId}
+                  turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
                 />
                 {showPlayerBoards && (
                   <PlayerBoard
@@ -268,6 +269,7 @@ export default function BoardLayout({
               status={getPlayerStatus(gameState, localPlayer.id, gameId)}
               localPlayerId={localPlayer.id}
               gameId={gameId}
+              turnsRemaining={isMyTurn ? gameState.turnsRemaining : 0}
             />
 
             {showPlayerBoards && (
@@ -295,6 +297,7 @@ export default function BoardLayout({
                   status={getPlayerStatus(gameState, opp.id, gameId)}
                   localPlayerId={localPlayer.id}
                   gameId={gameId}
+                  turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
                 />
                 {showPlayerBoards && (
                   <PlayerBoard

@@ -1,6 +1,6 @@
 import type { GameState } from '../../types/GameState';
 import { cn } from '../../lib/cn';
-import { Sparkles, Layers, Eye } from 'lucide-react';
+import { Sparkles, Layers, Eye, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import PlayingCard from '../card/PlayingCard';
@@ -15,6 +15,7 @@ interface Props {
   status?: string;
   localPlayerId?: string;
   gameId?: string;
+  turnsRemaining?: number;
 }
 
 export default function PlayerInfo({
@@ -23,6 +24,7 @@ export default function PlayerInfo({
   status,
   localPlayerId,
   gameId,
+  turnsRemaining = 0,
 }: Props) {
   const [showHand, setShowHand] = useState(false);
 
@@ -31,6 +33,8 @@ export default function PlayerInfo({
   const canView =
     hasNannyCam && localPlayerId !== undefined && localPlayerId !== player.id;
   const showStablePower = gameId !== 'exploding-kittens';
+  const showTurns = gameId === 'exploding-kittens';
+  const displayedTurns = showTurns && isActive ? Math.max(1, turnsRemaining) : 0;
 
   return (
     <div
@@ -114,6 +118,17 @@ export default function PlayerInfo({
             <Sparkles size={11} className="text-amber-400" />
             <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
               {getStablePower(player)}
+            </span>
+          </div>
+        )}
+        {showTurns && (
+          <div
+            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-orange-500/30"
+            title="Turnos pendientes"
+          >
+            <RotateCcw size={11} className="text-orange-400" />
+            <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
+              {displayedTurns}
             </span>
           </div>
         )}
