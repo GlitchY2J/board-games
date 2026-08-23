@@ -3,6 +3,7 @@ import type { GameState } from '../types/GameState';
 export function getPlayerStatus(
   gameState: GameState,
   playerId: string,
+  gameId?: string,
 ): string | undefined {
   const pending = gameState.pendingAction;
 
@@ -53,6 +54,10 @@ export function getPlayerStatus(
 
   const activePlayer = gameState.players[gameState.currentPlayer];
   if (activePlayer && activePlayer.id === playerId) {
+    if (gameId === 'exploding-kittens') {
+      return 'Jugando cartas...';
+    }
+
     if (gameState.phase === 'DRAW') {
       return 'Robando carta...';
     }

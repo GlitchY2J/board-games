@@ -20,6 +20,7 @@ import { useState, useEffect, useRef } from 'react';
 
 interface Props {
   gameState: GameState;
+  gameId?: string;
   isMyTurn: boolean;
   isHost: boolean;
   onPlay(cardId: string): void;
@@ -28,6 +29,7 @@ interface Props {
 
 export default function BoardLayout({
   gameState,
+  gameId,
   isMyTurn,
   isHost,
   onPlay,
@@ -71,6 +73,8 @@ export default function BoardLayout({
   const totalPlayers = gameState.players.length;
   const activePlayer = gameState.players[gameState.currentPlayer];
   const isActivePlayer = activePlayer?.socketId === socket.id;
+  const showPlayerBoards = gameId !== 'exploding-kittens';
+  const showPhases = gameId !== 'exploding-kittens';
 
   useEffect(() => {
     if (!autoEnabled || !isActivePlayer) return;
@@ -167,7 +171,7 @@ export default function BoardLayout({
   }, [isMyTurn, gameState, localPlayerId]);
 
   return (
-    <div className="board-layout">
+    <div className={`board-layout ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}>
       <div className="game-area">
         <div className="player-top">
           {opponents.map((opp) => {
@@ -183,14 +187,17 @@ export default function BoardLayout({
                 <PlayerInfo
                   player={opp}
                   isActive={opp.id === activePlayer.id}
-                  status={getPlayerStatus(gameState, opp.id)}
+                  status={getPlayerStatus(gameState, opp.id, gameId)}
                   localPlayerId={localPlayer.id}
+                  gameId={gameId}
                 />
-                <PlayerBoard
-                  player={opp}
-                  isLocalPlayer={false}
-                  isMyTurn={opp.id === activePlayer.id}
-                />
+                {showPlayerBoards && (
+                  <PlayerBoard
+                    player={opp}
+                    isLocalPlayer={false}
+                    isMyTurn={opp.id === activePlayer.id}
+                  />
+                )}
               </div>
             );
           })}
@@ -211,13 +218,13 @@ export default function BoardLayout({
                     localPlayerId={localPlayer.id}
                   />
 
-                  {isMyTurn && gameState.phase === 'DRAW' && (
+                  {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
                       Presiona <kbd className="space-key">Space</kbd> para robar una carta
                     </span>
                   )}
 
-                  {isMyTurn &&
+                  {showPhases && isMyTurn &&
                     gameState.phase === 'ACTION' &&
                     !gameState.actionUsed &&
                     !gameState.pendingPlay && (
@@ -247,15 +254,18 @@ export default function BoardLayout({
             <PlayerInfo
               player={localPlayer}
               isActive={isMyTurn}
-              status={getPlayerStatus(gameState, localPlayer.id)}
+              status={getPlayerStatus(gameState, localPlayer.id, gameId)}
               localPlayerId={localPlayer.id}
+              gameId={gameId}
             />
 
-            <PlayerBoard
-              player={localPlayer}
-              isLocalPlayer
-              isMyTurn={isMyTurn}
-            />
+            {showPlayerBoards && (
+              <PlayerBoard
+                player={localPlayer}
+                isLocalPlayer
+                isMyTurn={isMyTurn}
+              />
+            )}
           </div>
 
           {opponents.map((opp) => {
@@ -271,14 +281,17 @@ export default function BoardLayout({
                 <PlayerInfo
                   player={opp}
                   isActive={opp.id === activePlayer.id}
-                  status={getPlayerStatus(gameState, opp.id)}
+                  status={getPlayerStatus(gameState, opp.id, gameId)}
                   localPlayerId={localPlayer.id}
+                  gameId={gameId}
                 />
-                <PlayerBoard
-                  player={opp}
-                  isLocalPlayer={false}
-                  isMyTurn={opp.id === activePlayer.id}
-                />
+                {showPlayerBoards && (
+                  <PlayerBoard
+                    player={opp}
+                    isLocalPlayer={false}
+                    isMyTurn={opp.id === activePlayer.id}
+                  />
+                )}
               </div>
             );
           })}
@@ -384,20 +397,24 @@ export default function BoardLayout({
         </div>
       )}
 
-      <div className="phase-panel-anchor">
-        <PhasePanel gameState={gameState} />
-      </div>
+      {showPhases && (
+        <>
+          <div className="phase-panel-anchor">
+            <PhasePanel gameState={gameState} />
+          </div>
 
-      <div className="phase-action-anchor">
-        <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
-      </div>
+          <div className="phase-action-anchor">
+            <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
+          </div>
+        </>
+      )}
 
       <div className="bottom-hand" data-hand>
         <PlayerHand
           player={localPlayer}
           isLocalPlayer
           isMyTurn={isMyTurn}
-          gamePhase={gameState.phase}
+          gamePhase={showPhases ? gameState.phase : 'ACTION'}
           actionUsed={gameState.actionUsed}
           pendingPlay={!!gameState.pendingPlay}
           blockedCardIds={blockedCardIds}

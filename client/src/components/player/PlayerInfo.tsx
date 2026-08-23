@@ -14,6 +14,7 @@ interface Props {
   isActive?: boolean;
   status?: string;
   localPlayerId?: string;
+  gameId?: string;
 }
 
 export default function PlayerInfo({
@@ -21,6 +22,7 @@ export default function PlayerInfo({
   isActive = false,
   status,
   localPlayerId,
+  gameId,
 }: Props) {
   const [showHand, setShowHand] = useState(false);
 
@@ -28,6 +30,7 @@ export default function PlayerInfo({
     player.downgrades.some((c) => c.id === 'nanny_cam') ?? false;
   const canView =
     hasNannyCam && localPlayerId !== undefined && localPlayerId !== player.id;
+  const showStablePower = gameId !== 'exploding-kittens';
 
   return (
     <div
@@ -93,21 +96,27 @@ export default function PlayerInfo({
                   : 'bg-slate-600'
               )}
             ></span>
-            {status ?? (isActive ? 'Tu Turno' : 'Esperando')}
+            {status ?? (isActive
+              ? gameId === 'exploding-kittens'
+                ? 'Jugando cartas...'
+                : 'Tu Turno'
+              : 'Esperando')}
           </span>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5 text-xs shrink-0">
-        <div
-          className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-slate-800/50"
-          title="Unicornios en el Establo"
-        >
-          <Sparkles size={11} className="text-amber-400" />
-          <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
-            {getStablePower(player)}
-          </span>
-        </div>
+        {showStablePower && (
+          <div
+            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-slate-800/50"
+            title="Unicornios en el Establo"
+          >
+            <Sparkles size={11} className="text-amber-400" />
+            <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
+              {getStablePower(player)}
+            </span>
+          </div>
+        )}
         <div
           className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-slate-800/50"
           title="Cartas en Mano"

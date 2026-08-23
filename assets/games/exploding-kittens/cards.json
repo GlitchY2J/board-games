@@ -1,0 +1,110 @@
+{
+  "gameId": "exploding-kittens",
+  "versionId": "exploding-kittens-base",
+  "cards": [
+    {
+      "id": "exploding_kitten",
+      "name": "Exploding Kitten",
+      "cardType": "exploding_kitten",
+      "effect": "explode",
+      "description": "Si robas esta carta, explotas y quedas eliminado salvo que uses un Defuse.",
+      "variants": { "pattern": "exploding_kitten_{id}.jpg", "count": 13 }
+    },
+    {
+      "id": "defuse",
+      "name": "Defuse",
+      "cardType": "defuse",
+      "effect": "defuse",
+      "description": "Evita una explosión y permite devolver el Exploding Kitten al mazo.",
+      "variants": { "pattern": "defuse_{id}.jpg", "count": 18 }
+    },
+    {
+      "id": "attack",
+      "name": "Attack",
+      "cardType": "action",
+      "effect": "attack",
+      "description": "Termina tu turno sin robar y obliga al siguiente jugador a tomar dos turnos.",
+      "variants": { "pattern": "attack_{id}.jpg", "count": 8 }
+    },
+    {
+      "id": "nope",
+      "name": "Nope",
+      "cardType": "action",
+      "effect": "nope",
+      "description": "Cancela una acción que acaba de jugarse.",
+      "variants": { "pattern": "nope_{id}.jpg", "count": 10 }
+    },
+    {
+      "id": "skip",
+      "name": "Skip",
+      "cardType": "action",
+      "effect": "skip",
+      "description": "Termina tu turno sin robar una carta.",
+      "variants": { "pattern": "skip_{id}.jpg", "count": 8 }
+    },
+    {
+      "id": "favor",
+      "name": "Favor",
+      "cardType": "action",
+      "effect": "favor",
+      "description": "Obliga a otro jugador a darte una carta de su mano.",
+      "variants": { "pattern": "favor_{id}.jpg", "count": 6 }
+    },
+    {
+      "id": "shuffle",
+      "name": "Shuffle",
+      "cardType": "action",
+      "effect": "shuffle",
+      "description": "Baraja el mazo de robo.",
+      "variants": { "pattern": "shuffle_{id}.jpg", "count": 8 }
+    },
+    {
+      "id": "see_the_future",
+      "name": "See the Future",
+      "cardType": "action",
+      "effect": "see_the_future",
+      "description": "Mira las tres cartas superiores del mazo.",
+      "variants": { "pattern": "see_the_future_{id}.jpg", "count": 10 }
+    },
+    {
+      "id": "cattermelon",
+      "name": "Cattermelon",
+      "cardType": "cat",
+      "effect": "cat_pair",
+      "description": "Juega dos cartas de gato iguales para robar una carta aleatoria.",
+      "variants": [{ "id": "cattermelon", "image": "cattermelon.jpg" }]
+    },
+    {
+      "id": "beard_cat",
+      "name": "Beard Cat",
+      "cardType": "cat",
+      "effect": "cat_pair",
+      "description": "Juega dos cartas de gato iguales para robar una carta aleatoria.",
+      "variants": [{ "id": "beard_cat", "image": "beard_cat.jpg" }]
+    },
+    {
+      "id": "hairy_potato_cat",
+      "name": "Hairy Potato Cat",
+      "cardType": "cat",
+      "effect": "cat_pair",
+      "description": "Juega dos cartas de gato iguales para robar una carta aleatoria.",
+      "variants": [{ "id": "hairy_potato_cat", "image": "hairy_potato_cat.jpg" }]
+    },
+    {
+      "id": "rainbow_ralphing_cat",
+      "name": "Rainbow-Ralphing Cat",
+      "cardType": "cat",
+      "effect": "cat_pair",
+      "description": "Juega dos cartas de gato iguales para robar una carta aleatoria.",
+      "variants": [{ "id": "rainbow_ralphing_cat", "image": "rainbow_ralphing_cat.jpg" }]
+    },
+    {
+      "id": "tacocat",
+      "name": "Tacocat",
+      "cardType": "cat",
+      "effect": "cat_pair",
+      "description": "Juega dos cartas de gato iguales para robar una carta aleatoria.",
+      "variants": [{ "id": "tacocat", "image": "tacocat.jpg" }]
+    }
+  ]
+}

@@ -17,6 +17,28 @@
   pointer-events: none;
 }
 
+/* Exploding Kittens uses its complete back-card artwork. */
+.game-exploding-kittens .playing-card.card-back {
+  overflow: hidden;
+  background: #d92f36;
+  border-radius: 10px;
+}
+
+.game-exploding-kittens .playing-card.card-back::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/cards/exploding-kittens/back-card.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 10px;
+}
+
+.game-exploding-kittens .playing-card.card-back img {
+  visibility: hidden;
+}
+
 .playing-card:hover {
   transform: translateY(-15px) scale(1.12);
   box-shadow: 0 0 24px rgba(255, 255, 255, 0.45);

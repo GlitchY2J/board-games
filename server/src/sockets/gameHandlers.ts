@@ -29,6 +29,22 @@ const NO_NEIGH_CARDS = new Set(['ginormous_unicorn']);
 
 const pendingTimers = new Map<string, NodeJS.Timeout>();
 
+function isExplodingKittensRoom(room: Room): boolean {
+  return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+}
+
+function advanceExplodingKittensTurn(game: Room['gameState']): void {
+  if (!game || game.players.length === 0) return;
+
+  game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
+  game.turn += 1;
+  game.phase = TurnPhase.DRAW;
+  game.actionUsed = false;
+  game.actionPlaysRemaining = undefined;
+  game.pendingAction = undefined;
+  game.pendingPlay = undefined;
+}
+
 function startPendingTimer(io: GameServer, room: Room, startedAt: number): void {
   const previous = pendingTimers.get(room.code);
   if (previous) {
@@ -374,6 +390,31 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    if (isExplodingKittensRoom(context.room)) {
+      const gamePlayer = context.game.players.find(
+        (player) => player.id === context.player.id,
+      );
+      const cardIndex = gamePlayer?.hand.findIndex((card) => card.uid === cardId) ?? -1;
+
+      if (!gamePlayer || cardIndex < 0) {
+        emitGameError(
+          socket,
+          'CARD_NOT_FOUND',
+          'No se encontró la carta en tu mano.',
+          'play-card',
+        );
+        return;
+      }
+
+      const [card] = gamePlayer.hand.splice(cardIndex, 1);
+      context.game.discard.push(card);
+      addLog(context.game, `${context.player.name} jugó carta "${card.name}"`, {
+        playerId: context.player.id,
+      });
+      emitGameState(io, context.room, 'game-updated');
+      return;
+    }
+
     const result = RulesEngine.stagePlay(
       context.game,
       context.player.id,
@@ -460,6 +501,30 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
         'El jugador enviado no coincide con tu sentido.',
         'draw-action-card',
       );
+      return;
+    }
+
+    if (isExplodingKittensRoom(room)) {
+      const gamePlayer = game.players.find((candidate) => candidate.id === player.id);
+      const card = game.deck.shift();
+
+      if (!gamePlayer) {
+        emitGameError(socket, 'PLAYER_NOT_FOUND', 'No se encontró al jugador.', 'draw-action-card');
+        return;
+      }
+
+      if (!card) {
+        emitGameError(socket, 'DECK_EMPTY', 'El mazo está vacío.', 'draw-action-card');
+        return;
+      }
+
+      enqueueDrawAnimation(game.roomCode, gamePlayer.id, card);
+      gamePlayer.hand.push(card);
+      addLog(game, `${player.name} robó una carta y terminó su turno`, {
+        playerId: player.id,
+      });
+      advanceExplodingKittensTurn(game);
+      emitGameState(io, room, 'game-updated');
       return;
     }
 

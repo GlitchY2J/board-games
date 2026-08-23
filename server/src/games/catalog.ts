@@ -1,6 +1,7 @@
 import type { GameDefinition } from '../../../shared/types/GameDefinition.ts';
 import { GameRegistry } from './GameRegistry.ts';
 import { unstableUnicornsEngine } from './engines/unstableUnicornsEngine.ts';
+import { explodingKittensEngine } from './engines/explodingKittensEngine.ts';
 
 export const unstableUnicorns: GameDefinition = {
   id: 'unstable-unicorns',
@@ -53,4 +54,4 @@ export const explodingKittens: GameDefinition = {
 export const gameRegistry = new GameRegistry();
 
 gameRegistry.register(unstableUnicorns, unstableUnicornsEngine);
-gameRegistry.register(explodingKittens, unstableUnicornsEngine);
+gameRegistry.register(explodingKittens, explodingKittensEngine);

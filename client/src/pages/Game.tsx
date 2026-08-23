@@ -351,6 +351,7 @@ export default function Game() {
     <>
       <BoardLayout
         gameState={gameState}
+        gameId={roomFromContext?.settings?.gameId ?? roomFromContext?.game}
         isMyTurn={isMyTurn}
         isHost={isHost}
         onPlay={play}
