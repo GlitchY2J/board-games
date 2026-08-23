@@ -138,14 +138,36 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
   // Los Neighs ya salieron de las manos al jugarse; ahora van al descarte.
   for (let i = 1; i < n; i++) {
-    game.discard.push(chain[i].card);
+    if (chain[i].card.effect === 'nope') {
+      game.discard.push(chain[i].card);
+    }
+  }
+
+  if (explodingKittens) {
+    // Attack cards stay in hand while the reaction window is open, so a stacked
+    // attack can still be canceled before all involved cards are discarded.
+    for (let i = 0; i < n; i++) {
+      const link = chain[i];
+      if (link.card.effect === 'nope') continue;
+      const owner = game.players.find((player) => player.id === link.playerId);
+      const cardIndex = owner?.hand.findIndex((card) => card.uid === link.card.uid) ?? -1;
+      if (owner && cardIndex !== -1) {
+        const [card] = owner.hand.splice(cardIndex, 1);
+        if (!game.discard.some((discarded) => discarded.uid === card.uid)) {
+          game.discard.push(card);
+          enqueueDiscardAnimation(room.code, owner.id, card);
+        }
+      } else if (!game.discard.some((discarded) => discarded.uid === link.card.uid)) {
+        game.discard.push(link.card);
+      }
+    }
   }
 
   const original = chain[0];
   const activePlayer = game.players.find((p) => p.id === original.playerId);
 
   if (linkCanceled[0]) {
-    if (activePlayer) {
+    if (activePlayer && !explodingKittens) {
       const idx = activePlayer.hand.findIndex(
         (c) => c.uid === original.card.uid,
       );
@@ -169,13 +191,12 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
     );
   } else if (activePlayer) {
     if (explodingKittens) {
-      const originalIndex = activePlayer.hand.findIndex(
-        (card) => card.uid === original.card.uid,
+      const successfulAttacks = chain.filter(
+        (link, index) => link.card.id === 'attack' && !linkCanceled[index],
       );
-      if (originalIndex !== -1) {
-        const [originalCard] = activePlayer.hand.splice(originalIndex, 1);
-        game.discard.push(originalCard);
-        if (originalCard.id === 'attack') startAttack(game);
+      if (successfulAttacks.length > 0) {
+        const lastAttacker = successfulAttacks[successfulAttacks.length - 1];
+        startAttack(game, lastAttacker.playerId, pending.attackCount ?? successfulAttacks.length);
       }
       addLog(
         game,
@@ -425,8 +446,23 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
 
       const card = gamePlayer.hand[cardIndex];
       const isNow = card.effect === 'now';
+      const pending = context.game.pendingPlay;
+      const fallbackAttackTargetId = pending
+        ? context.game.players[
+            (context.game.players.findIndex((player) => player.id === pending.playerId) + 1) %
+              context.game.players.length
+          ]?.id
+        : undefined;
+      const canStackAttack =
+        !!pending &&
+        (pending.chain[pending.chain.length - 1]?.card.id === 'attack' ||
+          pending.chain[pending.chain.length - 1]?.card.effect === 'attack') &&
+        (pending.targetPlayerId ?? fallbackAttackTargetId) === context.player.id &&
+        card.cardType === 'action' &&
+        card.id === 'attack' &&
+        card.effect === 'attack';
 
-      if (!isNow && context.game.players[context.game.currentPlayer]?.id !== context.player.id) {
+      if (!canStackAttack && !isNow && context.game.players[context.game.currentPlayer]?.id !== context.player.id) {
         emitGameError(socket, 'NOT_YOUR_TURN', 'No es tu turno.', 'play-card');
         return;
       }
@@ -451,6 +487,42 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         return;
       }
 
+      if (canStackAttack && pending) {
+        gamePlayer.hand.splice(cardIndex, 1);
+        const startedAt = Date.now();
+        const targetPlayer = context.game.players[
+          (context.game.players.findIndex((player) => player.id === context.player.id) + 1) %
+            context.game.players.length
+        ];
+        context.game.pendingPlay = {
+          ...pending,
+          playerId: context.player.id,
+          playerName: context.player.name,
+          card,
+          startedAt,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer?.id,
+          targetPlayerName: targetPlayer?.name,
+          attackCount: (pending.attackCount ?? 1) + 1,
+          chain: [
+            ...pending.chain,
+            {
+              playerId: context.player.id,
+              playerName: context.player.name,
+              card,
+              group: (pending.chain[pending.chain.length - 1].group ?? 0) + 1,
+            },
+          ],
+          neighGraceUntil: undefined,
+        };
+        addLog(context.game, `${context.player.name} apiló un Attack`, {
+          playerId: context.player.id,
+        });
+        emitGameState(io, context.room, 'game-updated');
+        startPendingTimer(io, context.room, startedAt);
+        return;
+      }
+
       const startedAt = Date.now();
       const targetPlayer =
         card.id === 'attack'
@@ -465,9 +537,10 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         startedAt,
         durationMs: NEIGH_WINDOW_MS,
         acceptedIds: [],
-        targetPlayerId: targetPlayer?.id,
-        targetPlayerName: targetPlayer?.name,
-        chain: [
+          targetPlayerId: targetPlayer?.id,
+          targetPlayerName: targetPlayer?.name,
+          attackCount: card.id === 'attack' ? 1 : undefined,
+          chain: [
           {
             playerId: context.player.id,
             playerName: context.player.name,
@@ -476,6 +549,10 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
           },
         ],
       };
+
+      if (card.id === 'attack' && card.effect === 'attack') {
+        gamePlayer.hand.splice(cardIndex, 1);
+      }
 
       addLog(context.game, `${context.player.name} intenta jugar carta "${card.name}"`, {
         playerId: context.player.id,

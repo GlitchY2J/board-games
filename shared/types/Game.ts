@@ -34,6 +34,7 @@ export interface PendingPlay {
   neighGraceUntil?: number;
   targetPlayerId?: string;
   targetPlayerName?: string;
+  attackCount?: number;
 }
 
 export interface GameLogEntry {

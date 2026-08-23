@@ -201,6 +201,22 @@
   box-shadow: 0 6px 30px rgba(239, 68, 68, 0.55);
 }
 
+.pending-play-attack-stack {
+  background: rgba(249, 115, 22, 0.16);
+  border-color: rgba(251, 146, 60, 0.45);
+  color: #fdba74;
+}
+
+.pending-attack-btn {
+  border-color: rgba(251, 146, 60, 0.7);
+  background: linear-gradient(135deg, #f97316, #c2410c);
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+}
+
+.pending-attack-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 30px rgba(249, 115, 22, 0.6);
+}
+
 .pending-neigh-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;

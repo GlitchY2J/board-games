@@ -13,7 +13,13 @@ interface Props {
 
 export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, hide = false }: Props) {
   const pending = gameState.pendingPlay;
-  const isExplodingKittens = gameId === 'exploding-kittens';
+  const isExplodingKittens =
+    gameId === 'exploding-kittens' ||
+    gameId === 'exploding_kittens' ||
+    gameId === 'explodingKittens' ||
+    pending?.card.id === 'attack' ||
+    pending?.card.effect === 'attack' ||
+    pending?.card.effect === 'nope';
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -36,10 +42,14 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const seconds = Math.ceil(remainingMs / 1000);
 
   const chainNeighCount = pending.chain.length - 1;
+  const attackCount = pending.attackCount ?? pending.chain.filter((link) => link.card.id === 'attack').length;
   const topIsReaction =
     pending.card.effect === 'neigh' ||
     pending.card.effect === 'super_neigh' ||
     (isExplodingKittens && pending.card.effect === 'nope');
+  const isAttackPlay =
+    isExplodingKittens &&
+    (pending.card.id === 'attack' || pending.card.effect === 'attack');
 
   const localPlayer = gameState.players.find((p) => p.id === localPlayerId);
   const hasRegularNeigh =
@@ -47,6 +57,14 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const hasSuperNeigh =
     localPlayer?.hand.some((c) => c.effect === 'super_neigh') ?? false;
   const hasNope = localPlayer?.hand.some((c) => c.effect === 'nope') ?? false;
+  const hasAttack =
+    localPlayer?.hand.some(
+      (card) =>
+        card.uid &&
+        card.cardType === 'action' &&
+        card.id === 'attack' &&
+        card.effect === 'attack',
+    ) ?? false;
   const hasBlindingLight =
     localPlayer?.downgrades.some((c) => c.id === 'blinding_light') ?? false;
   const hasGinormousUnicorn =
@@ -56,11 +74,25 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     localPlayer?.downgrades.some((card) => card.id === 'slowdown') ?? false;
   const hasAccepted = pending.acceptedIds.includes(localPlayerId);
   const canRespond = !isMyPlay;
-  const attackTarget = pending.targetPlayerId
-    ? gameState.players.find((player) => player.id === pending.targetPlayerId)
+  const fallbackAttackTargetId =
+    gameState.players.length > 0
+      ? gameState.players[
+          (gameState.players.findIndex((player) => player.id === pending.playerId) + 1) %
+            gameState.players.length
+        ]?.id
+      : undefined;
+  const resolvedAttackTargetId = pending.targetPlayerId ?? fallbackAttackTargetId;
+  const attackTarget = resolvedAttackTargetId
+    ? gameState.players.find((player) => player.id === resolvedAttackTargetId)
     : undefined;
   const isTargetedAttack =
-    isExplodingKittens && pending.card.id === 'attack' && !!attackTarget;
+    isAttackPlay && !!attackTarget;
+  const canStackAttack =
+    isExplodingKittens &&
+    (pending.chain[pending.chain.length - 1]?.card.id === 'attack' ||
+      pending.chain[pending.chain.length - 1]?.card.effect === 'attack') &&
+    (pending.targetPlayerId ?? fallbackAttackTargetId) === localPlayerId &&
+    hasAttack;
 
   function accept() {
     socket.emit('neigh-accept', { roomCode: gameState.roomCode });
@@ -100,11 +132,33 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     });
   }
 
+  function playAttack() {
+    const attackCard = localPlayer?.hand.find(
+      (card) =>
+        card.uid &&
+        card.cardType === 'action' &&
+        card.id === 'attack' &&
+        card.effect === 'attack',
+    );
+    if (!attackCard) return;
+    socket.emit('play-card', {
+      roomCode: gameState.roomCode,
+      playerId: localPlayerId,
+      cardId: attackCard.uid,
+    });
+  }
+
   return (
     <div className={`pending-play-backdrop ${hide ? 'animating-out' : ''}`}>
       <div className="pending-play-window">
         <h2 className="pending-play-title">
-          {isMyPlay
+          {isAttackPlay
+            ? isMyPlay
+              ? 'Has jugado un Attack'
+              : attackTarget?.id === localPlayerId
+                ? `${pending.playerName} te está atacando`
+                : `${pending.playerName} está atacando a ${attackTarget?.name ?? 'otro jugador'}`
+            : isMyPlay
             ? topIsReaction
               ? isExplodingKittens ? 'Has jugado un Nope' : 'Has jugado un Neigh'
               : 'Colocando tu carta...'
@@ -113,7 +167,9 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
               : `${pending.playerName} juega una carta`}
         </h2>
         <p className="pending-play-subtitle">
-            {isMyPlay
+            {isAttackPlay
+              ? `${attackCount * 2} turnos acumulados. Se resuelve en ${seconds}s`
+              : isMyPlay
               ? `Se resolverá en ${seconds}s`
               : isExplodingKittens
                 ? `¿Tienes un Nope para negarla? Se resuelve en ${seconds}s`
@@ -163,10 +219,14 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
 
         <div className="pending-play-card-name">{pending.card.name}</div>
 
-          {chainNeighCount > 0 && (
+          {isExplodingKittens && attackCount > 1 ? (
+            <div className="pending-play-chain pending-play-attack-stack">
+              Attacks apilados: {attackCount}
+            </div>
+          ) : chainNeighCount > 0 && (
             <div className="pending-play-chain">
               {isExplodingKittens ? 'Nopes' : 'Neighs'} en la cadena: {chainNeighCount}
-          </div>
+            </div>
         )}
 
         <div className="pending-play-timer">
@@ -188,6 +248,11 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
               {isExplodingKittens && hasNope && (
                 <button className="pending-neigh-btn" onClick={playNope}>
                   Nope
+                </button>
+              )}
+              {canStackAttack && (
+                <button className="pending-neigh-btn pending-attack-btn" onClick={playAttack}>
+                  Attack
                 </button>
               )}
               {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasRegularNeigh && (
