@@ -120,6 +120,10 @@ export default function Game() {
         },
       });
     };
+    const onKickedFromRoom = () => {
+      deactivate();
+      navigate('/lobby');
+    };
 
     socket.on('game-updated', (state: GameState) => {
       if (activeAnimationsCountRef.current > 0) {
@@ -138,6 +142,7 @@ export default function Game() {
     });
 
     socket.on('turn-order-assigned', onTurnOrderAssigned);
+    socket.on('kicked-from-room', onKickedFromRoom);
 
     const onCardAnimations = (animations: CardAnimation[]) => {
       const found = animations
@@ -202,6 +207,7 @@ export default function Game() {
       socket.off('game-updated');
       socket.off('game-restarted');
       socket.off('turn-order-assigned', onTurnOrderAssigned);
+      socket.off('kicked-from-room', onKickedFromRoom);
       socket.off('card-animations');
       socket.off('neigh-animations');
       socket.off('draw-animations');

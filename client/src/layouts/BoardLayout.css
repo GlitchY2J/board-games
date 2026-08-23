@@ -92,6 +92,40 @@
   display: none;
 }
 
+.room-code-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: 12px;
+  background: rgba(8, 47, 73, 0.72);
+  color: #bae6fd;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.room-code-display:hover {
+  border-color: rgba(34, 211, 238, 0.6);
+  background: rgba(8, 47, 73, 0.95);
+  transform: translateY(-1px);
+}
+
+.room-code-label {
+  color: #67e8f9;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.room-code-display strong {
+  color: #f8fafc;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+
 .mobile-chat-panel {
   display: none;
 }

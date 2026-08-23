@@ -168,6 +168,30 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     }
   });
 
+  socket.on('kick-player', ({ roomCode, playerId }) => {
+    const room = roomManager.getRoom(roomCode);
+    if (!room) return;
+
+    const host = room.players.find((player) => player.socketId === socket.id);
+    const target = room.players.find((player) => player.id === playerId);
+    if (!host || host.id !== room.hostId || !target || target.id === host.id) return;
+
+    const targetSocket = io.sockets.sockets.get(target.socketId);
+    const game = room.gameState;
+    if (game) removePlayerFromGame(room, target.id);
+
+    roomManager.removePlayer(target.socketId);
+    targetSocket?.leave(room.code);
+    targetSocket?.emit('kicked-from-room', { message: 'Has sido expulsado de la sala.' });
+
+    const updatedRoom = roomManager.getRoom(roomCode);
+    if (!updatedRoom) return;
+    io.to(room.code).emit('room-updated', createPublicRoom(updatedRoom));
+    if (game && updatedRoom.gameState) {
+      emitGameState(io, updatedRoom, 'game-updated');
+    }
+  });
+
   socket.on('room:create', ({ hostName, game, avatar }, callback) => {
     const room = roomManager.createRoom(hostName, game, socket.id, avatar);
 

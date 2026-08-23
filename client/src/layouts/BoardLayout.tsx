@@ -13,7 +13,7 @@ import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
 import PlayerNotification from '../components/player/PlayerNotification';
-import { RotateCcw, LogOut, Bot, Bug, MessageSquare, X } from 'lucide-react';
+import { RotateCcw, LogOut, Bot, Bug, MessageSquare, X, Copy, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { useState, useEffect, useRef } from 'react';
@@ -39,6 +39,7 @@ export default function BoardLayout({
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [autoEnabled, setAutoEnabled] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   const [playerNotification, setPlayerNotification] = useState<string | null>(
     null,
   );
@@ -57,6 +58,16 @@ export default function BoardLayout({
       setPlayerNotification(null);
       notificationTimerRef.current = null;
     }, 2200);
+  }
+
+  async function copyRoomCode() {
+    try {
+      await navigator.clipboard.writeText(gameState.roomCode);
+      setRoomCodeCopied(true);
+      window.setTimeout(() => setRoomCodeCopied(false), 1600);
+    } catch {
+      setRoomCodeCopied(false);
+    }
   }
 
   useEffect(() => {
@@ -192,6 +203,8 @@ export default function BoardLayout({
                   localPlayerId={localPlayer.id}
                   gameId={gameId}
                   turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
+                  isHost={isHost}
+                  roomCode={gameState.roomCode}
                 />
                 {showPlayerBoards && (
                   <PlayerBoard
@@ -270,6 +283,8 @@ export default function BoardLayout({
               localPlayerId={localPlayer.id}
               gameId={gameId}
               turnsRemaining={isMyTurn ? gameState.turnsRemaining : 0}
+              isHost={isHost}
+              roomCode={gameState.roomCode}
             />
 
             {showPlayerBoards && (
@@ -298,6 +313,8 @@ export default function BoardLayout({
                   localPlayerId={localPlayer.id}
                   gameId={gameId}
                   turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
+                  isHost={isHost}
+                  roomCode={gameState.roomCode}
                 />
                 {showPlayerBoards && (
                   <PlayerBoard
@@ -326,6 +343,16 @@ export default function BoardLayout({
       />
 
       <div className="corner-controls">
+        <button
+          className="room-code-display"
+          title="Copiar código de sala"
+          onClick={copyRoomCode}
+        >
+          <span className="room-code-label">Sala</span>
+          <strong>{gameState.roomCode}</strong>
+          {roomCodeCopied ? <Check size={14} /> : <Copy size={14} />}
+        </button>
+
         {gameId !== 'exploding-kittens' && (
           <button
             className={`ctrl-button ctrl-neutral${autoEnabled ? ' auto-on' : ''}`}
@@ -414,15 +441,17 @@ export default function BoardLayout({
         </div>
       )}
 
-      {showPhases && (
+      {(showPhases || gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens') && (
         <>
           <div className="phase-panel-anchor">
-            <PhasePanel gameState={gameState} />
+            <PhasePanel gameState={gameState} showRoundPhase={showPhases} />
           </div>
 
-          <div className="phase-action-anchor">
-            <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
-          </div>
+          {showPhases && (
+            <div className="phase-action-anchor">
+              <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
+            </div>
+          )}
         </>
       )}
 

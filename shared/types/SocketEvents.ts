@@ -16,6 +16,11 @@ export interface CreateRoomPayload {
   avatar?: string;
 }
 
+export interface KickPlayerPayload {
+  roomCode: string;
+  playerId: string;
+}
+
 export interface PlayCardPayload {
   roomCode: string;
   playerId: string;
@@ -193,6 +198,7 @@ export interface ServerToClientEvents {
   'play-animations': (animations: PlayAnimation[]) => void;
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
   'chat-message': (payload: ChatMessageEvent) => void;
+  'kicked-from-room': (payload: { message: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -208,6 +214,7 @@ export interface ClientToServerEvents {
   // Leave Room
   'leave-room': (payload: LeaveRoomPayload) => void;
   'leave-game': (payload: LeaveRoomPayload) => void;
+  'kick-player': (payload: KickPlayerPayload) => void;
 
   // Toggle Expansion
   'toggle-expansion': (payload: ToggleExpansionPayload) => void;
