@@ -202,6 +202,7 @@ export function createExplodingKittensState(room: Room): GameState {
     discard: [],
     phase: 'DRAW',
     actionUsed: false,
+    turnsRemaining: 1,
     log: [],
     chat: [],
   };

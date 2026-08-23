@@ -150,19 +150,21 @@ export default function CardFan({
                 disabled={false}
                 selected={selectedCardId === card.uid}
                 onClick={() => {
-                  if (!isMyTurn) {
+                  const isNow = card.effect === 'now';
+
+                  if (!isMyTurn && !isNow) {
                     onInvalidAction?.('No es tu turno');
                     return;
                   }
 
-                  if (gamePhase !== 'ACTION') {
+                  if (!isNow && gamePhase !== 'ACTION') {
                     onInvalidAction?.(
                       'Solo puedes jugar cartas durante tu fase de acción',
                     );
                     return;
                   }
 
-                  if (actionUsed) {
+                  if (!isNow && actionUsed) {
                     onInvalidAction?.('Ya jugaste una carta este turno');
                     return;
                   }

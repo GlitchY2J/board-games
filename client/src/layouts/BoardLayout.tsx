@@ -77,7 +77,7 @@ export default function BoardLayout({
   const showPhases = gameId !== 'exploding-kittens';
 
   useEffect(() => {
-    if (!autoEnabled || !isActivePlayer) return;
+    if (gameId === 'exploding-kittens' || !autoEnabled || !isActivePlayer) return;
     if (gameState.pendingAction || gameState.pendingPlay) return;
 
     const canAutoAdvance =
@@ -99,6 +99,7 @@ export default function BoardLayout({
     gameState.pendingAction,
     gameState.pendingPlay,
     gameState.roomCode,
+    gameId,
   ]);
 
   const positions: ('top' | 'bottom')[] =
@@ -216,6 +217,7 @@ export default function BoardLayout({
                     gameState={gameState}
                     isMyTurn={isMyTurn}
                     localPlayerId={localPlayer.id}
+                    gameId={gameId}
                   />
 
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
@@ -223,6 +225,15 @@ export default function BoardLayout({
                       Presiona <kbd className="space-key">Space</kbd> para robar una carta
                     </span>
                   )}
+
+                  {gameId === 'exploding-kittens' &&
+                    isMyTurn &&
+                    !gameState.pendingAction &&
+                    !gameState.pendingPlay && (
+                      <span className="draw-hint">
+                        Presiona <kbd className="space-key">Space</kbd> para robar una carta y terminar tu turno
+                      </span>
+                    )}
 
                   {showPhases && isMyTurn &&
                     gameState.phase === 'ACTION' &&
@@ -307,19 +318,22 @@ export default function BoardLayout({
       <PendingPlayOverlay
         gameState={gameState}
         localPlayerId={localPlayer.id}
+        gameId={gameId}
         hide={hidePendingPlay}
       />
 
       <div className="corner-controls">
-        <button
-          className={`ctrl-button ctrl-neutral${autoEnabled ? ' auto-on' : ''}`}
-          title={
-            autoEnabled ? 'Desactivar modo automático' : 'Activar modo automático'
-          }
-          onClick={() => setAutoEnabled((v) => !v)}
-        >
-          <Bot size={16} />
-        </button>
+        {gameId !== 'exploding-kittens' && (
+          <button
+            className={`ctrl-button ctrl-neutral${autoEnabled ? ' auto-on' : ''}`}
+            title={
+              autoEnabled ? 'Desactivar modo automático' : 'Activar modo automático'
+            }
+            onClick={() => setAutoEnabled((v) => !v)}
+          >
+            <Bot size={16} />
+          </button>
+        )}
 
         {isHost && (
           <button

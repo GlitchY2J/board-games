@@ -7,27 +7,35 @@ import './DiscardViewer.css';
 interface Props {
   gameState: GameState;
   onClose(): void;
+  gameId?: string;
 }
 
-export default function DiscardViewer({ gameState, onClose }: Props) {
+export default function DiscardViewer({ gameState, onClose, gameId }: Props) {
   const [activeFilter, setActiveFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
+  const isExplodingKittens = gameId === 'exploding-kittens';
 
   const cards = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
 
     return [...gameState.discard]
       .reverse()
-      .filter((card) => activeFilter === 'all' || card.cardType === activeFilter)
-      .filter((card) => {
-        if (!normalizedSearch) return true;
+       .filter(
+         (card) =>
+           isExplodingKittens ||
+           activeFilter === 'all' ||
+           card.cardType === activeFilter,
+       )
+       .filter((card) => {
+         if (isExplodingKittens) return true;
+         if (!normalizedSearch) return true;
 
         return [card.name, card.id, card.description]
           .join(' ')
           .toLocaleLowerCase()
           .includes(normalizedSearch);
       });
-  }, [activeFilter, gameState.discard, search]);
+  }, [activeFilter, gameState.discard, isExplodingKittens, search]);
 
   const filterOptions: { value: Filter; label: string }[] = [
     { value: 'all', label: 'Todas' },
@@ -55,7 +63,8 @@ export default function DiscardViewer({ gameState, onClose }: Props) {
           {gameState.discard.length === 1 ? 'carta' : 'cartas'}
         </p>
 
-        <div className="discard-toolbar">
+        {!isExplodingKittens && (
+          <div className="discard-toolbar">
           <label className="discard-search">
             <Search size={17} aria-hidden="true" />
             <span className="sr-only">Buscar en el descarte</span>
@@ -89,7 +98,8 @@ export default function DiscardViewer({ gameState, onClose }: Props) {
               </button>
             ))}
           </div>
-        </div>
+          </div>
+        )}
 
         <div className="card-selection-grid">
           {cards.length > 0 ? (

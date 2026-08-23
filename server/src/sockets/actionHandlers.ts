@@ -14,6 +14,7 @@ import {
   enqueueDrawAnimation,
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
+import { advanceTurnAfterDraw } from '../game/exploding-kittens/turn.ts';
 import { nextUnicornOfWarChoice } from '../game/cards/effects/unicornOfWar.ts';
 import {
   drawRainbowPrincessCards,
@@ -1602,7 +1603,12 @@ export function registerActionHandlers(
 
       room.gameState.pendingAction = undefined;
 
-      if (room.gameState.phase === TurnPhase.BEGINNING) {
+      const isExplodingKittens =
+        (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+
+      if (isExplodingKittens && pending.reason === 'debug_draw') {
+        advanceTurnAfterDraw(room.gameState);
+      } else if (room.gameState.phase === TurnPhase.BEGINNING) {
         TurnManager.processBeginningQueue(room.gameState);
       } else if (
         room.gameState.phase === TurnPhase.DRAW &&
