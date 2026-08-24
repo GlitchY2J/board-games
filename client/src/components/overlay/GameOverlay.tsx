@@ -1962,7 +1962,7 @@ export default function GameOverlay({
         const isAngelUnicorn = action.reason === 'angel_unicorn';
         const isFrenchiecorn = action.reason === 'frenchiecorn';
 
-        const eligibleCards = gameState.discard.filter(
+        const eligibleCards = [...gameState.discard].reverse().filter(
           (card) =>
             (!action.cardType || card.cardType === action.cardType) &&
             (!isFrenchiecorn || action.discardedCardIds?.includes(card.uid)) &&

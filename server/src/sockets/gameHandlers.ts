@@ -136,13 +136,6 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
     }
   }
 
-  // Los Neighs ya salieron de las manos al jugarse; ahora van al descarte.
-  for (let i = 1; i < n; i++) {
-    if (chain[i].card.effect === 'nope') {
-      game.discard.push(chain[i].card);
-    }
-  }
-
   if (explodingKittens) {
     // Attack cards stay in hand while the reaction window is open, so a stacked
     // attack can still be canceled before all involved cards are discarded.
@@ -159,6 +152,22 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         }
       } else if (!game.discard.some((discarded) => discarded.uid === link.card.uid)) {
         game.discard.push(link.card);
+      }
+    }
+
+    // Los Nope se jugaron después de la carta original, por lo que deben
+    // quedar después en el arreglo del descarte para que aparezcan primero.
+    for (let i = 1; i < n; i++) {
+      const link = chain[i];
+      if (link.card.effect === 'nope' && !game.discard.some((card) => card.uid === link.card.uid)) {
+        game.discard.push(link.card);
+      }
+    }
+  } else {
+    // Los Neighs ya salieron de las manos al jugarse; conservar su orden real.
+    for (let i = 1; i < n; i++) {
+      if (chain[i].card.effect === 'nope') {
+        game.discard.push(chain[i].card);
       }
     }
   }

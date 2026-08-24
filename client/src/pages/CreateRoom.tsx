@@ -70,7 +70,7 @@ export default function CreateRoom() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="page-scroll min-h-screen w-full flex items-center justify-center p-6 relative">
       {/* Luces decorativas */}
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 

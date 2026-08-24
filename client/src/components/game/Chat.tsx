@@ -56,7 +56,7 @@ export default function Chat({ gameState, initialOpen = false, onClose }: Props)
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
-  }, [messages.length]);
+  }, [messages.length, isOpen]);
 
   useEffect(() => {
     if (messages.length === 0) return;

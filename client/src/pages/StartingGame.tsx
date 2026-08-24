@@ -138,7 +138,7 @@ export default function StartingGame() {
                   return (
                     <motion.div
                       key={`${player.id}-${index}`}
-                      className="absolute w-60 h-32 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4 shadow-2xl flex flex-col justify-between"
+                      className="absolute w-60 h-32 rounded-2xl bg-gradient-to-br from-black to-slate-950 border border-slate-800/80 p-4 shadow-2xl flex flex-col justify-between"
                       style={{ zIndex: 10 + index }}
                       animate={{
                         x: isLeft ? [0, -110, 10, 0] : [0, 110, -10, 0],

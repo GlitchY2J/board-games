@@ -45,6 +45,16 @@ body {
   font-family: 'Outfit', 'Inter', sans-serif;
 }
 
+.page-scroll {
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 /* Efectos y clases de utilidad custom para UI Premium */
 .glass-panel {
   background: rgba(24, 28, 35, 0.62);

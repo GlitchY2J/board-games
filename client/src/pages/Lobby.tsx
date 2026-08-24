@@ -245,7 +245,7 @@ export default function Lobby() {
   );
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="page-scroll w-full flex items-start justify-center p-6 relative">
       {/* Luces de fondo */}
       <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -308,7 +308,7 @@ export default function Lobby() {
               Jugadores Conectados
             </span>
             <span className="text-xs font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
-              {availablePlayers.length} disponibles / {selectedGame?.maxPlayers ?? '—'}
+              {availablePlayers.length} / {selectedGame?.maxPlayers ?? '—'}
             </span>
           </div>
 
