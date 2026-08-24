@@ -45,9 +45,10 @@ export type PendingAction =
       type: "select_player";
       reason:
         | "back_kick"
-        | "americorn"
-        | "blatant_thievery"
-        | "unicorn_poison"
+         | "americorn"
+         | "blatant_thievery"
+         | "two_of_a_kind"
+         | "unicorn_poison"
         | "annoying_flying_unicorn"
         | "play_downgrade"
         | "mermaid_unicorn"
@@ -55,8 +56,10 @@ export type PendingAction =
         | "unicorn_swap"
         | "re_target_source"
         | "re_target_destination";
-      sourcePlayerId: string;
-      card?: Card;
+       sourcePlayerId: string;
+       targetPlayerId?: string;
+       cardIds?: string[];
+       card?: Card;
       /** Jugador dueño original de la carta que se mueve (Re-Target). */
       fromPlayerId?: string;
     }
@@ -94,9 +97,9 @@ export type PendingAction =
     }
   | {
       type: "select_hand_card";
-      reason: "blatant_thievery" | "americorn" | "glitter_unicorn";
-      sourcePlayerId: string;
-      targetPlayerId: string;
+       reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind";
+       sourcePlayerId: string;
+       targetPlayerId: string;
     }
   | {
       type: "alluring_narwhal";

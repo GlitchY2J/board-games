@@ -1,5 +1,5 @@
 import type { Card } from './models/Card.ts';
-import type { NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation } from '../../../shared/types/SocketEvents.ts';
 
 export type CardAnimType = 'sacrifice' | 'destroy';
 
@@ -96,6 +96,43 @@ interface QueuedDrawAnimation extends DrawAnimation {
 }
 
 const drawBuffer: QueuedDrawAnimation[] = [];
+
+interface QueuedStealAnimation extends StealAnimation {
+  roomCode: string;
+}
+
+const stealBuffer: QueuedStealAnimation[] = [];
+
+export function enqueueStealAnimation(
+  roomCode: string,
+  sourcePlayerId: string,
+  targetPlayerId: string,
+  card: Card,
+): void {
+  stealBuffer.push({
+    animId: `steal-${Math.random().toString(36).slice(2, 8)}`,
+    roomCode,
+    sourcePlayerId,
+    targetPlayerId,
+    card: {
+      uid: card.uid,
+      id: card.id,
+      name: card.name,
+      image: card.image,
+    },
+  });
+}
+
+export function drainStealAnimations(roomCode: string): StealAnimation[] {
+  const drained: StealAnimation[] = [];
+  for (let i = stealBuffer.length - 1; i >= 0; i--) {
+    if (stealBuffer[i].roomCode === roomCode) {
+      const [item] = stealBuffer.splice(i, 1);
+      drained.push(item);
+    }
+  }
+  return drained.reverse();
+}
 
 export function enqueueDrawAnimation(
   roomCode: string,

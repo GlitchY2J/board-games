@@ -42,7 +42,7 @@ function isReactionEffect(effect: string | null, explodingKittens: boolean): boo
   );
 }
 
-function startPendingTimer(io: GameServer, room: Room, startedAt: number): void {
+export function startPendingTimer(io: GameServer, room: Room, startedAt: number): void {
   const previous = pendingTimers.get(room.code);
   if (previous) {
     clearTimeout(previous);
@@ -198,6 +198,23 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         const lastAttacker = successfulAttacks[successfulAttacks.length - 1];
         startAttack(game, lastAttacker.playerId, pending.attackCount ?? successfulAttacks.length);
       }
+
+      if (
+        original.card.effect === 'cat_pair' &&
+        chain.length === 2 &&
+        pending.targetPlayerId
+      ) {
+        game.pendingAction = {
+          type: 'select_hand_card',
+          reason: 'two_of_a_kind',
+          sourcePlayerId: original.playerId,
+          targetPlayerId: pending.targetPlayerId,
+        };
+        game.pendingPlay = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       addLog(
         game,
         `${original.playerName} jugó carta "${original.card.name}"`,
@@ -464,6 +481,16 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         return;
       }
 
+      if (context.game.pendingAction) {
+        emitGameError(
+          socket,
+          'PENDING_ACTION',
+          'Debes resolver la selección pendiente primero.',
+          'play-card',
+        );
+        return;
+      }
+
       const card = gamePlayer.hand[cardIndex];
       const requestedCardIds = cardIds?.length ? cardIds : [cardId];
       const selectedCards = requestedCardIds.map((uid) =>
@@ -489,6 +516,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       }
 
       const cardsToPlay = selectedCards.filter((selected): selected is typeof card => !!selected);
+      const isTwoOfAKind = card.effect === 'cat_pair' && requestedCardIds.length === 2;
       const isNow = card.effect === 'now';
       const pending = context.game.pendingPlay;
       const fallbackAttackTargetId = pending
@@ -528,6 +556,22 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
           'Esta carta no puede jugarse directamente.',
           'play-card',
         );
+        return;
+      }
+
+      if (isTwoOfAKind) {
+        context.game.pendingAction = {
+          type: 'select_player',
+          reason: 'two_of_a_kind',
+          sourcePlayerId: context.player.id,
+          targetPlayerId: '',
+          cardIds: requestedCardIds,
+        };
+
+        addLog(context.game, `${context.player.name} jugó Two of a Kind`, {
+          playerId: context.player.id,
+        });
+        emitGameState(io, context.room, 'game-updated');
         return;
       }
 

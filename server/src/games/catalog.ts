@@ -37,8 +37,8 @@ export const explodingKittens: GameDefinition = {
   description: 'Evita explotar, usa tus cartas y sobrevive hasta el final.',
   minPlayers: 2,
   maxPlayers: 5,
-  // The card set exists, but its complete game engine is not ready yet.
-  available: false,
+  // Temporarily enabled while the game is being tested and completed.
+  available: true,
   versions: [
     {
       id: 'exploding-kittens-base',

@@ -2,7 +2,7 @@ import type { GameServer } from './socketTypes.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { GameState } from '../game/models/GameState.ts';
 import type { Card } from '../game/models/Card.ts';
-import { drainCardAnimations, drainNeighAnimations, drainDrawAnimations, drainDiscardAnimations, drainPlayAnimations } from '../game/cardAnimations.ts';
+import { drainCardAnimations, drainNeighAnimations, drainDrawAnimations, drainDiscardAnimations, drainPlayAnimations, drainStealAnimations } from '../game/cardAnimations.ts';
 import { checkTinyStable } from '../game/cards/effects/tinyStable.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
 
@@ -28,6 +28,14 @@ function canViewerSeeTargetHand(
   targetPlayerId: string,
 ): boolean {
   const pending = game.pendingAction;
+
+  const isTwoOfAKindViewer =
+    pending?.type === 'select_hand_card' &&
+    pending.reason === 'two_of_a_kind' &&
+    pending.sourcePlayerId === viewerId &&
+    pending.targetPlayerId === targetPlayerId;
+
+  if (isTwoOfAKindViewer) return false;
 
   if (
     game.players.some(
@@ -67,11 +75,16 @@ export function createGameStateForPlayer(
 
       // El jugador que usa Americorn ve la mano objetivo boca abajo, pero en
       // orden aleatorio (sin filtrar el orden real de la mano).
-      const isAmericornViewer =
+  const isAmericornViewer =
         game.pendingAction?.type === 'select_hand_card' &&
         game.pendingAction?.reason === 'americorn' &&
         game.pendingAction?.sourcePlayerId === viewerId &&
         game.pendingAction?.targetPlayerId === player.id;
+      const isTwoOfAKindViewer =
+        game.pendingAction?.type === 'select_hand_card' &&
+        game.pendingAction.reason === 'two_of_a_kind' &&
+        game.pendingAction.sourcePlayerId === viewerId &&
+        game.pendingAction.targetPlayerId === player.id;
 
       return {
         ...publicPlayer,
@@ -82,10 +95,12 @@ export function createGameStateForPlayer(
               }))
             : (() => {
                 const hidden = player.hand.map((_, index) =>
-                  createHiddenCard(`hidden-hand-${player.id}-${index}`),
+                  createHiddenCard(
+                    `${isTwoOfAKindViewer ? 'two-of-a-kind' : 'hidden-hand'}-${player.id}-${index}`,
+                  ),
                 );
 
-                if (isAmericornViewer && hidden.length > 1) {
+                if ((isAmericornViewer || isTwoOfAKindViewer) && hidden.length > 1) {
                   for (let i = hidden.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [hidden[i], hidden[j]] = [hidden[j], hidden[i]];
@@ -142,6 +157,10 @@ export function emitGameState(
   const drawAnims = drainDrawAnimations(game.roomCode);
   if (drawAnims.length > 0) {
     io.to(room.code).emit('draw-animations', drawAnims);
+  }
+  const stealAnims = drainStealAnimations(game.roomCode);
+  if (stealAnims.length > 0) {
+    io.to(room.code).emit('steal-animations', stealAnims);
   }
 
   const discardAnims = drainDiscardAnimations(game.roomCode);

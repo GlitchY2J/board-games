@@ -10,8 +10,9 @@ import CardDrawEffect from '../components/effects/CardDrawEffect';
 import CardDiscardEffect from '../components/effects/CardDiscardEffect';
 import CardPlayEffect from '../components/effects/CardPlayEffect';
 import CardRemovalAnimation from '../components/effects/CardRemovalAnimation';
+import CardStealEffect from '../components/effects/CardStealEffect';
 import NeighAnnouncement from '../components/game/NeighAnnouncement';
-import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation } from '../../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface TurnAnnounce {
@@ -38,7 +39,7 @@ export default function Game() {
 
   useEffect(() => {
     const onSortHand = (event: KeyboardEvent) => {
-      if (gameId !== 'unstable-unicorns') return;
+      if (gameId !== 'unstable-unicorns' && gameId !== 'exploding-kittens') return;
       if (event.code !== 'KeyS' && event.key.toLowerCase() !== 's') return;
       if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
       event.preventDefault();
@@ -56,6 +57,7 @@ export default function Game() {
   >([]);
   const [neighAnims, setNeighAnims] = useState<NeighAnimation[]>([]);
   const [drawAnims, setDrawAnims] = useState<DrawAnimation[]>([]);
+  const [stealAnims, setStealAnims] = useState<StealAnimation[]>([]);
   const [discardAnims, setDiscardAnims] = useState<DiscardAnimation[]>([]);
   const [playAnims, setPlayAnims] = useState<PlayAnimation[]>([]);
 
@@ -207,6 +209,13 @@ export default function Game() {
       }
     };
 
+    const onStealAnimations = (animations: StealAnimation[]) => {
+      if (animations.length > 0) {
+        activeAnimationsCountRef.current += animations.length;
+        setStealAnims((prev) => [...prev, ...animations]);
+      }
+    };
+
     const onDiscardAnimations = (animations: DiscardAnimation[]) => {
       if (animations.length > 0) {
         activeAnimationsCountRef.current += animations.length;
@@ -223,6 +232,7 @@ export default function Game() {
     socket.on('card-animations', onCardAnimations);
     socket.on('neigh-animations', onNeighAnimations);
     socket.on('draw-animations', onDrawAnimations);
+    socket.on('steal-animations', onStealAnimations);
     socket.on('discard-animations', onDiscardAnimations);
     socket.on('play-animations', onPlayAnimations);
 
@@ -234,6 +244,7 @@ export default function Game() {
       socket.off('card-animations');
       socket.off('neigh-animations');
       socket.off('draw-animations');
+      socket.off('steal-animations');
       socket.off('discard-animations');
       socket.off('play-animations');
     };
@@ -352,6 +363,21 @@ export default function Game() {
     });
   }
 
+  function removeStealAnim(animId: string) {
+    setStealAnims((prev) => {
+      const next = prev.filter((animation) => animation.animId !== animId);
+      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+
+      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
+        const pendingState = pendingGameStateRef.current;
+        pendingGameStateRef.current = null;
+        applyGameState(pendingState);
+      }
+
+      return next;
+    });
+  }
+
   function removeDiscardAnim(animId: string) {
     setDiscardAnims((prev) => {
       const next = prev.filter((a) => a.animId !== animId);
@@ -424,6 +450,14 @@ export default function Game() {
           animation={animation}
           localPlayerId={localPlayer.id}
           onDone={() => removeDrawAnim(animation.animId)}
+        />
+      ))}
+      {stealAnims.map((animation) => (
+        <CardStealEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={localPlayer.id}
+          onDone={() => removeStealAnim(animation.animId)}
         />
       ))}
       {discardAnims.map((animation) => (

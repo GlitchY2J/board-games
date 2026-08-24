@@ -24,7 +24,7 @@ interface Props {
   sortHandMode?: 'alphabetical' | 'type' | null;
 }
 
-function getUnstableUnicornsTypeRank(card: CardType): number {
+function getCardTypeRank(card: CardType): number {
   if (card.cardType === 'unicorn') {
     return card.unicornClass === 'magical' ? 1 : 0;
   }
@@ -33,7 +33,15 @@ function getUnstableUnicornsTypeRank(card: CardType): number {
   if (card.cardType === 'upgrade') return 3;
   if (card.cardType === 'downgrade') return 4;
   if (card.cardType === 'instant' && card.id.includes('neigh')) return 5;
-  return 6;
+
+  const remainingRanks: Partial<Record<CardType['cardType'], number>> = {
+    instant: 6,
+    action: 7,
+    cat: 8,
+    defuse: 9,
+    exploding_kitten: 10,
+  };
+  return remainingRanks[card.cardType] ?? 11;
 }
 
 export default function CardFan({
@@ -58,7 +66,7 @@ export default function CardFan({
     ? [...cards].sort((a, b) => {
         if (sortHandMode === 'type') {
           const rankDifference =
-            getUnstableUnicornsTypeRank(a) - getUnstableUnicornsTypeRank(b);
+            getCardTypeRank(a) - getCardTypeRank(b);
           if (rankDifference !== 0) return rankDifference;
         }
 

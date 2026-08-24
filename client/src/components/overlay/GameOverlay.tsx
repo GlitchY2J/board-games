@@ -235,8 +235,9 @@ export default function GameOverlay({
       case 'select_player': {
         if (action.sourcePlayerId !== localPlayerId) return null;
 
-        const isBlatantThievery = action.reason === 'blatant_thievery';
-        const isAmericorn = action.reason === 'americorn';
+         const isBlatantThievery = action.reason === 'blatant_thievery';
+         const isAmericorn = action.reason === 'americorn';
+         const isTwoOfAKind = action.reason === 'two_of_a_kind';
         const isUnicornPoison = action.reason === 'unicorn_poison';
         const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
         const isPlayDowngrade = action.reason === 'play_downgrade';
@@ -246,9 +247,10 @@ export default function GameOverlay({
         const isReTargetSource = action.reason === 're_target_source';
         const isReTargetDestination = action.reason === 're_target_destination';
         const needsHand =
-          isBlatantThievery ||
-          isAmericorn ||
-          isAnnoyingFlying ||
+           isBlatantThievery ||
+           isAmericorn ||
+           isTwoOfAKind ||
+           isAnnoyingFlying ||
           isUnfairBargain;
 
         const eligiblePlayers = gameState.players.filter((p) => {
@@ -294,8 +296,9 @@ export default function GameOverlay({
         }));
 
         const getTitle = () => {
-          if (isBlatantThievery) return '🃏 Blatant Thievery';
-          if (isAmericorn) return '🇺🇸 Americorn';
+           if (isBlatantThievery) return '🃏 Blatant Thievery';
+           if (isAmericorn) return '🇺🇸 Americorn';
+           if (isTwoOfAKind) return '🎴 Two of a Kind';
           if (isUnicornPoison) return '🧪 Unicorn Poison';
           if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
           if (isPlayDowngrade) return '⏬ Jugar Downgrade';
@@ -308,10 +311,12 @@ export default function GameOverlay({
         };
 
         const getSubtitle = () => {
-          if (isBlatantThievery)
-            return 'Elige al jugador cuya mano quieres ver y robar una carta';
-          if (isAmericorn)
-            return 'Elige a un jugador para tomar una carta de su mano al azar';
+           if (isBlatantThievery)
+             return 'Elige al jugador cuya mano quieres ver y robar una carta';
+           if (isAmericorn)
+             return 'Elige a un jugador para tomar una carta de su mano al azar';
+           if (isTwoOfAKind)
+             return 'Elige a un jugador para tomarle una carta al azar';
           if (isUnicornPoison)
             return 'Elige a un jugador para destruir uno de sus unicornios';
           if (isAnnoyingFlying)
@@ -399,15 +404,18 @@ export default function GameOverlay({
         if (!target) return null;
 
         const isAmericorn = action.reason === 'americorn';
+        const isTwoOfAKind = action.reason === 'two_of_a_kind';
         const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
         const revealAmericorn = isAmericorn && hasNannyCam;
 
         return (
           <CardSelectionOverlay
             hide={hide}
-            title={isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
+            title={isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
             subtitle={
-              isAmericorn
+              isTwoOfAKind
+                ? `Elige una carta boca abajo de la mano de ${target.name}`
+                : isAmericorn || isTwoOfAKind
                 ? revealAmericorn
                   ? `Nanny Cam: se ven las cartas de ${target.name}. Elige una`
                   : `Elige una carta boca abajo de la mano de ${target.name}`
@@ -418,12 +426,12 @@ export default function GameOverlay({
               value: card.uid,
               title: revealAmericorn
                 ? card.name
-                : isAmericorn
+                : isAmericorn || isTwoOfAKind
                   ? `Carta ${idx + 1}`
                   : card.name,
               image: revealAmericorn
                 ? card.image
-                : isAmericorn
+                : isAmericorn || isTwoOfAKind
                   ? '/cards/base/card_back.png'
                   : card.image,
             }))}

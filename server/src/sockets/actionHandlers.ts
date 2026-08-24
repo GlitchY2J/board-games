@@ -8,18 +8,25 @@ import { emitGameError, getSocketGameContext } from './socketContext.ts';
 import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { roomManager } from '../roomManagerInstance.ts';
+import type { Room } from '../game/models/Room.ts';
 import { GameState } from '../game/models/GameState.ts';
 import {
   enqueueCardAnimation,
   enqueueDrawAnimation,
+  enqueueStealAnimation,
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
 import { advanceTurnAfterDraw } from '../game/exploding-kittens/turn.ts';
 import { nextUnicornOfWarChoice } from '../game/cards/effects/unicornOfWar.ts';
+import { startPendingTimer } from './gameHandlers.ts';
 import {
   drawRainbowPrincessCards,
   nextRainbowPrincessChoice,
 } from '../game/cards/effects/unicornRainbowPrincess.ts';
+
+function isExplodingKittensRoom(room: Room): boolean {
+  return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+}
 
 export function registerActionHandlers(
   io: GameServer,
@@ -141,6 +148,66 @@ export function registerActionHandlers(
         (p) => p.socketId === socket.id,
       );
       if (!sourcePlayer) return;
+
+      const pendingAction = room.gameState.pendingAction;
+      if (
+        isExplodingKittensRoom(room) &&
+        pendingAction?.type === 'select_player' &&
+        pendingAction.reason === 'two_of_a_kind'
+      ) {
+        if (
+          pendingAction.sourcePlayerId !== sourcePlayer.id ||
+          playerId === sourcePlayer.id
+        ) {
+          return;
+        }
+
+        const targetPlayer = room.gameState.players.find(
+          (player) => player.id === playerId && player.hand.length > 0,
+        );
+        const cardIds = pendingAction.cardIds ?? [];
+        const playedCards = cardIds.map((id) =>
+          sourcePlayer.hand.find((card) => card.uid === id),
+        );
+
+        if (!targetPlayer || playedCards.some((card) => !card)) {
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'El jugador o las cartas seleccionadas ya no son válidos.',
+            'select-player',
+          );
+          return;
+        }
+
+        const startedAt = Date.now();
+        room.gameState.pendingAction = undefined;
+        room.gameState.pendingPlay = {
+          playerId: sourcePlayer.id,
+          playerName: sourcePlayer.name,
+          card: playedCards[0]!,
+          startedAt,
+          durationMs: 5000,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer.id,
+          targetPlayerName: targetPlayer.name,
+          chain: playedCards.map((card) => ({
+            playerId: sourcePlayer.id,
+            playerName: sourcePlayer.name,
+            card: card!,
+            group: 0,
+          })),
+        };
+
+        addLog(
+          room.gameState,
+          `${sourcePlayer.name} eligió a ${targetPlayer.name} para Two of a Kind`,
+          { playerId: sourcePlayer.id },
+        );
+        emitGameState(io, room, 'game-updated');
+        startPendingTimer(io, room, startedAt);
+        return;
+      }
 
       const resolved = ActionResolver.handleSelectPlayer(
         room.gameState,
@@ -264,7 +331,7 @@ export function registerActionHandlers(
 
       let resolvedCardId = cardId;
 
-      if (pending.reason === 'americorn') {
+      if (pending.reason === 'americorn' || pending.reason === 'two_of_a_kind') {
         const targetPlayer = game.players.find(
           (candidate) => candidate.id === pending.targetPlayerId,
         );
@@ -279,7 +346,10 @@ export function registerActionHandlers(
           return;
         }
 
-        const expectedPrefix = `hidden-hand-${targetPlayer.id}-`;
+        const expectedPrefix =
+          pending.reason === 'two_of_a_kind'
+            ? `two-of-a-kind-${targetPlayer.id}-`
+            : `hidden-hand-${targetPlayer.id}-`;
 
         if (cardId.startsWith(expectedPrefix)) {
           // Mano boca abajo: el cliente envía el uid de la carta oculta y el
@@ -309,6 +379,12 @@ export function registerActionHandlers(
           resolvedCardId = cardId;
         }
       }
+      const stolenCard = pending.reason === 'two_of_a_kind'
+        ? game.players
+            .find((candidate) => candidate.id === pending.targetPlayerId)
+            ?.hand.find((card) => card.uid === resolvedCardId)
+        : undefined;
+
       const resolved = ActionResolver.handleSelectHandCard(
         game,
         player.id,
@@ -325,9 +401,20 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'two_of_a_kind') {
+        if (stolenCard) {
+          enqueueStealAnimation(
+            game.roomCode,
+            pending.targetPlayerId,
+            player.id,
+            stolenCard,
+          );
+        }
+      }
+
       continueBeginningPhaseIfReady(game);
 
-      if (pending.reason === 'americorn') {
+        if (pending.reason === 'americorn') {
         const targetPlayer = game.players.find(
           (candidate) => candidate.id === pending.targetPlayerId,
         );
@@ -339,6 +426,10 @@ export function registerActionHandlers(
             : `${player.name} robó una carta de una mano al azar`,
           { playerId: player.id },
         );
+      } else if (pending.reason === 'two_of_a_kind') {
+        addLog(game, `${player.name} robó una carta con Two of a Kind`, {
+          playerId: player.id,
+        });
       } else {
         addLog(game, `${player.name} eligió una carta de una mano`, {
           playerId: player.id,

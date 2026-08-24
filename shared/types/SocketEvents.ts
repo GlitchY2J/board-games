@@ -156,6 +156,18 @@ export interface DrawAnimation {
   };
 }
 
+export interface StealAnimation {
+  animId: string;
+  sourcePlayerId: string;
+  targetPlayerId: string;
+  card: {
+    uid: string;
+    id: string;
+    name: string;
+    image: string;
+  };
+}
+
 export interface DiscardAnimation {
   animId: string;
   playerId: string;
@@ -195,6 +207,7 @@ export interface ServerToClientEvents {
   'card-animations': (animations: CardAnimation[]) => void;
   'neigh-animations': (animations: NeighAnimation[]) => void;
   'draw-animations': (animations: DrawAnimation[]) => void;
+  'steal-animations': (animations: StealAnimation[]) => void;
   'discard-animations': (animations: DiscardAnimation[]) => void;
   'play-animations': (animations: PlayAnimation[]) => void;
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
