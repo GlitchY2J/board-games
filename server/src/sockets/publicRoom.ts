@@ -21,5 +21,6 @@ export function createPublicRoom(room: Room): PublicRoom {
       name,
       avatar,
     })),
+    chat: [...room.chat],
   };
 }

@@ -9,6 +9,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { Copy, Check, Users, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2 } from 'lucide-react';
+import LobbyChat from '../components/game/LobbyChat';
 
 export default function Lobby() {
   const location = useLocation();
@@ -628,6 +629,10 @@ export default function Lobby() {
           )}
         </div>
       </Card>
+
+      <div className="fixed right-6 bottom-6 z-30 w-80 max-w-[calc(100vw-3rem)]">
+        <LobbyChat room={room} />
+      </div>
 
       {showLeaveConfirm && (
         <LeaveConfirm

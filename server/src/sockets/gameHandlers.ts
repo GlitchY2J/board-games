@@ -13,6 +13,7 @@ import {
 import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { roomManager } from '../roomManagerInstance.ts';
+import { createPublicRoom } from './publicRoom.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
@@ -20,7 +21,7 @@ import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, e
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
-import { advanceTurnAfterDraw, startAttack } from '../game/exploding-kittens/turn.ts';
+import { advanceTurnAfterDraw, calculateAttackTurns, startAttack } from '../game/exploding-kittens/turn.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -207,9 +208,8 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         const lastAttacker = successfulAttacks[successfulAttacks.length - 1];
         const stackedAttacks = pending.attackCount ?? successfulAttacks.length;
         const turnPendings = Math.max(0, game.turnsRemaining ?? 0);
-        const pendingBonus = turnPendings > 1 ? turnPendings : 0;
         startAttack(game, lastAttacker.playerId, stackedAttacks);
-        game.turnsRemaining = (stackedAttacks * 2) + pendingBonus;
+        game.turnsRemaining = calculateAttackTurns(stackedAttacks, turnPendings);
       }
 
       if (original.card.effect === 'favor') {
@@ -1438,13 +1438,13 @@ let chatSeq = 0;
 
 function registerSendChat(io: GameServer, socket: GameSocket): void {
   socket.on('send-chat', ({ roomCode, text }) => {
-    const context = getSocketGameContext(socket, roomCode);
+    const context = getSocketPlayerContext(socket, roomCode);
 
     if (!context) {
       return;
     }
 
-    const { game, player, room } = context;
+    const { player, room } = context;
 
     const cleaned = text.trim().slice(0, 500);
 
@@ -1458,10 +1458,6 @@ function registerSendChat(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    if (!game.chat) {
-      game.chat = [];
-    }
-
     const message: ChatMessage = {
       id: `chat-${Date.now()}-${++chatSeq}`,
       playerId: player.id,
@@ -1470,14 +1466,19 @@ function registerSendChat(io: GameServer, socket: GameSocket): void {
       timestamp: Date.now(),
     };
 
-    game.chat.push(message);
+    room.chat.push(message);
 
     // Evitar que el historial de chat crezca sin límite.
-    if (game.chat.length > 200) {
-      game.chat.splice(0, game.chat.length - 200);
+    if (room.chat.length > 200) {
+      room.chat.splice(0, room.chat.length - 200);
+    }
+
+    if (room.gameState) {
+      room.gameState.chat = [...room.chat];
     }
 
     io.to(room.code).emit('chat-message', { roomCode, message });
-    emitGameState(io, room, 'game-updated');
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
+    if (room.gameState) emitGameState(io, room, 'game-updated');
   });
 }

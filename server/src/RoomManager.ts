@@ -70,6 +70,7 @@ export class RoomManager {
       game: game ?? '',
       hostId: host.id,
       players: [host],
+      chat: [],
       expansions: [],
       settings: {
         gameId: game,

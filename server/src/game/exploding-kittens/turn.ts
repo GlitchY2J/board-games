@@ -1,5 +1,14 @@
 import type { GameState } from '../models/GameState.ts';
 
+export function calculateAttackTurns(
+  stackedAttacks: number,
+  turnPendings: number,
+): number {
+  const attackTurns = Math.max(1, stackedAttacks) * 2;
+  const pendingBonus = turnPendings > 1 ? turnPendings : 0;
+  return attackTurns + pendingBonus;
+}
+
 export function startAttack(game: GameState, attackerId?: string, attackCount = 1): void {
   if (game.players.length === 0) return;
 
