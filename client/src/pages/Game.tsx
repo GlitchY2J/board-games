@@ -31,23 +31,25 @@ export default function Game() {
   );
 
   const [turnAnnounce, setTurnAnnounce] = useState<TurnAnnounce | null>(null);
-  const [sortHandRequest, setSortHandRequest] = useState(0);
+  const [sortHandMode, setSortHandMode] = useState<
+    'alphabetical' | 'type' | null
+  >(null);
+  const gameId = roomFromContext?.settings?.gameId ?? roomFromContext?.game;
 
   useEffect(() => {
     const onSortHand = (event: KeyboardEvent) => {
+      if (gameId !== 'unstable-unicorns') return;
       if (event.code !== 'KeyS' && event.key.toLowerCase() !== 's') return;
       if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
       event.preventDefault();
-      setSortHandRequest((request) => request + 1);
+      setSortHandMode((mode) => (mode === 'alphabetical' ? 'type' : 'alphabetical'));
     };
 
     window.addEventListener('keydown', onSortHand, true);
-    window.addEventListener('keyup', onSortHand, true);
     return () => {
       window.removeEventListener('keydown', onSortHand, true);
-      window.removeEventListener('keyup', onSortHand, true);
     };
-  }, []);
+  }, [gameId]);
 
   const [removalAnims, setRemovalAnims] = useState<
     { animation: CardAnimation; rect: { left: number; top: number; width: number; height: number } }[]
@@ -144,22 +146,24 @@ export default function Game() {
       navigate('/lobby');
     };
 
-    socket.on('game-updated', (state: GameState) => {
+    const onGameUpdated = (state: GameState) => {
       if (activeAnimationsCountRef.current > 0) {
         pendingGameStateRef.current = state;
       } else {
         applyGameState(state);
       }
-    });
+    };
 
-    socket.on('game-restarted', (state: GameState) => {
+    const onGameRestarted = (state: GameState) => {
       // Reinicio: forzar que el anuncio de turno se muestre de nuevo.
       prevTurnRef.current = null;
       pendingGameStateRef.current = null;
       activeAnimationsCountRef.current = 0;
       applyGameState(state);
-    });
+    };
 
+    socket.on('game-updated', onGameUpdated);
+    socket.on('game-restarted', onGameRestarted);
     socket.on('turn-order-assigned', onTurnOrderAssigned);
     socket.on('kicked-from-room', onKickedFromRoom);
 
@@ -223,8 +227,8 @@ export default function Game() {
     socket.on('play-animations', onPlayAnimations);
 
     return () => {
-      socket.off('game-updated');
-      socket.off('game-restarted');
+      socket.off('game-updated', onGameUpdated);
+      socket.off('game-restarted', onGameRestarted);
       socket.off('turn-order-assigned', onTurnOrderAssigned);
       socket.off('kicked-from-room', onKickedFromRoom);
       socket.off('card-animations');
@@ -377,11 +381,11 @@ export default function Game() {
     <>
       <BoardLayout
         gameState={gameState}
-        gameId={roomFromContext?.settings?.gameId ?? roomFromContext?.game}
+        gameId={gameId}
         isMyTurn={isMyTurn}
         isHost={isHost}
         onPlay={play}
-        sortHandRequest={sortHandRequest}
+        sortHandMode={sortHandMode}
         hidePendingPlay={hasActiveAnims}
       />
       {gameState.winnerId && (

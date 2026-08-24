@@ -17,7 +17,7 @@ interface Props {
   onInvalidAction?(message: string): void;
   compact?: boolean;
   gameId?: string;
-  sortHandRequest?: number;
+  sortHandMode?: 'alphabetical' | 'type' | null;
 }
 
 export default function LocalHand({
@@ -33,17 +33,11 @@ export default function LocalHand({
   onInvalidAction,
   compact,
   gameId,
-  sortHandRequest,
+  sortHandMode,
 }: Props) {
-  const orderedCards = [...player.hand].sort((a, b) =>
-    String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', {
-      sensitivity: 'base',
-    }),
-  );
-
   return (
     <CardFan
-      cards={orderedCards}
+      cards={player.hand}
       isMyTurn={isMyTurn}
       gamePhase={gamePhase}
       actionUsed={actionUsed}
@@ -55,7 +49,7 @@ export default function LocalHand({
       onInvalidAction={onInvalidAction}
       compact={compact}
       gameId={gameId}
-      sortHandRequest={sortHandRequest}
+      sortHandMode={sortHandMode}
     />
   );
 }

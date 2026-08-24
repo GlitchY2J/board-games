@@ -19,7 +19,7 @@ interface Props {
   onInvalidAction?(message: string): void;
   compact?: boolean;
   gameId?: string;
-  sortHandRequest?: number;
+  sortHandMode?: 'alphabetical' | 'type' | null;
 }
 
 export default function PlayerHand({
@@ -36,7 +36,7 @@ export default function PlayerHand({
   onInvalidAction,
   compact,
   gameId,
-  sortHandRequest,
+  sortHandMode,
 }: Props) {
   return (
     <div className="player-hand">
@@ -54,7 +54,7 @@ export default function PlayerHand({
           onInvalidAction={onInvalidAction}
           compact={compact}
           gameId={gameId}
-          sortHandRequest={sortHandRequest}
+          sortHandMode={sortHandMode}
         />
       ) : (
         <HiddenHand cardCount={player.hand.length} />

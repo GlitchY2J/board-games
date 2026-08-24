@@ -21,7 +21,19 @@ interface Props {
   onInvalidAction?(message: string): void;
   compact?: boolean;
   gameId?: string;
-  sortHandRequest?: number;
+  sortHandMode?: 'alphabetical' | 'type' | null;
+}
+
+function getUnstableUnicornsTypeRank(card: CardType): number {
+  if (card.cardType === 'unicorn') {
+    return card.unicornClass === 'magical' ? 1 : 0;
+  }
+
+  if (card.cardType === 'magic') return 2;
+  if (card.cardType === 'upgrade') return 3;
+  if (card.cardType === 'downgrade') return 4;
+  if (card.cardType === 'instant' && card.id.includes('neigh')) return 5;
+  return 6;
 }
 
 export default function CardFan({
@@ -37,18 +49,23 @@ export default function CardFan({
   onInvalidAction,
   compact = false,
   gameId,
-  sortHandRequest = 0,
+  sortHandMode = null,
 }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [alphabetical, setAlphabetical] = useState(false);
   const { hidePreview } = useCardPreview();
 
-  const displayCards = (alphabetical || sortHandRequest > 0)
-    ? [...cards].sort((a, b) =>
-        String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', {
+  const displayCards = sortHandMode
+    ? [...cards].sort((a, b) => {
+        if (sortHandMode === 'type') {
+          const rankDifference =
+            getUnstableUnicornsTypeRank(a) - getUnstableUnicornsTypeRank(b);
+          if (rankDifference !== 0) return rankDifference;
+        }
+
+        return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', {
           sensitivity: 'base',
-        }),
-      )
+        });
+      })
     : cards;
 
   useEffect(() => {
@@ -90,13 +107,6 @@ export default function CardFan({
       if (event.target instanceof HTMLElement) {
         const tag = event.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      }
-
-      if (event.code === 'KeyS' || event.key.toLowerCase() === 's') {
-        event.preventDefault();
-        event.stopPropagation();
-        setAlphabetical(true);
-        return;
       }
 
       if (selectedCardId) return;

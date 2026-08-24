@@ -74,6 +74,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     socket.on('room-updated', onRoomUpdated);
     socket.on('game-updated', onGameUpdated);
+    socket.on('game-restarted', onGameUpdated);
 
     const onConnect = () => {
       const session = getSession();
@@ -87,6 +88,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return () => {
       socket.off('room-updated', onRoomUpdated);
       socket.off('game-updated', onGameUpdated);
+      socket.off('game-restarted', onGameUpdated);
       socket.off('connect', onConnect);
     };
   }, []);
