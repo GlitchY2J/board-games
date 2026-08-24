@@ -153,7 +153,8 @@ export function registerActionHandlers(
       if (
         isExplodingKittensRoom(room) &&
         pendingAction?.type === 'select_player' &&
-        pendingAction.reason === 'two_of_a_kind'
+        (pendingAction.reason === 'two_of_a_kind' ||
+          pendingAction.reason === 'three_of_a_kind')
       ) {
         if (
           pendingAction.sourcePlayerId !== sourcePlayer.id ||
@@ -177,6 +178,39 @@ export function registerActionHandlers(
             'El jugador o las cartas seleccionadas ya no son válidos.',
             'select-player',
           );
+          return;
+        }
+
+        if (pendingAction.reason === 'three_of_a_kind') {
+          room.gameState.pendingAction = {
+            type: 'select_choice',
+            reason: 'three_of_a_kind',
+            playerId: sourcePlayer.id,
+            title: 'Three of a Kind',
+            description: `Elige qué carta quieres robarle a ${targetPlayer.name}`,
+            options: [
+              { value: 'beard_cat', text: 'Beard Cat' },
+              { value: 'cattermelon', text: 'Cattermelon' },
+              { value: 'hairy_potato_cat', text: 'Hairy Potato Card' },
+              { value: 'rainbow_ralphing_cat', text: 'Rainbow-Ralphing Cat' },
+              { value: 'tacocat', text: 'Tacocat' },
+              { value: 'attack', text: 'Attack 2x' },
+              { value: 'defuse', text: 'Defuse' },
+              { value: 'favor', text: 'Favor' },
+              { value: 'nope', text: 'Nope' },
+              { value: 'see_the_future', text: 'See the Future 3x' },
+              { value: 'shuffle', text: 'Shuffle' },
+              { value: 'skip', text: 'Skip' },
+            ],
+            targetPlayerId: targetPlayer.id,
+            cardIds: pendingAction.cardIds,
+          };
+          addLog(
+            room.gameState,
+            `${sourcePlayer.name} eligió a ${targetPlayer.name} para Three of a Kind`,
+            { playerId: sourcePlayer.id },
+          );
+          emitGameState(io, room, 'game-updated');
           return;
         }
 
@@ -331,7 +365,11 @@ export function registerActionHandlers(
 
       let resolvedCardId = cardId;
 
-      if (pending.reason === 'americorn' || pending.reason === 'two_of_a_kind') {
+      if (
+        pending.reason === 'americorn' ||
+        pending.reason === 'two_of_a_kind' ||
+        pending.reason === 'three_of_a_kind'
+      ) {
         const targetPlayer = game.players.find(
           (candidate) => candidate.id === pending.targetPlayerId,
         );
@@ -347,8 +385,10 @@ export function registerActionHandlers(
         }
 
         const expectedPrefix =
-          pending.reason === 'two_of_a_kind'
-            ? `two-of-a-kind-${targetPlayer.id}-`
+          pending.reason === 'three_of_a_kind'
+            ? `three-of-a-kind-${targetPlayer.id}-`
+            : pending.reason === 'two_of_a_kind'
+              ? `two-of-a-kind-${targetPlayer.id}-`
             : `hidden-hand-${targetPlayer.id}-`;
 
         if (cardId.startsWith(expectedPrefix)) {
@@ -379,11 +419,30 @@ export function registerActionHandlers(
           resolvedCardId = cardId;
         }
       }
-      const stolenCard = pending.reason === 'two_of_a_kind'
+      const stolenCard =
+        (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind')
         ? game.players
             .find((candidate) => candidate.id === pending.targetPlayerId)
             ?.hand.find((card) => card.uid === resolvedCardId)
         : undefined;
+
+      if (pending.reason === 'three_of_a_kind') {
+        const targetPlayer = game.players.find(
+          (candidate) => candidate.id === pending.targetPlayerId,
+        );
+        const selectedCard = targetPlayer?.hand.find(
+          (card) => card.uid === resolvedCardId,
+        );
+        if (!selectedCard || selectedCard.id !== pending.requestedCardType) {
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'La carta seleccionada no coincide con el tipo elegido.',
+            'select-hand-card',
+          );
+          return;
+        }
+      }
 
       const resolved = ActionResolver.handleSelectHandCard(
         game,
@@ -401,7 +460,7 @@ export function registerActionHandlers(
         return;
       }
 
-      if (pending.reason === 'two_of_a_kind') {
+      if (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
         if (stolenCard) {
           enqueueStealAnimation(
             game.roomCode,
@@ -426,8 +485,8 @@ export function registerActionHandlers(
             : `${player.name} robó una carta de una mano al azar`,
           { playerId: player.id },
         );
-      } else if (pending.reason === 'two_of_a_kind') {
-        addLog(game, `${player.name} robó una carta con Two of a Kind`, {
+      } else if (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
+        addLog(game, `${player.name} robó una carta con ${pending.reason === 'three_of_a_kind' ? 'Three' : 'Two'} of a Kind`, {
           playerId: player.id,
         });
       } else {
@@ -502,6 +561,64 @@ export function registerActionHandlers(
         pending.type !== 'select_choice' ||
         pending.playerId !== player.id
       ) {
+        return;
+      }
+
+      if (pending.reason === 'three_of_a_kind') {
+        const validChoices = new Set([
+          'beard_cat', 'cattermelon', 'hairy_potato_cat',
+          'rainbow_ralphing_cat', 'tacocat', 'attack', 'defuse',
+          'favor', 'nope', 'see_the_future', 'shuffle', 'skip',
+        ]);
+        const targetPlayer = room.gameState.players.find(
+          (candidate) => candidate.id === pending.targetPlayerId,
+        );
+        const playedCards = (pending.cardIds ?? []).map((id) =>
+          player.hand.find((card) => card.uid === id),
+        );
+
+        if (
+          !validChoices.has(choice) ||
+          !targetPlayer ||
+          playedCards.length !== 3 ||
+          playedCards.some((card) => !card)
+        ) {
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'El tipo de carta seleccionado no es válido.',
+            'select-choice',
+          );
+          return;
+        }
+
+        const startedAt = Date.now();
+        room.gameState.pendingAction = undefined;
+        room.gameState.pendingPlay = {
+          playerId: player.id,
+          playerName: player.name,
+          card: playedCards[0]!,
+          startedAt,
+          durationMs: 5000,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer.id,
+          targetPlayerName: targetPlayer.name,
+          requestedCardType: choice,
+          chain: playedCards.map((card) => ({
+            playerId: player.id,
+            playerName: player.name,
+            card: card!,
+            group: 0,
+          })),
+        };
+
+        addLog(
+          room.gameState,
+          `${player.name} eligió robar una carta de tipo ${choice} a ${targetPlayer.name}`,
+          { playerId: player.id },
+        );
+        emitGameState(io, room, 'game-updated');
+        startPendingTimer(io, room, startedAt);
         return;
       }
 

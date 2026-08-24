@@ -58,6 +58,24 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     isExplodingKittens &&
     pending.card.effect === 'cat_pair' &&
     pending.chain.length === 2;
+  const isThreeOfAKind =
+    isExplodingKittens &&
+    pending.card.effect === 'cat_pair' &&
+    pending.chain.length === 3;
+  const requestedCardTypeName: Record<string, string> = {
+    beard_cat: 'Beard Cat',
+    cattermelon: 'Cattermelon',
+    hairy_potato_cat: 'Hairy Potato Card',
+    rainbow_ralphing_cat: 'Rainbow-Ralphing Cat',
+    tacocat: 'Tacocat',
+    attack: 'Attack 2x',
+    defuse: 'Defuse',
+    favor: 'Favor',
+    nope: 'Nope',
+    see_the_future: 'See the Future 3x',
+    shuffle: 'Shuffle',
+    skip: 'Skip',
+  };
 
   const localPlayer = gameState.players.find((p) => p.id === localPlayerId);
   const hasRegularNeigh =
@@ -167,7 +185,11 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     <div className={`pending-play-backdrop ${hide ? 'animating-out' : ''}`}>
       <div className="pending-play-window">
         <h2 className="pending-play-title">
-          {isTwoOfAKind
+          {isThreeOfAKind
+            ? isTwoOfAKindTarget
+              ? `${pending.playerName} te está robando una carta (${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionada'})`
+              : `${pending.playerName} le está robando una carta (${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionada'}) a ${twoOfAKindTarget?.name ?? 'otro jugador'}`
+            : isTwoOfAKind
             ? isTwoOfAKindTarget
               ? `${pending.playerName} te está robando una carta al azar`
               : `${pending.playerName} le está robando una carta al azar a ${twoOfAKindTarget?.name ?? 'otro jugador'}`
@@ -186,7 +208,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
               : `${pending.playerName} juega una carta`}
         </h2>
         <p className="pending-play-subtitle">
-            {isTwoOfAKind
+            {isThreeOfAKind || isTwoOfAKind
               ? `Se resolverá en ${seconds}s. ¿Tienes un Nope para negarla?`
               : isAttackPlay
               ? `${attackCount * 2} turnos acumulados. Se resuelve en ${seconds}s`
@@ -229,7 +251,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
           </div>
         )}
 
-        {isTwoOfAKind && twoOfAKindTarget && (
+        {(isTwoOfAKind || isThreeOfAKind) && twoOfAKindTarget && (
           <div className="pending-play-target pending-play-two-kind-target">
             <div className="pending-play-target-player">
               {twoOfAKindSource?.avatar ? (
@@ -250,7 +272,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
             </div>
             <p>
               {isTwoOfAKindTarget
-                ? `${pending.playerName} te está robando una carta al azar`
+                ? `${pending.playerName} te está robando una carta${isThreeOfAKind ? ` de tipo ${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionado'}` : ''} al azar`
                 : `${pending.playerName} está robando una carta al azar`}
             </p>
           </div>

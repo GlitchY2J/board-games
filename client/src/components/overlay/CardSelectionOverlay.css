@@ -276,6 +276,62 @@
   width: 100%;
   padding: 16px;
   font-size: 16px;
+  border: 1px solid rgba(34, 211, 238, 0.24);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(8, 47, 73, 0.72));
+  color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(2, 6, 23, 0.28);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.choice-button:hover:not(:disabled) {
+  border-color: rgba(45, 212, 191, 0.65);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(13, 148, 136, 0.38));
+  box-shadow: 0 6px 22px rgba(13, 148, 136, 0.2);
+}
+
+.choice-button-icon {
+  display: block;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 8px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(2, 6, 23, 0.45));
+}
+
+.choice-window-three-of-a-kind .choice-options-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.choice-window-three-of-a-kind .choice-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 126px;
+  padding: 9px 5px;
+  font-size: 10px;
+  line-height: 1.15;
+  text-transform: none;
+}
+
+.choice-window-three-of-a-kind .choice-button-icon {
+  width: 58px;
+  height: 76px;
+  margin-bottom: 7px;
+}
+
+@media (max-width: 520px) {
+  .choice-window-three-of-a-kind .choice-options-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .choice-window-three-of-a-kind .choice-button {
+    min-height: 116px;
+  }
 }
 
 .discard-close {

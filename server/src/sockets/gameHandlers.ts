@@ -16,7 +16,7 @@ import { roomManager } from '../roomManagerInstance.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
-import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation } from '../game/cardAnimations.ts';
+import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation, enqueueStealAnimation } from '../game/cardAnimations.ts';
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
@@ -210,15 +210,50 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
       if (
         original.card.effect === 'cat_pair' &&
-        chain.length === 2 &&
+        (() => {
+          const catCount = chain.filter((link) => link.card.cardType === 'cat').length;
+          return catCount === 2 || catCount === 3;
+        })() &&
         pending.targetPlayerId
       ) {
+        const catCount = chain.filter((link) => link.card.cardType === 'cat').length;
+        if (catCount === 3) {
+          const targetPlayer = game.players.find(
+            (player) => player.id === pending.targetPlayerId,
+          );
+          const selectedIndex = targetPlayer?.hand.findIndex(
+            (card) => card.id === pending.requestedCardType,
+          ) ?? -1;
+
+          if (targetPlayer && selectedIndex >= 0) {
+            const [stolenCard] = targetPlayer.hand.splice(selectedIndex, 1);
+            activePlayer.hand.push(stolenCard);
+            enqueueStealAnimation(
+              game.roomCode,
+              targetPlayer.id,
+              activePlayer.id,
+              stolenCard,
+            );
+            addLog(
+              game,
+              `${original.playerName} robó ${stolenCard.name} de ${targetPlayer.name} con Three of a Kind`,
+              { playerId: original.playerId },
+            );
+          } else {
+            addLog(
+              game,
+              `${targetPlayer?.name ?? 'El objetivo'} no tenía la carta elegida para Three of a Kind`,
+              { playerId: original.playerId },
+            );
+          }
+        } else {
         game.pendingAction = {
           type: 'select_hand_card',
           reason: 'two_of_a_kind',
           sourcePlayerId: original.playerId,
           targetPlayerId: pending.targetPlayerId,
         };
+        }
         game.pendingPlay = undefined;
         emitGameState(io, room, 'game-updated');
         return;
@@ -526,6 +561,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
 
       const cardsToPlay = selectedCards.filter((selected): selected is typeof card => !!selected);
       const isTwoOfAKind = card.effect === 'cat_pair' && requestedCardIds.length === 2;
+      const isThreeOfAKind = card.effect === 'cat_pair' && requestedCardIds.length === 3;
       const isNow = card.effect === 'now';
       const pending = context.game.pendingPlay;
       const fallbackAttackTargetId = pending
@@ -578,6 +614,22 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         };
 
         addLog(context.game, `${context.player.name} jugó Two of a Kind`, {
+          playerId: context.player.id,
+        });
+        emitGameState(io, context.room, 'game-updated');
+        return;
+      }
+
+      if (isThreeOfAKind) {
+        context.game.pendingAction = {
+          type: 'select_player',
+          reason: 'three_of_a_kind',
+          sourcePlayerId: context.player.id,
+          targetPlayerId: '',
+          cardIds: requestedCardIds,
+        };
+
+        addLog(context.game, `${context.player.name} jugó Three of a Kind`, {
           playerId: context.player.id,
         });
         emitGameState(io, context.room, 'game-updated');
@@ -1234,8 +1286,12 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
 
     const startedAt = Date.now();
 
+    // En Exploding Kittens cada Nope debe formar su propio bloque: dos Nopes
+    // consecutivos se contrarrestan y dejan viva la carta original.
     const withinGrace =
-      pending.neighGraceUntil != null && startedAt < pending.neighGraceUntil;
+      !explodingKittens &&
+      pending.neighGraceUntil != null &&
+      startedAt < pending.neighGraceUntil;
     const group = withinGrace ? (top.group ?? 0) : (top.group ?? 0) + 1;
 
     pending.chain.push({

@@ -238,6 +238,7 @@ export default function GameOverlay({
          const isBlatantThievery = action.reason === 'blatant_thievery';
          const isAmericorn = action.reason === 'americorn';
          const isTwoOfAKind = action.reason === 'two_of_a_kind';
+         const isThreeOfAKind = action.reason === 'three_of_a_kind';
         const isUnicornPoison = action.reason === 'unicorn_poison';
         const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
         const isPlayDowngrade = action.reason === 'play_downgrade';
@@ -249,7 +250,9 @@ export default function GameOverlay({
         const needsHand =
            isBlatantThievery ||
            isAmericorn ||
-           isTwoOfAKind ||
+            isTwoOfAKind ||
+            isThreeOfAKind ||
+            isThreeOfAKind ||
            isAnnoyingFlying ||
           isUnfairBargain;
 
@@ -298,7 +301,9 @@ export default function GameOverlay({
         const getTitle = () => {
            if (isBlatantThievery) return '🃏 Blatant Thievery';
            if (isAmericorn) return '🇺🇸 Americorn';
-           if (isTwoOfAKind) return '🎴 Two of a Kind';
+            if (isTwoOfAKind) return '🎴 Two of a Kind';
+            if (isThreeOfAKind) return '🎴 Three of a Kind';
+            if (isThreeOfAKind) return '🎴 Three of a Kind';
           if (isUnicornPoison) return '🧪 Unicorn Poison';
           if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
           if (isPlayDowngrade) return '⏬ Jugar Downgrade';
@@ -317,6 +322,10 @@ export default function GameOverlay({
              return 'Elige a un jugador para tomar una carta de su mano al azar';
            if (isTwoOfAKind)
              return 'Elige a un jugador para tomarle una carta al azar';
+           if (isThreeOfAKind)
+             return 'Elige a un jugador para elegir una carta de su mano';
+           if (isThreeOfAKind)
+             return 'Elige a un jugador para elegir una carta de su mano';
           if (isUnicornPoison)
             return 'Elige a un jugador para destruir uno de sus unicornios';
           if (isAnnoyingFlying)
@@ -405,16 +414,19 @@ export default function GameOverlay({
 
         const isAmericorn = action.reason === 'americorn';
         const isTwoOfAKind = action.reason === 'two_of_a_kind';
+        const isThreeOfAKind = action.reason === 'three_of_a_kind';
         const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
         const revealAmericorn = isAmericorn && hasNannyCam;
 
         return (
           <CardSelectionOverlay
             hide={hide}
-            title={isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
+            title={isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
             subtitle={
-              isTwoOfAKind
-                ? `Elige una carta boca abajo de la mano de ${target.name}`
+              isThreeOfAKind
+                ? `Elige una carta boca abajo de tipo ${action.requestedCardType ?? 'seleccionado'} de la mano de ${target.name}`
+                : isTwoOfAKind
+                  ? `Elige una carta boca abajo de la mano de ${target.name}`
                 : isAmericorn || isTwoOfAKind
                 ? revealAmericorn
                   ? `Nanny Cam: se ven las cartas de ${target.name}. Elige una`
@@ -426,12 +438,12 @@ export default function GameOverlay({
               value: card.uid,
               title: revealAmericorn
                 ? card.name
-                : isAmericorn || isTwoOfAKind
+                : isAmericorn || isTwoOfAKind || isThreeOfAKind
                   ? `Carta ${idx + 1}`
                   : card.name,
               image: revealAmericorn
                 ? card.image
-                : isAmericorn || isTwoOfAKind
+                : isAmericorn || isTwoOfAKind || isThreeOfAKind
                   ? '/cards/base/card_back.png'
                   : card.image,
             }))}
@@ -1912,10 +1924,25 @@ export default function GameOverlay({
       // ───────────────────────────────────
       case 'select_choice': {
         if (action.playerId !== localPlayerId) return null;
+        const threeOfAKindIcons: Record<string, string> = {
+          beard_cat: '/icons/beard-cat.png',
+          cattermelon: '/icons/cattermelon.png',
+          hairy_potato_cat: '/icons/hairy-potato-cat.png',
+          rainbow_ralphing_cat: '/icons/rainbow-ralphing-cat.png',
+          tacocat: '/icons/tacocat.png',
+          attack: '/icons/attack-2x.png',
+          defuse: '/icons/defuse.png',
+          favor: '/icons/favor.png',
+          nope: '/icons/nope.png',
+          see_the_future: '/icons/see-the-future-3x.png',
+          shuffle: '/icons/shuffle.png',
+          skip: '/icons/skip.png',
+        };
+        const isThreeOfAKind = action.reason === 'three_of_a_kind';
 
         return (
           <div className="overlay-backdrop">
-            <div className="card-selection-window choice-window">
+            <div className={`card-selection-window choice-window${isThreeOfAKind ? ' choice-window-three-of-a-kind' : ''}`}>
               <h2>{action.title}</h2>
               <p>{action.description}</p>
               <div className="choice-options-grid">
@@ -1931,6 +1958,13 @@ export default function GameOverlay({
                       });
                     }}
                   >
+                    {isThreeOfAKind && threeOfAKindIcons[option.value] && (
+                      <img
+                        src={threeOfAKindIcons[option.value]}
+                        alt=""
+                        className="choice-button-icon"
+                      />
+                    )}
                     {option.text}
                   </button>
                 ))}

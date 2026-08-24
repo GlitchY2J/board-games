@@ -48,6 +48,7 @@ export type PendingAction =
          | "americorn"
          | "blatant_thievery"
          | "two_of_a_kind"
+         | "three_of_a_kind"
          | "unicorn_poison"
         | "annoying_flying_unicorn"
         | "play_downgrade"
@@ -97,9 +98,10 @@ export type PendingAction =
     }
   | {
       type: "select_hand_card";
-       reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind";
-       sourcePlayerId: string;
-       targetPlayerId: string;
+        reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind";
+        sourcePlayerId: string;
+        targetPlayerId: string;
+        requestedCardType?: string;
     }
   | {
       type: "alluring_narwhal";
@@ -182,14 +184,17 @@ export type PendingAction =
         | "beginning_effect_picker"
         | "rainbow_lasso"
         | "stable_artillery"
-         | "angel_unicorn";
+         | "angel_unicorn"
+         | "three_of_a_kind";
       playerId: string;
       title: string;
       description: string;
       options: { value: string; text: string }[];
       targetCardId?: string;
       originalTargetPlayerId?: string;
-      sourcePlayerId?: string;
+       sourcePlayerId?: string;
+       targetPlayerId?: string;
+       cardIds?: string[];
       remainingPlayerIds?: string[];
       /** Carta que está "en el aire" mientras se decide (p. ej. Unicorn Phoenix) */
       heldCard?: Card;

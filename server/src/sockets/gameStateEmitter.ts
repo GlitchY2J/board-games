@@ -80,9 +80,15 @@ export function createGameStateForPlayer(
         game.pendingAction?.reason === 'americorn' &&
         game.pendingAction?.sourcePlayerId === viewerId &&
         game.pendingAction?.targetPlayerId === player.id;
-      const isTwoOfAKindViewer =
+  const isTwoOfAKindViewer =
+    game.pendingAction?.type === 'select_hand_card' &&
+    (game.pendingAction.reason === 'two_of_a_kind' ||
+      game.pendingAction.reason === 'three_of_a_kind') &&
+        game.pendingAction.sourcePlayerId === viewerId &&
+        game.pendingAction.targetPlayerId === player.id;
+      const isThreeOfAKindViewer =
         game.pendingAction?.type === 'select_hand_card' &&
-        game.pendingAction.reason === 'two_of_a_kind' &&
+        game.pendingAction.reason === 'three_of_a_kind' &&
         game.pendingAction.sourcePlayerId === viewerId &&
         game.pendingAction.targetPlayerId === player.id;
 
@@ -96,7 +102,11 @@ export function createGameStateForPlayer(
             : (() => {
                 const hidden = player.hand.map((_, index) =>
                   createHiddenCard(
-                    `${isTwoOfAKindViewer ? 'two-of-a-kind' : 'hidden-hand'}-${player.id}-${index}`,
+                    `${isTwoOfAKindViewer
+                      ? isThreeOfAKindViewer
+                        ? 'three-of-a-kind'
+                        : 'two-of-a-kind'
+                      : 'hidden-hand'}-${player.id}-${index}`,
                   ),
                 );
 

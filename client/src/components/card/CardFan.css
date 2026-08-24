@@ -97,10 +97,10 @@
 
 .cat-combo-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: 8px;
-  max-width: 280px;
+  max-width: none;
 }
 
 .cat-combo-button {
