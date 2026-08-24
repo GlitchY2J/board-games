@@ -146,6 +146,7 @@ function createCards(): Card[] {
         uid: `${spec.id}__${index + 1}`,
         id: spec.id,
         variantId,
+        name: spec.name,
         cardType: spec.cardType,
         image: `${CARD_PATH}/${filename}`,
         description: spec.description,

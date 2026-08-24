@@ -372,18 +372,38 @@ function validateRoomConfiguration(
     return false;
   }
 
-  const versionId = room.settings?.versionId;
-  if (versionId) {
-    const version = game.versions.find((candidate) => candidate.id === versionId);
-    if (!version?.available) {
-      emitGameError(
-        socket,
-        'INVALID_GAME_VERSION',
-        'La versión seleccionada no está disponible.',
-        action,
-      );
-      return false;
-    }
+  const versionId = room.settings?.versionId ?? null;
+  const version = versionId
+    ? game.versions.find((candidate) => candidate.id === versionId)
+    : undefined;
+
+  if (!version?.available) {
+    emitGameError(
+      socket,
+      'INVALID_GAME_VERSION',
+      'Selecciona una versión disponible antes de iniciar la partida.',
+      action,
+    );
+    return false;
+  }
+
+  const expansionIds = room.settings?.expansionIds ?? room.expansions ?? [];
+  const hasInvalidExpansion = expansionIds.some((expansionId) => {
+    const expansion = game.expansions.find((candidate) => candidate.id === expansionId);
+    return (
+      !expansion?.available ||
+      (expansion.versionIds && !expansion.versionIds.includes(version.id))
+    );
+  });
+
+  if (hasInvalidExpansion) {
+    emitGameError(
+      socket,
+      'INVALID_GAME_EXPANSION',
+      'Una o más expansiones no son compatibles con la configuración seleccionada.',
+      action,
+    );
+    return false;
   }
 
   const connectedPlayers = room.players.filter((player) => player.connected).length;

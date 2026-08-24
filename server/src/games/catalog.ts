@@ -37,8 +37,8 @@ export const explodingKittens: GameDefinition = {
   description: 'Evita explotar, usa tus cartas y sobrevive hasta el final.',
   minPlayers: 2,
   maxPlayers: 5,
-  // Temporary: Exploding Kittens currently uses the Unstable Unicorns engine.
-  available: true,
+  // The card set exists, but its complete game engine is not ready yet.
+  available: false,
   versions: [
     {
       id: 'exploding-kittens-base',

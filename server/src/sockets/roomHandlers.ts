@@ -176,11 +176,13 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     const target = room.players.find((player) => player.id === playerId);
     if (!host || host.id !== room.hostId || !target || target.id === host.id) return;
 
-    const targetSocket = io.sockets.sockets.get(target.socketId);
+    const targetSocket = target.socketId
+      ? io.sockets.sockets.get(target.socketId)
+      : undefined;
     const game = room.gameState;
     if (game) removePlayerFromGame(room, target.id);
 
-    roomManager.removePlayer(target.socketId);
+    roomManager.removePlayer(target.socketId ?? '', target.id);
     targetSocket?.leave(room.code);
     targetSocket?.emit('kicked-from-room', { message: 'Has sido expulsado de la sala.' });
 
@@ -193,7 +195,7 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
   });
 
   socket.on('room:create', ({ hostName, game, avatar }, callback) => {
-    const room = roomManager.createRoom(hostName, game, socket.id, avatar);
+    const room = roomManager.createRoom(hostName, game ?? null, socket.id, avatar);
 
     socket.join(room.code);
 
