@@ -60,8 +60,9 @@ export type PendingAction =
         | "mermaid_unicorn"
         | "unfair_bargain"
         | "unicorn_swap"
-        | "re_target_source"
-        | "re_target_destination";
+         | "re_target_source"
+         | "re_target_destination"
+         | "favor";
        sourcePlayerId: string;
        targetPlayerId?: string;
        cardIds?: string[];
@@ -103,7 +104,7 @@ export type PendingAction =
     }
   | {
       type: "select_hand_card";
-        reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind";
+        reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor";
         sourcePlayerId: string;
         targetPlayerId: string;
         requestedCardType?: string;
@@ -190,7 +191,8 @@ export type PendingAction =
         | "rainbow_lasso"
         | "stable_artillery"
          | "angel_unicorn"
-         | "three_of_a_kind";
+        | "three_of_a_kind"
+        | "favor";
       playerId: string;
       title: string;
       description: string;
@@ -219,6 +221,7 @@ export type PendingAction =
       playerId: string;
       candidates: Card[];
       card: Card;
+      turnsRemaining?: number;
     }
   | {
       type: "select_deck_card";

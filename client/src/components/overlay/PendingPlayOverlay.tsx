@@ -63,6 +63,11 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     isExplodingKittens &&
     pending.card.effect === 'cat_pair' &&
     pending.chain.length === 3;
+  const isFavorPlay = pending.card.effect === 'favor';
+  const isFavorSelection =
+    gameState.pendingAction?.type === 'select_hand_card' &&
+    gameState.pendingAction.reason === 'favor';
+  if (isFavorSelection) return null;
   const requestedCardTypeName: Record<string, string> = {
     beard_cat: 'Beard Cat',
     cattermelon: 'Cattermelon',
@@ -100,7 +105,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const hasSlowdown =
     localPlayer?.downgrades.some((card) => card.id === 'slowdown') ?? false;
   const hasAccepted = pending.acceptedIds.includes(localPlayerId);
-  const canRespond = !spectator && !isMyPlay;
+  const canRespond = !spectator && !isMyPlay && !isFavorSelection;
   const fallbackAttackTargetId =
     gameState.players.length > 0
       ? gameState.players[
@@ -186,7 +191,11 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     <div className={`pending-play-backdrop ${hide ? 'animating-out' : ''}`}>
       <div className="pending-play-window">
         <h2 className="pending-play-title">
-          {isThreeOfAKind
+          {isFavorSelection
+            ? `${pending.targetPlayerName ?? 'El jugador objetivo'} está escogiendo una carta`
+            : isFavorPlay
+            ? `${pending.playerName} le pide una carta a ${pending.targetPlayerName ?? 'otro jugador'}`
+            : isThreeOfAKind
             ? isTwoOfAKindTarget
               ? `${pending.playerName} te está robando una carta (${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionada'})`
               : `${pending.playerName} le está robando una carta (${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionada'}) a ${twoOfAKindTarget?.name ?? 'otro jugador'}`
@@ -209,7 +218,11 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
               : `${pending.playerName} juega una carta`}
         </h2>
         <p className="pending-play-subtitle">
-            {isThreeOfAKind || isTwoOfAKind
+            {isFavorSelection
+              ? `Está eligiendo una carta para entregársela a ${pending.playerName}`
+              : isFavorPlay
+              ? `${pending.targetPlayerName ?? 'El jugador objetivo'} debe elegir una carta de su mano`
+              : isThreeOfAKind || isTwoOfAKind
               ? `Se resolverá en ${seconds}s. ¿Tienes un Nope para negarla?`
               : isAttackPlay
               ? `${attackCount * 2} turnos acumulados. Se resuelve en ${seconds}s`

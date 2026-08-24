@@ -155,6 +155,31 @@ export function registerActionHandlers(
       if (
         isExplodingKittensRoom(room) &&
         pendingAction?.type === 'select_player' &&
+        pendingAction.reason === 'favor'
+      ) {
+        if (pendingAction.sourcePlayerId !== sourcePlayer.id || playerId === sourcePlayer.id) return;
+        const targetPlayer = room.gameState.players.find((candidate) => candidate.id === playerId && candidate.hand.length > 0);
+        if (!targetPlayer) return;
+
+        room.gameState.pendingPlay = {
+          playerId: sourcePlayer.id,
+          playerName: sourcePlayer.name,
+          card: pendingAction.card!,
+          startedAt: Date.now(),
+          durationMs: 5000,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer.id,
+          targetPlayerName: targetPlayer.name,
+          chain: [{ playerId: sourcePlayer.id, playerName: sourcePlayer.name, card: pendingAction.card!, group: 0 }],
+        };
+        addLog(room.gameState, `${sourcePlayer.name} pidió una carta a ${targetPlayer.name} con Favor`, { playerId: sourcePlayer.id });
+        emitGameState(io, room, 'game-updated');
+        startPendingTimer(io, room, room.gameState.pendingPlay.startedAt);
+        return;
+      }
+      if (
+        isExplodingKittensRoom(room) &&
+        pendingAction?.type === 'select_player' &&
         (pendingAction.reason === 'two_of_a_kind' ||
           pendingAction.reason === 'three_of_a_kind')
       ) {
@@ -352,6 +377,33 @@ export function registerActionHandlers(
           'No hay una selección de mano pendiente.',
           'select-hand-card',
         );
+        return;
+      }
+
+      if (pending.reason === 'favor') {
+        if (pending.targetPlayerId !== player.id) return;
+        const targetPlayer = game.players.find((candidate) => candidate.id === player.id);
+        const sourcePlayer = game.players.find((candidate) => candidate.id === pending.sourcePlayerId);
+        const cardIndex = targetPlayer?.hand.findIndex((card) => card.uid === cardId) ?? -1;
+        if (!targetPlayer || !sourcePlayer || cardIndex < 0) return;
+        const [stolenCard] = targetPlayer.hand.splice(cardIndex, 1);
+        sourcePlayer.hand.push(stolenCard);
+        const favorIndex = sourcePlayer.hand.findIndex(
+          (card) => card.uid === game.pendingPlay?.card.uid,
+        );
+        if (favorIndex >= 0) {
+          const [favorCard] = sourcePlayer.hand.splice(favorIndex, 1);
+          game.discard.push(favorCard);
+        }
+        game.pendingAction = undefined;
+        game.pendingPlay = undefined;
+        game.currentPlayer = game.players.findIndex((candidate) => candidate.id === sourcePlayer.id);
+        game.phase = TurnPhase.ACTION;
+        game.actionUsed = false;
+        game.actionPlaysRemaining = undefined;
+        enqueueStealAnimation(game.roomCode, targetPlayer.id, sourcePlayer.id, stolenCard);
+        addLog(game, `${targetPlayer.name} entregó una carta a ${sourcePlayer.name} por Favor`, { playerId: sourcePlayer.id });
+        emitGameState(io, room, 'game-updated');
         return;
       }
 
@@ -586,17 +638,11 @@ export function registerActionHandlers(
         return;
       }
 
-      const gamePlayer = game.players.find((candidate) => candidate.id === player.id);
-      const cardIndex = gamePlayer?.hand.findIndex((card) => card.uid === pending.card.uid) ?? -1;
-      const [playedCard] = cardIndex >= 0
-        ? gamePlayer!.hand.splice(cardIndex, 1)
-        : [pending.card];
-      game.discard.push(playedCard);
       game.pendingAction = undefined;
       game.pendingPlay = undefined;
       game.currentPlayer = game.players.findIndex((candidate) => candidate.id === player.id);
       game.phase = TurnPhase.ACTION;
-      game.turnsRemaining = 1;
+      game.turnsRemaining = pending.turnsRemaining ?? game.turnsRemaining;
       game.actionUsed = false;
       game.actionPlaysRemaining = undefined;
       addLog(game, `${player.name} terminó de mirar el futuro`, { playerId: player.id });

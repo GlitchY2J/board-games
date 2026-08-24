@@ -205,7 +205,44 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       );
       if (successfulAttacks.length > 0) {
         const lastAttacker = successfulAttacks[successfulAttacks.length - 1];
-        startAttack(game, lastAttacker.playerId, pending.attackCount ?? successfulAttacks.length);
+        const stackedAttacks = pending.attackCount ?? successfulAttacks.length;
+        const turnPendings = Math.max(0, game.turnsRemaining ?? 0);
+        const pendingBonus = turnPendings > 1 ? turnPendings : 0;
+        startAttack(game, lastAttacker.playerId, stackedAttacks);
+        game.turnsRemaining = (stackedAttacks * 2) + pendingBonus;
+      }
+
+      if (original.card.effect === 'favor') {
+        game.pendingAction = {
+          type: 'select_hand_card',
+          reason: 'favor',
+          sourcePlayerId: original.playerId,
+          targetPlayerId: pending.targetPlayerId!,
+        };
+        game.pendingPlay = {
+          ...pending,
+          startedAt: Date.now(),
+          durationMs: 600000,
+        };
+        addLog(game, `${original.playerName} espera que ${pending.targetPlayerName} elija una carta por Favor`, {
+          playerId: original.playerId,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (original.card.effect === 'skip' || original.card.id === 'skip') {
+        clearPendingTimer(room.code);
+        game.pendingPlay = undefined;
+        game.pendingAction = undefined;
+        advanceTurnAfterDraw(game);
+        game.pendingPlay = undefined;
+        game.pendingAction = undefined;
+        addLog(game, `${original.playerName} usó Skip y terminó un turno`, {
+          playerId: original.playerId,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
       }
 
       if (original.card.effect === 'see_the_future') {
@@ -214,6 +251,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
           playerId: original.playerId,
           candidates: game.deck.slice(0, 3).map((futureCard) => ({ ...futureCard })),
           card: original.card,
+          turnsRemaining: game.turnsRemaining,
         };
         addLog(game, `${original.playerName} miró las primeras cartas del mazo`, {
           playerId: original.playerId,
@@ -235,9 +273,6 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         if (catCount === 3) {
           const targetPlayer = game.players.find(
             (player) => player.id === pending.targetPlayerId,
-          );
-          const sourcePlayer = game.players.find(
-            (player) => player.id === original.playerId,
           );
           const selectedIndex = targetPlayer?.hand.findIndex(
             (card) => card.id === pending.requestedCardType,
@@ -265,25 +300,6 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
             );
           }
 
-          if (sourcePlayer) {
-            const playedCatIds = new Set(
-              chain
-                .filter(
-                  (link) =>
-                    link.playerId === original.playerId &&
-                    link.card.cardType === 'cat',
-                )
-                .map((link) => link.card.uid),
-            );
-            const discardedCards = sourcePlayer.hand.filter((card) =>
-              playedCatIds.has(card.uid),
-            );
-            sourcePlayer.hand = sourcePlayer.hand.filter(
-              (card) => !playedCatIds.has(card.uid),
-            );
-            game.discard.push(...discardedCards);
-          }
-
           advanceTurnAfterDraw(game);
         } else {
         game.pendingAction = {
@@ -299,12 +315,6 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       }
 
       if (original.card.effect === 'shuffle') {
-        const sourcePlayer = game.players.find((p) => p.id === original.playerId);
-        const cardIndex = sourcePlayer?.hand.findIndex((card) => card.uid === original.card.uid) ?? -1;
-        if (sourcePlayer && cardIndex >= 0) {
-          const [playedCard] = sourcePlayer.hand.splice(cardIndex, 1);
-          game.discard.push(playedCard);
-        }
         for (let i = game.deck.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [game.deck[i], game.deck[j]] = [game.deck[j], game.deck[i]];
@@ -672,6 +682,19 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         addLog(context.game, `${context.player.name} jugó Two of a Kind`, {
           playerId: context.player.id,
         });
+        emitGameState(io, context.room, 'game-updated');
+        return;
+      }
+
+      if (card.effect === 'favor') {
+        context.game.pendingAction = {
+          type: 'select_player',
+          reason: 'favor',
+          sourcePlayerId: context.player.id,
+          targetPlayerId: '',
+          card,
+        };
+        addLog(context.game, `${context.player.name} jugó Favor`, { playerId: context.player.id });
         emitGameState(io, context.room, 'game-updated');
         return;
       }

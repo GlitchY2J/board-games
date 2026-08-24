@@ -107,6 +107,24 @@ export default function GameOverlay({
       if (waiting) return waiting;
     }
 
+    if (
+      action.type === 'select_hand_card' &&
+      action.reason === 'favor' &&
+      action.targetPlayerId !== localPlayerId
+    ) {
+      const target = gameState.players.find((player) => player.id === action.targetPlayerId);
+      return (
+        <div className="overlay-backdrop">
+          <div className="card-selection-window choice-window">
+            <h2>🃏 Favor</h2>
+            <p>
+              {target?.name ?? 'El jugador objetivo'} está escogiendo una carta para entregarla.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     switch (action.type) {
       case 'exploding_kitten': {
         const affectedPlayer = gameState.players.find(
@@ -302,6 +320,7 @@ export default function GameOverlay({
          const isAmericorn = action.reason === 'americorn';
          const isTwoOfAKind = action.reason === 'two_of_a_kind';
          const isThreeOfAKind = action.reason === 'three_of_a_kind';
+         const isFavor = action.reason === 'favor';
         const isUnicornPoison = action.reason === 'unicorn_poison';
         const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
         const isPlayDowngrade = action.reason === 'play_downgrade';
@@ -314,7 +333,8 @@ export default function GameOverlay({
            isBlatantThievery ||
            isAmericorn ||
             isTwoOfAKind ||
-            isThreeOfAKind ||
+             isThreeOfAKind ||
+             isFavor ||
             isThreeOfAKind ||
            isAnnoyingFlying ||
           isUnfairBargain;
@@ -365,7 +385,8 @@ export default function GameOverlay({
            if (isBlatantThievery) return '🃏 Blatant Thievery';
            if (isAmericorn) return '🇺🇸 Americorn';
             if (isTwoOfAKind) return '🎴 Two of a Kind';
-            if (isThreeOfAKind) return '🎴 Three of a Kind';
+             if (isThreeOfAKind) return '🎴 Three of a Kind';
+            if (isFavor) return '🃏 Favor';
             if (isThreeOfAKind) return '🎴 Three of a Kind';
           if (isUnicornPoison) return '🧪 Unicorn Poison';
           if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
@@ -387,6 +408,8 @@ export default function GameOverlay({
              return 'Elige a un jugador para tomarle una carta al azar';
            if (isThreeOfAKind)
              return 'Elige a un jugador para elegir una carta de su mano';
+           if (isFavor)
+             return 'Elige a un jugador que tenga al menos una carta para entregarte';
            if (isThreeOfAKind)
              return 'Elige a un jugador para elegir una carta de su mano';
           if (isUnicornPoison)
@@ -438,7 +461,10 @@ export default function GameOverlay({
       }
 
       case 'select_hand_card': {
-        if (action.sourcePlayerId !== localPlayerId) return null;
+        const isFavor = action.reason === 'favor';
+        if (isFavor
+          ? action.targetPlayerId !== localPlayerId
+          : action.sourcePlayerId !== localPlayerId) return null;
 
         if (action.reason === 'glitter_unicorn') {
           const player = gameState.players.find((p) => p.id === localPlayerId);
@@ -484,9 +510,11 @@ export default function GameOverlay({
         return (
           <CardSelectionOverlay
             hide={hide}
-            title={isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
+            title={isFavor ? '🃏 Favor' : isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
             subtitle={
-              isThreeOfAKind
+              isFavor
+                ? `Elige cualquier carta de tu mano para entregársela a ${gameState.players.find((p) => p.id === action.sourcePlayerId)?.name ?? 'ese jugador'}`
+                : isThreeOfAKind
                 ? `Elige una carta boca abajo de tipo ${action.requestedCardType ?? 'seleccionado'} de la mano de ${target.name}`
                 : isTwoOfAKind
                   ? `Elige una carta boca abajo de la mano de ${target.name}`
@@ -499,19 +527,21 @@ export default function GameOverlay({
             items={target.hand.map((card, idx) => ({
               id: `${card.id}_${idx}`,
               value: card.uid,
-              title: revealAmericorn
+                title: isFavor ? card.name : revealAmericorn
                 ? card.name
                 : isAmericorn || isTwoOfAKind || isThreeOfAKind
                   ? `Carta ${idx + 1}`
                   : card.name,
-              image: revealAmericorn
+                image: isFavor
+                  ? card.image
+                  : revealAmericorn
                 ? card.image
                 : isAmericorn || isTwoOfAKind || isThreeOfAKind
                   ? '/cards/base/card_back.png'
                   : card.image,
             }))}
             maxSelection={1}
-            confirmText="Robar"
+            confirmText={isFavor ? 'Dar' : 'Robar'}
             onConfirm={([cardId]) => {
               dismiss();
               socket.emit('select-hand-card', {
