@@ -221,6 +221,9 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
           const targetPlayer = game.players.find(
             (player) => player.id === pending.targetPlayerId,
           );
+          const sourcePlayer = game.players.find(
+            (player) => player.id === original.playerId,
+          );
           const selectedIndex = targetPlayer?.hand.findIndex(
             (card) => card.id === pending.requestedCardType,
           ) ?? -1;
@@ -246,6 +249,27 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
               { playerId: original.playerId },
             );
           }
+
+          if (sourcePlayer) {
+            const playedCatIds = new Set(
+              chain
+                .filter(
+                  (link) =>
+                    link.playerId === original.playerId &&
+                    link.card.cardType === 'cat',
+                )
+                .map((link) => link.card.uid),
+            );
+            const discardedCards = sourcePlayer.hand.filter((card) =>
+              playedCatIds.has(card.uid),
+            );
+            sourcePlayer.hand = sourcePlayer.hand.filter(
+              (card) => !playedCatIds.has(card.uid),
+            );
+            game.discard.push(...discardedCards);
+          }
+
+          advanceTurnAfterDraw(game);
         } else {
         game.pendingAction = {
           type: 'select_hand_card',
@@ -601,6 +625,21 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
           'Esta carta no puede jugarse directamente.',
           'play-card',
         );
+        return;
+      }
+
+      if (card.effect === 'see_the_future') {
+        gamePlayer.hand.splice(cardIndex, 1);
+        context.game.pendingAction = {
+          type: 'see_the_future',
+          playerId: context.player.id,
+          candidates: context.game.deck.slice(0, 3).map((futureCard) => ({ ...futureCard })),
+          card,
+        };
+        addLog(context.game, `${context.player.name} miró las primeras cartas del mazo`, {
+          playerId: context.player.id,
+        });
+        emitGameState(io, context.room, 'game-updated');
         return;
       }
 

@@ -161,6 +161,10 @@ export interface ResolveExplodingKittenPayload {
   useDefuse: boolean;
 }
 
+export interface ResolveSeeTheFuturePayload {
+  roomCode: string;
+}
+
 export interface StealAnimation {
   animId: string;
   sourcePlayerId: string;
@@ -265,6 +269,7 @@ export interface ClientToServerEvents {
   // Select Hand Card
   'select-hand-card': (payload: SelectHandCardPayload) => void;
   'resolve-exploding-kitten': (payload: ResolveExplodingKittenPayload) => void;
+  'resolve-see-the-future': (payload: ResolveSeeTheFuturePayload) => void;
 
   // Next Phase
   'next-phase': (roomCode: string) => void;

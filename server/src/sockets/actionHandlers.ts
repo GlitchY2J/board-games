@@ -38,6 +38,7 @@ export function registerActionHandlers(
   registerSelectStableCard(io, socket);
   registerSelectHandCard(io, socket);
   registerResolveExplodingKitten(io, socket);
+  registerResolveSeeTheFuture(io, socket);
   registerCancelAction(io, socket);
   registerSelectChoice(io, socket);
   registerSelectNurseryCard(io, socket);
@@ -569,6 +570,28 @@ export function registerActionHandlers(
         game.actionPlaysRemaining = undefined;
       }
 
+      emitGameState(io, room, 'game-updated');
+    });
+  }
+
+  function registerResolveSeeTheFuture(io: GameServer, socket: GameSocket): void {
+    socket.on('resolve-see-the-future', ({ roomCode }) => {
+      const context = getSocketGameContext(socket, roomCode);
+      if (!context) return;
+
+      const { game, player, room } = context;
+      const pending = game.pendingAction;
+      if (!pending || pending.type !== 'see_the_future' || pending.playerId !== player.id) {
+        emitGameError(socket, 'NO_PENDING_ACTION', 'No hay una visión del futuro pendiente.', 'select-choice');
+        return;
+      }
+
+      game.discard.push(pending.card);
+      game.pendingAction = undefined;
+      game.phase = TurnPhase.ACTION;
+      game.actionUsed = false;
+      game.actionPlaysRemaining = undefined;
+      addLog(game, `${player.name} terminó de mirar el futuro`, { playerId: player.id });
       emitGameState(io, room, 'game-updated');
     });
   }

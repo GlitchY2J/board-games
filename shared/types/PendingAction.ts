@@ -215,6 +215,12 @@ export type PendingAction =
        discardedCardIds?: string[];
     }
   | {
+      type: "see_the_future";
+      playerId: string;
+      candidates: Card[];
+      card: Card;
+    }
+  | {
       type: "select_deck_card";
       reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse";
       playerId: string;

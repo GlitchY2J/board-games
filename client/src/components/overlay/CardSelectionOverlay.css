@@ -269,6 +269,13 @@
   filter: drop-shadow(0 10px 22px rgba(239, 68, 68, 0.32));
 }
 
+.see-the-future-cards {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 18px 0;
+}
+
 .choice-options-grid {
   display: flex;
   flex-direction: column;

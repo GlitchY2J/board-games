@@ -2195,6 +2195,38 @@ export default function GameOverlay({
         );
       }
 
+      case 'see_the_future': {
+        if (action.playerId !== localPlayerId) return null;
+
+        return (
+          <div className="overlay-backdrop">
+            <div className="card-selection-window choice-window see-the-future-window">
+              <h2>🔮 See the Future 3x</h2>
+              <p>Estas son las primeras cartas del mazo. El orden no ha cambiado.</p>
+              <div className="see-the-future-cards">
+                {action.candidates.map((card) => (
+                  <PlayingCard
+                    key={card.uid}
+                    name={card.name}
+                    image={card.image}
+                    size="medium"
+                    disabled
+                  />
+                ))}
+              </div>
+              <button
+                className="confirm-button choice-button"
+                onClick={() => socket.emit('resolve-see-the-future', {
+                  roomCode: gameState.roomCode,
+                })}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        );
+      }
+
       // ───────────────────────────────────
       // SELECCIONAR CARTAS DE LA NURSERY
       // ───────────────────────────────────
