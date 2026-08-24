@@ -90,9 +90,9 @@ export default function CardFan({
     : cards;
 
   const cardCount = displayCards.length;
-  const overlap = Math.min(60, Math.max(24, fanWidth * 0.2));
+  const overlap = Math.min(60, Math.max(12, fanWidth * 0.2));
   const cardWidth = fanWidth > 0
-    ? Math.min(148, Math.max(64, (fanWidth + overlap * Math.max(0, cardCount - 1)) / Math.max(1, cardCount)))
+    ? Math.min(148, Math.max(48, (fanWidth + overlap * Math.max(0, cardCount - 1)) / Math.max(1, cardCount)))
     : 148;
 
   useEffect(() => {
@@ -248,6 +248,14 @@ export default function CardFan({
 
                   if (pendingPlay) {
                     onInvalidAction?.('Hay otra carta esperando a resolverse');
+                    return;
+                  }
+
+                  if (
+                    gameId &&
+                    (card.id === 'defuse' || card.id === 'nope' || card.effect === 'nope')
+                  ) {
+                    onInvalidAction?.('No puedes jugar esta carta en este momento');
                     return;
                   }
 

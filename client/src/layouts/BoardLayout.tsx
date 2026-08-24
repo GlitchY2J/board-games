@@ -190,6 +190,7 @@ export default function BoardLayout({
         isMyTurn &&
         (gameState.phase === 'DRAW' || gameState.phase === 'ACTION') &&
         !gameState.actionUsed &&
+        !gameState.pendingAction &&
         !gameState.pendingPlay &&
         (gameState.actionPlaysRemaining === undefined ||
           gameState.actionPlaysRemaining === 2);

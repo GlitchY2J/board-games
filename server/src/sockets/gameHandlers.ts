@@ -799,6 +799,16 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
     }
 
     if (isExplodingKittensRoom(room)) {
+      if (game.pendingAction || game.pendingPlay) {
+        emitGameError(
+          socket,
+          'ACTION_NOT_ALLOWED',
+          'Debes resolver la acción pendiente antes de robar otra carta.',
+          'draw-action-card',
+        );
+        return;
+      }
+
       const gamePlayer = game.players.find((candidate) => candidate.id === player.id);
 
       if (game.debugMode) {
