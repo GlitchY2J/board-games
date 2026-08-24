@@ -71,9 +71,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setIsHost(updatedRoom.hostId === playerIdRef.current);
     };
     const onGameUpdated = (state: GameState) => setGameState(state);
+    const onGameStarted = (state: GameState) => setGameState(state);
 
     socket.on('room-updated', onRoomUpdated);
     socket.on('game-updated', onGameUpdated);
+    socket.on('game-started', onGameStarted);
     socket.on('game-restarted', onGameUpdated);
 
     const onConnect = () => {
@@ -88,6 +90,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return () => {
       socket.off('room-updated', onRoomUpdated);
       socket.off('game-updated', onGameUpdated);
+      socket.off('game-started', onGameStarted);
       socket.off('game-restarted', onGameUpdated);
       socket.off('connect', onConnect);
     };

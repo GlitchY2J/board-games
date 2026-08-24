@@ -26,10 +26,12 @@ export default function Game() {
   const location = useLocation();
   const navigate = useNavigate();
   const { gameState: contextGameState, isHost: contextIsHost, room: roomFromContext, deactivate } = useGame();
+  const locationGameState = location.state?.gameState as GameState | undefined;
 
   const [gameState, setGameState] = useState<GameState | null>(
-    contextGameState ?? location.state?.gameState ?? null,
+    locationGameState ?? contextGameState ?? null,
   );
+  const skippedInitialContextStateRef = useRef(Boolean(locationGameState));
 
   const [turnAnnounce, setTurnAnnounce] = useState<TurnAnnounce | null>(null);
   const [sortHandMode, setSortHandMode] = useState<
@@ -110,6 +112,11 @@ export default function Game() {
 
   useEffect(() => {
     if (contextGameState) {
+      if (skippedInitialContextStateRef.current) {
+        skippedInitialContextStateRef.current = false;
+        return;
+      }
+
       if (activeAnimationsCountRef.current > 0) {
         pendingGameStateRef.current = contextGameState;
       } else {

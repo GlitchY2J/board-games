@@ -432,6 +432,7 @@ export default function BoardLayout({
           onCancel={() => setLeaveOpen(false)}
           onConfirm={() => {
             socket.emit('leave-game', { roomCode: gameState.roomCode });
+            setMobileChatOpen(false);
             navigate('/lobby');
           }}
         />
