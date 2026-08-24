@@ -199,6 +199,11 @@ export interface PlayAnimation {
   };
 }
 
+export interface ShuffleAnimation {
+  animId: string;
+  playerId: string;
+}
+
 export interface ResumeSessionResponse {
   success: boolean;
   playerId?: string;
@@ -219,6 +224,7 @@ export interface ServerToClientEvents {
   'steal-animations': (animations: StealAnimation[]) => void;
   'discard-animations': (animations: DiscardAnimation[]) => void;
   'play-animations': (animations: PlayAnimation[]) => void;
+  'shuffle-animations': (animations: ShuffleAnimation[]) => void;
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
   'chat-message': (payload: ChatMessageEvent) => void;
   'kicked-from-room': (payload: { message: string }) => void;

@@ -1,5 +1,5 @@
 import type { Card } from './models/Card.ts';
-import type { NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
 
 export type CardAnimType = 'sacrifice' | 'destroy';
 
@@ -203,6 +203,27 @@ interface QueuedPlayAnimation extends PlayAnimation {
 }
 
 const playBuffer: QueuedPlayAnimation[] = [];
+
+interface QueuedShuffleAnimation extends ShuffleAnimation {
+  roomCode: string;
+}
+
+const shuffleBuffer: QueuedShuffleAnimation[] = [];
+
+export function enqueueShuffleAnimation(roomCode: string, playerId: string): void {
+  shuffleBuffer.push({ roomCode, playerId, animId: `shuffle-${Math.random().toString(36).slice(2, 8)}` });
+}
+
+export function drainShuffleAnimations(roomCode: string): ShuffleAnimation[] {
+  const drained: ShuffleAnimation[] = [];
+  for (let i = shuffleBuffer.length - 1; i >= 0; i--) {
+    if (shuffleBuffer[i].roomCode === roomCode) {
+      const [item] = shuffleBuffer.splice(i, 1);
+      drained.push(item);
+    }
+  }
+  return drained.reverse();
+}
 
 export function enqueuePlayAnimation(
   roomCode: string,

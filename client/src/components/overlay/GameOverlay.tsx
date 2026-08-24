@@ -2216,9 +2216,12 @@ export default function GameOverlay({
               </div>
               <button
                 className="confirm-button choice-button"
-                onClick={() => socket.emit('resolve-see-the-future', {
-                  roomCode: gameState.roomCode,
-                })}
+                onClick={() => {
+                  dismiss();
+                  socket.emit('resolve-see-the-future', {
+                    roomCode: gameState.roomCode,
+                  });
+                }}
               >
                 Aceptar
               </button>

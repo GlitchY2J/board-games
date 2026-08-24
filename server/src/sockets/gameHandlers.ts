@@ -16,7 +16,7 @@ import { roomManager } from '../roomManagerInstance.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
-import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation, enqueueStealAnimation } from '../game/cardAnimations.ts';
+import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation, enqueueStealAnimation, enqueueShuffleAnimation } from '../game/cardAnimations.ts';
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
@@ -208,6 +208,21 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         startAttack(game, lastAttacker.playerId, pending.attackCount ?? successfulAttacks.length);
       }
 
+      if (original.card.effect === 'see_the_future') {
+        game.pendingAction = {
+          type: 'see_the_future',
+          playerId: original.playerId,
+          candidates: game.deck.slice(0, 3).map((futureCard) => ({ ...futureCard })),
+          card: original.card,
+        };
+        addLog(game, `${original.playerName} miró las primeras cartas del mazo`, {
+          playerId: original.playerId,
+        });
+        game.pendingPlay = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         original.card.effect === 'cat_pair' &&
         (() => {
@@ -278,6 +293,23 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
           targetPlayerId: pending.targetPlayerId,
         };
         }
+        game.pendingPlay = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (original.card.effect === 'shuffle') {
+        const sourcePlayer = game.players.find((p) => p.id === original.playerId);
+        const cardIndex = sourcePlayer?.hand.findIndex((card) => card.uid === original.card.uid) ?? -1;
+        if (sourcePlayer && cardIndex >= 0) {
+          const [playedCard] = sourcePlayer.hand.splice(cardIndex, 1);
+          game.discard.push(playedCard);
+        }
+        for (let i = game.deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [game.deck[i], game.deck[j]] = [game.deck[j], game.deck[i]];
+        }
+        enqueueShuffleAnimation(game.roomCode, original.playerId);
         game.pendingPlay = undefined;
         emitGameState(io, room, 'game-updated');
         return;
@@ -625,21 +657,6 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
           'Esta carta no puede jugarse directamente.',
           'play-card',
         );
-        return;
-      }
-
-      if (card.effect === 'see_the_future') {
-        gamePlayer.hand.splice(cardIndex, 1);
-        context.game.pendingAction = {
-          type: 'see_the_future',
-          playerId: context.player.id,
-          candidates: context.game.deck.slice(0, 3).map((futureCard) => ({ ...futureCard })),
-          card,
-        };
-        addLog(context.game, `${context.player.name} miró las primeras cartas del mazo`, {
-          playerId: context.player.id,
-        });
-        emitGameState(io, context.room, 'game-updated');
         return;
       }
 

@@ -11,8 +11,9 @@ import CardDiscardEffect from '../components/effects/CardDiscardEffect';
 import CardPlayEffect from '../components/effects/CardPlayEffect';
 import CardRemovalAnimation from '../components/effects/CardRemovalAnimation';
 import CardStealEffect from '../components/effects/CardStealEffect';
+import ShuffleDeckEffect from '../components/effects/ShuffleDeckEffect';
 import NeighAnnouncement from '../components/game/NeighAnnouncement';
-import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface TurnAnnounce {
@@ -62,6 +63,7 @@ export default function Game() {
   const [stealAnims, setStealAnims] = useState<StealAnimation[]>([]);
   const [discardAnims, setDiscardAnims] = useState<DiscardAnimation[]>([]);
   const [playAnims, setPlayAnims] = useState<PlayAnimation[]>([]);
+  const [shuffleAnims, setShuffleAnims] = useState<ShuffleAnimation[]>([]);
 
   const pendingGameStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
@@ -249,12 +251,17 @@ export default function Game() {
       }
     };
 
+    const onShuffleAnimations = (animations: ShuffleAnimation[]) => {
+      setShuffleAnims((prev) => [...prev, ...animations]);
+    };
+
     socket.on('card-animations', onCardAnimations);
     socket.on('neigh-animations', onNeighAnimations);
     socket.on('draw-animations', onDrawAnimations);
     socket.on('steal-animations', onStealAnimations);
     socket.on('discard-animations', onDiscardAnimations);
     socket.on('play-animations', onPlayAnimations);
+    socket.on('shuffle-animations', onShuffleAnimations);
 
     return () => {
       socket.off('game-updated', onGameUpdated);
@@ -267,6 +274,7 @@ export default function Game() {
       socket.off('steal-animations');
       socket.off('discard-animations');
       socket.off('play-animations');
+      socket.off('shuffle-animations', onShuffleAnimations);
     };
   }, [applyGameState, deactivate, isSpectatorState, navigate]);
 
@@ -326,6 +334,13 @@ export default function Game() {
           <div className="pointer-events-none fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-full border border-rose-400/30 bg-slate-950/85 px-4 py-2 text-center text-xs font-bold text-rose-200 shadow-xl backdrop-blur">
             Espectador · Eliminado en {eliminated.placement}° lugar
           </div>
+          {shuffleAnims.map((animation) => (
+            <ShuffleDeckEffect
+              key={animation.animId}
+              animation={animation}
+              onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
+            />
+          ))}
         </div>
       );
     }
@@ -517,6 +532,13 @@ export default function Game() {
           animation={animation}
           localPlayerId={localPlayer.id}
           onDone={() => removePlayAnim(animation.animId)}
+        />
+      ))}
+      {shuffleAnims.map((animation) => (
+        <ShuffleDeckEffect
+          key={animation.animId}
+          animation={animation}
+          onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
         />
       ))}
     </>

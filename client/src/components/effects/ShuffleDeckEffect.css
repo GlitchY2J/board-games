@@ -1,0 +1,47 @@
+.shuffle-deck-effect {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 10020;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #fef3c7;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: shuffle-effect-in 0.2s ease-out both;
+}
+
+.shuffle-deck-stack {
+  position: relative;
+  width: 82px;
+  height: 112px;
+}
+
+.shuffle-deck-stack span {
+  position: absolute;
+  inset: 0;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  background: #d92f36 url('/cards/exploding-kittens/back-card.png') center / cover;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.shuffle-deck-stack span:nth-child(1) { animation: shuffle-card-left 0.7s ease-in-out infinite alternate; }
+.shuffle-deck-stack span:nth-child(2) { transform: translate(0, -4px); }
+.shuffle-deck-stack span:nth-child(3) { animation: shuffle-card-right 0.7s ease-in-out infinite alternate; }
+
+@keyframes shuffle-card-left {
+  to { transform: translateX(-28px) rotate(-12deg); }
+}
+
+@keyframes shuffle-card-right {
+  to { transform: translateX(28px) rotate(12deg); }
+}
+
+@keyframes shuffle-effect-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}

@@ -586,9 +586,17 @@ export function registerActionHandlers(
         return;
       }
 
-      game.discard.push(pending.card);
+      const gamePlayer = game.players.find((candidate) => candidate.id === player.id);
+      const cardIndex = gamePlayer?.hand.findIndex((card) => card.uid === pending.card.uid) ?? -1;
+      const [playedCard] = cardIndex >= 0
+        ? gamePlayer!.hand.splice(cardIndex, 1)
+        : [pending.card];
+      game.discard.push(playedCard);
       game.pendingAction = undefined;
+      game.pendingPlay = undefined;
+      game.currentPlayer = game.players.findIndex((candidate) => candidate.id === player.id);
       game.phase = TurnPhase.ACTION;
+      game.turnsRemaining = 1;
       game.actionUsed = false;
       game.actionPlaysRemaining = undefined;
       addLog(game, `${player.name} terminó de mirar el futuro`, { playerId: player.id });
