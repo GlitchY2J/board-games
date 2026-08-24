@@ -4,7 +4,7 @@ import type { GameState } from '../../types/GameState.ts';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Play, X } from 'lucide-react';
-import { useCardPreview } from '../../context/CardPreviewContext';
+import { useCardPreview } from '../../context/useCardPreview';
 
 type CardType = GameState['players'][number]['hand'][number];
 
@@ -42,10 +42,6 @@ export default function CardFan({
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [alphabetical, setAlphabetical] = useState(false);
   const { hidePreview } = useCardPreview();
-
-  useEffect(() => {
-    if (sortHandRequest > 0) setAlphabetical(true);
-  }, [sortHandRequest]);
 
   const displayCards = (alphabetical || sortHandRequest > 0)
     ? [...cards].sort((a, b) =>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import { getGame, getGames } from '../services/api';
 import type { PublicRoom as Room } from '../../../shared/types/PublicRoom.ts';
 import type { GameDefinition, RoomSettings } from '../../../shared/types/GameDefinition.ts';
@@ -44,7 +44,9 @@ export default function Lobby() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const roomRef = useRef(room);
-  roomRef.current = room;
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
 
   useEffect(() => {
     let active = true;

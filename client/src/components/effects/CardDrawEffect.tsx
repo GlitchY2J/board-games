@@ -23,12 +23,9 @@ export default function CardDrawEffect({ animation, localPlayerId, onDone }: Pro
     const deckEl = document.querySelector('[data-deck]');
     const isMe = animation.playerId === localPlayerId;
     
-    let targetEl: Element | null = null;
-    if (isMe) {
-      targetEl = document.querySelector('[data-hand]');
-    } else {
-      targetEl = document.querySelector(`[data-player-id="${animation.playerId}"]`);
-    }
+    const targetEl = isMe
+      ? document.querySelector('[data-hand]')
+      : document.querySelector(`[data-player-id="${animation.playerId}"]`);
 
     const start = {
       x: window.innerWidth / 2 - 55,

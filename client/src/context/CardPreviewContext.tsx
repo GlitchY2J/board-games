@@ -1,18 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-
-interface PreviewData {
-  image: string;
-  x: number;
-  y: number;
-}
-
-interface ContextType {
-  preview: PreviewData | null;
-  showPreview(image: string, x: number, y: number): void;
-  hidePreview(): void;
-}
-
-const CardPreviewContext = createContext<ContextType | null>(null);
+import { useState, type ReactNode } from 'react';
+import { CardPreviewContext, type PreviewData } from './CardPreviewStore';
 
 export function CardPreviewProvider({ children }: { children: ReactNode }) {
   const [preview, setPreview] = useState<PreviewData | null>(null);
@@ -42,12 +29,3 @@ export function CardPreviewProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useCardPreview() {
-  const ctx = useContext(CardPreviewContext);
-
-  if (!ctx) {
-    throw new Error('CardPreviewProvider missing');
-  }
-
-  return ctx;
-}

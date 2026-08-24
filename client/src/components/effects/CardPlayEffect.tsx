@@ -22,13 +22,9 @@ export default function CardPlayEffect({ animation, localPlayerId, onDone }: Pro
 
     const isMe = animation.playerId === localPlayerId;
     const stableEl = document.querySelector(`[data-stable-id="${animation.playerId}"]`);
-    let startEl: Element | null = null;
-
-    if (isMe) {
-      startEl = document.querySelector('[data-hand]');
-    } else {
-      startEl = document.querySelector(`[data-player-id="${animation.playerId}"]`);
-    }
+    const startEl = isMe
+      ? document.querySelector('[data-hand]')
+      : document.querySelector(`[data-player-id="${animation.playerId}"]`);
 
     // Default start positions (fallback)
     const start = {

@@ -1,31 +1,9 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Room } from '../types/Room';
 import type { GameState } from '../types/GameState';
 import { socket } from '../services/socket';
 import { getSession, clearSession } from '../services/session';
-
-export type SessionStatus = 'loading' | 'none' | 'active';
-
-interface GameContextType {
-  status: SessionStatus;
-  room?: Room;
-  gameState?: GameState;
-  playerId?: string;
-  playerName: string;
-  isHost: boolean;
-  setRoom: (room: Room) => void;
-  setPlayerName: (name: string) => void;
-  activate: (data: {
-    room: Room;
-    playerId: string;
-    isHost: boolean;
-    playerName?: string;
-  }) => void;
-  deactivate: () => void;
-  resume: () => void;
-}
-
-const GameContext = createContext<GameContextType | null>(null);
+import { GameContext, type SessionStatus } from './GameStore';
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<SessionStatus>('loading');
@@ -35,7 +13,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [playerName, setPlayerName] = useState('');
   const [isHost, setIsHost] = useState(false);
 
-  const resume = () => {
+  const resume = useCallback(() => {
     const session = getSession();
 
     if (!session) {
@@ -70,13 +48,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         }
       },
     );
-  };
+  }, []);
 
   const resumeRef = useRef(resume);
-  resumeRef.current = resume;
-
   const playerIdRef = useRef(playerId);
-  playerIdRef.current = playerId;
+
+  useEffect(() => {
+    resumeRef.current = resume;
+  }, [resume]);
+
+  useEffect(() => {
+    playerIdRef.current = playerId;
+  }, [playerId]);
 
   useEffect(() => {
     socket.connect();
@@ -152,9 +135,3 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useGame() {
-  const context = useContext(GameContext);
-  if (!context) throw new Error('GameContext no encontrado');
-
-  return context;
-}

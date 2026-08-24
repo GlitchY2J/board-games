@@ -80,8 +80,6 @@ export default function BoardLayout({
     };
   }, []);
 
-  if (!localPlayer) return;
-
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
   const totalPlayers = gameState.players.length;
   const activePlayer = gameState.players[gameState.currentPlayer];
@@ -129,19 +127,19 @@ export default function BoardLayout({
       : undefined;
 
   const blockedBasicUnicornIds = new Set(
-    queenBeeOwnerId !== undefined && queenBeeOwnerId !== localPlayer.id
-      ? localPlayer.hand
+    queenBeeOwnerId !== undefined && queenBeeOwnerId !== localPlayer?.id
+        ? (localPlayer?.hand ?? [])
           .filter((c) => c.cardType === 'unicorn' && c.unicornClass === 'basic')
           .map((c) => c.uid)
       : [],
   );
 
   const hasBrokenStable =
-    localPlayer.downgrades.some((c) => c.id === 'broken_stable') ?? false;
+    localPlayer?.downgrades.some((c) => c.id === 'broken_stable') ?? false;
 
   const blockedUpgradeIds = hasBrokenStable
     ? new Set(
-        localPlayer.hand
+        (localPlayer?.hand ?? [])
           .filter((c) => c.cardType === 'upgrade')
           .map((c) => c.uid),
       )
@@ -151,7 +149,7 @@ export default function BoardLayout({
     ...blockedBasicUnicornIds,
     ...blockedUpgradeIds,
   ]);
-  const localPlayerId = localPlayer.id;
+  const localPlayerId = localPlayer?.id ?? '';
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -183,6 +181,8 @@ export default function BoardLayout({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isMyTurn, gameState, localPlayerId]);
+
+  if (!localPlayer) return null;
 
   return (
     <div className={`board-layout ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import type { GameState } from '../types/GameState';
 import BoardLayout from '../layouts/BoardLayout';
 import VictoryScreen from '../components/game/VictoryScreen';

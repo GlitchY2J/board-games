@@ -9,7 +9,7 @@ import Settings from './pages/Settings';
 import { useEffect } from 'react';
 import JoinRoom from './pages/JoinRoom';
 import { CardPreviewProvider } from './context/CardPreviewContext';
-import { useGame } from './context/GameContext';
+import { useGame } from './context/useGame';
 import CardPreview from './components/card/CardPreview';
 import GameErrorToast from './components/game/GameErrorToast';
 import { Loader2 } from 'lucide-react';

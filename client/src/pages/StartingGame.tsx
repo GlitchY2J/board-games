@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2, Shuffle, Users } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { socket } from '../services/socket';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 

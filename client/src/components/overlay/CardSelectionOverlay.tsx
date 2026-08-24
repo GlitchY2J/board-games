@@ -1,5 +1,5 @@
 import './CardSelectionOverlay.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import PlayingCard from '../card/PlayingCard';
 
 export interface SelectionItem {
@@ -34,13 +34,9 @@ export default function CardSelectionOverlay({
   onConfirm,
   onCancel,
 }: Props) {
-  const [selected, setSelected] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (maxSelection === 1 && items.length === 1) {
-      setSelected([items[0].id]);
-    }
-  }, [items, maxSelection]);
+  const [selected, setSelected] = useState<string[]>(() =>
+    maxSelection === 1 && items.length === 1 ? [items[0].id] : [],
+  );
 
   function toggle(itemId: string) {
     if (selected.includes(itemId)) {

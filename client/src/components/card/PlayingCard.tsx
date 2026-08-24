@@ -1,4 +1,4 @@
-import { useCardPreview } from '../../context/CardPreviewContext';
+import { useCardPreview } from '../../context/useCardPreview';
 import './PlayingCard.css';
 
 interface Props {
