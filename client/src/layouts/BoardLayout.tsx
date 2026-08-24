@@ -13,7 +13,7 @@ import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
 import PlayerNotification from '../components/player/PlayerNotification';
-import { RotateCcw, LogOut, Bot, Bug, MessageSquare, X, Copy, Check } from 'lucide-react';
+import { RotateCcw, LogOut, Bot, Bug, MessageSquare, Copy, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { useState, useEffect, useRef } from 'react';
@@ -79,6 +79,27 @@ export default function BoardLayout({
       }
     };
   }, []);
+
+  useEffect(() => {
+    const onMobileChatShortcut = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' && event.code !== 'Enter') return;
+      if (window.innerWidth > 640 || mobileChatOpen) return;
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target.tagName)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      setMobileChatOpen(true);
+    };
+
+    window.addEventListener('keydown', onMobileChatShortcut);
+    return () => window.removeEventListener('keydown', onMobileChatShortcut);
+  }, [mobileChatOpen]);
 
   const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
   const totalPlayers = gameState.players.length;
@@ -433,13 +454,6 @@ export default function BoardLayout({
               onClose={() => setMobileChatOpen(false)}
             />
           </div>
-          <button
-            className="mobile-chat-close"
-            title="Cerrar chat"
-            onClick={() => setMobileChatOpen(false)}
-          >
-            <X size={16} />
-          </button>
         </div>
       )}
 

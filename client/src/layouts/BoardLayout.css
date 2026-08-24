@@ -429,8 +429,8 @@
     gap: 6px;
   }
   .center-stack > .flex {
-    gap: 8px !important;
-    padding: 6px !important;
+    gap: 12px !important;
+    padding: 14px !important;
   }
   .turn-order-side {
     display: none;
@@ -465,11 +465,13 @@
   .mobile-chat-panel {
     display: block;
     position: fixed;
-    left: 8px;
+    top: 50%;
     right: 8px;
-    bottom: 112px;
+    left: auto;
     z-index: 10001;
-    max-height: 55vh;
+    width: min(180px, calc(100vw - 16px));
+    max-height: 50vh;
+    transform: translateY(-50%);
     animation: phasePanelExpand 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .mobile-chat-panel-inner .chat-panel {
