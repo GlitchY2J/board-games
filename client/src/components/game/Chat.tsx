@@ -64,7 +64,9 @@ export default function Chat({ gameState, initialOpen = false, onClose }: Props)
     // Los mensajes entrantes hacen visible el chat, pero no roban el foco.
     focusOnOpenRef.current = false;
     lastActivityRef.current = Date.now();
-    setIsOpen(true);
+
+    const openTimer = setTimeout(() => setIsOpen(true), 0);
+    return () => clearTimeout(openTimer);
   }, [messages.length]);
 
   useEffect(() => {

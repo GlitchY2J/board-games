@@ -25,7 +25,7 @@ const PLAYER_COLORS = [
 export default function PhasePanel({ gameState, showRoundPhase = true }: Props) {
   const [open, setOpen] = useState(false);
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
-  const logEntries = gameState.log ?? [];
+  const logEntries = useMemo(() => gameState.log ?? [], [gameState.log]);
   const logRef = useRef<HTMLDivElement>(null);
 
   const playerColors = useMemo(() => {

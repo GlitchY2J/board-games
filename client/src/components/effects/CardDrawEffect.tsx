@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { DrawAnimation } from '../../../../shared/types/SocketEvents.ts';
 import './CardDrawEffect.css';
 
@@ -11,61 +11,64 @@ interface Props {
 export default function CardDrawEffect({ animation, localPlayerId, onDone }: Props) {
   const cardRef = useRef<HTMLImageElement>(null);
   const onDoneRef = useRef(onDone);
+  const animationRef = useRef<Animation | null>(null);
 
   useEffect(() => {
     onDoneRef.current = onDone;
   }, [onDone]);
 
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
+  useLayoutEffect(() => {
+    let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+    const frame = requestAnimationFrame(() => {
+      const el = cardRef.current;
+      if (!el) return;
 
-    const deckEl = document.querySelector('[data-deck]');
-    const isMe = animation.playerId === localPlayerId;
+      const deckEl = document.querySelector('[data-deck]');
+      const isMe = animation.playerId === localPlayerId;
     
-    const targetEl = isMe
-      ? document.querySelector('[data-hand]')
-      : document.querySelector(`[data-player-id="${animation.playerId}"]`);
+      const targetEl = isMe
+        ? document.querySelector('[data-hand]')
+        : document.querySelector(`[data-player-id="${animation.playerId}"]`);
 
-    const start = {
-      x: window.innerWidth / 2 - 55,
-      y: window.innerHeight * 0.45 - 77,
-    };
-    const end = {
-      x: window.innerWidth / 2 - 55,
-      y: isMe ? window.innerHeight - 200 : 50,
-    };
+      const start = {
+        x: window.innerWidth / 2 - 55,
+        y: window.innerHeight * 0.45 - 77,
+      };
+      const end = {
+        x: window.innerWidth / 2 - 55,
+        y: isMe ? window.innerHeight - 200 : 50,
+      };
 
-    if (deckEl) {
-      const rect = deckEl.getBoundingClientRect();
-      start.x = rect.left + rect.width / 2 - 55;
-      start.y = rect.top + rect.height / 2 - 77;
-    }
+      if (deckEl) {
+        const rect = deckEl.getBoundingClientRect();
+        start.x = rect.left + rect.width / 2 - 55;
+        start.y = rect.top + rect.height / 2 - 77;
+      }
 
-    if (targetEl) {
-      if (isMe) {
-        const lastCard = targetEl.querySelector('.fan-card:last-child');
-        if (lastCard) {
-          const rect = lastCard.getBoundingClientRect();
-          end.x = rect.left + rect.width / 2 - 55;
-          end.y = rect.top + rect.height / 2 - 77;
+      if (targetEl) {
+        if (isMe) {
+          const lastCard = targetEl.querySelector('.fan-card:last-child');
+          if (lastCard) {
+            const rect = lastCard.getBoundingClientRect();
+            end.x = rect.left + rect.width / 2 - 55;
+            end.y = rect.top + rect.height / 2 - 77;
+          } else {
+            const rect = targetEl.getBoundingClientRect();
+            end.x = rect.left + rect.width / 2 - 55;
+            end.y = rect.top + 30 - 77;
+          }
         } else {
           const rect = targetEl.getBoundingClientRect();
           end.x = rect.left + rect.width / 2 - 55;
-          end.y = rect.top + 30 - 77;
+          end.y = rect.top + rect.height / 2 - 77;
         }
-      } else {
-        const rect = targetEl.getBoundingClientRect();
-        end.x = rect.left + rect.width / 2 - 55;
-        end.y = rect.top + rect.height / 2 - 77;
       }
-    }
 
-    const DURATION = 600;
-    const ARRIVE_AT = 0.82; // fraction at which card reaches destination
+      const DURATION = 600;
+      const ARRIVE_AT = 0.82; // fraction at which card reaches destination
 
-    const anim = el.animate(
-      [
+      animationRef.current = el.animate(
+        [
         {
           transform: `translate(${start.x}px, ${start.y}px) scale(0.6) rotate(15deg)`,
           opacity: 0,
@@ -84,23 +87,26 @@ export default function CardDrawEffect({ animation, localPlayerId, onDone }: Pro
           transform: `translate(${end.x}px, ${end.y}px) scale(${isMe ? 0.75 : 0.35}) rotate(${isMe ? 0 : -10}deg)`,
           opacity: 0,
         },
-      ],
-      {
-        duration: DURATION,
-        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-        fill: 'forwards',
-      }
-    );
+        ],
+        {
+          duration: DURATION,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          fill: 'forwards',
+        },
+      );
 
-    // Release state lock when card visually arrives — don't wait for full fade-out
-    const releaseTimer = setTimeout(() => {
-      onDoneRef.current();
-    }, DURATION * ARRIVE_AT);
+      // Release state lock when card visually arrives, before the fade-out ends.
+      releaseTimer = setTimeout(() => {
+        onDoneRef.current();
+      }, DURATION * ARRIVE_AT);
 
-    anim.onfinish = () => el.remove();
+    });
+
     return () => {
-      anim.cancel();
-      clearTimeout(releaseTimer);
+      cancelAnimationFrame(frame);
+      animationRef.current?.cancel();
+      animationRef.current = null;
+      if (releaseTimer) clearTimeout(releaseTimer);
     };
   }, [animation, localPlayerId]);
 

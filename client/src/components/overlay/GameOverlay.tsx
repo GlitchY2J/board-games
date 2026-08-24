@@ -50,8 +50,12 @@ export default function GameOverlay({
   const [minimized, setMinimized] = useState(false);
 
   useEffect(() => {
-    setDismissedKey((prev) => (prev && prev !== actionKey ? null : prev));
-    setMinimized(false);
+    const resetTimer = setTimeout(() => {
+      setDismissedKey((prev) => (prev && prev !== actionKey ? null : prev));
+      setMinimized(false);
+    }, 0);
+
+    return () => clearTimeout(resetTimer);
   }, [actionKey]);
 
   const dismiss = () => setDismissedKey(actionKey);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
 import { useGame } from '../context/useGame';
@@ -66,9 +66,7 @@ export default function Game() {
 
   const announcedInitialRef = useRef(false);
 
-  const applyGameState = (state: GameState) => {
-    setGameState(state);
-
+  const announceGameState = useCallback((state: GameState) => {
     const prev = prevTurnRef.current;
     const active = state.players[state.currentPlayer];
     if (!active) {
@@ -99,7 +97,12 @@ export default function Game() {
       });
     }
     prevTurnRef.current = { turn: state.turn, currentPlayer: state.currentPlayer };
-  };
+  }, []);
+
+  const applyGameState = useCallback((state: GameState) => {
+    setGameState(state);
+    announceGameState(state);
+  }, [announceGameState]);
 
   useEffect(() => {
     if (contextGameState) {
@@ -118,9 +121,8 @@ export default function Game() {
     if (announcedInitialRef.current) return;
     if (!gameState) return;
     announcedInitialRef.current = true;
-    applyGameState(gameState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState]);
+    announceGameState(gameState);
+  }, [gameState, announceGameState]);
 
   useEffect(() => {
     if (!turnAnnounce) return;
@@ -231,7 +233,7 @@ export default function Game() {
       socket.off('discard-animations');
       socket.off('play-animations');
     };
-  }, [navigate]);
+  }, [applyGameState, deactivate, navigate]);
 
   const activePlayer = gameState?.players[gameState.currentPlayer];
   const localPlayer = gameState?.players.find((p) => p.socketId === socket.id);

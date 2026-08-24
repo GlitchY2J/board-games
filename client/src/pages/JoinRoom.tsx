@@ -21,7 +21,6 @@ export default function JoinRoom() {
   useEffect(() => {
     const code = roomCode.trim().toUpperCase();
     if (code.length < 2) {
-      setTakenAvatars([]);
       return;
     }
 

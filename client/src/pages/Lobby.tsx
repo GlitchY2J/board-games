@@ -22,19 +22,14 @@ export default function Lobby() {
     deactivate,
   } = useGame();
 
-  const [room, setRoom] = useState<Room | null>(
-    contextRoom ?? location.state?.room ?? null,
+  const [localRoom, setLocalRoom] = useState<Room | null>(
+    location.state?.room ?? null,
   );
+  const room = contextRoom ?? localRoom;
   const playerName: string = contextPlayerName || (location.state?.playerName ?? '');
   const playerId: string = contextPlayerId || (location.state?.playerId ?? '');
   const isHost: boolean = contextIsHost || (location.state?.isHost ?? false);
   const canEditSettings = isHost;
-
-  useEffect(() => {
-    if (contextRoom) {
-      setRoom(contextRoom);
-    }
-  }, [contextRoom]);
 
   const [copied, setCopied] = useState(false);
   const [games, setGames] = useState<GameDefinition[]>([]);
@@ -57,9 +52,6 @@ export default function Lobby() {
       : gameId
         ? getGame(gameId).then((game) => [game])
         : Promise.resolve([] as GameDefinition[]);
-
-    setCatalogLoading(true);
-    setCatalogError('');
 
     catalogRequest
       .then((availableGames) => {
@@ -96,7 +88,7 @@ export default function Lobby() {
     socket.on('connect', emitJoinRoom);
 
     const onRoomUpdated = (updatedRoom: Room) => {
-      setRoom(updatedRoom);
+      setLocalRoom(updatedRoom);
     };
 
     const onTurnOrderAssigned = (players: { id: string; name: string; avatar?: string }[]) => {
