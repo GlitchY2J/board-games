@@ -9,9 +9,10 @@ interface Props {
   localPlayerId: string;
   gameId?: string;
   hide?: boolean;
+  spectator?: boolean;
 }
 
-export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, hide = false }: Props) {
+export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, hide = false, spectator = false }: Props) {
   const pending = gameState.pendingPlay;
   const isExplodingKittens =
     gameId === 'exploding-kittens' ||
@@ -30,7 +31,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
 
   if (!pending) return null;
 
-  const isMyPlay = pending.playerId === localPlayerId;
+  const isMyPlay = !spectator && pending.playerId === localPlayerId;
   const remainingMs = Math.max(
     0,
     pending.startedAt + pending.durationMs - now,
@@ -99,7 +100,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const hasSlowdown =
     localPlayer?.downgrades.some((card) => card.id === 'slowdown') ?? false;
   const hasAccepted = pending.acceptedIds.includes(localPlayerId);
-  const canRespond = !isMyPlay;
+  const canRespond = !spectator && !isMyPlay;
   const fallbackAttackTargetId =
     gameState.players.length > 0
       ? gameState.players[

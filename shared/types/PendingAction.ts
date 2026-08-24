@@ -2,6 +2,11 @@ import type { Card } from "./Card.ts";
 
 export type PendingAction =
   | {
+      type: "exploding_kitten";
+      playerId: string;
+      card: Card;
+    }
+  | {
       type: "select_discard_count";
       reason: "unicorn_of_pestilence";
       playerId: string;
@@ -211,10 +216,11 @@ export type PendingAction =
     }
   | {
       type: "select_deck_card";
-      reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw";
+      reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
       candidates: Card[];
+      card?: Card;
     }
   | {
       type: "select_oracle_cards";

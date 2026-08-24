@@ -264,6 +264,11 @@
   align-items: center;
 }
 
+.exploding-kitten-card {
+  margin: 16px 0 4px;
+  filter: drop-shadow(0 10px 22px rgba(239, 68, 68, 0.32));
+}
+
 .choice-options-grid {
   display: flex;
   flex-direction: column;
@@ -321,6 +326,19 @@
   width: 58px;
   height: 76px;
   margin-bottom: 7px;
+}
+
+.choice-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.choice-actions .choice-button {
+  width: auto;
+  min-width: 140px;
 }
 
 @media (max-width: 520px) {

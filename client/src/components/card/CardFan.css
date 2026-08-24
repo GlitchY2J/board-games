@@ -5,11 +5,12 @@
   height: 260px;
   overflow: visible;
   max-width: 100vw;
+  width: 100%;
 }
 
 .fan-card {
   position: relative;
-  margin-left: -60px;
+  margin-left: var(--hand-card-overlap, -60px);
   transition: 0.2s;
   transform-origin: center bottom;
 }
@@ -43,6 +44,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .card-fan-compact {
@@ -50,7 +52,7 @@
 }
 
 .card-fan-compact .fan-card {
-  margin-left: -72px;
+  margin-left: var(--hand-card-overlap, -72px);
 }
 
 .card-fan-compact .fan-card:first-child {
@@ -58,7 +60,11 @@
 }
 
 .card-fan-compact .playing-card.large {
-  width: 112px;
+  width: var(--hand-card-width, 112px);
+}
+
+.card-fan .playing-card.large {
+  width: var(--hand-card-width, 148px);
 }
 
 .fan-card:hover {
@@ -220,7 +226,10 @@
     height: 190px;
   }
   .fan-card {
-    margin-left: -46px;
+    margin-left: max(var(--hand-card-overlap, -46px), -34px);
+  }
+  .card-fan .playing-card.large {
+    width: min(var(--hand-card-width, 88px), 88px);
   }
 
 }
@@ -230,6 +239,9 @@
     height: 165px;
   }
   .fan-card {
-    margin-left: -40px;
+    margin-left: max(var(--hand-card-overlap, -40px), -28px);
+  }
+  .card-fan .playing-card.large {
+    width: min(var(--hand-card-width, 76px), 76px);
   }
 }

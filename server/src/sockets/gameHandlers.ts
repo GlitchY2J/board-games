@@ -826,6 +826,18 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
 
       enqueueDrawAnimation(game.roomCode, gamePlayer.id, card);
       gamePlayer.hand.push(card);
+      if (card.id === 'exploding_kitten') {
+        game.pendingAction = {
+          type: 'exploding_kitten',
+          playerId: gamePlayer.id,
+          card,
+        };
+        addLog(game, `${player.name} robó un Exploding Kitten`, {
+          playerId: player.id,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
       addLog(game, `${player.name} robó una carta y terminó su turno`, {
         playerId: player.id,
       });

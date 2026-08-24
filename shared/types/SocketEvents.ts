@@ -156,6 +156,11 @@ export interface DrawAnimation {
   };
 }
 
+export interface ResolveExplodingKittenPayload {
+  roomCode: string;
+  useDefuse: boolean;
+}
+
 export interface StealAnimation {
   animId: string;
   sourcePlayerId: string;
@@ -259,6 +264,7 @@ export interface ClientToServerEvents {
 
   // Select Hand Card
   'select-hand-card': (payload: SelectHandCardPayload) => void;
+  'resolve-exploding-kitten': (payload: ResolveExplodingKittenPayload) => void;
 
   // Next Phase
   'next-phase': (roomCode: string) => void;

@@ -25,7 +25,7 @@ interface TurnAnnounce {
 export default function Game() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { gameState: contextGameState, isHost: contextIsHost, room: roomFromContext, deactivate } = useGame();
+  const { gameState: contextGameState, playerId: contextPlayerId, isHost: contextIsHost, room: roomFromContext, deactivate } = useGame();
   const locationGameState = location.state?.gameState as GameState | undefined;
 
   const [gameState, setGameState] = useState<GameState | null>(
@@ -105,6 +105,13 @@ export default function Game() {
     prevTurnRef.current = { turn: state.turn, currentPlayer: state.currentPlayer };
   }, []);
 
+  const isSpectatorState = useCallback((state: GameState) => {
+    return (
+      !state.players.some((player) => player.socketId === socket.id) &&
+      state.eliminatedPlayers?.some((player) => player.id === contextPlayerId) === true
+    );
+  }, [contextPlayerId]);
+
   const applyGameState = useCallback((state: GameState) => {
     setGameState(state);
     announceGameState(state);
@@ -156,6 +163,12 @@ export default function Game() {
     };
 
     const onGameUpdated = (state: GameState) => {
+      if (isSpectatorState(state)) {
+        activeAnimationsCountRef.current = 0;
+        pendingGameStateRef.current = null;
+        applyGameState(state);
+        return;
+      }
       if (activeAnimationsCountRef.current > 0) {
         pendingGameStateRef.current = state;
       } else {
@@ -255,7 +268,7 @@ export default function Game() {
       socket.off('discard-animations');
       socket.off('play-animations');
     };
-  }, [applyGameState, deactivate, navigate]);
+  }, [applyGameState, deactivate, isSpectatorState, navigate]);
 
   const activePlayer = gameState?.players[gameState.currentPlayer];
   const localPlayer = gameState?.players.find((p) => p.socketId === socket.id);
@@ -264,10 +277,13 @@ export default function Game() {
   useEffect(() => {
     if (!gameState) return;
     const local = gameState.players.find((p) => p.socketId === socket.id);
-    if (!local) {
+    const isEliminated = gameState.eliminatedPlayers?.some(
+      (player) => player.id === contextPlayerId,
+    );
+    if (!local && !isEliminated) {
       deactivate();
     }
-  }, [gameState, deactivate]);
+  }, [contextPlayerId, gameState, deactivate]);
 
   // Ejecutar automáticamente los efectos de inicio de turno después del anuncio de turno
   useEffect(() => {
@@ -293,6 +309,26 @@ export default function Game() {
   }
 
   if (!localPlayer) {
+    const eliminated = gameState.eliminatedPlayers?.find(
+      (player) => player.id === contextPlayerId,
+    );
+    if (eliminated) {
+      return (
+        <div className="relative min-h-screen">
+          <BoardLayout
+            gameState={gameState}
+            gameId={gameId}
+            isMyTurn={false}
+            isHost={false}
+            onPlay={() => undefined}
+            spectator
+          />
+          <div className="pointer-events-none fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-full border border-rose-400/30 bg-slate-950/85 px-4 py-2 text-center text-xs font-bold text-rose-200 shadow-xl backdrop-blur">
+            Espectador · Eliminado en {eliminated.placement}° lugar
+          </div>
+        </div>
+      );
+    }
     return <h2>Jugador no encontrado.</h2>;
   }
 

@@ -37,6 +37,7 @@ export function registerActionHandlers(
   registerSelectPlayers(io, socket);
   registerSelectStableCard(io, socket);
   registerSelectHandCard(io, socket);
+  registerResolveExplodingKitten(io, socket);
   registerCancelAction(io, socket);
   registerSelectChoice(io, socket);
   registerSelectNurseryCard(io, socket);
@@ -493,6 +494,79 @@ export function registerActionHandlers(
         addLog(game, `${player.name} eligió una carta de una mano`, {
           playerId: player.id,
         });
+      }
+
+      emitGameState(io, room, 'game-updated');
+    });
+  }
+
+  function registerResolveExplodingKitten(io: GameServer, socket: GameSocket): void {
+    socket.on('resolve-exploding-kitten', ({ roomCode, useDefuse }) => {
+      const context = getSocketGameContext(socket, roomCode);
+      if (!context) return;
+
+      const { game, player, room } = context;
+      const pending = game.pendingAction;
+      if (!pending || pending.type !== 'exploding_kitten' || pending.playerId !== player.id) {
+        emitGameError(socket, 'NO_PENDING_ACTION', 'No hay un Exploding Kitten pendiente.', 'select-choice');
+        return;
+      }
+
+      const gamePlayer = game.players.find((candidate) => candidate.id === player.id);
+      if (!gamePlayer) return;
+
+      const kittenIndex = gamePlayer.hand.findIndex((card) => card.uid === pending.card.uid);
+      if (kittenIndex < 0) return;
+
+      if (useDefuse) {
+        const defuseIndex = gamePlayer.hand.findIndex((card) => card.id === 'defuse');
+        if (defuseIndex < 0) {
+          emitGameError(socket, 'CARD_NOT_FOUND', 'No tienes un Defuse.', 'select-choice');
+          return;
+        }
+
+        const [defuse] = gamePlayer.hand.splice(defuseIndex, 1);
+        gamePlayer.hand.splice(kittenIndex > defuseIndex ? kittenIndex - 1 : kittenIndex, 1);
+        game.discard.push(defuse);
+        game.pendingAction = {
+          type: 'select_deck_card',
+          reason: 'exploding_kitten_defuse',
+          playerId: player.id,
+          candidates: [],
+          card: pending.card,
+        };
+        addLog(game, `${player.name} usó un Defuse`, { playerId: player.id });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      const playerIndex = game.players.findIndex((candidate) => candidate.id === player.id);
+      const placement = game.players.length;
+      game.discard.push(...gamePlayer.hand.filter((card) => card.uid !== pending.card.uid));
+      game.discard.push(pending.card);
+      game.eliminatedPlayers ??= [];
+      game.eliminatedPlayers.push({
+        id: player.id,
+        name: player.name,
+        avatar: player.avatar,
+        placement,
+      });
+      game.players.splice(playerIndex, 1);
+      game.pendingAction = undefined;
+      addLog(game, `${player.name} fue eliminado por un Exploding Kitten`, {
+        playerId: player.id,
+      });
+
+      if (game.players.length === 1) {
+        game.winnerId = game.players[0].id;
+        game.phase = TurnPhase.END;
+      } else if (game.players.length > 1) {
+        game.currentPlayer = playerIndex % game.players.length;
+        game.turn += 1;
+        game.phase = TurnPhase.DRAW;
+        game.turnsRemaining = 1;
+        game.actionUsed = false;
+        game.actionPlaysRemaining = undefined;
       }
 
       emitGameState(io, room, 'game-updated');
@@ -1772,7 +1846,8 @@ export function registerActionHandlers(
         pending.reason !== 'classy_narwhal' &&
         pending.reason !== 'the_great_narwhal' &&
         pending.reason !== 'shabby_the_narwhal' &&
-        pending.reason !== 'debug_draw'
+        pending.reason !== 'debug_draw' &&
+        pending.reason !== 'exploding_kitten_defuse'
       )
         return;
 
@@ -1786,6 +1861,21 @@ export function registerActionHandlers(
           'La carta seleccionada no es válida.',
           'select-deck-card',
         );
+        return;
+      }
+
+      if (pending.reason === 'exploding_kitten_defuse') {
+        const position = Number(cardId.replace('deck-position-', ''));
+        if (!Number.isInteger(position) || position < 0 || position > room.gameState.deck.length) {
+          emitGameError(socket, 'INVALID_SELECTION', 'La posición del mazo no es válida.', 'select-deck-card');
+          return;
+        }
+
+        if (!pending.card) return;
+        room.gameState.deck.splice(position, 0, pending.card);
+        room.gameState.pendingAction = undefined;
+        advanceTurnAfterDraw(room.gameState);
+        emitGameState(io, room, 'game-updated');
         return;
       }
 

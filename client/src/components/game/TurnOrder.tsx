@@ -87,6 +87,36 @@ export default function TurnOrder({ gameState, localPlayerId }: Props) {
           </motion.div>
         );
       })}
+      {(gameState.eliminatedPlayers?.length ?? 0) > 0 && (
+        <div className="turn-order-eliminated">
+          <div className="turn-order-eliminated-title">Eliminados</div>
+          {gameState.eliminatedPlayers?.map((player) => (
+            <div key={player.id} className="turn-order-row turn-order-row-idle turn-order-eliminated-row">
+              <div className="turn-order-avatar">
+                {player.avatar ? (
+                  <img
+                    src={`/avatars/${player.avatar}.png`}
+                    alt={player.name}
+                    className="w-full h-full object-cover rounded-full grayscale"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center font-black text-[10px] rounded-full bg-slate-800 text-slate-500">
+                    {player.name.substring(0, 2)}
+                  </div>
+                )}
+              </div>
+              <div className="turn-order-name-wrap">
+                <span className="turn-order-name truncate text-slate-500 line-through">
+                  {player.name}
+                </span>
+                <span className="text-[9px] text-slate-600 ml-1">
+                  {player.placement}°
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

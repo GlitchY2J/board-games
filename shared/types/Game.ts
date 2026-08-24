@@ -47,6 +47,13 @@ export interface GameLogEntry {
   timestamp: number;
 }
 
+export interface EliminatedPlayer {
+  id: string;
+  name: string;
+  avatar: string;
+  placement: number;
+}
+
 export interface ChatMessage {
   id: string;
   playerId: string;
@@ -85,4 +92,5 @@ export interface GameState {
   log: GameLogEntry[];
   /** Mensajes de chat entre jugadores (cronológicos: el más reciente al final). */
   chat?: ChatMessage[];
+  eliminatedPlayers?: EliminatedPlayer[];
 }

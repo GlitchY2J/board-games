@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { GameState } from '../../types/GameState';
 import CardSelectionOverlay from './CardSelectionOverlay';
+import PlayingCard from '../card/PlayingCard';
 
 function isPandamoniumProtected(
   player: { downgrades: { id: string }[] },
@@ -107,6 +108,68 @@ export default function GameOverlay({
     }
 
     switch (action.type) {
+      case 'exploding_kitten': {
+        const affectedPlayer = gameState.players.find(
+          (player) => player.id === action.playerId,
+        );
+        const isAffectedPlayer = action.playerId === localPlayerId;
+        const localPlayer = gameState.players.find(
+          (player) => player.id === localPlayerId,
+        );
+        const defuse = localPlayer?.hand.find((card) => card.id === 'defuse');
+
+        return (
+          <div className="overlay-backdrop">
+            <div className="card-selection-window choice-window exploding-kitten-window">
+              <h2>
+                {isAffectedPlayer
+                  ? 'Has robado un Exploding Kitten'
+                  : `${affectedPlayer?.name ?? 'Un jugador'} ha robado un Exploding Kitten`}
+              </h2>
+              <div className="exploding-kitten-card">
+                <PlayingCard
+                  name={action.card.name}
+                  image={action.card.image}
+                  size="large"
+                  disabled
+                  preview={false}
+                />
+              </div>
+              <p>
+                {isAffectedPlayer
+                  ? defuse
+                    ? 'Usa un Defuse para sobrevivir o acepta tu eliminación.'
+                    : 'No tienes un Defuse. Acepta tu eliminación.'
+                  : `${affectedPlayer?.name ?? 'El jugador'} debe usar un Defuse o será eliminado.`}
+              </p>
+              {isAffectedPlayer && (
+                <div className="choice-actions">
+                  {defuse && (
+                    <button
+                      className="confirm-button choice-button"
+                      onClick={() => socket.emit('resolve-exploding-kitten', {
+                        roomCode: gameState.roomCode,
+                        useDefuse: true,
+                      })}
+                    >
+                      Usar Defuse
+                    </button>
+                  )}
+                  <button
+                    className="cancel-button choice-button"
+                    onClick={() => socket.emit('resolve-exploding-kitten', {
+                      roomCode: gameState.roomCode,
+                      useDefuse: false,
+                    })}
+                  >
+                    Aceptar
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
       // ───────────────────────────────────
       // DESCARTE DE CARTAS
       // ───────────────────────────────────
@@ -2066,8 +2129,11 @@ export default function GameOverlay({
         const isGreatNarwhal = action.reason === 'the_great_narwhal';
         const isShabbyNarwhal = action.reason === 'shabby_the_narwhal';
         const isDebugDraw = action.reason === 'debug_draw';
+        const isExplodingKittenDefuse = action.reason === 'exploding_kitten_defuse';
 
-        const title = isDebugDraw
+        const title = isExplodingKittenDefuse
+          ? '🛡️ Coloca el Exploding Kitten'
+          : isDebugDraw
           ? '🐛 Modo Debug — Roba una carta'
           : isGreatNarwhal
             ? '🐋 The Great Narwhal'
@@ -2075,7 +2141,9 @@ export default function GameOverlay({
               ? '🦄 Shabby The Narwhal'
               : '🐳 Classy Narwhal';
 
-        const subtitle = isDebugDraw
+        const subtitle = isExplodingKittenDefuse
+          ? 'Elige en qué posición del mazo quieres devolver el Exploding Kitten'
+          : isDebugDraw
           ? 'Elige qué carta del mazo quieres tomar en tu fase de robo'
           : isGreatNarwhal
             ? 'Elige una carta con "Narwhal" en su nombre para agregarla a tu mano (luego se barajará el mazo)'
@@ -2083,7 +2151,18 @@ export default function GameOverlay({
               ? 'Elige una carta de Downgrade del mazo para agregarla a tu mano (luego se barajará el mazo)'
               : 'Elige una carta de Upgrade del mazo para agregarla a tu mano (luego se barajará el mazo)';
 
-        const items = isDebugDraw
+        const items = isExplodingKittenDefuse
+          ? Array.from({ length: gameState.deck.length + 1 }, (_, idx) => ({
+              id: `deck-position-${idx}`,
+              value: `deck-position-${idx}`,
+              title: idx === 0
+                ? 'Parte superior'
+                : idx === gameState.deck.length
+                  ? 'Parte inferior'
+                  : `Posición ${idx + 1}`,
+              image: '/cards/base/card_back.png',
+            }))
+          : isDebugDraw
           ? gameState.deck.map((card, idx) => ({
               id: `${card.id}_${idx}`,
               value: card.uid,
@@ -2104,7 +2183,7 @@ export default function GameOverlay({
             subtitle={subtitle}
             items={items}
             maxSelection={1}
-            confirmText={isDebugDraw ? 'Robar' : 'Tomar'}
+            confirmText={isExplodingKittenDefuse ? 'Colocar' : isDebugDraw ? 'Robar' : 'Tomar'}
             onConfirm={([cardId]) => {
               dismiss();
               socket.emit('select-deck-card', {

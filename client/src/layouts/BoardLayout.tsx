@@ -26,6 +26,7 @@ interface Props {
   onPlay(cardId: string, cardIds?: string[]): void;
   hidePendingPlay?: boolean;
   sortHandMode?: 'alphabetical' | 'type' | null;
+  spectator?: boolean;
 }
 
 export default function BoardLayout({
@@ -36,6 +37,7 @@ export default function BoardLayout({
   onPlay,
   hidePendingPlay = false,
   sortHandMode = null,
+  spectator = false,
 }: Props) {
   const navigate = useNavigate();
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -45,7 +47,9 @@ export default function BoardLayout({
   const [playerNotification, setPlayerNotification] = useState<string | null>(
     null,
   );
-  const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
+  const localPlayer =
+    gameState.players.find((p) => p.socketId === socket.id) ??
+    (spectator ? gameState.players[0] : undefined);
   const cardSelectedRef = useRef(false);
   const notificationTimerRef = useRef<number | null>(null);
 
@@ -101,7 +105,7 @@ export default function BoardLayout({
     return () => window.removeEventListener('keydown', onMobileChatShortcut);
   }, [mobileChatOpen]);
 
-  const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
+  const opponents = gameState.players.filter((P) => P.id !== localPlayer?.id);
   const totalPlayers = gameState.players.length;
   const activePlayer = gameState.players[gameState.currentPlayer];
   const isActivePlayer = activePlayer?.socketId === socket.id;
@@ -311,10 +315,10 @@ export default function BoardLayout({
             />
 
             {showPlayerBoards && (
-              <PlayerBoard
-                player={localPlayer}
-                isLocalPlayer
-                isMyTurn={isMyTurn}
+                <PlayerBoard
+                  player={localPlayer}
+                  isLocalPlayer={!spectator}
+                  isMyTurn={isMyTurn && !spectator}
               />
             )}
           </div>
@@ -352,17 +356,20 @@ export default function BoardLayout({
         </div>
       </div>
 
-      <GameOverlay
-        gameState={gameState}
-        localPlayerId={localPlayer.id}
-        hide={hidePendingPlay}
-      />
+      {!spectator && (
+        <GameOverlay
+          gameState={gameState}
+          localPlayerId={localPlayer.id}
+          hide={hidePendingPlay}
+        />
+      )}
 
       <PendingPlayOverlay
         gameState={gameState}
-        localPlayerId={localPlayer.id}
+        localPlayerId={spectator ? '' : localPlayer.id}
         gameId={gameId}
         hide={hidePendingPlay}
+        spectator={spectator}
       />
 
       <div className="corner-controls">
@@ -472,26 +479,28 @@ export default function BoardLayout({
         </>
       )}
 
-      <div className="bottom-hand" data-hand>
-        <PlayerHand
-          player={localPlayer}
-          isLocalPlayer
-          isMyTurn={isMyTurn}
-          gamePhase={showPhases ? gameState.phase : 'ACTION'}
-          actionUsed={gameState.actionUsed}
-          pendingPlay={!!gameState.pendingPlay}
-          blockedCardIds={blockedCardIds}
-          onPlay={onPlay}
-          onPlayCards={(cardIds) => onPlay(cardIds[0], cardIds)}
-          compact={gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens'}
-          gameId={gameId}
-          sortHandMode={sortHandMode}
-          onInvalidAction={showPlayerNotification}
-          onSelectionChange={(selected) => {
-            cardSelectedRef.current = selected;
-          }}
-        />
-      </div>
+      {!spectator && (
+        <div className="bottom-hand" data-hand>
+          <PlayerHand
+            player={localPlayer}
+            isLocalPlayer
+            isMyTurn={isMyTurn}
+            gamePhase={showPhases ? gameState.phase : 'ACTION'}
+            actionUsed={gameState.actionUsed}
+            pendingPlay={!!gameState.pendingPlay}
+            blockedCardIds={blockedCardIds}
+            onPlay={onPlay}
+            onPlayCards={(cardIds) => onPlay(cardIds[0], cardIds)}
+            compact={gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens'}
+            gameId={gameId}
+            sortHandMode={sortHandMode}
+            onInvalidAction={showPlayerNotification}
+            onSelectionChange={(selected) => {
+              cardSelectedRef.current = selected;
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

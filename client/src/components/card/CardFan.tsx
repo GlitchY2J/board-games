@@ -1,7 +1,7 @@
 import './CardFan.css';
 import PlayingCard from './PlayingCard.tsx';
 import type { GameState } from '../../types/GameState.ts';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { Play, X } from 'lucide-react';
 import { useCardPreview } from '../../context/useCardPreview';
@@ -60,7 +60,20 @@ export default function CardFan({
   sortHandMode = null,
 }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const fanRef = useRef<HTMLDivElement>(null);
+  const [fanWidth, setFanWidth] = useState(0);
   const { hidePreview } = useCardPreview();
+
+  useLayoutEffect(() => {
+    const element = fanRef.current;
+    if (!element) return;
+
+    const updateWidth = () => setFanWidth(element.clientWidth);
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   const displayCards = sortHandMode
     ? [...cards].sort((a, b) => {
@@ -75,6 +88,12 @@ export default function CardFan({
         });
       })
     : cards;
+
+  const cardCount = displayCards.length;
+  const overlap = Math.min(60, Math.max(24, fanWidth * 0.2));
+  const cardWidth = fanWidth > 0
+    ? Math.min(148, Math.max(64, (fanWidth + overlap * Math.max(0, cardCount - 1)) / Math.max(1, cardCount)))
+    : 148;
 
   useEffect(() => {
     onSelectionChange?.(selectedCardId !== null);
@@ -175,7 +194,14 @@ export default function CardFan({
   return (
     <>
       <div className="card-fan-wrap">
-        <div className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}`}>
+        <div
+          ref={fanRef}
+          className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}`}
+          style={{
+            '--hand-card-width': `${cardWidth}px`,
+            '--hand-card-overlap': `-${overlap}px`,
+          } as CSSProperties}
+        >
         {displayCards.map((card, index) => {
           const total = displayCards.length;
           const middle = (total - 1) / 2;
