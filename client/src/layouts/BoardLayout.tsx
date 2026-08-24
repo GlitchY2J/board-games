@@ -23,8 +23,9 @@ interface Props {
   gameId?: string;
   isMyTurn: boolean;
   isHost: boolean;
-  onPlay(cardId: string): void;
+  onPlay(cardId: string, cardIds?: string[]): void;
   hidePendingPlay?: boolean;
+  sortHandRequest?: number;
 }
 
 export default function BoardLayout({
@@ -34,6 +35,7 @@ export default function BoardLayout({
   isHost,
   onPlay,
   hidePendingPlay = false,
+  sortHandRequest = 0,
 }: Props) {
   const navigate = useNavigate();
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -465,8 +467,11 @@ export default function BoardLayout({
           pendingPlay={!!gameState.pendingPlay}
           blockedCardIds={blockedCardIds}
           onPlay={onPlay}
-          onInvalidAction={showPlayerNotification}
+          onPlayCards={(cardIds) => onPlay(cardIds[0], cardIds)}
           compact={gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens'}
+          gameId={gameId}
+          sortHandRequest={sortHandRequest}
+          onInvalidAction={showPlayerNotification}
           onSelectionChange={(selected) => {
             cardSelectedRef.current = selected;
           }}

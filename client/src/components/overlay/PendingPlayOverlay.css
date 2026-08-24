@@ -66,6 +66,29 @@
   max-width: 240px;
 }
 
+.pending-play-card-fan {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 270px;
+  min-height: 190px;
+  padding: 12px 34px 0;
+}
+
+.pending-play-fan-card {
+  position: relative;
+  margin-left: -62px;
+  transform-origin: center bottom;
+}
+
+.pending-play-fan-card:first-child {
+  margin-left: 0;
+}
+
+.pending-play-fan-card .playing-card {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
 .pending-play-target {
   width: 100%;
   max-width: 360px;

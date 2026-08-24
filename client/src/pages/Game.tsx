@@ -31,6 +31,23 @@ export default function Game() {
   );
 
   const [turnAnnounce, setTurnAnnounce] = useState<TurnAnnounce | null>(null);
+  const [sortHandRequest, setSortHandRequest] = useState(0);
+
+  useEffect(() => {
+    const onSortHand = (event: KeyboardEvent) => {
+      if (event.code !== 'KeyS' && event.key.toLowerCase() !== 's') return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      event.preventDefault();
+      setSortHandRequest((request) => request + 1);
+    };
+
+    window.addEventListener('keydown', onSortHand, true);
+    window.addEventListener('keyup', onSortHand, true);
+    return () => {
+      window.removeEventListener('keydown', onSortHand, true);
+      window.removeEventListener('keyup', onSortHand, true);
+    };
+  }, []);
 
   const [removalAnims, setRemovalAnims] = useState<
     { animation: CardAnimation; rect: { left: number; top: number; width: number; height: number } }[]
@@ -258,7 +275,7 @@ export default function Game() {
   const isHost = contextIsHost || localPlayer.id === roomFromContext?.hostId;
   const gs: GameState = gameState;
 
-  function play(cardId: string) {
+  function play(cardId: string, cardIds?: string[]) {
     if (!localPlayer) {
       console.error(
         'No se puede jugar una carta: jugador local no encontrado.',
@@ -270,6 +287,7 @@ export default function Game() {
       roomCode: gs.roomCode,
       playerId: localPlayer.id,
       cardId,
+      cardIds,
     });
   }
 
@@ -361,6 +379,7 @@ export default function Game() {
         isMyTurn={isMyTurn}
         isHost={isHost}
         onPlay={play}
+        sortHandRequest={sortHandRequest}
         hidePendingPlay={hasActiveAnims}
       />
       {gameState.winnerId && (

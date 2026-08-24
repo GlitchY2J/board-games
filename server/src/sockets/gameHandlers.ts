@@ -411,7 +411,7 @@ function validateRoomConfiguration(
 }
 
 function registerPlayCard(io: GameServer, socket: GameSocket): void {
-  socket.on('play-card', ({ roomCode, playerId, cardId }) => {
+  socket.on('play-card', ({ roomCode, playerId, cardId, cardIds }) => {
     const context = getSocketGameContext(socket, roomCode);
 
     if (!context) {
@@ -445,6 +445,30 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       }
 
       const card = gamePlayer.hand[cardIndex];
+      const requestedCardIds = cardIds?.length ? cardIds : [cardId];
+      const selectedCards = requestedCardIds.map((uid) =>
+        gamePlayer.hand.find((handCard) => handCard.uid === uid),
+      );
+      const isCatCombo = requestedCardIds.length === 2 || requestedCardIds.length === 3;
+
+      if (requestedCardIds.length > 1) {
+        const validCatCombo =
+          isCatCombo &&
+          selectedCards.every((selected) => selected?.cardType === 'cat') &&
+          selectedCards.every((selected) => selected?.id === card.id);
+
+        if (!validCatCombo) {
+          emitGameError(
+            socket,
+            'ACTION_NOT_ALLOWED',
+            'Solo puedes combinar dos o tres cartas de gato idénticas.',
+            'play-card',
+          );
+          return;
+        }
+      }
+
+      const cardsToPlay = selectedCards.filter((selected): selected is typeof card => !!selected);
       const isNow = card.effect === 'now';
       const pending = context.game.pendingPlay;
       const fallbackAttackTargetId = pending
@@ -540,14 +564,12 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
           targetPlayerId: targetPlayer?.id,
           targetPlayerName: targetPlayer?.name,
           attackCount: card.id === 'attack' ? 1 : undefined,
-          chain: [
-          {
-            playerId: context.player.id,
-            playerName: context.player.name,
-            card,
-            group: 0,
-          },
-        ],
+        chain: cardsToPlay.map((playedCard) => ({
+          playerId: context.player.id,
+          playerName: context.player.name,
+          card: playedCard,
+          group: 0,
+        })),
       };
 
       if (card.id === 'attack' && card.effect === 'attack') {

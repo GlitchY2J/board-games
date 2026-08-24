@@ -43,6 +43,10 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
 
   const chainNeighCount = pending.chain.length - 1;
   const attackCount = pending.attackCount ?? pending.chain.filter((link) => link.card.id === 'attack').length;
+  const isCatComboPlay =
+    isExplodingKittens &&
+    pending.chain.length > 1 &&
+    pending.card.cardType === 'cat';
   const topIsReaction =
     pending.card.effect === 'neigh' ||
     pending.card.effect === 'super_neigh' ||
@@ -208,18 +212,44 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
           </div>
         )}
 
-        <div className="pending-play-card">
-          <PlayingCard
-            name={pending.card.name}
-            image={pending.card.image}
-            size={isMyPlay ? 'large' : 'xlarge'}
-            preview={false}
-          />
-        </div>
+        {isCatComboPlay ? (
+          <div className="pending-play-card-fan" aria-label={`${pending.chain.length} cartas gato jugadas`}>
+            {pending.chain.map((link, index) => (
+              <div
+                className="pending-play-fan-card"
+                key={link.card.uid}
+                style={{
+                  transform: `rotate(${(index - (pending.chain.length - 1) / 2) * 7}deg)`,
+                  zIndex: index,
+                }}
+              >
+                <PlayingCard
+                  name={link.card.name}
+                  image={link.card.image}
+                  size="large"
+                  preview={false}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="pending-play-card">
+            <PlayingCard
+              name={pending.card.name}
+              image={pending.card.image}
+              size={isMyPlay ? 'large' : 'xlarge'}
+              preview={false}
+            />
+          </div>
+        )}
 
         <div className="pending-play-card-name">{pending.card.name}</div>
 
-          {isExplodingKittens && attackCount > 1 ? (
+          {isCatComboPlay ? (
+            <div className="pending-play-chain">
+              Gatos jugados: {pending.chain.length}
+            </div>
+          ) : isExplodingKittens && attackCount > 1 ? (
             <div className="pending-play-chain pending-play-attack-stack">
               Attacks apilados: {attackCount}
             </div>

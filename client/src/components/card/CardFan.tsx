@@ -16,9 +16,12 @@ interface Props {
   pendingPlay: boolean;
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
+  onPlayCards?(cardIds: string[]): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
   compact?: boolean;
+  gameId?: string;
+  sortHandRequest?: number;
 }
 
 export default function CardFan({
@@ -29,12 +32,28 @@ export default function CardFan({
   pendingPlay,
   blockedCardIds,
   onPlay,
+  onPlayCards,
   onSelectionChange,
   onInvalidAction,
   compact = false,
+  gameId,
+  sortHandRequest = 0,
 }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [alphabetical, setAlphabetical] = useState(false);
   const { hidePreview } = useCardPreview();
+
+  useEffect(() => {
+    if (sortHandRequest > 0) setAlphabetical(true);
+  }, [sortHandRequest]);
+
+  const displayCards = (alphabetical || sortHandRequest > 0)
+    ? [...cards].sort((a, b) =>
+        String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', {
+          sensitivity: 'base',
+        }),
+      )
+    : cards;
 
   useEffect(() => {
     onSelectionChange?.(selectedCardId !== null);
@@ -70,19 +89,28 @@ export default function CardFan({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (selectedCardId || event.isComposing) return;
+      if (event.isComposing) return;
 
       if (event.target instanceof HTMLElement) {
         const tag = event.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       }
 
+      if (event.code === 'KeyS' || event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        event.stopPropagation();
+        setAlphabetical(true);
+        return;
+      }
+
+      if (selectedCardId) return;
+
       const keyIndex =
         event.key === '0' ? 9 : Number.parseInt(event.key, 10) - 1;
       if (
         Number.isNaN(keyIndex) ||
         keyIndex < 0 ||
-        keyIndex >= cards.length ||
+        keyIndex >= displayCards.length ||
         keyIndex > 9
       )
         return;
@@ -97,11 +125,17 @@ export default function CardFan({
         ?.click();
     }
 
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [cards.length, selectedCardId]);
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [displayCards.length, selectedCardId]);
 
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
+  const isCat = selectedCard?.cardType === 'cat';
+  const matchingCats = isCat
+    ? cards.filter((card) => card.id === selectedCard.id && card.uid !== selectedCard.uid)
+    : [];
+  const canPlayPair = matchingCats.length >= 1;
+  const canPlayTrio = matchingCats.length >= 2;
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
 
   const blockedReason = (card: CardType): string => {
@@ -126,9 +160,10 @@ export default function CardFan({
 
   return (
     <>
-      <div className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}`}>
-        {cards.map((card, index) => {
-          const total = cards.length;
+      <div className="card-fan-wrap">
+        <div className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}`}>
+        {displayCards.map((card, index) => {
+          const total = displayCards.length;
           const middle = (total - 1) / 2;
           const rotation = (index - middle) * 5;
           const hotkey = index < 9 ? index + 1 : index === 9 ? 0 : null;
@@ -194,6 +229,7 @@ export default function CardFan({
             </div>
           );
         })}
+        </div>
       </div>
 
       {selectedCardId &&
@@ -232,6 +268,44 @@ export default function CardFan({
                     Neigh solo puede jugarse como respuesta a la carta de otro
                     jugador.
                   </p>
+                ) : gameId === 'exploding-kittens' && isCat ? (
+                  <div className="cat-combo-actions">
+                    <button
+                      className="cat-combo-button cat-combo-single"
+                      onClick={() => {
+                        onPlay(selectedCardId);
+                        setSelectedCardId(null);
+                      }}
+                    >
+                      Jugar Carta
+                    </button>
+                    {canPlayPair && (
+                      <button
+                        className="cat-combo-button cat-combo-pair"
+                        onClick={() => {
+                          onPlayCards?.([selectedCardId, matchingCats[0].uid]);
+                          setSelectedCardId(null);
+                        }}
+                      >
+                        Two of a kind
+                      </button>
+                    )}
+                    {canPlayTrio && (
+                      <button
+                        className="cat-combo-button cat-combo-trio"
+                        onClick={() => {
+                          onPlayCards?.([
+                            selectedCardId,
+                            matchingCats[0].uid,
+                            matchingCats[1].uid,
+                          ]);
+                          setSelectedCardId(null);
+                        }}
+                      >
+                        Three of a kind
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <button
                     data-card-confirm

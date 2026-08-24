@@ -25,6 +25,7 @@ export interface PlayCardPayload {
   roomCode: string;
   playerId: string;
   cardId: string;
+  cardIds?: string[];
 }
 
 export interface DrawActionCardPayload {

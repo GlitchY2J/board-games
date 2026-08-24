@@ -14,9 +14,12 @@ interface Props {
   pendingPlay: boolean;
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
+  onPlayCards?(cardIds: string[]): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
   compact?: boolean;
+  gameId?: string;
+  sortHandRequest?: number;
 }
 
 export default function PlayerHand({
@@ -28,9 +31,12 @@ export default function PlayerHand({
   pendingPlay,
   blockedCardIds,
   onPlay,
+  onPlayCards,
   onSelectionChange,
   onInvalidAction,
   compact,
+  gameId,
+  sortHandRequest,
 }: Props) {
   return (
     <div className="player-hand">
@@ -43,9 +49,12 @@ export default function PlayerHand({
           pendingPlay={pendingPlay}
           blockedCardIds={blockedCardIds}
           onPlay={onPlay}
+          onPlayCards={onPlayCards}
           onSelectionChange={onSelectionChange}
           onInvalidAction={onInvalidAction}
           compact={compact}
+          gameId={gameId}
+          sortHandRequest={sortHandRequest}
         />
       ) : (
         <HiddenHand cardCount={player.hand.length} />

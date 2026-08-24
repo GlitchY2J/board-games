@@ -175,11 +175,13 @@ export function createExplodingKittensState(room: Room): GameState {
     (card) => card.id !== 'exploding_kitten' && card.id !== 'defuse',
   );
   const deck = new DeckManager(drawCards);
+  const defuseDeck = new DeckManager(defuses);
   deck.shuffle();
+  defuseDeck.shuffle();
   const players = room.players.map(resetPlayer);
 
   for (const player of players) {
-    const defuse = defuses.shift();
+     const defuse = defuseDeck.draw();
     if (defuse) player.hand.push(defuse);
 
     for (let cardIndex = 0; cardIndex < 7; cardIndex += 1) {
@@ -188,7 +190,10 @@ export function createExplodingKittensState(room: Room): GameState {
     }
   }
 
-  deck.drawPile.push(...defuses, ...kittens.slice(0, Math.max(0, players.length - 1)));
+   deck.drawPile.push(
+     ...defuseDeck.drawPile,
+     ...kittens.slice(0, Math.max(0, players.length - 1)),
+   );
   deck.shuffle();
 
   return {
