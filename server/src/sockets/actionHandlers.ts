@@ -1952,7 +1952,24 @@ export function registerActionHandlers(
         if (!pending.card) return;
         room.gameState.deck.splice(position, 0, pending.card);
         room.gameState.pendingAction = undefined;
-        advanceTurnAfterDraw(room.gameState);
+        const defusingPlayerIndex = room.gameState.players.findIndex(
+          (candidate) => candidate.id === player.id,
+        );
+        if (defusingPlayerIndex >= 0) {
+          room.gameState.currentPlayer = defusingPlayerIndex;
+        }
+        room.gameState.currentPlayer =
+          (room.gameState.currentPlayer + 1) % room.gameState.players.length;
+        room.gameState.turn += 1;
+        room.gameState.turnsRemaining = 1;
+        room.gameState.phase = TurnPhase.DRAW;
+        room.gameState.actionUsed = false;
+        room.gameState.actionPlaysRemaining = undefined;
+        room.gameState.pendingAction = undefined;
+        room.gameState.pendingPlay = undefined;
+        addLog(room.gameState, `${player.name} terminó su turno después de usar Defuse`, {
+          playerId: player.id,
+        });
         emitGameState(io, room, 'game-updated');
         return;
       }
