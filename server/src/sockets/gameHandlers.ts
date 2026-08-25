@@ -300,7 +300,12 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
             );
           }
 
-          advanceTurnAfterDraw(game);
+          game.currentPlayer = game.players.findIndex(
+            (player) => player.id === original.playerId,
+          );
+          game.phase = TurnPhase.ACTION;
+          game.actionUsed = false;
+          game.actionPlaysRemaining = undefined;
         } else {
         game.pendingAction = {
           type: 'select_hand_card',
