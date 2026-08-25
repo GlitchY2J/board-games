@@ -1,10 +1,10 @@
 import './CardFan.css';
 import PlayingCard from './PlayingCard.tsx';
 import type { GameState } from '../../types/GameState.ts';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { Play, X } from 'lucide-react';
-import { useCardPreview } from '../../context/CardPreviewContext';
+import { useCardPreview } from '../../context/useCardPreview';
 
 type CardType = GameState['players'][number]['hand'][number];
 
@@ -16,8 +16,32 @@ interface Props {
   pendingPlay: boolean;
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
+  onPlayCards?(cardIds: string[]): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
+  compact?: boolean;
+  gameId?: string;
+  sortHandMode?: 'alphabetical' | 'type' | null;
+}
+
+function getCardTypeRank(card: CardType): number {
+  if (card.cardType === 'unicorn') {
+    return card.unicornClass === 'magical' ? 1 : 0;
+  }
+
+  if (card.cardType === 'magic') return 2;
+  if (card.cardType === 'upgrade') return 3;
+  if (card.cardType === 'downgrade') return 4;
+  if (card.cardType === 'instant' && card.id.includes('neigh')) return 5;
+
+  const remainingRanks: Partial<Record<CardType['cardType'], number>> = {
+    instant: 6,
+    action: 7,
+    cat: 8,
+    defuse: 9,
+    exploding_kitten: 10,
+  };
+  return remainingRanks[card.cardType] ?? 11;
 }
 
 export default function CardFan({
@@ -28,11 +52,48 @@ export default function CardFan({
   pendingPlay,
   blockedCardIds,
   onPlay,
+  onPlayCards,
   onSelectionChange,
   onInvalidAction,
+  compact = false,
+  gameId,
+  sortHandMode = null,
 }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const fanRef = useRef<HTMLDivElement>(null);
+  const [fanWidth, setFanWidth] = useState(0);
   const { hidePreview } = useCardPreview();
+
+  useLayoutEffect(() => {
+    const element = fanRef.current;
+    if (!element) return;
+
+    const updateWidth = () => setFanWidth(element.clientWidth);
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const displayCards = sortHandMode
+    ? [...cards].sort((a, b) => {
+        if (sortHandMode === 'type') {
+          const rankDifference =
+            getCardTypeRank(a) - getCardTypeRank(b);
+          if (rankDifference !== 0) return rankDifference;
+        }
+
+        return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', {
+          sensitivity: 'base',
+        });
+      })
+    : cards;
+
+  const cardCount = displayCards.length;
+  const overlap = Math.min(60, Math.max(12, fanWidth * 0.2));
+  const cardWidth = fanWidth > 0
+    ? Math.min(148, Math.max(48, (fanWidth + overlap * Math.max(0, cardCount - 1)) / Math.max(1, cardCount)))
+    : 148;
 
   useEffect(() => {
     onSelectionChange?.(selectedCardId !== null);
@@ -40,57 +101,74 @@ export default function CardFan({
 
   useEffect(() => {
     if (!selectedCardId) return;
-    if (pendingPlay) return;
 
-    const selectedId = selectedCardId;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.isComposing) return;
 
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLElement) {
-        const tag = e.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      }
-
-      if (e.isComposing) return;
-      if (e.code !== 'Enter') return;
-
-      const selected = cards.find((c) => c.uid === selectedId);
-      if (!selected) return;
-
-      if (actionUsed) {
-        onInvalidAction?.('Ya jugaste una carta este turno');
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setSelectedCardId(null);
         return;
       }
 
-      if (isBlocked(selectedId)) {
-        onInvalidAction?.(blockedReason(selected));
-        return;
-      }
+      if (event.key.toLowerCase() !== 'a') return;
 
-      if (isNeigh(selected)) {
-        onInvalidAction?.(
-          'Neigh solo puede jugarse como respuesta a la carta de otro jugador',
-        );
-        return;
-      }
+      const confirmButton = document.querySelector<HTMLElement>(
+        '[data-card-confirm]',
+      );
+      if (!confirmButton) return;
 
-      e.preventDefault();
-      e.stopPropagation();
-      onPlay(selectedId);
-      setSelectedCardId(null);
+      event.preventDefault();
+      event.stopPropagation();
+      confirmButton.click();
     }
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [
-    selectedCardId,
-    cards,
-    onPlay,
-    pendingPlay,
-    actionUsed,
-    onInvalidAction,
-  ]);
+  }, [selectedCardId]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.isComposing) return;
+
+      if (event.target instanceof HTMLElement) {
+        const tag = event.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      }
+
+      if (selectedCardId) return;
+
+      const keyIndex =
+        event.key === '0' ? 9 : Number.parseInt(event.key, 10) - 1;
+      if (
+        Number.isNaN(keyIndex) ||
+        keyIndex < 0 ||
+        keyIndex >= displayCards.length ||
+        keyIndex > 9
+      )
+        return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Reutiliza el mismo flujo del clic para mantener todas las validaciones.
+      document
+        .querySelector<HTMLElement>(`[data-card-hotkey="${keyIndex}"]`)
+        ?.querySelector<HTMLElement>('.playing-card')
+        ?.click();
+    }
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [displayCards.length, selectedCardId]);
 
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
+  const isCat = selectedCard?.cardType === 'cat';
+  const matchingCats = isCat
+    ? cards.filter((card) => card.id === selectedCard.id && card.uid !== selectedCard.uid)
+    : [];
+  const canPlayPair = matchingCats.length >= 1;
+  const canPlayTrio = matchingCats.length >= 2;
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
 
   const blockedReason = (card: CardType): string => {
@@ -115,18 +193,33 @@ export default function CardFan({
 
   return (
     <>
-      <div className="card-fan">
-        {cards.map((card, index) => {
-          const total = cards.length;
+      <div className="card-fan-wrap">
+        <div
+          ref={fanRef}
+          className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}`}
+          style={{
+            '--hand-card-width': `${cardWidth}px`,
+            '--hand-card-overlap': `-${overlap}px`,
+          } as CSSProperties}
+        >
+        {displayCards.map((card, index) => {
+          const total = displayCards.length;
           const middle = (total - 1) / 2;
           const rotation = (index - middle) * 5;
+          const hotkey = index < 9 ? index + 1 : index === 9 ? 0 : null;
 
           return (
             <div
               key={card.uid}
               className="fan-card"
+              data-card-hotkey={index}
               style={{ transform: `rotate(${rotation}deg)`, zIndex: index }}
             >
+              {hotkey !== null && (
+                <span className="card-hotkey" aria-hidden="true">
+                  {hotkey}
+                </span>
+              )}
               <PlayingCard
                 name={card.name}
                 image={card.image}
@@ -134,25 +227,35 @@ export default function CardFan({
                 disabled={false}
                 selected={selectedCardId === card.uid}
                 onClick={() => {
-                  if (!isMyTurn) {
+                  const isNow = card.effect === 'now';
+
+                  if (!isMyTurn && !isNow) {
                     onInvalidAction?.('No es tu turno');
                     return;
                   }
 
-                  if (gamePhase !== 'ACTION') {
+                  if (!isNow && gamePhase !== 'ACTION') {
                     onInvalidAction?.(
                       'Solo puedes jugar cartas durante tu fase de acción',
                     );
                     return;
                   }
 
-                  if (actionUsed) {
+                  if (!isNow && actionUsed) {
                     onInvalidAction?.('Ya jugaste una carta este turno');
                     return;
                   }
 
                   if (pendingPlay) {
                     onInvalidAction?.('Hay otra carta esperando a resolverse');
+                    return;
+                  }
+
+                  if (
+                    gameId &&
+                    (card.id === 'defuse' || card.id === 'nope' || card.effect === 'nope')
+                  ) {
+                    onInvalidAction?.('No puedes jugar esta carta en este momento');
                     return;
                   }
 
@@ -174,6 +277,7 @@ export default function CardFan({
             </div>
           );
         })}
+        </div>
       </div>
 
       {selectedCardId &&
@@ -212,8 +316,47 @@ export default function CardFan({
                     Neigh solo puede jugarse como respuesta a la carta de otro
                     jugador.
                   </p>
+                ) : gameId === 'exploding-kittens' && isCat ? (
+                  <div className="cat-combo-actions">
+                    <button
+                      className="cat-combo-button cat-combo-single"
+                      onClick={() => {
+                        onPlay(selectedCardId);
+                        setSelectedCardId(null);
+                      }}
+                    >
+                      Jugar Carta
+                    </button>
+                    {canPlayPair && (
+                      <button
+                        className="cat-combo-button cat-combo-pair"
+                        onClick={() => {
+                          onPlayCards?.([selectedCardId, matchingCats[0].uid]);
+                          setSelectedCardId(null);
+                        }}
+                      >
+                        Two of a kind
+                      </button>
+                    )}
+                    {canPlayTrio && (
+                      <button
+                        className="cat-combo-button cat-combo-trio"
+                        onClick={() => {
+                          onPlayCards?.([
+                            selectedCardId,
+                            matchingCats[0].uid,
+                            matchingCats[1].uid,
+                          ]);
+                          setSelectedCardId(null);
+                        }}
+                      >
+                        Three of a kind
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <button
+                    data-card-confirm
                     className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10"
                     onClick={() => {
                       if (actionUsed) {

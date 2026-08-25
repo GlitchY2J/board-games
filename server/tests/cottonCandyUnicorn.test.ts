@@ -74,14 +74,16 @@ test('Cotton Candy Unicorn: fuerza sacrificio de unicornio a todos y luego el du
   // La acción pendiente sigue activa para P2
   assert.equal(state.pendingAction?.type, 'cotton_candy_unicorn');
 
-  const initialHandSize = p1.hand.length;
+  const initialP1HandSize = p1.hand.length;
+  const initialP2HandSize = p2.hand.length;
 
   // P2 sacrifica p2Card
   const r2 = ActionResolver.handleSelectStableCard(state, 'p2', p2Card.uid);
   assert.equal(r2, true);
   assert.equal(p2.stable.some((c) => c.uid === p2Card.uid), false);
 
-  // Terminaron todos los sacrificios -> P1 roba 1 carta
+  // Terminaron todos los sacrificios -> ambos jugadores roban 1 carta
   assert.equal(state.pendingAction, undefined);
-  assert.equal(p1.hand.length, initialHandSize + 1);
+  assert.equal(p1.hand.length, initialP1HandSize + 1);
+  assert.equal(p2.hand.length, initialP2HandSize + 1);
 });

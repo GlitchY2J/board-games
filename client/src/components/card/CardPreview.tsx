@@ -1,6 +1,6 @@
 import './CardPreview.css';
 
-import { useCardPreview } from '../../context/CardPreviewContext';
+import { useCardPreview } from '../../context/useCardPreview';
 
 export default function CardPreview() {
   const { preview } = useCardPreview();

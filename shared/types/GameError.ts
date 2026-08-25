@@ -17,6 +17,14 @@ export type GameErrorCode =
   | 'DECK_EMPTY'
   | 'ACTION_NOT_ALLOWED'
   | 'EMPTY_CHAT'
+  | 'ROOM_ALREADY_STARTED'
+  | 'INVALID_ROOM_SETTINGS'
+  | 'GAME_NOT_AVAILABLE'
+  | 'INVALID_GAME_VERSION'
+  | 'INVALID_GAME_EXPANSION'
+  | 'NOT_ENOUGH_PLAYERS'
+  | 'TOO_MANY_PLAYERS'
+  | 'PLAYERS_IN_GAME'
   | 'INTERNAL_ERROR';
 
 export type GameActionName =
@@ -41,6 +49,7 @@ export type GameActionName =
   | 'play-neigh'
   | 'toggle-debug-mode'
   | 'send-chat'
+  | 'update-room-settings'
   | 'unknown';
 
 export interface GameError {

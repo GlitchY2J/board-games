@@ -32,6 +32,10 @@ export interface PendingPlay {
   /** Hasta cuándo (Date.now()) los Neighs se agrupan con el Neigh actual,
    * apuntando a la misma carta, en vez de encadenarse uno encima del otro. */
   neighGraceUntil?: number;
+  targetPlayerId?: string;
+  targetPlayerName?: string;
+  requestedCardType?: string;
+  attackCount?: number;
 }
 
 export interface GameLogEntry {
@@ -41,6 +45,13 @@ export interface GameLogEntry {
   playerName?: string;
   turn: number;
   timestamp: number;
+}
+
+export interface EliminatedPlayer {
+  id: string;
+  name: string;
+  avatar: string;
+  placement: number;
 }
 
 export interface ChatMessage {
@@ -74,9 +85,12 @@ export interface GameState {
   actionPlaysRemaining?: number;
   winnerId?: string;
   extraTurn?: boolean;
+  /** Exploding Kittens: remaining draws for the active player. */
+  turnsRemaining?: number;
   /** Modo debug: permite a cada jugador elegir qué carta del mazo tomar en su fase de robo. Solo el anfitrión lo activa. */
   debugMode?: boolean;
   log: GameLogEntry[];
   /** Mensajes de chat entre jugadores (cronológicos: el más reciente al final). */
   chat?: ChatMessage[];
+  eliminatedPlayers?: EliminatedPlayer[];
 }

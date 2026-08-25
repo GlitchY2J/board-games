@@ -66,6 +66,82 @@
   max-width: 240px;
 }
 
+
+.pending-play-card-fan {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 270px;
+  min-height: 190px;
+  padding: 12px 34px 0;
+}
+
+.pending-play-fan-card {
+  position: relative;
+  margin-left: -62px;
+  transform-origin: center bottom;
+}
+
+.pending-play-fan-card:first-child {
+  margin-left: 0;
+}
+
+.pending-play-fan-card .playing-card {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.pending-play-target {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(127, 29, 29, 0.24);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+}
+
+.pending-play-target-player {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #f1f5f9;
+  font-size: 12px;
+}
+
+.pending-play-target-player img,
+.pending-play-target-player > span {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #475569;
+  color: #f8fafc;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.pending-play-target-arrow {
+  color: #f87171;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.pending-play-target p {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  color: #fca5a5;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .pending-play-chain {
   display: inline-block;
   padding: 5px 14px;
@@ -147,6 +223,22 @@
   transform: translateY(-2px);
   filter: brightness(1.15);
   box-shadow: 0 6px 30px rgba(239, 68, 68, 0.55);
+}
+
+.pending-play-attack-stack {
+  background: rgba(249, 115, 22, 0.16);
+  border-color: rgba(251, 146, 60, 0.45);
+  color: #fdba74;
+}
+
+.pending-attack-btn {
+  border-color: rgba(251, 146, 60, 0.7);
+  background: linear-gradient(135deg, #f97316, #c2410c);
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+}
+
+.pending-attack-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 30px rgba(249, 115, 22, 0.6);
 }
 
 .pending-neigh-btn:disabled {

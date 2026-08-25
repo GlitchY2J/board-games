@@ -11,8 +11,160 @@ import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import { maybeTriggerBarbedWireLeave } from '../../cards/effects/barbedWire.ts';
 import { drawForSadisticRitual } from '../../cards/effects/sadisticRitual.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
+import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
+import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
+import { nextUnicornOfWarChoice } from '../../cards/effects/unicornOfWar.ts';
+import {
+  drawRainbowPrincessCards,
+  nextRainbowPrincessChoice,
+} from '../../cards/effects/unicornRainbowPrincess.ts';
 
 export class ActionResolver {
+  static handleSelectPlayers(
+    state: GameState,
+    sourcePlayerId: string,
+    playerIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'select_players' ||
+      pending.sourcePlayerId !== sourcePlayerId ||
+      new Set(playerIds).size !== playerIds.length ||
+      playerIds.some((id) => !pending.playerIds.includes(id))
+    ) {
+      return false;
+    }
+
+    const player = state.players.find(
+      (candidate) => candidate.id === sourcePlayerId,
+    );
+    if (!player) return false;
+
+    drawRainbowPrincessCards(state, player, playerIds.length);
+    state.pendingAction = nextRainbowPrincessChoice(
+      state,
+      sourcePlayerId,
+      playerIds,
+    );
+    return true;
+  }
+
+  static handlePestilenceDiscardCount(
+    state: GameState,
+    playerId: string,
+    cardIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'select_discard_count' ||
+      pending.playerId !== playerId ||
+      cardIds.length > pending.maxCards
+    ) {
+      return false;
+    }
+
+    const player = state.players.find((candidate) => candidate.id === playerId);
+    if (!player || new Set(cardIds).size !== cardIds.length) return false;
+
+    for (const cardId of cardIds) {
+      const idx = player.hand.findIndex((card) => card.uid === cardId);
+      if (idx === -1) return false;
+    }
+
+    for (const cardId of cardIds) {
+      const idx = player.hand.findIndex((card) => card.uid === cardId);
+      const [discarded] = player.hand.splice(idx, 1);
+      enqueueDiscardAnimation(state.roomCode, player.id, discarded);
+      state.discard.push(discarded);
+    }
+
+    const remainingPlayerIds = state.players
+      .filter(
+        (candidate) => candidate.id !== playerId && candidate.hand.length > 0,
+      )
+      .map((candidate) => candidate.id);
+
+    state.pendingAction = undefined;
+    ActionResolver.advancePestilence(
+      state,
+      playerId,
+      remainingPlayerIds,
+      cardIds.length,
+    );
+    return true;
+  }
+
+  static handlePestilenceDiscard(
+    state: GameState,
+    playerId: string,
+    cardIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'pestilence_discard' ||
+      pending.playerId !== playerId ||
+      cardIds.length !== pending.cardsToDiscard
+    ) {
+      return false;
+    }
+
+    const player = state.players.find((candidate) => candidate.id === playerId);
+    if (!player || new Set(cardIds).size !== cardIds.length) return false;
+
+    for (const cardId of cardIds) {
+      const idx = player.hand.findIndex((card) => card.uid === cardId);
+      if (idx === -1) return false;
+    }
+
+    for (const cardId of cardIds) {
+      const idx = player.hand.findIndex((card) => card.uid === cardId);
+      const [discarded] = player.hand.splice(idx, 1);
+      enqueueDiscardAnimation(state.roomCode, player.id, discarded);
+      state.discard.push(discarded);
+    }
+
+    ActionResolver.advancePestilence(
+      state,
+      pending.sourcePlayerId,
+      pending.remainingPlayerIds.filter((id) => id !== playerId),
+      pending.cardsToDiscard,
+    );
+    return true;
+  }
+
+  private static advancePestilence(
+    state: GameState,
+    sourcePlayerId: string,
+    remainingPlayerIds: string[],
+    cardsToDiscard: number,
+  ): void {
+    while (remainingPlayerIds.length > 0) {
+      const playerId = remainingPlayerIds[0];
+      const player = state.players.find(
+        (candidate) => candidate.id === playerId,
+      );
+      const amount = Math.min(cardsToDiscard, player?.hand.length ?? 0);
+      remainingPlayerIds = remainingPlayerIds.slice(1);
+
+      if (amount > 0) {
+        state.pendingAction = {
+          type: 'pestilence_discard',
+          reason: 'unicorn_of_pestilence',
+          sourcePlayerId,
+          playerId,
+          remainingPlayerIds,
+          cardsToDiscard: amount,
+        };
+        return;
+      }
+    }
+
+    state.pendingAction = undefined;
+  }
+
   static handleDiscard(
     state: GameState,
     playerId: string,
@@ -97,6 +249,21 @@ export class ActionResolver {
         reason: 'rainbow_lasso_steal',
         sourcePlayerId: playerId,
       };
+      return true;
+    }
+
+    if (reason === 'extremely_fertile_unicorn') {
+      if (
+        state.nursery.some(
+          (card) => card.cardType === 'unicorn' && card.unicornClass === 'baby',
+        )
+      ) {
+        state.pendingAction = {
+          type: 'select_nursery_card',
+          reason: 'extremely_fertile_unicorn',
+          playerId,
+        };
+      }
       return true;
     }
 
@@ -315,6 +482,62 @@ export class ActionResolver {
       pending.type !== 'cotton_candy_unicorn'
     ) {
       return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_of_war_destroy'
+    ) {
+      const targetPlayer = state.players.find(
+        (player) =>
+          player.id !== sourcePlayerId &&
+          player.stable.some((card) => card.uid === cardId),
+      );
+      if (!targetPlayer) return false;
+
+      const idx = targetPlayer.stable.findIndex((card) => card.uid === cardId);
+      const target = targetPlayer.stable[idx];
+      if (
+        !target ||
+        target.cardType !== 'unicorn' ||
+        isPandamoniumProtected(targetPlayer, target) ||
+        isImmuneToDestruction(target.id)
+      ) {
+        return false;
+      }
+
+      const next = nextUnicornOfWarChoice(
+        state,
+        pending.sourcePlayerId,
+        pending.remainingPlayerIds ?? [],
+      );
+
+      if (CardMovement.maybeBlackKnightIntercept(state, targetPlayer, target)) {
+        if (next) {
+          if (!state.pendingResume) state.pendingResume = [];
+          state.pendingResume.push(next);
+        }
+        return true;
+      }
+
+      const [destroyed] = targetPlayer.stable.splice(idx, 1);
+      const previousPending = state.pendingAction;
+      CardMovement.destroyOrSacrifice(
+        state,
+        targetPlayer,
+        destroyed,
+        'destroy',
+      );
+
+      if (state.pendingAction !== previousPending) {
+        if (next) {
+          if (!state.pendingResume) state.pendingResume = [];
+          state.pendingResume.push(next);
+        }
+      } else {
+        state.pendingAction = next;
+      }
+      return true;
     }
 
     if (pending.type === 'two_for_one') {
@@ -663,6 +886,106 @@ export class ActionResolver {
       return true;
     }
 
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_of_death_sacrifice'
+    ) {
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const idx = player.stable.findIndex(
+        (card) =>
+          card.uid === cardId &&
+          card.cardType === 'unicorn' &&
+          !isPandamoniumProtected(player, card),
+      );
+      if (idx === -1) return false;
+
+      const [sacrificed] = player.stable.splice(idx, 1);
+      const destroyStep = {
+        type: 'select_stable_card',
+        reason: 'unicorn_of_death_destroy',
+        sourcePlayerId,
+      } as const;
+      const previousPending = state.pendingAction;
+      const intercepted = CardMovement.destroyOrSacrifice(
+        state,
+        player,
+        sacrificed,
+        'sacrifice',
+        false,
+      );
+
+      if (intercepted || state.pendingAction !== previousPending) {
+        if (!state.pendingResume) state.pendingResume = [];
+        state.pendingResume.push(destroyStep);
+      } else {
+        state.pendingAction = destroyStep;
+      }
+      return true;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorn_of_death_destroy'
+    ) {
+      for (const targetPlayer of state.players) {
+        if (targetPlayer.id === sourcePlayerId) continue;
+
+        const idx = targetPlayer.stable.findIndex(
+          (card) => card.uid === cardId,
+        );
+        if (idx === -1) continue;
+
+        const target = targetPlayer.stable[idx];
+        if (
+          target.cardType !== 'unicorn' ||
+          isPandamoniumProtected(targetPlayer, target) ||
+          isImmuneToUnicornOrUpgradeDestruction(target.id)
+        ) {
+          return false;
+        }
+
+        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        CardMovement.destroyOrSacrifice(
+          state,
+          targetPlayer,
+          destroyed,
+          'destroy',
+        );
+        EffectStack.finish(state, pending);
+        return true;
+      }
+
+      return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'zombie_unicorn'
+    ) {
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const idx = player.stable.findIndex(
+        (card) =>
+          card.uid === cardId &&
+          card.cardType === 'unicorn' &&
+          !isPandamoniumProtected(player, card),
+      );
+      if (idx === -1) return false;
+
+      const [sacrificed] = player.stable.splice(idx, 1);
+      CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+      state.pendingAction = {
+        type: 'select_discard_card',
+        reason: 'zombie_unicorn',
+        playerId: sourcePlayerId,
+        cardType: 'unicorn',
+      };
+      return true;
+    }
+
     // Glitter Bomb: sacrificar una carta propia, luego destruir una carta
     if (
       pending.type === 'select_stable_card' &&
@@ -716,6 +1039,10 @@ export class ActionResolver {
           const i = p[z].findIndex((c) => c.uid === cardId);
           if (i !== -1) {
             const target = p[z][i];
+
+            if (isImmuneToUnicornOrUpgradeDestruction(target.id)) {
+              return false;
+            }
 
             if (CardMovement.maybeBlackKnightIntercept(state, p, target)) {
               return true;
@@ -1271,10 +1598,6 @@ export class ActionResolver {
 
       if (!sacrificed || !zone) return false;
 
-      if (isPandamoniumProtected(targetPlayer, sacrificed)) {
-        return false;
-      }
-
       const idx = targetPlayer[zone].findIndex((c) => c.uid === cardId);
       const [removed] = targetPlayer[zone].splice(idx, 1);
       CardMovement.destroyOrSacrifice(
@@ -1282,6 +1605,7 @@ export class ActionResolver {
         targetPlayer,
         removed,
         'sacrifice',
+        false,
       );
 
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
@@ -1302,7 +1626,8 @@ export class ActionResolver {
     }
 
     // ──────────────────────────────────────────
-    // Cotton Candy Unicorn: cada jugador sacrifica 1 unicornio; al finalizar, quien la jugó roba 1 carta
+    // Cotton Candy Unicorn: cada jugador sacrifica 1 unicornio; al finalizar,
+    // cada jugador que sacrificó roba 1 carta.
     // ──────────────────────────────────────────
     if (pending.type === 'cotton_candy_unicorn') {
       const targetPlayer = state.players.find((p) => p.id === sourcePlayerId);
@@ -1337,19 +1662,21 @@ export class ActionResolver {
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
 
       if (resolvedPlayerIds.length >= pending.remainingPlayerIds.length) {
-        const sourcePlayer = state.players.find(
-          (p) => p.id === pending.sourcePlayerId,
-        );
-        if (sourcePlayer) {
+        for (const resolvedPlayerId of resolvedPlayerIds) {
+          const resolvedPlayer = state.players.find(
+            (p) => p.id === resolvedPlayerId,
+          );
+          if (!resolvedPlayer) continue;
+
           const drawn = state.deck.shift();
           if (drawn) {
-            enqueueDrawAnimation(state.roomCode, sourcePlayer.id, drawn);
-            sourcePlayer.hand.push(drawn);
+            enqueueDrawAnimation(state.roomCode, resolvedPlayer.id, drawn);
+            resolvedPlayer.hand.push(drawn);
           }
           addLog(
             state,
-            `${sourcePlayer.name} robó 1 carta por efecto de Cotton Candy Unicorn`,
-            { playerId: sourcePlayer.id },
+            `${resolvedPlayer.name} robó 1 carta por efecto de Cotton Candy Unicorn`,
+            { playerId: resolvedPlayer.id },
           );
         }
 
@@ -1387,6 +1714,8 @@ export class ActionResolver {
         if (isPandamoniumProtected(targetPlayer, card)) {
           return false;
         }
+
+        if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         const intercepted = CardMovement.destroyOrSacrifice(
@@ -1430,6 +1759,8 @@ export class ActionResolver {
         if (isPandamoniumProtected(targetPlayer, card)) {
           return false;
         }
+
+        if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
@@ -1517,6 +1848,7 @@ export class ActionResolver {
 
         const [stolen] = targetPlayer.stable.splice(idx, 1);
         maybeTriggerBarbedWireLeave(state, targetPlayer);
+        const prevPending = state.pendingAction;
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
 
         if (!entered) {
@@ -1524,10 +1856,14 @@ export class ActionResolver {
           return false;
         }
 
-        // Resolución LIFO centralizada: si la carta robada abrió un efecto hijo
-        // interactivo al entrar, se mantiene activo; si no, termina el paso.
-        EffectStack.finish(state, pending);
+        // Rainbow Lasso ya terminó en el momento en que roba el unicornio.
+        // Si el unicornio abre un efecto interactivo al entrar, ese efecto
+        // debe resolverse sin reanudar Rainbow Lasso después.
+        if (state.pendingAction !== prevPending) {
+          return true;
+        }
 
+        state.pendingAction = undefined;
         return true;
       }
 
@@ -1551,6 +1887,8 @@ export class ActionResolver {
         if (isPandamoniumProtected(targetPlayer, card)) {
           return false;
         }
+
+        if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
@@ -1583,6 +1921,8 @@ export class ActionResolver {
         if (isPandamoniumProtected(targetPlayer, card)) {
           return false;
         }
+
+        if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
@@ -1619,6 +1959,20 @@ export class ActionResolver {
     const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
 
     if (!targetPlayer || !sourcePlayer) return false;
+
+    if (pending.reason === 'glitter_unicorn') {
+      if (targetPlayer.id !== sourcePlayer.id) return false;
+
+      const cardIdx = sourcePlayer.hand.findIndex((c) => c.uid === cardId);
+      if (cardIdx === -1 || sourcePlayer.hand[cardIdx].cardType !== 'upgrade') {
+        return false;
+      }
+
+      const [upgrade] = sourcePlayer.hand.splice(cardIdx, 1);
+      sourcePlayer.upgrades.push(upgrade);
+      state.pendingAction = undefined;
+      return true;
+    }
 
     const cardIdx = targetPlayer.hand.findIndex((c) => c.uid === cardId);
     if (cardIdx === -1) return false;
@@ -1771,6 +2125,58 @@ export class ActionResolver {
       };
     } else {
       state.pendingAction = undefined;
+    }
+
+    return true;
+  }
+
+  static handleFrenchiecornDiscard(
+    state: GameState,
+    playerId: string,
+    cardIds: string[],
+  ): boolean {
+    const pending = state.pendingAction;
+    if (
+      !pending ||
+      pending.type !== 'frenchiecorn' ||
+      !pending.remainingPlayerIds.includes(playerId)
+    ) {
+      return false;
+    }
+
+    if (cardIds.length !== 1) return false;
+
+    const player = state.players.find((candidate) => candidate.id === playerId);
+    if (!player) return false;
+
+    const idx = player.hand.findIndex((card) => card.uid === cardIds[0]);
+    if (idx === -1) return false;
+
+    const [discarded] = player.hand.splice(idx, 1);
+    enqueueDiscardAnimation(state.roomCode, player.id, discarded);
+    state.discard.push(discarded);
+
+    const remainingPlayerIds = pending.remainingPlayerIds.filter(
+      (id) => id !== playerId,
+    );
+    const resolvedPlayerIds = [...pending.resolvedPlayerIds, playerId];
+    const discardedCardIds = [...pending.discardedCardIds, discarded.uid];
+
+    if (remainingPlayerIds.length > 0) {
+      state.pendingAction = {
+        type: 'frenchiecorn',
+        sourcePlayerId: pending.sourcePlayerId,
+        remainingPlayerIds,
+        resolvedPlayerIds,
+        discardedCardIds,
+      };
+    } else {
+      state.pendingAction = {
+        type: 'select_discard_card',
+        reason: 'frenchiecorn',
+        playerId: pending.sourcePlayerId,
+        discardedCardIds,
+      };
     }
 
     return true;

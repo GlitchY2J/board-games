@@ -13,36 +13,43 @@ import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
 import PlayerNotification from '../components/player/PlayerNotification';
-import { RotateCcw, LogOut, Bot, Bug, MessageSquare, X } from 'lucide-react';
+import { RotateCcw, LogOut, Bot, Bug, MessageSquare, Copy, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useGame } from '../context/GameContext';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { useState, useEffect, useRef } from 'react';
 
 interface Props {
   gameState: GameState;
+  gameId?: string;
   isMyTurn: boolean;
   isHost: boolean;
-  onPlay(cardId: string): void;
+  onPlay(cardId: string, cardIds?: string[]): void;
   hidePendingPlay?: boolean;
+  sortHandMode?: 'alphabetical' | 'type' | null;
+  spectator?: boolean;
 }
 
 export default function BoardLayout({
   gameState,
+  gameId,
   isMyTurn,
   isHost,
   onPlay,
   hidePendingPlay = false,
+  sortHandMode = null,
+  spectator = false,
 }: Props) {
   const navigate = useNavigate();
-  const { deactivate } = useGame();
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [autoEnabled, setAutoEnabled] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   const [playerNotification, setPlayerNotification] = useState<string | null>(
     null,
   );
-  const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
+  const localPlayer =
+    gameState.players.find((p) => p.socketId === socket.id) ??
+    (spectator ? gameState.players[0] : undefined);
   const cardSelectedRef = useRef(false);
   const notificationTimerRef = useRef<number | null>(null);
 
@@ -59,6 +66,16 @@ export default function BoardLayout({
     }, 2200);
   }
 
+  async function copyRoomCode() {
+    try {
+      await navigator.clipboard.writeText(gameState.roomCode);
+      setRoomCodeCopied(true);
+      window.setTimeout(() => setRoomCodeCopied(false), 1600);
+    } catch {
+      setRoomCodeCopied(false);
+    }
+  }
+
   useEffect(() => {
     return () => {
       if (notificationTimerRef.current !== null) {
@@ -67,15 +84,36 @@ export default function BoardLayout({
     };
   }, []);
 
-  if (!localPlayer) return;
+  useEffect(() => {
+    const onMobileChatShortcut = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' && event.code !== 'Enter') return;
+      if (window.innerWidth > 640 || mobileChatOpen) return;
 
-  const opponents = gameState.players.filter((P) => P.socketId !== socket.id);
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target.tagName)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      setMobileChatOpen(true);
+    };
+
+    window.addEventListener('keydown', onMobileChatShortcut);
+    return () => window.removeEventListener('keydown', onMobileChatShortcut);
+  }, [mobileChatOpen]);
+
+  const opponents = gameState.players.filter((P) => P.id !== localPlayer?.id);
   const totalPlayers = gameState.players.length;
   const activePlayer = gameState.players[gameState.currentPlayer];
   const isActivePlayer = activePlayer?.socketId === socket.id;
+  const showPlayerBoards = gameId !== 'exploding-kittens';
+  const showPhases = gameId !== 'exploding-kittens';
 
   useEffect(() => {
-    if (!autoEnabled || !isActivePlayer) return;
+    if (gameId === 'exploding-kittens' || !autoEnabled || !isActivePlayer) return;
     if (gameState.pendingAction || gameState.pendingPlay) return;
 
     const canAutoAdvance =
@@ -97,6 +135,7 @@ export default function BoardLayout({
     gameState.pendingAction,
     gameState.pendingPlay,
     gameState.roomCode,
+    gameId,
   ]);
 
   const positions: ('top' | 'bottom')[] =
@@ -113,19 +152,19 @@ export default function BoardLayout({
       : undefined;
 
   const blockedBasicUnicornIds = new Set(
-    queenBeeOwnerId !== undefined && queenBeeOwnerId !== localPlayer.id
-      ? localPlayer.hand
+    queenBeeOwnerId !== undefined && queenBeeOwnerId !== localPlayer?.id
+        ? (localPlayer?.hand ?? [])
           .filter((c) => c.cardType === 'unicorn' && c.unicornClass === 'basic')
           .map((c) => c.uid)
       : [],
   );
 
   const hasBrokenStable =
-    localPlayer.downgrades.some((c) => c.id === 'broken_stable') ?? false;
+    localPlayer?.downgrades.some((c) => c.id === 'broken_stable') ?? false;
 
   const blockedUpgradeIds = hasBrokenStable
     ? new Set(
-        localPlayer.hand
+        (localPlayer?.hand ?? [])
           .filter((c) => c.cardType === 'upgrade')
           .map((c) => c.uid),
       )
@@ -135,7 +174,7 @@ export default function BoardLayout({
     ...blockedBasicUnicornIds,
     ...blockedUpgradeIds,
   ]);
-  const localPlayerId = localPlayer.id;
+  const localPlayerId = localPlayer?.id ?? '';
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -151,6 +190,7 @@ export default function BoardLayout({
         isMyTurn &&
         (gameState.phase === 'DRAW' || gameState.phase === 'ACTION') &&
         !gameState.actionUsed &&
+        !gameState.pendingAction &&
         !gameState.pendingPlay &&
         (gameState.actionPlaysRemaining === undefined ||
           gameState.actionPlaysRemaining === 2);
@@ -168,8 +208,10 @@ export default function BoardLayout({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isMyTurn, gameState, localPlayerId]);
 
+  if (!localPlayer) return null;
+
   return (
-    <div className="board-layout">
+    <div className={`board-layout ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}>
       <div className="game-area">
         <div className="player-top">
           {opponents.map((opp) => {
@@ -185,14 +227,20 @@ export default function BoardLayout({
                 <PlayerInfo
                   player={opp}
                   isActive={opp.id === activePlayer.id}
-                  status={getPlayerStatus(gameState, opp.id)}
+                  status={getPlayerStatus(gameState, opp.id, gameId)}
                   localPlayerId={localPlayer.id}
+                  gameId={gameId}
+                  turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
+                  isHost={isHost}
+                  roomCode={gameState.roomCode}
                 />
-                <PlayerBoard
-                  player={opp}
-                  isLocalPlayer={false}
-                  isMyTurn={opp.id === activePlayer.id}
-                />
+                {showPlayerBoards && (
+                  <PlayerBoard
+                    player={opp}
+                    isLocalPlayer={false}
+                    isMyTurn={opp.id === activePlayer.id}
+                  />
+                )}
               </div>
             );
           })}
@@ -211,17 +259,31 @@ export default function BoardLayout({
                     gameState={gameState}
                     isMyTurn={isMyTurn}
                     localPlayerId={localPlayer.id}
+                    gameId={gameId}
                   />
 
-                  {isMyTurn && gameState.phase === 'DRAW' && (
-                    <span className="draw-hint">Roba una carta</span>
+                  {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
+                    <span className="draw-hint">
+                      Presiona <kbd className="space-key">Space</kbd> para robar una carta
+                    </span>
                   )}
 
-                  {isMyTurn &&
+                  {gameId === 'exploding-kittens' &&
+                    isMyTurn &&
+                    !gameState.pendingAction &&
+                    !gameState.pendingPlay && (
+                      <span className="draw-hint">
+                        Presiona <kbd className="space-key">Space</kbd> para robar una carta y terminar tu turno
+                      </span>
+                    )}
+
+                  {showPhases && isMyTurn &&
                     gameState.phase === 'ACTION' &&
                     !gameState.actionUsed &&
                     !gameState.pendingPlay && (
-                      <span className="draw-hint">Juega o roba una carta</span>
+                      <span className="draw-hint">
+                        Juega una carta o presiona <kbd className="space-key">Space</kbd> para robar
+                      </span>
                     )}
                 </div>
               </div>
@@ -245,15 +307,21 @@ export default function BoardLayout({
             <PlayerInfo
               player={localPlayer}
               isActive={isMyTurn}
-              status={getPlayerStatus(gameState, localPlayer.id)}
+              status={getPlayerStatus(gameState, localPlayer.id, gameId)}
               localPlayerId={localPlayer.id}
+              gameId={gameId}
+              turnsRemaining={isMyTurn ? gameState.turnsRemaining : 0}
+              isHost={isHost}
+              roomCode={gameState.roomCode}
             />
 
-            <PlayerBoard
-              player={localPlayer}
-              isLocalPlayer
-              isMyTurn={isMyTurn}
-            />
+            {showPlayerBoards && (
+                <PlayerBoard
+                  player={localPlayer}
+                  isLocalPlayer={!spectator}
+                  isMyTurn={isMyTurn && !spectator}
+              />
+            )}
           </div>
 
           {opponents.map((opp) => {
@@ -269,42 +337,64 @@ export default function BoardLayout({
                 <PlayerInfo
                   player={opp}
                   isActive={opp.id === activePlayer.id}
-                  status={getPlayerStatus(gameState, opp.id)}
+                  status={getPlayerStatus(gameState, opp.id, gameId)}
                   localPlayerId={localPlayer.id}
+                  gameId={gameId}
+                  turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
+                  isHost={isHost}
+                  roomCode={gameState.roomCode}
                 />
-                <PlayerBoard
-                  player={opp}
-                  isLocalPlayer={false}
-                  isMyTurn={opp.id === activePlayer.id}
-                />
+                {showPlayerBoards && (
+                  <PlayerBoard
+                    player={opp}
+                    isLocalPlayer={false}
+                    isMyTurn={opp.id === activePlayer.id}
+                  />
+                )}
               </div>
             );
           })}
         </div>
       </div>
 
-      <GameOverlay
-        gameState={gameState}
-        localPlayerId={localPlayer.id}
-        hide={hidePendingPlay}
-      />
+      {!spectator && (
+        <GameOverlay
+          gameState={gameState}
+          localPlayerId={localPlayer.id}
+          hide={hidePendingPlay}
+        />
+      )}
 
       <PendingPlayOverlay
         gameState={gameState}
-        localPlayerId={localPlayer.id}
+        localPlayerId={spectator ? '' : localPlayer.id}
+        gameId={gameId}
         hide={hidePendingPlay}
+        spectator={spectator}
       />
 
       <div className="corner-controls">
         <button
-          className={`ctrl-button ctrl-neutral${autoEnabled ? ' auto-on' : ''}`}
-          title={
-            autoEnabled ? 'Desactivar modo automático' : 'Activar modo automático'
-          }
-          onClick={() => setAutoEnabled((v) => !v)}
+          className="room-code-display"
+          title="Copiar código de sala"
+          onClick={copyRoomCode}
         >
-          <Bot size={16} />
+          <span className="room-code-label">Sala</span>
+          <strong>{gameState.roomCode}</strong>
+          {roomCodeCopied ? <Check size={14} /> : <Copy size={14} />}
         </button>
+
+        {gameId !== 'exploding-kittens' && (
+          <button
+            className={`ctrl-button ctrl-neutral${autoEnabled ? ' auto-on' : ''}`}
+            title={
+              autoEnabled ? 'Desactivar modo automático' : 'Activar modo automático'
+            }
+            onClick={() => setAutoEnabled((v) => !v)}
+          >
+            <Bot size={16} />
+          </button>
+        )}
 
         {isHost && (
           <button
@@ -328,7 +418,9 @@ export default function BoardLayout({
           <button
             className="ctrl-button ctrl-reset"
             title="Reiniciar partida"
-            onClick={() => socket.emit('restart-game', gameState.roomCode)}
+            onClick={() => {
+              socket.emit('restart-game', gameState.roomCode);
+            }}
           >
             <RotateCcw size={16} />
           </button>
@@ -347,9 +439,9 @@ export default function BoardLayout({
         <LeaveConfirm
           onCancel={() => setLeaveOpen(false)}
           onConfirm={() => {
-            socket.emit('leave-room', { roomCode: gameState.roomCode });
-            deactivate();
-            navigate('/');
+            socket.emit('leave-game', { roomCode: gameState.roomCode });
+            setMobileChatOpen(false);
+            navigate('/lobby');
           }}
         />
       )}
@@ -365,42 +457,51 @@ export default function BoardLayout({
       {mobileChatOpen && (
         <div className="mobile-chat-panel">
           <div className="mobile-chat-panel-inner">
-            <Chat gameState={gameState} />
+            <Chat
+              gameState={gameState}
+              initialOpen
+              onClose={() => setMobileChatOpen(false)}
+            />
           </div>
-          <button
-            className="mobile-chat-close"
-            title="Cerrar chat"
-            onClick={() => setMobileChatOpen(false)}
-          >
-            <X size={16} />
-          </button>
         </div>
       )}
 
-      <div className="phase-panel-anchor">
-        <PhasePanel gameState={gameState} />
-      </div>
+      {(showPhases || gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens') && (
+        <>
+          <div className="phase-panel-anchor">
+            <PhasePanel gameState={gameState} showRoundPhase={showPhases} />
+          </div>
 
-      <div className="phase-action-anchor">
-        <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
-      </div>
+          {showPhases && (
+            <div className="phase-action-anchor">
+              <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
+            </div>
+          )}
+        </>
+      )}
 
-      <div className="bottom-hand" data-hand>
-        <PlayerHand
-          player={localPlayer}
-          isLocalPlayer
-          isMyTurn={isMyTurn}
-          gamePhase={gameState.phase}
-          actionUsed={gameState.actionUsed}
-          pendingPlay={!!gameState.pendingPlay}
-          blockedCardIds={blockedCardIds}
-          onPlay={onPlay}
-          onInvalidAction={showPlayerNotification}
-          onSelectionChange={(selected) => {
-            cardSelectedRef.current = selected;
-          }}
-        />
-      </div>
+      {!spectator && (
+        <div className="bottom-hand" data-hand>
+          <PlayerHand
+            player={localPlayer}
+            isLocalPlayer
+            isMyTurn={isMyTurn}
+            gamePhase={showPhases ? gameState.phase : 'ACTION'}
+            actionUsed={gameState.actionUsed}
+            pendingPlay={!!gameState.pendingPlay}
+            blockedCardIds={blockedCardIds}
+            onPlay={onPlay}
+            onPlayCards={(cardIds) => onPlay(cardIds[0], cardIds)}
+            compact={gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens'}
+            gameId={gameId}
+            sortHandMode={sortHandMode}
+            onInvalidAction={showPlayerNotification}
+            onSelectionChange={(selected) => {
+              cardSelectedRef.current = selected;
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

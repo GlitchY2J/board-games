@@ -12,8 +12,12 @@ interface Props {
   pendingPlay: boolean;
   blockedCardIds?: Set<string>;
   onPlay(cardId: string): void;
+  onPlayCards?(cardIds: string[]): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
+  compact?: boolean;
+  gameId?: string;
+  sortHandMode?: 'alphabetical' | 'type' | null;
 }
 
 export default function LocalHand({
@@ -24,8 +28,12 @@ export default function LocalHand({
   pendingPlay,
   blockedCardIds,
   onPlay,
+  onPlayCards,
   onSelectionChange,
   onInvalidAction,
+  compact,
+  gameId,
+  sortHandMode,
 }: Props) {
   return (
     <CardFan
@@ -36,8 +44,12 @@ export default function LocalHand({
       pendingPlay={pendingPlay}
       blockedCardIds={blockedCardIds}
       onPlay={onPlay}
+      onPlayCards={onPlayCards}
       onSelectionChange={onSelectionChange}
       onInvalidAction={onInvalidAction}
+      compact={compact}
+      gameId={gameId}
+      sortHandMode={sortHandMode}
     />
   );
 }

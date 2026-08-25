@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import type { Room } from './game/models/Room.ts';
 import type { Player } from './game/models/Player.ts';
+import type { RoomSettings } from '../../shared/types/GameDefinition.ts';
 
 import { generateRoomCode } from './utils/generateRoomCode.ts';
 
@@ -46,7 +47,7 @@ export class RoomManager {
   // Crear Sala
   createRoom(
     hostName: string,
-    game: string,
+    game: string | null,
     socketId: string,
     avatar?: string,
   ): Room {
@@ -65,10 +66,17 @@ export class RoomManager {
 
     const room: Room = {
       code: generateRoomCode(),
-      game,
+      // Keep the legacy fields while the lobby migrates to settings.
+      game: game ?? '',
       hostId: host.id,
       players: [host],
+      chat: [],
       expansions: [],
+      settings: {
+        gameId: game,
+        versionId: null,
+        expansionIds: [],
+      },
     };
     this.rooms.set(room.code, room);
 
@@ -138,6 +146,27 @@ export class RoomManager {
     } else {
       room.expansions.push(expansionId);
     }
+
+    room.settings = {
+      gameId: room.settings?.gameId ?? (room.game || null),
+      versionId: room.settings?.versionId ?? null,
+      expansionIds: [...room.expansions],
+    };
+
+    return room;
+  }
+
+  updateRoomSettings(code: string, settings: RoomSettings): Room | null {
+    const room = this.rooms.get(code);
+    if (!room) return null;
+
+    room.settings = {
+      gameId: settings.gameId,
+      versionId: settings.versionId,
+      expansionIds: [...settings.expansionIds],
+    };
+    room.game = settings.gameId ?? '';
+    room.expansions = [...settings.expansionIds];
 
     return room;
   }

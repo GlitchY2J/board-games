@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import type { GameState } from '../types/GameState';
 import BoardLayout from '../layouts/BoardLayout';
 import VictoryScreen from '../components/game/VictoryScreen';
@@ -10,8 +10,10 @@ import CardDrawEffect from '../components/effects/CardDrawEffect';
 import CardDiscardEffect from '../components/effects/CardDiscardEffect';
 import CardPlayEffect from '../components/effects/CardPlayEffect';
 import CardRemovalAnimation from '../components/effects/CardRemovalAnimation';
+import CardStealEffect from '../components/effects/CardStealEffect';
+import ShuffleDeckEffect from '../components/effects/ShuffleDeckEffect';
 import NeighAnnouncement from '../components/game/NeighAnnouncement';
-import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface TurnAnnounce {
@@ -23,21 +25,45 @@ interface TurnAnnounce {
 
 export default function Game() {
   const location = useLocation();
-  const { gameState: contextGameState, isHost: contextIsHost, room: roomFromContext, deactivate } = useGame();
+  const navigate = useNavigate();
+  const { gameState: contextGameState, playerId: contextPlayerId, isHost: contextIsHost, room: roomFromContext, deactivate } = useGame();
+  const locationGameState = location.state?.gameState as GameState | undefined;
 
   const [gameState, setGameState] = useState<GameState | null>(
-    contextGameState ?? location.state?.gameState ?? null,
+    locationGameState ?? contextGameState ?? null,
   );
+  const skippedInitialContextStateRef = useRef(Boolean(locationGameState));
 
   const [turnAnnounce, setTurnAnnounce] = useState<TurnAnnounce | null>(null);
+  const [sortHandMode, setSortHandMode] = useState<
+    'alphabetical' | 'type' | null
+  >(null);
+  const gameId = roomFromContext?.settings?.gameId ?? roomFromContext?.game;
+
+  useEffect(() => {
+    const onSortHand = (event: KeyboardEvent) => {
+      if (gameId !== 'unstable-unicorns' && gameId !== 'exploding-kittens') return;
+      if (event.code !== 'KeyS' && event.key.toLowerCase() !== 's') return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      event.preventDefault();
+      setSortHandMode((mode) => (mode === 'alphabetical' ? 'type' : 'alphabetical'));
+    };
+
+    window.addEventListener('keydown', onSortHand, true);
+    return () => {
+      window.removeEventListener('keydown', onSortHand, true);
+    };
+  }, [gameId]);
 
   const [removalAnims, setRemovalAnims] = useState<
     { animation: CardAnimation; rect: { left: number; top: number; width: number; height: number } }[]
   >([]);
   const [neighAnims, setNeighAnims] = useState<NeighAnimation[]>([]);
   const [drawAnims, setDrawAnims] = useState<DrawAnimation[]>([]);
+  const [stealAnims, setStealAnims] = useState<StealAnimation[]>([]);
   const [discardAnims, setDiscardAnims] = useState<DiscardAnimation[]>([]);
   const [playAnims, setPlayAnims] = useState<PlayAnimation[]>([]);
+  const [shuffleAnims, setShuffleAnims] = useState<ShuffleAnimation[]>([]);
 
   const pendingGameStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
@@ -48,9 +74,7 @@ export default function Game() {
 
   const announcedInitialRef = useRef(false);
 
-  const applyGameState = (state: GameState) => {
-    setGameState(state);
-
+  const announceGameState = useCallback((state: GameState) => {
     const prev = prevTurnRef.current;
     const active = state.players[state.currentPlayer];
     if (!active) {
@@ -81,10 +105,27 @@ export default function Game() {
       });
     }
     prevTurnRef.current = { turn: state.turn, currentPlayer: state.currentPlayer };
-  };
+  }, []);
+
+  const isSpectatorState = useCallback((state: GameState) => {
+    return (
+      !state.players.some((player) => player.socketId === socket.id) &&
+      state.eliminatedPlayers?.some((player) => player.id === contextPlayerId) === true
+    );
+  }, [contextPlayerId]);
+
+  const applyGameState = useCallback((state: GameState) => {
+    setGameState(state);
+    announceGameState(state);
+  }, [announceGameState]);
 
   useEffect(() => {
     if (contextGameState) {
+      if (skippedInitialContextStateRef.current) {
+        skippedInitialContextStateRef.current = false;
+        return;
+      }
+
       if (activeAnimationsCountRef.current > 0) {
         pendingGameStateRef.current = contextGameState;
       } else {
@@ -100,9 +141,8 @@ export default function Game() {
     if (announcedInitialRef.current) return;
     if (!gameState) return;
     announcedInitialRef.current = true;
-    applyGameState(gameState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState]);
+    announceGameState(gameState);
+  }, [gameState, announceGameState]);
 
   useEffect(() => {
     if (!turnAnnounce) return;
@@ -111,21 +151,45 @@ export default function Game() {
   }, [turnAnnounce]);
 
   useEffect(() => {
-    socket.on('game-updated', (state: GameState) => {
+    const onTurnOrderAssigned = (players: { id: string; name: string; avatar?: string }[]) => {
+      navigate('/starting', {
+        state: {
+          restart: true,
+          turnOrder: players,
+        },
+      });
+    };
+    const onKickedFromRoom = () => {
+      deactivate();
+      navigate('/lobby');
+    };
+
+    const onGameUpdated = (state: GameState) => {
+      if (isSpectatorState(state)) {
+        activeAnimationsCountRef.current = 0;
+        pendingGameStateRef.current = null;
+        applyGameState(state);
+        return;
+      }
       if (activeAnimationsCountRef.current > 0) {
         pendingGameStateRef.current = state;
       } else {
         applyGameState(state);
       }
-    });
+    };
 
-    socket.on('game-restarted', (state: GameState) => {
+    const onGameRestarted = (state: GameState) => {
       // Reinicio: forzar que el anuncio de turno se muestre de nuevo.
       prevTurnRef.current = null;
       pendingGameStateRef.current = null;
       activeAnimationsCountRef.current = 0;
       applyGameState(state);
-    });
+    };
+
+    socket.on('game-updated', onGameUpdated);
+    socket.on('game-restarted', onGameRestarted);
+    socket.on('turn-order-assigned', onTurnOrderAssigned);
+    socket.on('kicked-from-room', onKickedFromRoom);
 
     const onCardAnimations = (animations: CardAnimation[]) => {
       const found = animations
@@ -167,6 +231,13 @@ export default function Game() {
       }
     };
 
+    const onStealAnimations = (animations: StealAnimation[]) => {
+      if (animations.length > 0) {
+        activeAnimationsCountRef.current += animations.length;
+        setStealAnims((prev) => [...prev, ...animations]);
+      }
+    };
+
     const onDiscardAnimations = (animations: DiscardAnimation[]) => {
       if (animations.length > 0) {
         activeAnimationsCountRef.current += animations.length;
@@ -180,22 +251,32 @@ export default function Game() {
       }
     };
 
+    const onShuffleAnimations = (animations: ShuffleAnimation[]) => {
+      setShuffleAnims((prev) => [...prev, ...animations]);
+    };
+
     socket.on('card-animations', onCardAnimations);
     socket.on('neigh-animations', onNeighAnimations);
     socket.on('draw-animations', onDrawAnimations);
+    socket.on('steal-animations', onStealAnimations);
     socket.on('discard-animations', onDiscardAnimations);
     socket.on('play-animations', onPlayAnimations);
+    socket.on('shuffle-animations', onShuffleAnimations);
 
     return () => {
-      socket.off('game-updated');
-      socket.off('game-restarted');
+      socket.off('game-updated', onGameUpdated);
+      socket.off('game-restarted', onGameRestarted);
+      socket.off('turn-order-assigned', onTurnOrderAssigned);
+      socket.off('kicked-from-room', onKickedFromRoom);
       socket.off('card-animations');
       socket.off('neigh-animations');
       socket.off('draw-animations');
+      socket.off('steal-animations');
       socket.off('discard-animations');
       socket.off('play-animations');
+      socket.off('shuffle-animations', onShuffleAnimations);
     };
-  }, []);
+  }, [applyGameState, deactivate, isSpectatorState, navigate]);
 
   const activePlayer = gameState?.players[gameState.currentPlayer];
   const localPlayer = gameState?.players.find((p) => p.socketId === socket.id);
@@ -204,10 +285,13 @@ export default function Game() {
   useEffect(() => {
     if (!gameState) return;
     const local = gameState.players.find((p) => p.socketId === socket.id);
-    if (!local) {
+    const isEliminated = gameState.eliminatedPlayers?.some(
+      (player) => player.id === contextPlayerId,
+    );
+    if (!local && !isEliminated) {
       deactivate();
     }
-  }, [gameState, deactivate]);
+  }, [contextPlayerId, gameState, deactivate]);
 
   // Ejecutar automáticamente los efectos de inicio de turno después del anuncio de turno
   useEffect(() => {
@@ -233,13 +317,40 @@ export default function Game() {
   }
 
   if (!localPlayer) {
+    const eliminated = gameState.eliminatedPlayers?.find(
+      (player) => player.id === contextPlayerId,
+    );
+    if (eliminated) {
+      return (
+        <div className="relative min-h-screen">
+          <BoardLayout
+            gameState={gameState}
+            gameId={gameId}
+            isMyTurn={false}
+            isHost={false}
+            onPlay={() => undefined}
+            spectator
+          />
+          <div className="pointer-events-none fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-full border border-rose-400/30 bg-slate-950/85 px-4 py-2 text-center text-xs font-bold text-rose-200 shadow-xl backdrop-blur">
+            Espectador · Eliminado en {eliminated.placement}° lugar
+          </div>
+          {shuffleAnims.map((animation) => (
+            <ShuffleDeckEffect
+              key={animation.animId}
+              animation={animation}
+              onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
+            />
+          ))}
+        </div>
+      );
+    }
     return <h2>Jugador no encontrado.</h2>;
   }
 
   const isHost = contextIsHost || localPlayer.id === roomFromContext?.hostId;
   const gs: GameState = gameState;
 
-  function play(cardId: string) {
+  function play(cardId: string, cardIds?: string[]) {
     if (!localPlayer) {
       console.error(
         'No se puede jugar una carta: jugador local no encontrado.',
@@ -251,12 +362,18 @@ export default function Game() {
       roomCode: gs.roomCode,
       playerId: localPlayer.id,
       cardId,
+      cardIds,
     });
   }
 
   function restartGame() {
     console.log('Solicitando reinicio...');
     socket.emit('restart-game', gs.roomCode);
+  }
+
+  function leaveToLobby() {
+    socket.emit('leave-game', { roomCode: gs.roomCode });
+    navigate('/lobby');
   }
 
   function removeRemovalAnim(animId: string) {
@@ -304,6 +421,21 @@ export default function Game() {
     });
   }
 
+  function removeStealAnim(animId: string) {
+    setStealAnims((prev) => {
+      const next = prev.filter((animation) => animation.animId !== animId);
+      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+
+      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
+        const pendingState = pendingGameStateRef.current;
+        pendingGameStateRef.current = null;
+        applyGameState(pendingState);
+      }
+
+      return next;
+    });
+  }
+
   function removeDiscardAnim(animId: string) {
     setDiscardAnims((prev) => {
       const next = prev.filter((a) => a.animId !== animId);
@@ -333,15 +465,18 @@ export default function Game() {
     <>
       <BoardLayout
         gameState={gameState}
+        gameId={gameId}
         isMyTurn={isMyTurn}
         isHost={isHost}
         onPlay={play}
+        sortHandMode={sortHandMode}
         hidePendingPlay={hasActiveAnims}
       />
       {gameState.winnerId && (
         <VictoryScreen
           gameState={gameState}
           onRestart={restartGame}
+          onLeaveLobby={leaveToLobby}
           isHost={isHost}
         />
       )}
@@ -375,6 +510,14 @@ export default function Game() {
           onDone={() => removeDrawAnim(animation.animId)}
         />
       ))}
+      {stealAnims.map((animation) => (
+        <CardStealEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={localPlayer.id}
+          onDone={() => removeStealAnim(animation.animId)}
+        />
+      ))}
       {discardAnims.map((animation) => (
         <CardDiscardEffect
           key={animation.animId}
@@ -389,6 +532,13 @@ export default function Game() {
           animation={animation}
           localPlayerId={localPlayer.id}
           onDone={() => removePlayAnim(animation.animId)}
+        />
+      ))}
+      {shuffleAnims.map((animation) => (
+        <ShuffleDeckEffect
+          key={animation.animId}
+          animation={animation}
+          onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
         />
       ))}
     </>

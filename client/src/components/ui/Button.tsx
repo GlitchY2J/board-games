@@ -16,7 +16,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const variants = {
-    primary: 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold glow-btn-emerald border border-emerald-400/20 shadow-emerald-500/20',
+    primary: 'bg-gradient-to-r from-slate-500 to-slate-700 hover:from-slate-400 hover:to-slate-600 text-slate-100 font-bold glow-btn-emerald border border-slate-400/20 shadow-slate-900/40',
     secondary: 'bg-slate-900/50 backdrop-blur-md hover:bg-slate-800/80 text-slate-200 border border-slate-700/50 hover:border-slate-600 shadow-lg shadow-black/10',
     danger: 'bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white font-bold border border-rose-500/20 shadow-lg shadow-red-500/10 hover:shadow-red-500/20',
   };

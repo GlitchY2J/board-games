@@ -1,7 +1,6 @@
 import type { GameState } from '../../types/GameState';
 import { socket } from '../../services/socket';
 import { ArrowRight } from 'lucide-react';
-import { useEffect } from 'react';
 
 interface Props {
   gameState: GameState;
@@ -16,38 +15,6 @@ export default function PhaseActionButton({ gameState, autoEnabled = false }: Pr
     if (!isActivePlayer) return;
     socket.emit('next-phase', gameState.roomCode);
   }
-
-  // Enter = avanzar de fase (terminar turno) cuando el botón está visible.
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLElement) {
-        const tag = e.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      }
-      if (e.isComposing) return;
-      if (e.code !== 'Enter') return;
-      // No avanzar mientras haya una carta o acción pendiente de resolver.
-      if (!isActivePlayer) return;
-      if (gameState.pendingPlay || gameState.pendingAction) return;
-
-      const doubleDutchCanEnd =
-        gameState.phase === 'ACTION' && gameState.actionPlaysRemaining === 1;
-      if (autoEnabled && !doubleDutchCanEnd) return;
-
-      const showButton =
-        (gameState.phase === 'ACTION' &&
-          (gameState.actionUsed || gameState.actionPlaysRemaining === 1)) ||
-        gameState.phase === 'END';
-
-      if (!showButton) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-      nextPhase();
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [gameState, isActivePlayer, autoEnabled]);
 
   function getButtonText() {
     switch (gameState.phase) {

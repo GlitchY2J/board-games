@@ -1,4 +1,4 @@
-import { useCardPreview } from '../../context/CardPreviewContext';
+import { useCardPreview } from '../../context/useCardPreview';
 import './PlayingCard.css';
 
 interface Props {
@@ -41,7 +41,7 @@ export default function PlayingCard({
 
   return (
     <div
-      className={`playing-card ${size} ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''} ${plain ? 'plain' : ''}`}
+      className={`playing-card ${size} ${isCardBack ? 'card-back' : ''} ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''} ${plain ? 'plain' : ''}`}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={hidePreview}

@@ -8,12 +8,25 @@ import { emitGameError, getSocketGameContext } from './socketContext.ts';
 import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { roomManager } from '../roomManagerInstance.ts';
+import type { Room } from '../game/models/Room.ts';
 import { GameState } from '../game/models/GameState.ts';
 import {
   enqueueCardAnimation,
   enqueueDrawAnimation,
+  enqueueStealAnimation,
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
+import { advanceTurnAfterDraw } from '../game/exploding-kittens/turn.ts';
+import { nextUnicornOfWarChoice } from '../game/cards/effects/unicornOfWar.ts';
+import { startPendingTimer } from './gameHandlers.ts';
+import {
+  drawRainbowPrincessCards,
+  nextRainbowPrincessChoice,
+} from '../game/cards/effects/unicornRainbowPrincess.ts';
+
+function isExplodingKittensRoom(room: Room): boolean {
+  return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+}
 
 export function registerActionHandlers(
   io: GameServer,
@@ -21,8 +34,11 @@ export function registerActionHandlers(
 ): void {
   registerDiscardCards(io, socket);
   registerSelectPlayer(io, socket);
+  registerSelectPlayers(io, socket);
   registerSelectStableCard(io, socket);
   registerSelectHandCard(io, socket);
+  registerResolveExplodingKitten(io, socket);
+  registerResolveSeeTheFuture(io, socket);
   registerCancelAction(io, socket);
   registerSelectChoice(io, socket);
   registerSelectNurseryCard(io, socket);
@@ -69,7 +85,19 @@ export function registerActionHandlers(
 
       let resolved = false;
 
-      if (game.pendingAction.type === 'mystical_vortex') {
+      if (game.pendingAction.type === 'select_discard_count') {
+        resolved = ActionResolver.handlePestilenceDiscardCount(
+          game,
+          player.id,
+          cardIds,
+        );
+      } else if (game.pendingAction.type === 'pestilence_discard') {
+        resolved = ActionResolver.handlePestilenceDiscard(
+          game,
+          player.id,
+          cardIds,
+        );
+      } else if (game.pendingAction.type === 'mystical_vortex') {
         resolved = ActionResolver.handleMysticalVortexDiscard(
           game,
           player.id,
@@ -77,6 +105,12 @@ export function registerActionHandlers(
         );
       } else if (game.pendingAction.type === 'llamacorn') {
         resolved = ActionResolver.handleLlamacornDiscard(
+          game,
+          player.id,
+          cardIds,
+        );
+      } else if (game.pendingAction.type === 'frenchiecorn') {
+        resolved = ActionResolver.handleFrenchiecornDiscard(
           game,
           player.id,
           cardIds,
@@ -117,6 +151,125 @@ export function registerActionHandlers(
       );
       if (!sourcePlayer) return;
 
+      const pendingAction = room.gameState.pendingAction;
+      if (
+        isExplodingKittensRoom(room) &&
+        pendingAction?.type === 'select_player' &&
+        pendingAction.reason === 'favor'
+      ) {
+        if (pendingAction.sourcePlayerId !== sourcePlayer.id || playerId === sourcePlayer.id) return;
+        const targetPlayer = room.gameState.players.find((candidate) => candidate.id === playerId && candidate.hand.length > 0);
+        if (!targetPlayer) return;
+
+        room.gameState.pendingPlay = {
+          playerId: sourcePlayer.id,
+          playerName: sourcePlayer.name,
+          card: pendingAction.card!,
+          startedAt: Date.now(),
+          durationMs: 5000,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer.id,
+          targetPlayerName: targetPlayer.name,
+          chain: [{ playerId: sourcePlayer.id, playerName: sourcePlayer.name, card: pendingAction.card!, group: 0 }],
+        };
+        addLog(room.gameState, `${sourcePlayer.name} pidió una carta a ${targetPlayer.name} con Favor`, { playerId: sourcePlayer.id });
+        emitGameState(io, room, 'game-updated');
+        startPendingTimer(io, room, room.gameState.pendingPlay.startedAt);
+        return;
+      }
+      if (
+        isExplodingKittensRoom(room) &&
+        pendingAction?.type === 'select_player' &&
+        (pendingAction.reason === 'two_of_a_kind' ||
+          pendingAction.reason === 'three_of_a_kind')
+      ) {
+        if (
+          pendingAction.sourcePlayerId !== sourcePlayer.id ||
+          playerId === sourcePlayer.id
+        ) {
+          return;
+        }
+
+        const targetPlayer = room.gameState.players.find(
+          (player) => player.id === playerId && player.hand.length > 0,
+        );
+        const cardIds = pendingAction.cardIds ?? [];
+        const playedCards = cardIds.map((id) =>
+          sourcePlayer.hand.find((card) => card.uid === id),
+        );
+
+        if (!targetPlayer || playedCards.some((card) => !card)) {
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'El jugador o las cartas seleccionadas ya no son válidos.',
+            'select-player',
+          );
+          return;
+        }
+
+        if (pendingAction.reason === 'three_of_a_kind') {
+          room.gameState.pendingAction = {
+            type: 'select_choice',
+            reason: 'three_of_a_kind',
+            playerId: sourcePlayer.id,
+            title: 'Three of a Kind',
+            description: `Elige qué carta quieres robarle a ${targetPlayer.name}`,
+            options: [
+              { value: 'beard_cat', text: 'Beard Cat' },
+              { value: 'cattermelon', text: 'Cattermelon' },
+              { value: 'hairy_potato_cat', text: 'Hairy Potato Card' },
+              { value: 'rainbow_ralphing_cat', text: 'Rainbow-Ralphing Cat' },
+              { value: 'tacocat', text: 'Tacocat' },
+              { value: 'attack', text: 'Attack 2x' },
+              { value: 'defuse', text: 'Defuse' },
+              { value: 'favor', text: 'Favor' },
+              { value: 'nope', text: 'Nope' },
+              { value: 'see_the_future', text: 'See the Future 3x' },
+              { value: 'shuffle', text: 'Shuffle' },
+              { value: 'skip', text: 'Skip' },
+            ],
+            targetPlayerId: targetPlayer.id,
+            cardIds: pendingAction.cardIds,
+          };
+          addLog(
+            room.gameState,
+            `${sourcePlayer.name} eligió a ${targetPlayer.name} para Three of a Kind`,
+            { playerId: sourcePlayer.id },
+          );
+          emitGameState(io, room, 'game-updated');
+          return;
+        }
+
+        const startedAt = Date.now();
+        room.gameState.pendingAction = undefined;
+        room.gameState.pendingPlay = {
+          playerId: sourcePlayer.id,
+          playerName: sourcePlayer.name,
+          card: playedCards[0]!,
+          startedAt,
+          durationMs: 5000,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer.id,
+          targetPlayerName: targetPlayer.name,
+          chain: playedCards.map((card) => ({
+            playerId: sourcePlayer.id,
+            playerName: sourcePlayer.name,
+            card: card!,
+            group: 0,
+          })),
+        };
+
+        addLog(
+          room.gameState,
+          `${sourcePlayer.name} eligió a ${targetPlayer.name} para Two of a Kind`,
+          { playerId: sourcePlayer.id },
+        );
+        emitGameState(io, room, 'game-updated');
+        startPendingTimer(io, room, startedAt);
+        return;
+      }
+
       const resolved = ActionResolver.handleSelectPlayer(
         room.gameState,
         sourcePlayer.id,
@@ -145,6 +298,23 @@ export function registerActionHandlers(
 
         emitGameState(io, room, 'game-updated');
       }
+    });
+  }
+
+  function registerSelectPlayers(io: GameServer, socket: GameSocket): void {
+    socket.on('select-players', ({ roomCode, playerIds }) => {
+      const context = getSocketGameContext(socket, roomCode);
+      if (!context) return;
+
+      const { game, player, room } = context;
+      const resolved = ActionResolver.handleSelectPlayers(
+        game,
+        player.id,
+        playerIds,
+      );
+      if (!resolved) return;
+
+      emitGameState(io, room, 'game-updated');
     });
   }
 
@@ -210,6 +380,33 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'favor') {
+        if (pending.targetPlayerId !== player.id) return;
+        const targetPlayer = game.players.find((candidate) => candidate.id === player.id);
+        const sourcePlayer = game.players.find((candidate) => candidate.id === pending.sourcePlayerId);
+        const cardIndex = targetPlayer?.hand.findIndex((card) => card.uid === cardId) ?? -1;
+        if (!targetPlayer || !sourcePlayer || cardIndex < 0) return;
+        const [stolenCard] = targetPlayer.hand.splice(cardIndex, 1);
+        sourcePlayer.hand.push(stolenCard);
+        const favorIndex = sourcePlayer.hand.findIndex(
+          (card) => card.uid === game.pendingPlay?.card.uid,
+        );
+        if (favorIndex >= 0) {
+          const [favorCard] = sourcePlayer.hand.splice(favorIndex, 1);
+          game.discard.push(favorCard);
+        }
+        game.pendingAction = undefined;
+        game.pendingPlay = undefined;
+        game.currentPlayer = game.players.findIndex((candidate) => candidate.id === sourcePlayer.id);
+        game.phase = TurnPhase.ACTION;
+        game.actionUsed = false;
+        game.actionPlaysRemaining = undefined;
+        enqueueStealAnimation(game.roomCode, targetPlayer.id, sourcePlayer.id, stolenCard);
+        addLog(game, `${targetPlayer.name} entregó una carta a ${sourcePlayer.name} por Favor`, { playerId: sourcePlayer.id });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (pending.sourcePlayerId !== player.id) {
         emitGameError(
           socket,
@@ -222,7 +419,11 @@ export function registerActionHandlers(
 
       let resolvedCardId = cardId;
 
-      if (pending.reason === 'americorn') {
+      if (
+        pending.reason === 'americorn' ||
+        pending.reason === 'two_of_a_kind' ||
+        pending.reason === 'three_of_a_kind'
+      ) {
         const targetPlayer = game.players.find(
           (candidate) => candidate.id === pending.targetPlayerId,
         );
@@ -237,7 +438,12 @@ export function registerActionHandlers(
           return;
         }
 
-        const expectedPrefix = `hidden-hand-${targetPlayer.id}-`;
+        const expectedPrefix =
+          pending.reason === 'three_of_a_kind'
+            ? `three-of-a-kind-${targetPlayer.id}-`
+            : pending.reason === 'two_of_a_kind'
+              ? `two-of-a-kind-${targetPlayer.id}-`
+            : `hidden-hand-${targetPlayer.id}-`;
 
         if (cardId.startsWith(expectedPrefix)) {
           // Mano boca abajo: el cliente envía el uid de la carta oculta y el
@@ -267,6 +473,31 @@ export function registerActionHandlers(
           resolvedCardId = cardId;
         }
       }
+      const stolenCard =
+        (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind')
+        ? game.players
+            .find((candidate) => candidate.id === pending.targetPlayerId)
+            ?.hand.find((card) => card.uid === resolvedCardId)
+        : undefined;
+
+      if (pending.reason === 'three_of_a_kind') {
+        const targetPlayer = game.players.find(
+          (candidate) => candidate.id === pending.targetPlayerId,
+        );
+        const selectedCard = targetPlayer?.hand.find(
+          (card) => card.uid === resolvedCardId,
+        );
+        if (!selectedCard || selectedCard.id !== pending.requestedCardType) {
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'La carta seleccionada no coincide con el tipo elegido.',
+            'select-hand-card',
+          );
+          return;
+        }
+      }
+
       const resolved = ActionResolver.handleSelectHandCard(
         game,
         player.id,
@@ -283,9 +514,20 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
+        if (stolenCard) {
+          enqueueStealAnimation(
+            game.roomCode,
+            pending.targetPlayerId,
+            player.id,
+            stolenCard,
+          );
+        }
+      }
+
       continueBeginningPhaseIfReady(game);
 
-      if (pending.reason === 'americorn') {
+        if (pending.reason === 'americorn') {
         const targetPlayer = game.players.find(
           (candidate) => candidate.id === pending.targetPlayerId,
         );
@@ -297,12 +539,113 @@ export function registerActionHandlers(
             : `${player.name} robó una carta de una mano al azar`,
           { playerId: player.id },
         );
+      } else if (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
+        addLog(game, `${player.name} robó una carta con ${pending.reason === 'three_of_a_kind' ? 'Three' : 'Two'} of a Kind`, {
+          playerId: player.id,
+        });
       } else {
         addLog(game, `${player.name} eligió una carta de una mano`, {
           playerId: player.id,
         });
       }
 
+      emitGameState(io, room, 'game-updated');
+    });
+  }
+
+  function registerResolveExplodingKitten(io: GameServer, socket: GameSocket): void {
+    socket.on('resolve-exploding-kitten', ({ roomCode, useDefuse }) => {
+      const context = getSocketGameContext(socket, roomCode);
+      if (!context) return;
+
+      const { game, player, room } = context;
+      const pending = game.pendingAction;
+      if (!pending || pending.type !== 'exploding_kitten' || pending.playerId !== player.id) {
+        emitGameError(socket, 'NO_PENDING_ACTION', 'No hay un Exploding Kitten pendiente.', 'select-choice');
+        return;
+      }
+
+      const gamePlayer = game.players.find((candidate) => candidate.id === player.id);
+      if (!gamePlayer) return;
+
+      const kittenIndex = gamePlayer.hand.findIndex((card) => card.uid === pending.card.uid);
+      if (kittenIndex < 0) return;
+
+      if (useDefuse) {
+        const defuseIndex = gamePlayer.hand.findIndex((card) => card.id === 'defuse');
+        if (defuseIndex < 0) {
+          emitGameError(socket, 'CARD_NOT_FOUND', 'No tienes un Defuse.', 'select-choice');
+          return;
+        }
+
+        const [defuse] = gamePlayer.hand.splice(defuseIndex, 1);
+        gamePlayer.hand.splice(kittenIndex > defuseIndex ? kittenIndex - 1 : kittenIndex, 1);
+        game.discard.push(defuse);
+        game.pendingAction = {
+          type: 'select_deck_card',
+          reason: 'exploding_kitten_defuse',
+          playerId: player.id,
+          candidates: [],
+          card: pending.card,
+        };
+        addLog(game, `${player.name} usó un Defuse`, { playerId: player.id });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      const playerIndex = game.players.findIndex((candidate) => candidate.id === player.id);
+      const placement = game.players.length;
+      game.discard.push(...gamePlayer.hand.filter((card) => card.uid !== pending.card.uid));
+      game.discard.push(pending.card);
+      game.eliminatedPlayers ??= [];
+      game.eliminatedPlayers.push({
+        id: player.id,
+        name: player.name,
+        avatar: player.avatar,
+        placement,
+      });
+      game.players.splice(playerIndex, 1);
+      game.pendingAction = undefined;
+      addLog(game, `${player.name} fue eliminado por un Exploding Kitten`, {
+        playerId: player.id,
+      });
+
+      if (game.players.length === 1) {
+        game.winnerId = game.players[0].id;
+        game.phase = TurnPhase.END;
+      } else if (game.players.length > 1) {
+        game.currentPlayer = playerIndex % game.players.length;
+        game.turn += 1;
+        game.phase = TurnPhase.DRAW;
+        game.turnsRemaining = 1;
+        game.actionUsed = false;
+        game.actionPlaysRemaining = undefined;
+      }
+
+      emitGameState(io, room, 'game-updated');
+    });
+  }
+
+  function registerResolveSeeTheFuture(io: GameServer, socket: GameSocket): void {
+    socket.on('resolve-see-the-future', ({ roomCode }) => {
+      const context = getSocketGameContext(socket, roomCode);
+      if (!context) return;
+
+      const { game, player, room } = context;
+      const pending = game.pendingAction;
+      if (!pending || pending.type !== 'see_the_future' || pending.playerId !== player.id) {
+        emitGameError(socket, 'NO_PENDING_ACTION', 'No hay una visión del futuro pendiente.', 'select-choice');
+        return;
+      }
+
+      game.pendingAction = undefined;
+      game.pendingPlay = undefined;
+      game.currentPlayer = game.players.findIndex((candidate) => candidate.id === player.id);
+      game.phase = TurnPhase.ACTION;
+      game.turnsRemaining = pending.turnsRemaining ?? game.turnsRemaining;
+      game.actionUsed = false;
+      game.actionPlaysRemaining = undefined;
+      addLog(game, `${player.name} terminó de mirar el futuro`, { playerId: player.id });
       emitGameState(io, room, 'game-updated');
     });
   }
@@ -372,6 +715,64 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'three_of_a_kind') {
+        const validChoices = new Set([
+          'beard_cat', 'cattermelon', 'hairy_potato_cat',
+          'rainbow_ralphing_cat', 'tacocat', 'attack', 'defuse',
+          'favor', 'nope', 'see_the_future', 'shuffle', 'skip',
+        ]);
+        const targetPlayer = room.gameState.players.find(
+          (candidate) => candidate.id === pending.targetPlayerId,
+        );
+        const playedCards = (pending.cardIds ?? []).map((id) =>
+          player.hand.find((card) => card.uid === id),
+        );
+
+        if (
+          !validChoices.has(choice) ||
+          !targetPlayer ||
+          playedCards.length !== 3 ||
+          playedCards.some((card) => !card)
+        ) {
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'El tipo de carta seleccionado no es válido.',
+            'select-choice',
+          );
+          return;
+        }
+
+        const startedAt = Date.now();
+        room.gameState.pendingAction = undefined;
+        room.gameState.pendingPlay = {
+          playerId: player.id,
+          playerName: player.name,
+          card: playedCards[0]!,
+          startedAt,
+          durationMs: 5000,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer.id,
+          targetPlayerName: targetPlayer.name,
+          requestedCardType: choice,
+          chain: playedCards.map((card) => ({
+            playerId: player.id,
+            playerName: player.name,
+            card: card!,
+            group: 0,
+          })),
+        };
+
+        addLog(
+          room.gameState,
+          `${player.name} eligió robar una carta de tipo ${choice} a ${targetPlayer.name}`,
+          { playerId: player.id },
+        );
+        emitGameState(io, room, 'game-updated');
+        startPendingTimer(io, room, startedAt);
+        return;
+      }
+
       if (pending.reason === 'beginning_effect_picker') {
         // El jugador elige en qué orden resolver sus efectos de inicio de turno.
         const q = room.gameState.beginningEffectsQueue ?? [];
@@ -387,6 +788,47 @@ export function registerActionHandlers(
           TurnManager.processBeginningQueue(room.gameState);
         }
 
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'unicorn_of_war') {
+        const remainingPlayerIds = pending.remainingPlayerIds ?? [];
+
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'unicorn_of_war_destroy',
+            sourcePlayerId: player.id,
+            remainingPlayerIds,
+          };
+        } else {
+          room.gameState.pendingAction = nextUnicornOfWarChoice(
+            room.gameState,
+            pending.sourcePlayerId ?? player.id,
+            remainingPlayerIds,
+          );
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'unicorn_rainbow_princess') {
+        if (choice === 'yes') {
+          const selectedPlayer = room.gameState.players.find(
+            (candidate) => candidate.id === player.id,
+          );
+          if (selectedPlayer) {
+            drawRainbowPrincessCards(room.gameState, selectedPlayer, 1);
+          }
+        }
+
+        room.gameState.pendingAction = nextRainbowPrincessChoice(
+          room.gameState,
+          pending.sourcePlayerId ?? player.id,
+          pending.remainingPlayerIds ?? [],
+        );
         emitGameState(io, room, 'game-updated');
         return;
       }
@@ -531,6 +973,30 @@ export function registerActionHandlers(
           choice === 'yes'
             ? `${player.name} usó el efecto de Dark Angel Unicorn`
             : `${player.name} omitió el efecto de Dark Angel Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'zombie_unicorn') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'zombie_unicorn',
+            sourcePlayerId: player.id,
+            targetPlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usará Zombie Unicorn`
+            : `${player.name} omitió el efecto de Zombie Unicorn`,
           { playerId: player.id },
         );
 
@@ -795,6 +1261,42 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'extremely_fertile_unicorn') {
+        if (choice === 'yes') {
+          const hasBaby = room.gameState.nursery.some(
+            (card) =>
+              card.cardType === 'unicorn' && card.unicornClass === 'baby',
+          );
+
+          if (player.hand.length > 0 && hasBaby) {
+            room.gameState.pendingAction = {
+              type: 'discard',
+              reason: 'extremely_fertile_unicorn',
+              playerId: player.id,
+              cardsToDiscard: 1,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+            if (room.gameState.phase === TurnPhase.BEGINNING) {
+              TurnManager.processBeginningQueue(room.gameState);
+            }
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usará Extremely Fertile Unicorn`
+            : `${player.name} omitió el efecto de Extremely Fertile Unicorn`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'necromancer_unicorn') {
         if (choice === 'yes') {
           room.gameState.pendingAction = {
@@ -936,6 +1438,29 @@ export function registerActionHandlers(
           choice === 'yes'
             ? `${player.name} usará Glitter Bomb para sacrificar y destruir`
             : `${player.name} omitió el efecto de Glitter Bomb`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'unicorn_of_death') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'unicorn_of_death_sacrifice',
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usará Unicorn of Death para sacrificar y destruir`
+            : `${player.name} omitió el efecto de Unicorn of Death`,
           { playerId: player.id },
         );
 
@@ -1181,7 +1706,8 @@ export function registerActionHandlers(
         !pending ||
         pending.type !== 'select_nursery_card' ||
         pending.playerId !== player.id ||
-        pending.reason !== 'mother_goose_unicorn'
+        pending.reason !== 'mother_goose_unicorn' &&
+        pending.reason !== 'extremely_fertile_unicorn'
       ) {
         return;
       }
@@ -1248,7 +1774,10 @@ export function registerActionHandlers(
         pending.reason !== 'necromancer_unicorn' &&
         pending.reason !== 'swift_flying_unicorn' &&
         pending.reason !== 'kiss_of_life' &&
-        pending.reason !== 'angel_unicorn'
+         pending.reason !== 'angel_unicorn' &&
+         pending.reason !== 'zombie_unicorn' &&
+         pending.reason !== 'extremely_fertile_unicorn' &&
+         pending.reason !== 'frenchiecorn'
       )
         return;
 
@@ -1267,6 +1796,19 @@ export function registerActionHandlers(
           socket,
           'INVALID_SELECTION',
           'La carta seleccionada no es válida.',
+          'select-discard-card',
+        );
+        return;
+      }
+
+      if (
+        pending.reason === 'frenchiecorn' &&
+        !pending.discardedCardIds?.includes(selectedCard.uid)
+      ) {
+        emitGameError(
+          socket,
+          'INVALID_SELECTION',
+          'Solo puedes elegir una carta descartada por Frenchiecorn.',
           'select-discard-card',
         );
         return;
@@ -1292,7 +1834,8 @@ export function registerActionHandlers(
       if (
         pending.reason === 'magical_flying_unicorn' ||
         pending.reason === 'majestic_flying_unicorn' ||
-        pending.reason === 'swift_flying_unicorn'
+        pending.reason === 'swift_flying_unicorn' ||
+        pending.reason === 'frenchiecorn'
       ) {
         player.hand.push(removed);
 
@@ -1325,6 +1868,17 @@ export function registerActionHandlers(
           TurnManager.processBeginningQueue(room.gameState);
         }
 
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'zombie_unicorn') {
+        addLog(
+          room.gameState,
+          `${player.name} trajo ${broughtFromDiscard.name} al establo por Zombie Unicorn y terminó su turno`,
+          { playerId: player.id },
+        );
+        TurnManager.endTurnImmediately(room.gameState);
         emitGameState(io, room, 'game-updated');
         return;
       }
@@ -1369,7 +1923,8 @@ export function registerActionHandlers(
         pending.reason !== 'classy_narwhal' &&
         pending.reason !== 'the_great_narwhal' &&
         pending.reason !== 'shabby_the_narwhal' &&
-        pending.reason !== 'debug_draw'
+        pending.reason !== 'debug_draw' &&
+        pending.reason !== 'exploding_kitten_defuse'
       )
         return;
 
@@ -1383,6 +1938,21 @@ export function registerActionHandlers(
           'La carta seleccionada no es válida.',
           'select-deck-card',
         );
+        return;
+      }
+
+      if (pending.reason === 'exploding_kitten_defuse') {
+        const position = Number(cardId.replace('deck-position-', ''));
+        if (!Number.isInteger(position) || position < 0 || position > room.gameState.deck.length) {
+          emitGameError(socket, 'INVALID_SELECTION', 'La posición del mazo no es válida.', 'select-deck-card');
+          return;
+        }
+
+        if (!pending.card) return;
+        room.gameState.deck.splice(position, 0, pending.card);
+        room.gameState.pendingAction = undefined;
+        advanceTurnAfterDraw(room.gameState);
+        emitGameState(io, room, 'game-updated');
         return;
       }
 
@@ -1408,7 +1978,12 @@ export function registerActionHandlers(
 
       room.gameState.pendingAction = undefined;
 
-      if (room.gameState.phase === TurnPhase.BEGINNING) {
+      const isExplodingKittens =
+        (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+
+      if (isExplodingKittens && pending.reason === 'debug_draw') {
+        advanceTurnAfterDraw(room.gameState);
+      } else if (room.gameState.phase === TurnPhase.BEGINNING) {
         TurnManager.processBeginningQueue(room.gameState);
       } else if (
         room.gameState.phase === TurnPhase.DRAW &&

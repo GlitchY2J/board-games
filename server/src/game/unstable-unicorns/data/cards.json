@@ -346,7 +346,7 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/base/llamacorn.png",
-    "description": "When this card enters your Stable, each player must DISCARD a card. Shuffle the discard pile into the deck.",
+    "description": "When this card enters your Stable, each player must DISCARD a card.",
     "effect": "llamacorn",
     "copies": 1,
     "expansion": "base"
@@ -368,7 +368,7 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/base/magical_kittencorn.png",
-    "description": "This card cannot be destroyed or otherwise affected by Magic cards.",
+    "description": "This card cannot be destroyed by Magic cards.",
     "effect": "magical_kittencorn",
     "copies": 1,
     "expansion": "base"
@@ -966,6 +966,160 @@
     "description": "When this card enters your Stable, each player (including you) must SACRIFICE a Unicorn card, then DRAW a card.",
     "effect": "cotton_candy_llamacorn",
     "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_extremely_destructive_unicorn",
+    "name": "Extremely Destructive Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/extremely_destructive_unicorn.png",
+    "description": "When this card enters your Stable, each player (including you) must SACRIFICE a Unicorn card.",
+    "effect": "extremely_destructive_unicorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "extremely_fertile_unicorn",
+    "name": "Extremely Fertile Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/extremely_fertile_unicorn.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD a card, then bring a Baby Unicorn card from the Nursery into your Stable.",
+    "effect": "extremely_fertile_unicorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "frenchiecorn",
+    "name": "Frenchiecorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/frenchiecorn.png",
+    "description": "When this card enters your STABLE, each other player must DISCARD a card. Choose one fo the discarded cards and add it to your hand.",
+    "effect": "frenchiecorn",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "glitter_unicorn",
+    "name": "Glitter Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/glitter_unicorn.png",
+    "description": "When this card enters your Stable, you may bring an Upgrade card from your hand into your Stable.",
+    "effect": "glitter_unicorn",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_llamacorn",
+    "name": "Llamacorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/llamacorn.png",
+    "description": "When this card enters your Stable, each player must DISCARD a card.",
+    "effect": "llamacorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_magical_kittencorn",
+    "name": "Magical Kittencorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/magical_kittencorn.png",
+    "description": "This card cannot be destroyed by Magic cards.",
+    "effect": "magical_kittencorn",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "the_tiniest_unicorn",
+    "name": "The Tiniest Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/the_tiniest_unicorn.png",
+    "description": "This card cannot be destroyed by effects of Unicorn or Upgrade cards.",
+    "effect": "the_tiniest_unicorn",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_of_death",
+    "name": "Unicorn Of Death",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_of_death.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a Unicorn card, then DESTROY a Unicorn card.",
+    "effect": "unicorn_of_death",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_of_famine",
+    "name": "Unicorn Of Famine",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_of_famine.png",
+    "description": "Each player's hand limit (including yours) is reduced by 5 cards.",
+    "effect": "unicorn_of_famine",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_of_pestilence",
+    "name": "Unicorn Of Pestilence",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_of_pestilence.png",
+    "description": "When this card enters your Stable, DISCARD any number of cards. Each other player must DISCARD the same number of cards.",
+    "effect": "unicorn_of_pestilence",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_of_war",
+    "name": "Unicorn Of War",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_of_war.png",
+    "description": "When this card enters your Stable, each player (including you) may DESTROY a Unicorn card. This card cannot be destroyed.",
+    "effect": "unicorn_of_war",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_unicorn_phoenix",
+    "name": "Unicorn Phoenix",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_phoenix.png",
+    "description": "If this card would be sacrificed or destroyed, you may DISCARD a card instead.",
+    "effect": "unicorn_phoenix",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_rainbow_princess",
+    "name": "Unicorn Rainbow Princess",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/unicorn_rainbow_princess.png",
+    "description": "When this card enters your Stable, choose any number of players. DRAW cards equal to the number of chosen players. Each chosen player may DRAW a card.",
+    "effect": "unicorn_rainbow_princess",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "zombie_unicorn",
+    "name": "Zombie Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/rainbow apocalypse/zombie_unicorn.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DISCARD a Unicorn card, then bring a Unicorn card from the discard pile into your Stable. If you do immediately end your turn.",
+    "effect": "zombie_unicorn",
+    "copies": 2,
     "expansion": "rainbow"
   }
 ]

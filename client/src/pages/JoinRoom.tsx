@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
 import { joinRoom, getRoomInfo } from '../services/api';
 import { saveSession } from '../services/session';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/useGame';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import AvatarPicker from '../components/ui/AvatarPicker';
@@ -21,7 +21,6 @@ export default function JoinRoom() {
   useEffect(() => {
     const code = roomCode.trim().toUpperCase();
     if (code.length < 2) {
-      setTakenAvatars([]);
       return;
     }
 

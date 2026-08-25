@@ -3,6 +3,24 @@
 
 @theme {
   --font-sans: 'Outfit', 'Inter', sans-serif;
+
+  /* Neutral charcoal palette used by the shared UI accents. */
+  --color-emerald-300: #d1d5db;
+  --color-emerald-400: #b7bec8;
+  --color-emerald-500: #808995;
+  --color-emerald-600: #626b77;
+  --color-cyan-300: #d1d5db;
+  --color-cyan-400: #b7bec8;
+  --color-cyan-500: #808995;
+  --color-cyan-600: #626b77;
+  --color-teal-400: #aeb6c0;
+  --color-teal-500: #7b8490;
+  --color-blue-400: #aeb6c0;
+  --color-blue-500: #7b8490;
+  --color-indigo-400: #aeb6c0;
+  --color-indigo-500: #7b8490;
+  --color-purple-400: #c0c5cc;
+  --color-purple-500: #858d98;
 }
 
 html,
@@ -16,20 +34,30 @@ body,
 }
 
 body {
-  background-color: #0b0f19;
+  background-color: #0b0d11;
   background-image: 
-    radial-gradient(at 0% 0%, hsla(242, 47%, 12%, 1) 0px, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(162, 57%, 8%, 0.8) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(242, 47%, 12%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(162, 57%, 8%, 0.8) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(220, 14%, 15%, 0.9) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(220, 10%, 10%, 0.9) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(220, 14%, 13%, 0.9) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(220, 10%, 8%, 0.9) 0px, transparent 50%);
   background-attachment: fixed;
   color: #f8fafc;
   font-family: 'Outfit', 'Inter', sans-serif;
 }
 
+.page-scroll {
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 /* Efectos y clases de utilidad custom para UI Premium */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(24, 28, 35, 0.62);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -37,18 +65,18 @@ body {
 }
 
 .text-gradient-emerald {
-  background: linear-gradient(135deg, #a7f3d0 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, #e5e7eb 0%, #7b8490 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .glow-btn-emerald {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 20px rgba(148, 163, 184, 0.14);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glow-btn-emerald:hover {
-  box-shadow: 0 0 30px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 30px rgba(203, 213, 225, 0.24);
 }
 
 /* Animaciones sutiles */

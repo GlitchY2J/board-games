@@ -1,5 +1,5 @@
 import './CardSelectionOverlay.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import PlayingCard from '../card/PlayingCard';
 
 export interface SelectionItem {
@@ -16,6 +16,7 @@ interface Props {
   subtitle?: string;
   items: SelectionItem[];
   maxSelection: number;
+  minSelection?: number;
   confirmText?: string;
   hide?: boolean;
   onConfirm(cardIds: string[]): void;
@@ -27,18 +28,15 @@ export default function CardSelectionOverlay({
   subtitle,
   items,
   maxSelection,
+  minSelection = maxSelection,
   confirmText = 'Confirmar',
   hide = false,
   onConfirm,
   onCancel,
 }: Props) {
-  const [selected, setSelected] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (maxSelection === 1 && items.length === 1) {
-      setSelected([items[0].id]);
-    }
-  }, [items, maxSelection]);
+  const [selected, setSelected] = useState<string[]>(() =>
+    maxSelection === 1 && items.length === 1 ? [items[0].id] : [],
+  );
 
   function toggle(itemId: string) {
     if (selected.includes(itemId)) {
@@ -57,8 +55,8 @@ export default function CardSelectionOverlay({
   }
 
   const canConfirm = useMemo(
-    () => selected.length === maxSelection,
-    [selected, maxSelection],
+    () => selected.length >= minSelection && selected.length <= maxSelection,
+    [selected, minSelection, maxSelection],
   );
 
   const selectedValues = useMemo(() => {

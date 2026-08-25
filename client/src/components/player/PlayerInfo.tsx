@@ -1,10 +1,11 @@
 import type { GameState } from '../../types/GameState';
 import { cn } from '../../lib/cn';
-import { Sparkles, Layers, Eye } from 'lucide-react';
+import { Sparkles, Layers, Eye, RotateCcw, UserX } from 'lucide-react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import PlayingCard from '../card/PlayingCard';
 import { getStablePower } from '../../lib/stablePower';
+import { socket } from '../../services/socket';
 import './PlayerInfo.css';
 
 type Player = GameState['players'][number];
@@ -14,6 +15,10 @@ interface Props {
   isActive?: boolean;
   status?: string;
   localPlayerId?: string;
+  gameId?: string;
+  turnsRemaining?: number;
+  isHost?: boolean;
+  roomCode?: string;
 }
 
 export default function PlayerInfo({
@@ -21,6 +26,10 @@ export default function PlayerInfo({
   isActive = false,
   status,
   localPlayerId,
+  gameId,
+  turnsRemaining = 0,
+  isHost = false,
+  roomCode,
 }: Props) {
   const [showHand, setShowHand] = useState(false);
 
@@ -28,6 +37,10 @@ export default function PlayerInfo({
     player.downgrades.some((c) => c.id === 'nanny_cam') ?? false;
   const canView =
     hasNannyCam && localPlayerId !== undefined && localPlayerId !== player.id;
+  const showStablePower = gameId !== 'exploding-kittens';
+  const showTurns = gameId === 'exploding-kittens';
+  const displayedTurns = showTurns && isActive ? Math.max(1, turnsRemaining) : 0;
+  const canKick = isHost && localPlayerId !== undefined && localPlayerId !== player.id;
 
   return (
     <div
@@ -93,21 +106,38 @@ export default function PlayerInfo({
                   : 'bg-slate-600'
               )}
             ></span>
-            {status ?? (isActive ? 'Tu Turno' : 'Esperando')}
+            {status ?? (isActive
+              ? gameId === 'exploding-kittens'
+                ? 'Jugando cartas...'
+                : 'Tu Turno'
+              : 'Esperando')}
           </span>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5 text-xs shrink-0">
-        <div
-          className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-slate-800/50"
-          title="Unicornios en el Establo"
-        >
-          <Sparkles size={11} className="text-amber-400" />
-          <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
-            {getStablePower(player)}
-          </span>
-        </div>
+        {showStablePower && (
+          <div
+            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-slate-800/50"
+            title="Unicornios en el Establo"
+          >
+            <Sparkles size={11} className="text-amber-400" />
+            <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
+              {getStablePower(player)}
+            </span>
+          </div>
+        )}
+        {showTurns && (
+          <div
+            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-orange-500/30"
+            title="Turnos pendientes"
+          >
+            <RotateCcw size={11} className="text-orange-400" />
+            <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
+              {displayedTurns}
+            </span>
+          </div>
+        )}
         <div
           className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-slate-800/50"
           title="Cartas en Mano"
@@ -125,6 +155,20 @@ export default function PlayerInfo({
             onClick={() => setShowHand(true)}
           >
             <Eye size={11} />
+          </button>
+        )}
+        {canKick && roomCode && (
+          <button
+            type="button"
+            className="flex items-center gap-1 bg-rose-950/50 px-2 py-1 rounded-lg border border-rose-500/40 hover:bg-rose-900/60 transition-colors text-rose-300 cursor-pointer"
+            title={`Expulsar a ${player.name}`}
+            onClick={() => {
+              if (window.confirm(`¿Expulsar a ${player.name} de la sala?`)) {
+                socket.emit('kick-player', { roomCode, playerId: player.id });
+              }
+            }}
+          >
+            <UserX size={11} />
           </button>
         )}
       </div>

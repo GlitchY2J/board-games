@@ -10,6 +10,8 @@ import {
 } from '../cards/effects/pandamonium.ts';
 import { hasDoubleDutch } from '../cards/effects/doubleDutch.ts';
 import { isEffectBlockedByBlindingLight } from '../cards/effects/blindingLight.ts';
+import { hasUnicornOfDeathTarget } from '../cards/effects/unicornOfDeath.ts';
+import { getHandLimit } from '../cards/effects/unicornOfFamine.ts';
 
 const END_OF_TURN_EFFECTS = new Set<string>([
   // Add here any card whose effect triggers at the end of your turn
@@ -83,6 +85,15 @@ export class TurnManager {
       uids.push(...glitter.map((c) => c.uid));
     }
 
+    const unicornOfDeath = allCards.filter((c) => c.id === 'unicorn_of_death');
+    if (
+      unicornOfDeath.length > 0 &&
+      hasAvailableUnicorn(activePlayer) &&
+      hasUnicornOfDeathTarget(game, activePlayer.id)
+    ) {
+      uids.push(...unicornOfDeath.map((c) => c.uid));
+    }
+
     // Rainbow Lasso: descartar 3 cartas y luego robar un unicornio. Efecto
     // opcional; se ofrece siempre que el upgrade esté en el establo y haya un
     // unicornio ajeno disponible. Si la mano no llega a 3 cartas al aceptar,
@@ -117,6 +128,15 @@ export class TurnManager {
       uids.push(...sadistic.map((c) => c.uid));
     }
 
+    const zombie = allCards.filter((c) => c.id === 'zombie_unicorn');
+    if (
+      zombie.length > 0 &&
+      hasAvailableUnicorn(activePlayer) &&
+      game.discard.some((card) => card.cardType === 'unicorn')
+    ) {
+      uids.push(...zombie.map((c) => c.uid));
+    }
+
     const angel = allCards.filter((c) => c.id === 'angel_unicorn');
     if (
       angel.length > 0 &&
@@ -124,6 +144,20 @@ export class TurnManager {
       angel.some((c) => !isEffectBlockedByBlindingLight(activePlayer, c))
     ) {
       uids.push(...angel.map((c) => c.uid));
+    }
+
+    // Extremely Fertile Unicorn: descartar una carta para traer un Baby
+    // Unicorn de la Nursery. Solo se ofrece si ambos pasos son posibles.
+    const fertile = allCards.filter((c) => c.id === 'extremely_fertile_unicorn');
+    if (
+      fertile.length > 0 &&
+      activePlayer.hand.length > 0 &&
+      game.nursery.some(
+        (c) => c.cardType === 'unicorn' && c.unicornClass === 'baby',
+      ) &&
+      fertile.some((c) => !isEffectBlockedByBlindingLight(activePlayer, c))
+    ) {
+      uids.push(...fertile.map((c) => c.uid));
     }
 
     return uids;
@@ -143,6 +177,13 @@ export class TurnManager {
       ...activePlayer.downgrades,
     ].find((c) => c.uid === uid);
     if (!card) return false;
+
+    // Marcar el efecto como consumido al iniciarlo. Esto evita que una
+    // interacción hija (por ejemplo, traer una carta del descarte) vuelva a
+    // presentar el mismo efecto de inicio de turno.
+    game.beginningEffectsQueue = (game.beginningEffectsQueue ?? []).filter(
+      (effectUid) => effectUid !== uid,
+    );
 
     switch (card.id) {
       case 'rhinocorn':
@@ -235,6 +276,36 @@ export class TurnManager {
           effectCardId: uid,
         };
         return true;
+      case 'unicorn_of_death':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'unicorn_of_death',
+          playerId: activePlayer.id,
+          title: '💀 Unicorn of Death',
+          description:
+            '¿Deseas SACRIFICAR un unicornio de tu establo para luego DESTRUIR un unicornio de otro establo?',
+          options: [
+            { value: 'yes', text: 'Sí, sacrificar y destruir' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'extremely_fertile_unicorn':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'extremely_fertile_unicorn',
+          playerId: activePlayer.id,
+          title: '🌱 Extremely Fertile Unicorn',
+          description:
+            '¿Deseas descartar una carta para traer un Baby Unicorn de la Nursery a tu establo?',
+          options: [
+            { value: 'yes', text: 'Sí, descartar y traer Baby Unicorn' },
+            { value: 'no', text: 'No, omitir efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
       case 'sadistic_ritual':
         // El sacrificio es OBLIGATORIO: no hay confirmación sí/no, se pasa
         // directamente a elegir qué unicornio sacrificar. Si se sacrifica, se
@@ -243,6 +314,21 @@ export class TurnManager {
           type: 'select_stable_card',
           reason: 'sadistic_ritual',
           sourcePlayerId: activePlayer.id,
+        };
+        return true;
+      case 'zombie_unicorn':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'zombie_unicorn',
+          playerId: activePlayer.id,
+          title: '🧟 Zombie Unicorn',
+          description:
+            '¿Deseas descartar un unicornio para traer un unicornio del descarte? Si lo haces, tu turno terminará inmediatamente.',
+          options: [
+            { value: 'yes', text: 'Sí, descartar y traer un unicornio' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
         };
         return true;
       case 'angel_unicorn':
@@ -352,6 +438,10 @@ export class TurnManager {
   static activateBeginningTriggers(game: GameState): boolean {
     if (game.phase !== TurnPhase.BEGINNING || game.pendingAction) return false;
 
+    // Construir la cola una sola vez por fase evita volver a ofrecer un efecto
+    // ya consumido cuando termina una interacción hija.
+    if (game.beginningEffectsQueue !== undefined) return false;
+
     const activePlayer = game.players[game.currentPlayer];
     if (!activePlayer) return false;
 
@@ -382,6 +472,7 @@ export class TurnManager {
 
     game.actionUsed = false;
     game.actionPlaysRemaining = undefined;
+    game.beginningEffectsQueue = undefined;
 
     if (game.currentPlayer === 0) {
       game.turn++;
@@ -403,17 +494,22 @@ export class TurnManager {
     }
   }
 
+  static endTurnImmediately(game: GameState): void {
+    this.passTurn(game);
+  }
+
   static skipEndIfNoTriggers(game: GameState): void {
     if (game.phase !== TurnPhase.END) return;
 
     const activePlayer = game.players[game.currentPlayer];
 
-    if (activePlayer.hand.length > 7) {
+    const handLimit = getHandLimit(game);
+    if (activePlayer.hand.length > handLimit) {
       game.pendingAction = {
         type: 'discard',
         reason: 'hand_limit',
         playerId: activePlayer.id,
-        cardsToDiscard: activePlayer.hand.length - 7,
+        cardsToDiscard: activePlayer.hand.length - handLimit,
       };
       return;
     }
@@ -465,12 +561,13 @@ export class TurnManager {
       case TurnPhase.END:
         const currentPlayer = game.players[game.currentPlayer];
 
-        if (currentPlayer.hand.length > 7) {
+        const handLimit = getHandLimit(game);
+        if (currentPlayer.hand.length > handLimit) {
           game.pendingAction = {
             type: 'discard',
             reason: 'hand_limit',
             playerId: currentPlayer.id,
-            cardsToDiscard: currentPlayer.hand.length - 7,
+            cardsToDiscard: currentPlayer.hand.length - handLimit,
           };
           return;
         }

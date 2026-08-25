@@ -11,6 +11,7 @@ import {
   triggerBarbedWireDiscard,
 } from '../../cards/effects/barbedWire.ts';
 import { isEffectBlockedByBlindingLight } from '../../cards/effects/blindingLight.ts';
+import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 
 export function hasUpgrade(player: Player, id: string): boolean {
   return player.upgrades.some((c) => c.id === id);
@@ -146,6 +147,13 @@ export class CardMovement {
     animType: CardAnimType = 'destroy',
     pandamoniumApplies = true,
   ): boolean {
+    if (animType !== 'sacrifice' && isImmuneToDestruction(card.id)) {
+      if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
+        player.stable.push(card);
+      }
+      return true;
+    }
+
     // Pandamonium: los unicornios de un establo protegido no pueden ser
     // destruidos ni sacrificados por nadie.
     if (pandamoniumApplies && isPandamoniumProtected(player, card)) return true;

@@ -8,12 +8,14 @@ interface Props {
   gameState: GameState;
   isMyTurn: boolean;
   localPlayerId: string;
+  gameId?: string;
 }
 
 export default function CenterArea({
   gameState,
   isMyTurn,
   localPlayerId,
+  gameId,
 }: Props) {
   const discardTop = gameState.discard[gameState.discard.length - 1];
   const [showDiscard, setShowDiscard] = useState(false);
@@ -70,6 +72,7 @@ export default function CenterArea({
       {showDiscard && (
         <DiscardViewer
           gameState={gameState}
+          gameId={gameId}
           onClose={() => setShowDiscard(false)}
         />
       )}

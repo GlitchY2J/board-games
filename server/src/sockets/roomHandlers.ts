@@ -1,11 +1,12 @@
 import type { GameServer, GameSocket } from './socketTypes.ts';
 import { roomManager } from '../roomManagerInstance.ts';
-import { emitGameState } from './gameStateEmitter.ts';
+import { createGameStateForPlayer, emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { Room } from '../game/models/Room.ts';
-import { Player } from '../game/models/Player.ts';
 import { Card } from '../game/models/Card.ts';
 import { GameState } from '../game/models/GameState.ts';
+import { gameRegistry } from '../games/catalog.ts';
+import { createPublicRoom } from './publicRoom.ts';
 
 function sendCardsOnLeave(game: GameState, cards: Card[]): void {
   for (const card of cards) {
@@ -17,15 +18,45 @@ function sendCardsOnLeave(game: GameState, cards: Card[]): void {
   }
 }
 
-function createPublicRoom(room: Room): Room {
-  return {
-    ...room,
-    players: room.players.map((player) => {
-      const { sessionToken: _sessionToken, ...publicPlayer } = player;
+function removePlayerFromGame(room: Room, playerId: string): boolean {
+  const game = room.gameState;
+  if (!game) return false;
 
-      return publicPlayer as Player;
-    }),
-  };
+  const gamePlayer = game.players.find((player) => player.id === playerId);
+  if (!gamePlayer) return false;
+
+  sendCardsOnLeave(game, gamePlayer.hand);
+  sendCardsOnLeave(game, gamePlayer.stable);
+  sendCardsOnLeave(game, gamePlayer.upgrades);
+  sendCardsOnLeave(game, gamePlayer.downgrades);
+
+  addLog(game, `${gamePlayer.name} salió de la partida`, {
+    playerId: gamePlayer.id,
+  });
+
+  const index = game.players.findIndex((player) => player.id === gamePlayer.id);
+  if (index !== -1) {
+    game.players.splice(index, 1);
+    if (game.players.length > 0) {
+      game.currentPlayer = game.currentPlayer % game.players.length;
+    }
+  }
+
+  if (game.pendingAction) {
+    const pending = game.pendingAction as any;
+    if (
+      pending.playerId === gamePlayer.id ||
+      pending.sourcePlayerId === gamePlayer.id
+    ) {
+      game.pendingAction = undefined;
+    }
+  }
+
+  if (game.pendingPlay?.playerId === gamePlayer.id) {
+    game.pendingPlay = undefined;
+  }
+
+  return true;
 }
 
 export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
@@ -52,7 +83,7 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
       console.log(`[join-room] Encontrado por socketId: ${socket.id}. Uniendo al canal y emitiendo room-updated`);
       socket.join(existingRoom.code);
       console.log(`[join-room] Salas actuales del socket ${socket.id}:`, Array.from(socket.rooms));
-      io.to(existingRoom.code).emit('room-updated', existingRoom);
+       io.to(existingRoom.code).emit('room-updated', createPublicRoom(existingRoom));
       return;
     }
 
@@ -68,7 +99,7 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
       byName.connected = true;
       socket.join(existingRoom.code);
       console.log(`[join-room] Salas actuales del socket ${socket.id}:`, Array.from(socket.rooms));
-      io.to(existingRoom.code).emit('room-updated', existingRoom);
+       io.to(existingRoom.code).emit('room-updated', createPublicRoom(existingRoom));
       return;
     }
 
@@ -88,7 +119,7 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
 
     socket.join(room.code);
     console.log(`[join-room] Sockets en la sala ${room.code} tras el join:`);
-    io.to(room.code).emit('room-updated', room);
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
   });
 
 
@@ -97,51 +128,10 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     const room = roomManager.getRoom(roomCode);
     if (!room) return;
 
-    // Si hay una partida en curso, eliminar al jugador del juego:
-    // sus cartas (mano, establo, upgrades, downgrades) van al descarte.
     const game = room.gameState;
     if (game) {
       const leavingId = room.players.find((p) => p.socketId === socket.id)?.id;
-
-      const gamePlayer = leavingId
-        ? game.players.find((p) => p.id === leavingId)
-        : undefined;
-
-      if (gamePlayer) {
-        sendCardsOnLeave(game, gamePlayer.hand);
-        sendCardsOnLeave(game, gamePlayer.stable);
-        sendCardsOnLeave(game, gamePlayer.upgrades);
-        sendCardsOnLeave(game, gamePlayer.downgrades);
-
-        addLog(
-          game,
-          `${gamePlayer.name} salió de la partida`,
-          { playerId: gamePlayer.id },
-        );
-
-        const index = game.players.findIndex((p) => p.id === gamePlayer.id);
-        if (index !== -1) {
-          game.players.splice(index, 1);
-        }
-
-        if (game.players.length > 0) {
-          game.currentPlayer = game.currentPlayer % game.players.length;
-        }
-      }
-
-      // Limpiar referencias del jugador en acciones pendientes
-      if (game.pendingAction) {
-        const pending = game.pendingAction as any;
-        if (
-          pending.playerId === gamePlayer?.id ||
-          pending.sourcePlayerId === gamePlayer?.id
-        ) {
-          game.pendingAction = undefined;
-        }
-      }
-      if (game.pendingPlay?.playerId === gamePlayer?.id) {
-        game.pendingPlay = undefined;
-      }
+      if (leavingId) removePlayerFromGame(room, leavingId);
     }
 
     roomManager.removePlayer(socket.id);
@@ -154,21 +144,64 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     }
 
     socket.leave(roomCode);
-    io.to(roomCode).emit('room-updated', updatedRoom);
+    io.to(roomCode).emit('room-updated', createPublicRoom(updatedRoom));
 
     if (game) {
       emitGameState(io, updatedRoom, 'game-updated');
     }
   });
 
+  socket.on('leave-game', ({ roomCode }) => {
+    const room = roomManager.getRoom(roomCode);
+    if (!room?.gameState) return;
+
+    const player = room.players.find((candidate) => candidate.socketId === socket.id);
+    if (!player || !removePlayerFromGame(room, player.id)) return;
+
+    if (room.gameState?.players.length === 0) {
+      room.gameState = undefined;
+    }
+
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
+    if (room.gameState) {
+      emitGameState(io, room, 'game-updated');
+    }
+  });
+
+  socket.on('kick-player', ({ roomCode, playerId }) => {
+    const room = roomManager.getRoom(roomCode);
+    if (!room) return;
+
+    const host = room.players.find((player) => player.socketId === socket.id);
+    const target = room.players.find((player) => player.id === playerId);
+    if (!host || host.id !== room.hostId || !target || target.id === host.id) return;
+
+    const targetSocket = target.socketId
+      ? io.sockets.sockets.get(target.socketId)
+      : undefined;
+    const game = room.gameState;
+    if (game) removePlayerFromGame(room, target.id);
+
+    roomManager.removePlayer(target.socketId ?? '', target.id);
+    targetSocket?.leave(room.code);
+    targetSocket?.emit('kicked-from-room', { message: 'Has sido expulsado de la sala.' });
+
+    const updatedRoom = roomManager.getRoom(roomCode);
+    if (!updatedRoom) return;
+    io.to(room.code).emit('room-updated', createPublicRoom(updatedRoom));
+    if (game && updatedRoom.gameState) {
+      emitGameState(io, updatedRoom, 'game-updated');
+    }
+  });
+
   socket.on('room:create', ({ hostName, game, avatar }, callback) => {
-    const room = roomManager.createRoom(hostName, game, socket.id, avatar);
+    const room = roomManager.createRoom(hostName, game ?? null, socket.id, avatar);
 
     socket.join(room.code);
 
     callback({
       success: true,
-      room,
+      room: createPublicRoom(room),
     });
   });
 
@@ -196,11 +229,13 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     callback({
       success: true,
       playerId: player.id,
-      room,
-      gameState: room.gameState,
+      room: createPublicRoom(room),
+      gameState: room.gameState
+        ? createGameStateForPlayer(room.gameState, player.id)
+        : undefined,
     });
 
-    io.to(room.code).emit('room-updated', room);
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
 
     if (room.gameState) {
       emitGameState(io, room, 'game-updated');
@@ -222,7 +257,80 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
 
     const updatedRoom = roomManager.toggleExpansion(roomCode, expansionId);
     if (updatedRoom) {
-      io.to(updatedRoom.code).emit('room-updated', updatedRoom);
+      io.to(updatedRoom.code).emit('room-updated', createPublicRoom(updatedRoom));
+    }
+  });
+
+  socket.on('update-room-settings', ({ roomCode, settings }) => {
+    const room = roomManager.getRoom(roomCode);
+    if (!room) return;
+
+    const player = room.players.find((candidate) => candidate.socketId === socket.id);
+    if (!player || player.id !== room.hostId) return;
+
+    if (room.gameState?.started) {
+      socket.emit('game-error', {
+        code: 'ROOM_ALREADY_STARTED',
+        message: 'La configuración no puede cambiarse después de iniciar la partida.',
+        action: 'update-room-settings',
+      });
+      return;
+    }
+
+    if (settings.gameId === null) {
+      if (settings.versionId !== null || settings.expansionIds.length > 0) {
+        socket.emit('game-error', {
+          code: 'INVALID_ROOM_SETTINGS',
+          message: 'No puedes seleccionar una versión o expansión sin elegir un juego.',
+          action: 'update-room-settings',
+        });
+        return;
+      }
+    } else {
+      const game = gameRegistry.getById(settings.gameId);
+      const version = settings.versionId
+        ? game?.versions.find((candidate) => candidate.id === settings.versionId)
+        : undefined;
+
+      if (!game) {
+        socket.emit('game-error', {
+          code: 'INVALID_ROOM_SETTINGS',
+          message: 'El juego seleccionado no existe.',
+          action: 'update-room-settings',
+        });
+        return;
+      }
+
+      if (!version) {
+        socket.emit('game-error', {
+          code: 'INVALID_GAME_VERSION',
+          message: 'La versión seleccionada no es válida.',
+          action: 'update-room-settings',
+        });
+        return;
+      }
+
+      const validExpansions = settings.expansionIds.every((expansionId) => {
+        const expansion = game.expansions.find((candidate) => candidate.id === expansionId);
+        return (
+          expansion?.available === true &&
+          (!expansion.versionIds || expansion.versionIds.includes(version.id))
+        );
+      });
+
+      if (!validExpansions) {
+        socket.emit('game-error', {
+          code: 'INVALID_GAME_EXPANSION',
+          message: 'Una o más expansiones no son compatibles con el juego seleccionado.',
+          action: 'update-room-settings',
+        });
+        return;
+      }
+    }
+
+    const updatedRoom = roomManager.updateRoomSettings(roomCode, settings);
+    if (updatedRoom) {
+      io.to(updatedRoom.code).emit('room-updated', createPublicRoom(updatedRoom));
     }
   });
 }

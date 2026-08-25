@@ -23,12 +23,9 @@ export default function CardDiscardEffect({ animation, localPlayerId, onDone }: 
     const discardEl = document.querySelector('[data-discard]');
     const isMe = animation.playerId === localPlayerId;
 
-    let sourceEl: Element | null = null;
-    if (isMe) {
-      sourceEl = document.querySelector('[data-hand]');
-    } else {
-      sourceEl = document.querySelector(`[data-player-id="${animation.playerId}"]`);
-    }
+    const sourceEl = isMe
+      ? document.querySelector('[data-hand]')
+      : document.querySelector(`[data-player-id="${animation.playerId}"]`);
 
     const start = {
       x: isMe ? window.innerWidth / 2 - 55 : 50,

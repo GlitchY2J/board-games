@@ -1,7 +1,8 @@
 import type { GameState } from './Game.ts';
 import type { GameError } from './GameError.ts';
-import type { Room } from './Room.ts';
 import type { ChatMessage } from './Game.ts';
+import type { RoomSettings } from './GameDefinition.ts';
+import type { PublicRoom } from './PublicRoom.ts';
 
 export interface JoinRoomPayload {
   roomCode: string;
@@ -11,14 +12,20 @@ export interface JoinRoomPayload {
 
 export interface CreateRoomPayload {
   hostName: string;
-  game: string;
+  game?: string;
   avatar?: string;
+}
+
+export interface KickPlayerPayload {
+  roomCode: string;
+  playerId: string;
 }
 
 export interface PlayCardPayload {
   roomCode: string;
   playerId: string;
   cardId: string;
+  cardIds?: string[];
 }
 
 export interface DrawActionCardPayload {
@@ -35,6 +42,11 @@ export interface DiscardCardsPayload {
 export interface SelectPlayerPayload {
   roomCode: string;
   playerId: string;
+}
+
+export interface SelectPlayersPayload {
+  roomCode: string;
+  playerIds: string[];
 }
 
 export interface SelectStableCardPayload {
@@ -54,6 +66,11 @@ export interface CancelActionPayload {
 export interface ToggleExpansionPayload {
   roomCode: string;
   expansionId: string;
+}
+
+export interface UpdateRoomSettingsPayload {
+  roomCode: string;
+  settings: RoomSettings;
 }
 
 export interface SelectChoicePayload {
@@ -83,7 +100,7 @@ export interface PlayNeighPayload {
 
 export interface RoomCreateResponse {
   success: boolean;
-  room?: Room;
+  room?: PublicRoom;
   error?: string;
 }
 
@@ -139,6 +156,27 @@ export interface DrawAnimation {
   };
 }
 
+export interface ResolveExplodingKittenPayload {
+  roomCode: string;
+  useDefuse: boolean;
+}
+
+export interface ResolveSeeTheFuturePayload {
+  roomCode: string;
+}
+
+export interface StealAnimation {
+  animId: string;
+  sourcePlayerId: string;
+  targetPlayerId: string;
+  card: {
+    uid: string;
+    id: string;
+    name: string;
+    image: string;
+  };
+}
+
 export interface DiscardAnimation {
   animId: string;
   playerId: string;
@@ -161,16 +199,21 @@ export interface PlayAnimation {
   };
 }
 
+export interface ShuffleAnimation {
+  animId: string;
+  playerId: string;
+}
+
 export interface ResumeSessionResponse {
   success: boolean;
   playerId?: string;
-  room?: Room;
+  room?: PublicRoom;
   gameState?: GameState;
   error?: string;
 }
 
 export interface ServerToClientEvents {
-  'room-updated': (room: Room) => void;
+  'room-updated': (room: PublicRoom) => void;
   'game-started': (gameState: GameState) => void;
   'game-updated': (gameState: GameState) => void;
   'game-restarted': (gameState: GameState) => void;
@@ -178,10 +221,13 @@ export interface ServerToClientEvents {
   'card-animations': (animations: CardAnimation[]) => void;
   'neigh-animations': (animations: NeighAnimation[]) => void;
   'draw-animations': (animations: DrawAnimation[]) => void;
+  'steal-animations': (animations: StealAnimation[]) => void;
   'discard-animations': (animations: DiscardAnimation[]) => void;
   'play-animations': (animations: PlayAnimation[]) => void;
+  'shuffle-animations': (animations: ShuffleAnimation[]) => void;
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
   'chat-message': (payload: ChatMessageEvent) => void;
+  'kicked-from-room': (payload: { message: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -196,15 +242,19 @@ export interface ClientToServerEvents {
 
   // Leave Room
   'leave-room': (payload: LeaveRoomPayload) => void;
+  'leave-game': (payload: LeaveRoomPayload) => void;
+  'kick-player': (payload: KickPlayerPayload) => void;
 
   // Toggle Expansion
   'toggle-expansion': (payload: ToggleExpansionPayload) => void;
+  'update-room-settings': (payload: UpdateRoomSettingsPayload) => void;
 
   // Start Game
   'start-game': (roomCode: string) => void;
 
   // Confirm Start Game (after turn order is shown)
   'confirm-start-game': (roomCode: string) => void;
+  'confirm-restart-game': (roomCode: string) => void;
 
   // Play Card
   'play-card': (payload: PlayCardPayload) => void;
@@ -217,12 +267,15 @@ export interface ClientToServerEvents {
 
   // Select Player
   'select-player': (payload: SelectPlayerPayload) => void;
+  'select-players': (payload: SelectPlayersPayload) => void;
 
   // Select Stable Card
   'select-stable-card': (payload: SelectStableCardPayload) => void;
 
   // Select Hand Card
   'select-hand-card': (payload: SelectHandCardPayload) => void;
+  'resolve-exploding-kitten': (payload: ResolveExplodingKittenPayload) => void;
+  'resolve-see-the-future': (payload: ResolveSeeTheFuturePayload) => void;
 
   // Next Phase
   'next-phase': (roomCode: string) => void;

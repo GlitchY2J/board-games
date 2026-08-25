@@ -8,6 +8,7 @@ import './PhasePanel.css';
 
 interface Props {
   gameState: GameState;
+  showRoundPhase?: boolean;
 }
 
 const PLAYER_COLORS = [
@@ -21,10 +22,10 @@ const PLAYER_COLORS = [
   { text: '#a3e635', bg: 'rgba(163,230,53,0.16)', border: 'rgba(163,230,53,0.45)' },
 ];
 
-export default function PhasePanel({ gameState }: Props) {
+export default function PhasePanel({ gameState, showRoundPhase = true }: Props) {
   const [open, setOpen] = useState(false);
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
-  const logEntries = gameState.log ?? [];
+  const logEntries = useMemo(() => gameState.log ?? [], [gameState.log]);
   const logRef = useRef<HTMLDivElement>(null);
 
   const playerColors = useMemo(() => {
@@ -126,27 +127,29 @@ export default function PhasePanel({ gameState }: Props) {
         </button>
       ) : (
         <div className="phase-panel-body">
-          <div className="w-full px-4 py-1.5 rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 flex items-center justify-center gap-3 relative">
-            <button
-              className="phase-panel-close"
-              title="Cerrar información"
-              onClick={() => setOpen(false)}
-            >
-              <X size={14} />
-            </button>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Ronda{' '}
-            </span>
-            <span className="text-sm font-black text-amber-400">
-              {gameState.turn}
-            </span>
-            <span className={cn(
-              "px-3 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase border",
-              getPhaseColor(gameState.phase)
-            )}>
-              {gameState.phase}
-            </span>
-          </div>
+          <button
+            className="phase-panel-close"
+            title="Cerrar historial"
+            onClick={() => setOpen(false)}
+          >
+            <X size={14} />
+          </button>
+          {showRoundPhase && <div className="w-full px-4 py-1.5 rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 flex items-center justify-center gap-3 relative">
+              <>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Ronda{' '}
+                </span>
+                <span className="text-sm font-black text-amber-400">
+                  {gameState.turn}
+                </span>
+                <span className={cn(
+                  "px-3 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase border",
+                  getPhaseColor(gameState.phase)
+                )}>
+                  {gameState.phase}
+                </span>
+              </>
+            </div>}
             <div className="w-full rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 overflow-hidden">
               <div className="px-4 py-2 border-b border-slate-900/60 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
                 Historial
@@ -157,9 +160,11 @@ export default function PhasePanel({ gameState }: Props) {
               >
                 {rounds.map((round) => (
                   <div key={round.turn} className="flex flex-col gap-1">
-                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center select-none">
-                      ═════ Ronda {round.turn} ═════
-                    </div>
+                    {showRoundPhase && (
+                      <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center select-none">
+                        ═════ Ronda {round.turn} ═════
+                      </div>
+                    )}
                     {round.entries.map((entry) => (
                       <div
                         key={entry.id}

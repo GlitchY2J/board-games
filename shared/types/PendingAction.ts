@@ -2,6 +2,25 @@ import type { Card } from "./Card.ts";
 
 export type PendingAction =
   | {
+      type: "exploding_kitten";
+      playerId: string;
+      card: Card;
+    }
+  | {
+      type: "select_discard_count";
+      reason: "unicorn_of_pestilence";
+      playerId: string;
+      maxCards: number;
+    }
+  | {
+      type: "pestilence_discard";
+      reason: "unicorn_of_pestilence";
+      sourcePlayerId: string;
+      playerId: string;
+      remainingPlayerIds: string[];
+      cardsToDiscard: number;
+    }
+  | {
       type: "discard";
       reason:
         | "hand_limit"
@@ -13,29 +32,41 @@ export type PendingAction =
         | "seductive_unicorn"
         | "unicorn_on_the_cob"
         | "unicorn_phoenix"
-        | "claw_machine"
-        | "rainbow_lasso"
+         | "claw_machine"
+         | "extremely_fertile_unicorn"
+         | "rainbow_lasso"
         | "stable_artillery"
         | "barbed_wire";
       playerId: string;
       cardsToDiscard: number;
     }
   | {
+      type: "select_players";
+      reason: "unicorn_rainbow_princess";
+      sourcePlayerId: string;
+      playerIds: string[];
+    }
+  | {
       type: "select_player";
       reason:
         | "back_kick"
-        | "americorn"
-        | "blatant_thievery"
-        | "unicorn_poison"
+         | "americorn"
+         | "blatant_thievery"
+         | "two_of_a_kind"
+         | "three_of_a_kind"
+         | "unicorn_poison"
         | "annoying_flying_unicorn"
         | "play_downgrade"
         | "mermaid_unicorn"
         | "unfair_bargain"
         | "unicorn_swap"
-        | "re_target_source"
-        | "re_target_destination";
-      sourcePlayerId: string;
-      card?: Card;
+         | "re_target_source"
+         | "re_target_destination"
+         | "favor";
+       sourcePlayerId: string;
+       targetPlayerId?: string;
+       cardIds?: string[];
+       card?: Card;
       /** Jugador dueño original de la carta que se mueve (Re-Target). */
       fromPlayerId?: string;
     }
@@ -57,20 +88,26 @@ export type PendingAction =
         | "caffeine_overload"
         | "re_target_card"
         | "targeted_destruction"
-        | "glitter_bomb_sacrifice"
-        | "glitter_bomb_destroy"
-        | "tiny_stable"
+         | "glitter_bomb_sacrifice"
+         | "glitter_bomb_destroy"
+         | "unicorn_of_death_sacrifice"
+         | "unicorn_of_death_destroy"
+         | "unicorn_of_war_destroy"
+         | "zombie_unicorn"
+         | "tiny_stable"
         | "rainbow_lasso_steal"
         | "stable_artillery_destroy"
         | "sadistic_ritual";
-      sourcePlayerId: string;
-      targetPlayerId?: string;
+       sourcePlayerId: string;
+       targetPlayerId?: string;
+       remainingPlayerIds?: string[];
     }
   | {
       type: "select_hand_card";
-      reason: "blatant_thievery" | "americorn";
-      sourcePlayerId: string;
-      targetPlayerId: string;
+        reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor";
+        sourcePlayerId: string;
+        targetPlayerId: string;
+        requestedCardType?: string;
     }
   | {
       type: "alluring_narwhal";
@@ -91,6 +128,13 @@ export type PendingAction =
       type: "llamacorn";
       remainingPlayerIds: string[]; // cola de jugadores que deben descartar
       resolvedPlayerIds: string[]; // jugadores que ya descartaron
+    }
+  | {
+      type: "frenchiecorn";
+      sourcePlayerId: string;
+      remainingPlayerIds: string[];
+      resolvedPlayerIds: string[];
+      discardedCardIds: string[];
     }
   | {
       type: "extremely_destructive_unicorn";
@@ -136,18 +180,29 @@ export type PendingAction =
         | "unicorn_phoenix"
         | "caffeine_overload"
         | "shabby_the_narwhal"
-        | "claw_machine"
-        | "glitter_bomb"
+         | "claw_machine"
+         | "extremely_fertile_unicorn"
+         | "glitter_bomb"
+         | "unicorn_of_death"
+         | "unicorn_of_war"
+         | "unicorn_rainbow_princess"
+         | "zombie_unicorn"
         | "beginning_effect_picker"
         | "rainbow_lasso"
         | "stable_artillery"
-        | "angel_unicorn";
+         | "angel_unicorn"
+        | "three_of_a_kind"
+        | "favor";
       playerId: string;
       title: string;
       description: string;
       options: { value: string; text: string }[];
       targetCardId?: string;
       originalTargetPlayerId?: string;
+       sourcePlayerId?: string;
+       targetPlayerId?: string;
+       cardIds?: string[];
+      remainingPlayerIds?: string[];
       /** Carta que está "en el aire" mientras se decide (p. ej. Unicorn Phoenix) */
       heldCard?: Card;
       /** Uid del efecto de inicio de turno que se está resolviendo. Permite distinguir
@@ -156,16 +211,25 @@ export type PendingAction =
     }
   | {
       type: "select_discard_card";
-      reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn";
+        reason: "dark_angel_unicorn" | "magical_flying_unicorn" | "majestic_flying_unicorn" | "necromancer_unicorn" | "swift_flying_unicorn" | "kiss_of_life" | "angel_unicorn" | "extremely_fertile_unicorn" | "frenchiecorn" | "zombie_unicorn";
       playerId: string;
-      cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
+       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
+       discardedCardIds?: string[];
+    }
+  | {
+      type: "see_the_future";
+      playerId: string;
+      candidates: Card[];
+      card: Card;
+      turnsRemaining?: number;
     }
   | {
       type: "select_deck_card";
-      reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw";
+      reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
       candidates: Card[];
+      card?: Card;
     }
   | {
       type: "select_oracle_cards";
@@ -174,7 +238,7 @@ export type PendingAction =
     }
   | {
       type: "select_nursery_card";
-      reason: "mother_goose_unicorn";
+       reason: "mother_goose_unicorn" | "extremely_fertile_unicorn";
       playerId: string;
     }
   | {

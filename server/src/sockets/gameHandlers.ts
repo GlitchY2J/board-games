@@ -1,5 +1,4 @@
 import type { GameServer, GameSocket } from './socketTypes.ts';
-import { createGameState } from '../game/unstable-unicorns/setup.ts';
 import { RulesEngine } from '../game/unstable-unicorns/engine/RulesEngine.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
 import { TurnPhase } from '../game/turn/TurnPhase.ts';
@@ -14,12 +13,15 @@ import {
 import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { roomManager } from '../roomManagerInstance.ts';
+import { createPublicRoom } from './publicRoom.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
-import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation } from '../game/cardAnimations.ts';
+import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation, enqueueStealAnimation, enqueueShuffleAnimation } from '../game/cardAnimations.ts';
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
+import { gameRegistry } from '../games/catalog.ts';
+import { advanceTurnAfterDraw, calculateAttackTurns, startAttack } from '../game/exploding-kittens/turn.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -29,7 +31,19 @@ const NO_NEIGH_CARDS = new Set(['ginormous_unicorn']);
 
 const pendingTimers = new Map<string, NodeJS.Timeout>();
 
-function startPendingTimer(io: GameServer, room: Room, startedAt: number): void {
+function isExplodingKittensRoom(room: Room): boolean {
+  return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+}
+
+function isReactionEffect(effect: string | null, explodingKittens: boolean): boolean {
+  return (
+    effect === 'neigh' ||
+    effect === 'super_neigh' ||
+    (explodingKittens && effect === 'nope')
+  );
+}
+
+export function startPendingTimer(io: GameServer, room: Room, startedAt: number): void {
   const previous = pendingTimers.get(room.code);
   if (previous) {
     clearTimeout(previous);
@@ -64,6 +78,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   clearPendingTimer(room.code);
 
   const pending = game.pendingPlay;
+  const explodingKittens = isExplodingKittensRoom(room);
   const chain = pending.chain;
   const n = chain.length;
 
@@ -91,10 +106,10 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
     if (i === blocks.length - 1) {
       blockCanceled[i] = false;
     } else {
-      const aboveIsNeigh = blocks[i + 1].links.some(
-        (l) => l.card.effect === 'neigh' || l.card.effect === 'super_neigh',
+      const aboveIsReaction = blocks[i + 1].links.some((link) =>
+        isReactionEffect(link.card.effect, explodingKittens),
       );
-      blockCanceled[i] = aboveIsNeigh && !blockCanceled[i + 1];
+      blockCanceled[i] = aboveIsReaction && !blockCanceled[i + 1];
     }
   }
 
@@ -109,27 +124,60 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   // Registrar animaciones para las cartas canceladas en la cadena.
   for (let i = 0; i < n - 1; i++) {
     if (linkCanceled[i]) {
-      const type = chain[i + 1].card.effect === 'super_neigh' ? 'super_neigh' : 'neigh';
-      enqueueNeighAnimation(
-        room.code,
-        chain[i].playerId,
-        chain[i].playerName,
-        chain[i].card.name,
-        type,
-      );
+      if (!explodingKittens) {
+        const type = chain[i + 1].card.effect === 'super_neigh' ? 'super_neigh' : 'neigh';
+        enqueueNeighAnimation(
+          room.code,
+          chain[i].playerId,
+          chain[i].playerName,
+          chain[i].card.name,
+          type,
+        );
+      }
     }
   }
 
-  // Los Neighs ya salieron de las manos al jugarse; ahora van al descarte.
-  for (let i = 1; i < n; i++) {
-    game.discard.push(chain[i].card);
+  if (explodingKittens) {
+    // Attack cards stay in hand while the reaction window is open, so a stacked
+    // attack can still be canceled before all involved cards are discarded.
+    for (let i = 0; i < n; i++) {
+      const link = chain[i];
+      if (link.card.effect === 'nope') continue;
+      const owner = game.players.find((player) => player.id === link.playerId);
+      const cardIndex = owner?.hand.findIndex((card) => card.uid === link.card.uid) ?? -1;
+      if (owner && cardIndex !== -1) {
+        const [card] = owner.hand.splice(cardIndex, 1);
+        if (!game.discard.some((discarded) => discarded.uid === card.uid)) {
+          game.discard.push(card);
+          enqueueDiscardAnimation(room.code, owner.id, card);
+        }
+      } else if (!game.discard.some((discarded) => discarded.uid === link.card.uid)) {
+        game.discard.push(link.card);
+      }
+    }
+
+    // Los Nope se jugaron después de la carta original, por lo que deben
+    // quedar después en el arreglo del descarte para que aparezcan primero.
+    for (let i = 1; i < n; i++) {
+      const link = chain[i];
+      if (link.card.effect === 'nope' && !game.discard.some((card) => card.uid === link.card.uid)) {
+        game.discard.push(link.card);
+      }
+    }
+  } else {
+    // Los Neighs ya salieron de las manos al jugarse; conservar su orden real.
+    for (let i = 1; i < n; i++) {
+      if (chain[i].card.effect === 'nope') {
+        game.discard.push(chain[i].card);
+      }
+    }
   }
 
   const original = chain[0];
   const activePlayer = game.players.find((p) => p.id === original.playerId);
 
   if (linkCanceled[0]) {
-    if (activePlayer) {
+    if (activePlayer && !explodingKittens) {
       const idx = activePlayer.hand.findIndex(
         (c) => c.uid === original.card.uid,
       );
@@ -141,9 +189,10 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       }
     }
 
-    // La carta negada aún consume una jugada de la fase de acción. Si hay
-    // Double Dutch activo, el jugador conserva su segunda jugada.
-    RulesEngine.consumeActionPlay(game);
+    if (!explodingKittens) {
+      // La carta negada aún consume una jugada de la fase de acción.
+      RulesEngine.consumeActionPlay(game);
+    }
 
     addLog(
       game,
@@ -151,6 +200,137 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       { playerId: original.playerId },
     );
   } else if (activePlayer) {
+    if (explodingKittens) {
+      const successfulAttacks = chain.filter(
+        (link, index) => link.card.id === 'attack' && !linkCanceled[index],
+      );
+      if (successfulAttacks.length > 0) {
+        const lastAttacker = successfulAttacks[successfulAttacks.length - 1];
+        const stackedAttacks = pending.attackCount ?? successfulAttacks.length;
+        const turnPendings = Math.max(0, game.turnsRemaining ?? 0);
+        startAttack(game, lastAttacker.playerId, stackedAttacks);
+        game.turnsRemaining = calculateAttackTurns(stackedAttacks, turnPendings);
+      }
+
+      if (original.card.effect === 'favor') {
+        game.pendingAction = {
+          type: 'select_hand_card',
+          reason: 'favor',
+          sourcePlayerId: original.playerId,
+          targetPlayerId: pending.targetPlayerId!,
+        };
+        game.pendingPlay = {
+          ...pending,
+          startedAt: Date.now(),
+          durationMs: 600000,
+        };
+        addLog(game, `${original.playerName} espera que ${pending.targetPlayerName} elija una carta por Favor`, {
+          playerId: original.playerId,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (original.card.effect === 'skip' || original.card.id === 'skip') {
+        clearPendingTimer(room.code);
+        game.pendingPlay = undefined;
+        game.pendingAction = undefined;
+        advanceTurnAfterDraw(game);
+        game.pendingPlay = undefined;
+        game.pendingAction = undefined;
+        addLog(game, `${original.playerName} usó Skip y terminó un turno`, {
+          playerId: original.playerId,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (original.card.effect === 'see_the_future') {
+        game.pendingAction = {
+          type: 'see_the_future',
+          playerId: original.playerId,
+          candidates: game.deck.slice(0, 3).map((futureCard) => ({ ...futureCard })),
+          card: original.card,
+          turnsRemaining: game.turnsRemaining,
+        };
+        addLog(game, `${original.playerName} miró las primeras cartas del mazo`, {
+          playerId: original.playerId,
+        });
+        game.pendingPlay = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (
+        original.card.effect === 'cat_pair' &&
+        (() => {
+          const catCount = chain.filter((link) => link.card.cardType === 'cat').length;
+          return catCount === 2 || catCount === 3;
+        })() &&
+        pending.targetPlayerId
+      ) {
+        const catCount = chain.filter((link) => link.card.cardType === 'cat').length;
+        if (catCount === 3) {
+          const targetPlayer = game.players.find(
+            (player) => player.id === pending.targetPlayerId,
+          );
+          const selectedIndex = targetPlayer?.hand.findIndex(
+            (card) => card.id === pending.requestedCardType,
+          ) ?? -1;
+
+          if (targetPlayer && selectedIndex >= 0) {
+            const [stolenCard] = targetPlayer.hand.splice(selectedIndex, 1);
+            activePlayer.hand.push(stolenCard);
+            enqueueStealAnimation(
+              game.roomCode,
+              targetPlayer.id,
+              activePlayer.id,
+              stolenCard,
+            );
+            addLog(
+              game,
+              `${original.playerName} robó ${stolenCard.name} de ${targetPlayer.name} con Three of a Kind`,
+              { playerId: original.playerId },
+            );
+          } else {
+            addLog(
+              game,
+              `${targetPlayer?.name ?? 'El objetivo'} no tenía la carta elegida para Three of a Kind`,
+              { playerId: original.playerId },
+            );
+          }
+
+          advanceTurnAfterDraw(game);
+        } else {
+        game.pendingAction = {
+          type: 'select_hand_card',
+          reason: 'two_of_a_kind',
+          sourcePlayerId: original.playerId,
+          targetPlayerId: pending.targetPlayerId,
+        };
+        }
+        game.pendingPlay = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (original.card.effect === 'shuffle') {
+        for (let i = game.deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [game.deck[i], game.deck[j]] = [game.deck[j], game.deck[i]];
+        }
+        enqueueShuffleAnimation(game.roomCode, original.playerId);
+        game.pendingPlay = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      addLog(
+        game,
+        `${original.playerName} jugó carta "${original.card.name}"`,
+        { playerId: original.playerId },
+      );
+    } else {
     RulesEngine.resolvePlay(game, activePlayer.id, original.card);
 
     addLog(
@@ -158,6 +338,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       `${original.playerName} jugó carta "${original.card.name}"`,
       { playerId: original.playerId },
     );
+    }
   }
 
   game.pendingPlay = undefined;
@@ -173,6 +354,7 @@ export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerNextPhase(io, socket);
   registerEndTurn(io, socket);
   registerRestartGame(io, socket);
+  registerConfirmRestartGame(io, socket);
   registerToggleDebugMode(io, socket);
   registerNeighAccept(io, socket);
   registerPlayNeigh(io, socket);
@@ -208,15 +390,17 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    if (room.gameState?.started) {
+    if (room.gameState?.started && room.gameState.players.length > 0) {
       emitGameError(
         socket,
-        'GAME_ALREADY_STARTED',
-        'La partida ya está iniciada.',
+        'PLAYERS_IN_GAME',
+        'No se puede iniciar una nueva partida mientras haya jugadores en la partida actual.',
         'start-game',
       );
       return;
     }
+
+    if (!validateRoomConfiguration(socket, room, 'start-game')) return;
 
     // Asignar el orden de turnos al azar
     room.players = shuffleArray(room.players);
@@ -263,7 +447,20 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    room.gameState = createGameState(room);
+    if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
+
+    const engine = gameRegistry.getEngine(room.settings?.gameId ?? room.game);
+    if (!engine) {
+      emitGameError(
+        socket,
+        'GAME_NOT_AVAILABLE',
+        'El motor de este juego todavía no está disponible.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    room.gameState = engine.createState(room);
 
     addLog(room.gameState, 'Partida iniciada');
 
@@ -284,8 +481,84 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
   });
 }
 
+function validateRoomConfiguration(
+  socket: GameSocket,
+  room: Room,
+  action: 'start-game' | 'confirm-start-game',
+): boolean {
+  const gameId = room.settings?.gameId ?? room.game;
+  const game = gameRegistry.getById(gameId);
+
+  if (!game || !game.available) {
+    emitGameError(
+      socket,
+      'GAME_NOT_AVAILABLE',
+      'Selecciona un juego disponible antes de iniciar la partida.',
+      action,
+    );
+    return false;
+  }
+
+  const versionId = room.settings?.versionId ?? null;
+  const version = versionId
+    ? game.versions.find((candidate) => candidate.id === versionId)
+    : undefined;
+
+  if (!version?.available) {
+    emitGameError(
+      socket,
+      'INVALID_GAME_VERSION',
+      'Selecciona una versión disponible antes de iniciar la partida.',
+      action,
+    );
+    return false;
+  }
+
+  const expansionIds = room.settings?.expansionIds ?? room.expansions ?? [];
+  const hasInvalidExpansion = expansionIds.some((expansionId) => {
+    const expansion = game.expansions.find((candidate) => candidate.id === expansionId);
+    return (
+      !expansion?.available ||
+      (expansion.versionIds && !expansion.versionIds.includes(version.id))
+    );
+  });
+
+  if (hasInvalidExpansion) {
+    emitGameError(
+      socket,
+      'INVALID_GAME_EXPANSION',
+      'Una o más expansiones no son compatibles con la configuración seleccionada.',
+      action,
+    );
+    return false;
+  }
+
+  const connectedPlayers = room.players.filter((player) => player.connected).length;
+  if (connectedPlayers < game.minPlayers) {
+    emitGameError(
+      socket,
+      'NOT_ENOUGH_PLAYERS',
+      `Se necesitan al menos ${game.minPlayers} jugadores para iniciar.`,
+      action,
+    );
+    return false;
+  }
+
+  if (connectedPlayers > game.maxPlayers) {
+    emitGameError(
+      socket,
+      'TOO_MANY_PLAYERS',
+      `Este juego permite como máximo ${game.maxPlayers} jugadores.`,
+      action,
+    );
+    return false;
+  }
+
+  return true;
+}
+
 function registerPlayCard(io: GameServer, socket: GameSocket): void {
-  socket.on('play-card', ({ roomCode, playerId, cardId }) => {
+  socket.on('play-card', ({ roomCode, playerId, cardId, cardIds }) => {
     const context = getSocketGameContext(socket, roomCode);
 
     if (!context) {
@@ -299,6 +572,219 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         'El jugador enviado no coincide con tu sesión.',
         'play-card',
       );
+      return;
+    }
+
+    if (isExplodingKittensRoom(context.room)) {
+      const gamePlayer = context.game.players.find(
+        (player) => player.id === context.player.id,
+      );
+      const cardIndex = gamePlayer?.hand.findIndex((card) => card.uid === cardId) ?? -1;
+
+      if (!gamePlayer || cardIndex < 0) {
+        emitGameError(
+          socket,
+          'CARD_NOT_FOUND',
+          'No se encontró la carta en tu mano.',
+          'play-card',
+        );
+        return;
+      }
+
+      if (context.game.pendingAction) {
+        emitGameError(
+          socket,
+          'PENDING_ACTION',
+          'Debes resolver la selección pendiente primero.',
+          'play-card',
+        );
+        return;
+      }
+
+      const card = gamePlayer.hand[cardIndex];
+      const requestedCardIds = cardIds?.length ? cardIds : [cardId];
+      const selectedCards = requestedCardIds.map((uid) =>
+        gamePlayer.hand.find((handCard) => handCard.uid === uid),
+      );
+      const isCatCombo = requestedCardIds.length === 2 || requestedCardIds.length === 3;
+
+      if (requestedCardIds.length > 1) {
+        const validCatCombo =
+          isCatCombo &&
+          selectedCards.every((selected) => selected?.cardType === 'cat') &&
+          selectedCards.every((selected) => selected?.id === card.id);
+
+        if (!validCatCombo) {
+          emitGameError(
+            socket,
+            'ACTION_NOT_ALLOWED',
+            'Solo puedes combinar dos o tres cartas de gato idénticas.',
+            'play-card',
+          );
+          return;
+        }
+      }
+
+      const cardsToPlay = selectedCards.filter((selected): selected is typeof card => !!selected);
+      const isTwoOfAKind = card.effect === 'cat_pair' && requestedCardIds.length === 2;
+      const isThreeOfAKind = card.effect === 'cat_pair' && requestedCardIds.length === 3;
+      const isNow = card.effect === 'now';
+      const pending = context.game.pendingPlay;
+      const fallbackAttackTargetId = pending
+        ? context.game.players[
+            (context.game.players.findIndex((player) => player.id === pending.playerId) + 1) %
+              context.game.players.length
+          ]?.id
+        : undefined;
+      const canStackAttack =
+        !!pending &&
+        (pending.chain[pending.chain.length - 1]?.card.id === 'attack' ||
+          pending.chain[pending.chain.length - 1]?.card.effect === 'attack') &&
+        (pending.targetPlayerId ?? fallbackAttackTargetId) === context.player.id &&
+        card.cardType === 'action' &&
+        card.id === 'attack' &&
+        card.effect === 'attack';
+
+      if (!canStackAttack && !isNow && context.game.players[context.game.currentPlayer]?.id !== context.player.id) {
+        emitGameError(socket, 'NOT_YOUR_TURN', 'No es tu turno.', 'play-card');
+        return;
+      }
+
+      if (card.effect === 'nope') {
+        emitGameError(
+          socket,
+          'ACTION_NOT_ALLOWED',
+          'Nope solo puede jugarse para responder a otra carta.',
+          'play-card',
+        );
+        return;
+      }
+
+      if (card.cardType === 'defuse' || card.cardType === 'exploding_kitten') {
+        emitGameError(
+          socket,
+          'ACTION_NOT_ALLOWED',
+          'Esta carta no puede jugarse directamente.',
+          'play-card',
+        );
+        return;
+      }
+
+      if (isTwoOfAKind) {
+        context.game.pendingAction = {
+          type: 'select_player',
+          reason: 'two_of_a_kind',
+          sourcePlayerId: context.player.id,
+          targetPlayerId: '',
+          cardIds: requestedCardIds,
+        };
+
+        addLog(context.game, `${context.player.name} jugó Two of a Kind`, {
+          playerId: context.player.id,
+        });
+        emitGameState(io, context.room, 'game-updated');
+        return;
+      }
+
+      if (card.effect === 'favor') {
+        context.game.pendingAction = {
+          type: 'select_player',
+          reason: 'favor',
+          sourcePlayerId: context.player.id,
+          targetPlayerId: '',
+          card,
+        };
+        addLog(context.game, `${context.player.name} jugó Favor`, { playerId: context.player.id });
+        emitGameState(io, context.room, 'game-updated');
+        return;
+      }
+
+      if (isThreeOfAKind) {
+        context.game.pendingAction = {
+          type: 'select_player',
+          reason: 'three_of_a_kind',
+          sourcePlayerId: context.player.id,
+          targetPlayerId: '',
+          cardIds: requestedCardIds,
+        };
+
+        addLog(context.game, `${context.player.name} jugó Three of a Kind`, {
+          playerId: context.player.id,
+        });
+        emitGameState(io, context.room, 'game-updated');
+        return;
+      }
+
+      if (canStackAttack && pending) {
+        gamePlayer.hand.splice(cardIndex, 1);
+        const startedAt = Date.now();
+        const targetPlayer = context.game.players[
+          (context.game.players.findIndex((player) => player.id === context.player.id) + 1) %
+            context.game.players.length
+        ];
+        context.game.pendingPlay = {
+          ...pending,
+          playerId: context.player.id,
+          playerName: context.player.name,
+          card,
+          startedAt,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer?.id,
+          targetPlayerName: targetPlayer?.name,
+          attackCount: (pending.attackCount ?? 1) + 1,
+          chain: [
+            ...pending.chain,
+            {
+              playerId: context.player.id,
+              playerName: context.player.name,
+              card,
+              group: (pending.chain[pending.chain.length - 1].group ?? 0) + 1,
+            },
+          ],
+          neighGraceUntil: undefined,
+        };
+        addLog(context.game, `${context.player.name} apiló un Attack`, {
+          playerId: context.player.id,
+        });
+        emitGameState(io, context.room, 'game-updated');
+        startPendingTimer(io, context.room, startedAt);
+        return;
+      }
+
+      const startedAt = Date.now();
+      const targetPlayer =
+        card.id === 'attack'
+          ? context.game.players[
+              (context.game.currentPlayer + 1) % context.game.players.length
+            ]
+          : undefined;
+      context.game.pendingPlay = {
+        playerId: context.player.id,
+        playerName: context.player.name,
+        card,
+        startedAt,
+        durationMs: NEIGH_WINDOW_MS,
+        acceptedIds: [],
+          targetPlayerId: targetPlayer?.id,
+          targetPlayerName: targetPlayer?.name,
+          attackCount: card.id === 'attack' ? 1 : undefined,
+        chain: cardsToPlay.map((playedCard) => ({
+          playerId: context.player.id,
+          playerName: context.player.name,
+          card: playedCard,
+          group: 0,
+        })),
+      };
+
+      if (card.id === 'attack' && card.effect === 'attack') {
+        gamePlayer.hand.splice(cardIndex, 1);
+      }
+
+      addLog(context.game, `${context.player.name} intenta jugar carta "${card.name}"`, {
+        playerId: context.player.id,
+      });
+      emitGameState(io, context.room, 'game-updated');
+      startPendingTimer(io, context.room, startedAt);
       return;
     }
 
@@ -388,6 +874,64 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
         'El jugador enviado no coincide con tu sentido.',
         'draw-action-card',
       );
+      return;
+    }
+
+    if (isExplodingKittensRoom(room)) {
+      if (game.pendingAction || game.pendingPlay) {
+        emitGameError(
+          socket,
+          'ACTION_NOT_ALLOWED',
+          'Debes resolver la acción pendiente antes de robar otra carta.',
+          'draw-action-card',
+        );
+        return;
+      }
+
+      const gamePlayer = game.players.find((candidate) => candidate.id === player.id);
+
+      if (game.debugMode) {
+        game.pendingAction = {
+          type: 'select_deck_card',
+          reason: 'debug_draw',
+          playerId: player.id,
+          candidates: [],
+        };
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      const card = game.deck.shift();
+
+      if (!gamePlayer) {
+        emitGameError(socket, 'PLAYER_NOT_FOUND', 'No se encontró al jugador.', 'draw-action-card');
+        return;
+      }
+
+      if (!card) {
+        emitGameError(socket, 'DECK_EMPTY', 'El mazo está vacío.', 'draw-action-card');
+        return;
+      }
+
+      enqueueDrawAnimation(game.roomCode, gamePlayer.id, card);
+      gamePlayer.hand.push(card);
+      if (card.id === 'exploding_kitten') {
+        game.pendingAction = {
+          type: 'exploding_kitten',
+          playerId: gamePlayer.id,
+          card,
+        };
+        addLog(game, `${player.name} robó un Exploding Kitten`, {
+          playerId: player.id,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+      addLog(game, `${player.name} robó una carta y terminó su turno`, {
+        playerId: player.id,
+      });
+      advanceTurnAfterDraw(game);
+      emitGameState(io, room, 'game-updated');
       return;
     }
 
@@ -619,15 +1163,64 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
 
     room.players = shuffleArray(room.players);
 
-    room.gameState = createGameState(room);
+    const order = room.players.map((p) => ({
+      id: p.id,
+      name: p.name,
+      avatar: p.avatar,
+    }));
 
+    io.to(room.code).emit('turn-order-assigned', order);
+
+    console.log(`Nuevo orden de turnos asignado para reinicio en ${roomCode}`);
+  });
+}
+
+function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
+  socket.on('confirm-restart-game', (roomCode: string) => {
+    const context = getSocketPlayerContext(socket, roomCode);
+
+    if (!context) return;
+
+    const { room, player } = context;
+    if (room.hostId !== player.id) {
+      emitGameError(
+        socket,
+        'NOT_HOST',
+        'Solo el anfitrión puede confirmar el reinicio.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    if (!room.gameState?.started) {
+      emitGameError(
+        socket,
+        'GAME_NOT_STARTED',
+        'No hay una partida iniciada para reiniciar.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
+
+    const engine = gameRegistry.getEngine(room.settings?.gameId ?? room.game);
+    if (!engine) {
+      emitGameError(
+        socket,
+        'GAME_NOT_AVAILABLE',
+        'El motor de este juego todavía no está disponible.',
+        'confirm-start-game',
+      );
+      return;
+    }
+
+    room.gameState = engine.createState(room);
     room.gameState.pendingAction = undefined;
-
     room.gameState.winnerId = undefined;
-
     room.gameState.actionUsed = false;
 
-    addLog(room.gameState, 'Partida iniciada');
+    addLog(room.gameState, 'Partida reiniciada');
 
     const firstPlayer = room.gameState.players[room.gameState.currentPlayer];
     if (firstPlayer) {
@@ -639,9 +1232,7 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
     }
 
     TurnManager.skipBeginningIfNoTriggers(room.gameState);
-
     emitGameState(io, room, 'game-restarted');
-
     console.log(`Partida reiniciada: ${roomCode}`);
   });
 }
@@ -744,9 +1335,12 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
 
     if (!gamePlayer) return;
 
-    // Blinding Light neutraliza el efecto de Ginormous Unicorn: mientras esté
-    // en tu establo, puedes volver a jugar Neigh.
+    const explodingKittens = isExplodingKittensRoom(room);
+
+    // Blinding Light neutraliza el efecto de Ginormous Unicorn en Unstable
+    // Unicorns. Exploding Kittens no tiene esta restricción.
     if (
+      !explodingKittens &&
       gamePlayer.stable.some((card) => NO_NEIGH_CARDS.has(card.id)) &&
       !hasBlindingLight(gamePlayer)
     ) {
@@ -759,7 +1353,7 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    if (gamePlayer.downgrades.some((card) => card.id === 'slowdown')) {
+    if (!explodingKittens && gamePlayer.downgrades.some((card) => card.id === 'slowdown')) {
       emitGameError(
         socket,
         'ACTION_NOT_ALLOWED',
@@ -770,14 +1364,18 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
     }
 
     const neighCard = gamePlayer.hand.find(
-      (c) => c.uid === cardId && c.effect !== null && NEIGH_EFFECTS.has(c.effect),
+      (c) =>
+        c.uid === cardId &&
+        isReactionEffect(c.effect, explodingKittens),
     );
 
     if (!neighCard) {
       emitGameError(
         socket,
         'CARD_NOT_FOUND',
-        'No tienes una carta Neigh en tu mano.',
+          explodingKittens
+            ? 'No tienes una carta Nope en tu mano.'
+            : 'No tienes una carta Neigh en tu mano.',
         'play-neigh',
       );
       return;
@@ -789,8 +1387,12 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
 
     const startedAt = Date.now();
 
+    // En Exploding Kittens cada Nope debe formar su propio bloque: dos Nopes
+    // consecutivos se contrarrestan y dejan viva la carta original.
     const withinGrace =
-      pending.neighGraceUntil != null && startedAt < pending.neighGraceUntil;
+      !explodingKittens &&
+      pending.neighGraceUntil != null &&
+      startedAt < pending.neighGraceUntil;
     const group = withinGrace ? (top.group ?? 0) : (top.group ?? 0) + 1;
 
     pending.chain.push({
@@ -809,9 +1411,11 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
 
     addLog(
       game,
-      neighCard.effect === 'super_neigh'
-        ? `${player.name} jugó un Super Neigh`
-        : `${player.name} jugó un Neigh`,
+      explodingKittens
+        ? `${player.name} jugó un Nope`
+        : neighCard.effect === 'super_neigh'
+          ? `${player.name} jugó un Super Neigh`
+          : `${player.name} jugó un Neigh`,
       { playerId: player.id },
     );
 
@@ -819,7 +1423,7 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
     // Yay: el Neigh jugado por un jugador con Yay tampoco puede ser Neigh'd.
     const playerHasYay = gamePlayer.upgrades.some((c) => c.id === 'yay');
 
-    if (neighCard.effect === 'super_neigh' || playerHasYay) {
+    if ((!explodingKittens && neighCard.effect === 'super_neigh') || playerHasYay) {
       resolvePendingPlayWindow(io, room);
       return;
     }
@@ -834,13 +1438,13 @@ let chatSeq = 0;
 
 function registerSendChat(io: GameServer, socket: GameSocket): void {
   socket.on('send-chat', ({ roomCode, text }) => {
-    const context = getSocketGameContext(socket, roomCode);
+    const context = getSocketPlayerContext(socket, roomCode);
 
     if (!context) {
       return;
     }
 
-    const { game, player, room } = context;
+    const { player, room } = context;
 
     const cleaned = text.trim().slice(0, 500);
 
@@ -854,10 +1458,6 @@ function registerSendChat(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    if (!game.chat) {
-      game.chat = [];
-    }
-
     const message: ChatMessage = {
       id: `chat-${Date.now()}-${++chatSeq}`,
       playerId: player.id,
@@ -866,14 +1466,19 @@ function registerSendChat(io: GameServer, socket: GameSocket): void {
       timestamp: Date.now(),
     };
 
-    game.chat.push(message);
+    room.chat.push(message);
 
     // Evitar que el historial de chat crezca sin límite.
-    if (game.chat.length > 200) {
-      game.chat.splice(0, game.chat.length - 200);
+    if (room.chat.length > 200) {
+      room.chat.splice(0, room.chat.length - 200);
+    }
+
+    if (room.gameState) {
+      room.gameState.chat = [...room.chat];
     }
 
     io.to(room.code).emit('chat-message', { roomCode, message });
-    emitGameState(io, room, 'game-updated');
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
+    if (room.gameState) emitGameState(io, room, 'game-updated');
   });
 }

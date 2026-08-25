@@ -11,6 +11,15 @@ import { chainsawUnicorn } from '../../../cards/effects/chainsawUnicorn.ts';
 import { classyNarwhal } from '../../../cards/effects/classyNarwhal.ts';
 import { greedyFlyingUnicorn } from '../../../cards/effects/greedyFlyingUnicorn.ts';
 import { llamacorn } from '../../../cards/effects/llamacorn.ts';
+import { frenchiecorn } from '../../../cards/effects/frenchiecorn.ts';
+import { glitterUnicorn } from '../../../cards/effects/glitterUnicorn.ts';
+import { theTiniestUnicorn } from '../../../cards/effects/theTiniestUnicorn.ts';
+import { unicornOfDeath } from '../../../cards/effects/unicornOfDeath.ts';
+import { unicornOfFamine } from '../../../cards/effects/unicornOfFamine.ts';
+import { unicornOfPestilence } from '../../../cards/effects/unicornOfPestilence.ts';
+import { unicornOfWar } from '../../../cards/effects/unicornOfWar.ts';
+import { unicornRainbowPrincess } from '../../../cards/effects/unicornRainbowPrincess.ts';
+import { zombieUnicorn } from '../../../cards/effects/zombieUnicorn.ts';
 import { darkAngelUnicorn } from '../../../cards/effects/darkAngelUnicorn.ts';
 import { ginormousUnicorn } from '../../../cards/effects/ginormousUnicorn.ts';
 import { extremelyDestructiveUnicorn } from '../../../cards/effects/extremelyDestructiveUnicorn.ts';
@@ -70,6 +79,15 @@ export const effects: Record<string, CardEffect> = {
   classy_narwhal: classyNarwhal,
   greedy_flying_unicorn: greedyFlyingUnicorn,
   llamacorn: llamacorn,
+  frenchiecorn: frenchiecorn,
+  glitter_unicorn: glitterUnicorn,
+  the_tiniest_unicorn: theTiniestUnicorn,
+  unicorn_of_death: unicornOfDeath,
+  unicorn_of_famine: unicornOfFamine,
+  unicorn_of_pestilence: unicornOfPestilence,
+  unicorn_of_war: unicornOfWar,
+  unicorn_rainbow_princess: unicornRainbowPrincess,
+  zombie_unicorn: zombieUnicorn,
   dark_angel_unicorn: darkAngelUnicorn,
   ginormous_unicorn: ginormousUnicorn,
   extremely_destructive_unicorn: extremelyDestructiveUnicorn,

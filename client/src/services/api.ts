@@ -1,9 +1,11 @@
-const API = 'http://10.30.11.88:3000';
+import type { GameDefinition } from '../../../shared/types/GameDefinition.ts';
+import { SERVER_URL } from './serverUrl';
+
+const API = SERVER_URL;
 
 // Crear sala
 export async function createRoom(data: {
   hostName: string;
-  game: string;
   socketId: string;
   avatar: string;
 }) {
@@ -56,3 +58,22 @@ export async function getRoomInfo(roomCode: string) {
   return response.json();
 }
 
+export async function getGames(): Promise<GameDefinition[]> {
+  const response = await fetch(`${API}/games`);
+
+  if (!response.ok) {
+    throw new Error('Error obteniendo los juegos');
+  }
+
+  return response.json();
+}
+
+export async function getGame(gameId: string): Promise<GameDefinition> {
+  const response = await fetch(`${API}/games/${encodeURIComponent(gameId)}`);
+
+  if (!response.ok) {
+    throw new Error('Juego no encontrado');
+  }
+
+  return response.json();
+}

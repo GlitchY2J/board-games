@@ -72,6 +72,7 @@ export function createGameState(room: Room): GameState {
     actionUsed: false,
     log: [],
     chat: [],
+    eliminatedPlayers: [],
   };
 
   TurnManager.skipBeginningIfNoTriggers(gameState);
