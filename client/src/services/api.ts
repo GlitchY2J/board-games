@@ -1,6 +1,7 @@
-import type { GameDefinition } from "../../../shared/types/GameDefinition.ts";
+import type { GameDefinition } from '../../../shared/types/GameDefinition.ts';
+import { SERVER_URL } from './serverUrl';
 
-const API = "http://localhost:3000";
+const API = SERVER_URL;
 
 // Crear sala
 export async function createRoom(data: {
@@ -9,16 +10,16 @@ export async function createRoom(data: {
   avatar: string;
 }) {
   const response = await fetch(`${API}/rooms/create`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
 
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error("Error creando sala");
+    throw new Error('Error creando sala');
   }
 
   return response.json();
@@ -32,15 +33,15 @@ export async function joinRoom(data: {
   avatar: string;
 }) {
   const response = await fetch(`${API}/rooms/join`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error("Error al unirse a la sala");
+    throw new Error('Error al unirse a la sala');
   }
 
   return response.json();
@@ -51,7 +52,7 @@ export async function getRoomInfo(roomCode: string) {
   const response = await fetch(`${API}/rooms/${roomCode.toUpperCase()}`);
 
   if (!response.ok) {
-    throw new Error("Sala no encontrada");
+    throw new Error('Sala no encontrada');
   }
 
   return response.json();
@@ -61,7 +62,7 @@ export async function getGames(): Promise<GameDefinition[]> {
   const response = await fetch(`${API}/games`);
 
   if (!response.ok) {
-    throw new Error("Error obteniendo los juegos");
+    throw new Error('Error obteniendo los juegos');
   }
 
   return response.json();
@@ -71,7 +72,7 @@ export async function getGame(gameId: string): Promise<GameDefinition> {
   const response = await fetch(`${API}/games/${encodeURIComponent(gameId)}`);
 
   if (!response.ok) {
-    throw new Error("Juego no encontrado");
+    throw new Error('Juego no encontrado');
   }
 
   return response.json();
