@@ -161,6 +161,7 @@ export function registerActionHandlers(
         const targetPlayer = room.gameState.players.find((candidate) => candidate.id === playerId && candidate.hand.length > 0);
         if (!targetPlayer) return;
 
+        room.gameState.pendingAction = undefined;
         room.gameState.pendingPlay = {
           playerId: sourcePlayer.id,
           playerName: sourcePlayer.name,
