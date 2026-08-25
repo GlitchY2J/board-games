@@ -27,6 +27,7 @@ interface Props {
   hidePendingPlay?: boolean;
   sortHandMode?: 'alphabetical' | 'type' | null;
   spectator?: boolean;
+  onLeaveLobby?(): void;
 }
 
 export default function BoardLayout({
@@ -38,6 +39,7 @@ export default function BoardLayout({
   hidePendingPlay = false,
   sortHandMode = null,
   spectator = false,
+  onLeaveLobby,
 }: Props) {
   const navigate = useNavigate();
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -439,9 +441,13 @@ export default function BoardLayout({
         <LeaveConfirm
           onCancel={() => setLeaveOpen(false)}
           onConfirm={() => {
-            socket.emit('leave-game', { roomCode: gameState.roomCode });
+            if (onLeaveLobby) {
+              onLeaveLobby();
+            } else {
+              socket.emit('leave-game', { roomCode: gameState.roomCode });
+              navigate('/lobby');
+            }
             setMobileChatOpen(false);
-            navigate('/lobby');
           }}
         />
       )}

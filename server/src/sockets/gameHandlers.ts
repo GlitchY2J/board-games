@@ -359,6 +359,7 @@ export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerNextPhase(io, socket);
   registerEndTurn(io, socket);
   registerRestartGame(io, socket);
+  registerReadyRestart(io, socket);
   registerConfirmRestartGame(io, socket);
   registerToggleDebugMode(io, socket);
   registerNeighAccept(io, socket);
@@ -1180,6 +1181,44 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
   });
 }
 
+function registerReadyRestart(io: GameServer, socket: GameSocket): void {
+  socket.on('ready-restart', (roomCode: string) => {
+    const context = getSocketPlayerContext(socket, roomCode);
+    const gameState = context?.room.gameState;
+    if (!context || !gameState?.winnerId) return;
+
+    const { room, player } = context;
+    const eligiblePlayerIds = new Set([
+      ...gameState.players.map((candidate) => candidate.id),
+      ...(gameState.eliminatedPlayers?.map((candidate) => candidate.id) ?? []),
+    ]);
+    const ready = new Set(gameState.restartReadyPlayerIds ?? []);
+    if (ready.has(player.id)) ready.delete(player.id);
+    else ready.add(player.id);
+    gameState.restartReadyPlayerIds = [...ready];
+
+    emitGameState(io, room, 'game-updated');
+
+    if (
+      eligiblePlayerIds.size > 0 &&
+      [...eligiblePlayerIds].every((id) => ready.has(id))
+    ) {
+      const restartPlayers = room.players.filter((candidate) => eligiblePlayerIds.has(candidate.id));
+      const order = shuffleArray(restartPlayers);
+      const turnOrder = order.map((candidate) => ({
+          id: candidate.id,
+          name: candidate.name,
+          avatar: candidate.avatar,
+        }));
+      for (const candidate of order) {
+        if (candidate.socketId) {
+          io.to(candidate.socketId).emit('turn-order-assigned', turnOrder);
+        }
+      }
+    }
+  });
+}
+
 function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
   socket.on('confirm-restart-game', (roomCode: string) => {
     const context = getSocketPlayerContext(socket, roomCode);
@@ -1220,9 +1259,15 @@ function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    room.gameState = engine.createState(room);
+    const restartPlayerIds = new Set(room.gameState.restartReadyPlayerIds ?? []);
+    const restartPlayers = room.players.filter((candidate) => restartPlayerIds.has(candidate.id));
+    const restartRoom = { ...room, players: restartPlayers };
+
+    room.gameState = engine.createState(restartRoom);
     room.gameState.pendingAction = undefined;
     room.gameState.winnerId = undefined;
+    room.gameState.winnerName = undefined;
+    room.gameState.restartReadyPlayerIds = undefined;
     room.gameState.actionUsed = false;
 
     addLog(room.gameState, 'Partida reiniciada');

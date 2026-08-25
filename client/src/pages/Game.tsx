@@ -67,6 +67,7 @@ export default function Game() {
 
   const pendingGameStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
+  const leavingToLobbyRef = useRef(false);
 
   const prevTurnRef = useRef<{ turn: number; currentPlayer: number } | null>(
     null,
@@ -288,7 +289,7 @@ export default function Game() {
     const isEliminated = gameState.eliminatedPlayers?.some(
       (player) => player.id === contextPlayerId,
     );
-    if (!local && !isEliminated) {
+    if (!local && !isEliminated && !leavingToLobbyRef.current) {
       deactivate();
     }
   }, [contextPlayerId, gameState, deactivate]);
@@ -316,11 +317,33 @@ export default function Game() {
     );
   }
 
+  const victoryPlayerIds = new Set([
+    ...gameState.players.map((player) => player.id),
+    ...(gameState.eliminatedPlayers?.map((player) => player.id) ?? []),
+  ]);
+  const restartTotalPlayers = roomFromContext
+    ? roomFromContext.players.filter((player) => victoryPlayerIds.has(player.id)).length
+    : victoryPlayerIds.size;
+
   if (!localPlayer) {
     const eliminated = gameState.eliminatedPlayers?.find(
       (player) => player.id === contextPlayerId,
     );
     if (eliminated) {
+      if (gameState.winnerId) {
+        return (
+          <VictoryScreen
+            gameState={gameState}
+            localPlayerId={contextPlayerId ?? ''}
+            onReadyRestart={() => socket.emit('ready-restart', gameState.roomCode)}
+            onLeaveLobby={leaveToLobby}
+            restartReadyCount={gameState.restartReadyPlayerIds?.length ?? 0}
+            restartTotalPlayers={restartTotalPlayers}
+            isRestartReady={contextPlayerId ? gameState.restartReadyPlayerIds?.includes(contextPlayerId) ?? false : false}
+          />
+        );
+      }
+
       return (
         <div className="relative min-h-screen">
           <BoardLayout
@@ -368,11 +391,14 @@ export default function Game() {
 
   function restartGame() {
     console.log('Solicitando reinicio...');
-    socket.emit('restart-game', gs.roomCode);
+    socket.emit('ready-restart', gs.roomCode);
   }
 
   function leaveToLobby() {
-    socket.emit('leave-game', { roomCode: gs.roomCode });
+    const roomCode = gameState?.roomCode ?? roomFromContext?.code;
+    if (!roomCode) return;
+    leavingToLobbyRef.current = true;
+    socket.emit('leave-game', { roomCode });
     navigate('/lobby');
   }
 
@@ -471,13 +497,17 @@ export default function Game() {
         onPlay={play}
         sortHandMode={sortHandMode}
         hidePendingPlay={hasActiveAnims}
+        onLeaveLobby={leaveToLobby}
       />
       {gameState.winnerId && (
         <VictoryScreen
           gameState={gameState}
-          onRestart={restartGame}
+          localPlayerId={localPlayer.id}
+          onReadyRestart={restartGame}
           onLeaveLobby={leaveToLobby}
-          isHost={isHost}
+          restartReadyCount={gs.restartReadyPlayerIds?.length ?? 0}
+          restartTotalPlayers={restartTotalPlayers}
+          isRestartReady={gs.restartReadyPlayerIds?.includes(localPlayer.id) ?? false}
         />
       )}
       {turnAnnounce && (

@@ -84,6 +84,7 @@ export interface GameState {
    *  esta fase de acción (2 si eligió "jugar 2"). Undefined = acción normal. */
   actionPlaysRemaining?: number;
   winnerId?: string;
+  winnerName?: string;
   extraTurn?: boolean;
   /** Exploding Kittens: remaining draws for the active player. */
   turnsRemaining?: number;
@@ -93,4 +94,5 @@ export interface GameState {
   /** Mensajes de chat entre jugadores (cronológicos: el más reciente al final). */
   chat?: ChatMessage[];
   eliminatedPlayers?: EliminatedPlayer[];
+  restartReadyPlayerIds?: string[];
 }

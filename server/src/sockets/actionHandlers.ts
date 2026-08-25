@@ -1994,6 +1994,23 @@ export function registerActionHandlers(
         enqueueDrawAnimation(room.gameState.roomCode, player.id, upgrade);
       }
 
+      if (
+        pending.reason === 'debug_draw' &&
+        (room.settings?.gameId ?? room.game) === 'exploding-kittens' &&
+        upgrade.id === 'exploding_kitten'
+      ) {
+        room.gameState.pendingAction = {
+          type: 'exploding_kitten',
+          playerId: player.id,
+          card: upgrade,
+        };
+        addLog(room.gameState, `${player.name} robó un Exploding Kitten`, {
+          playerId: player.id,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       room.gameState.pendingAction = undefined;
 
       const isExplodingKittens =

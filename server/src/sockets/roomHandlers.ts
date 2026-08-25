@@ -36,6 +36,9 @@ function removePlayerFromGame(room: Room, playerId: string): boolean {
 
   const index = game.players.findIndex((player) => player.id === gamePlayer.id);
   if (index !== -1) {
+    if (game.winnerId === gamePlayer.id) {
+      game.winnerName = gamePlayer.name;
+    }
     game.players.splice(index, 1);
     if (game.players.length > 0) {
       game.currentPlayer = game.currentPlayer % game.players.length;
@@ -55,6 +58,13 @@ function removePlayerFromGame(room: Room, playerId: string): boolean {
   if (game.pendingPlay?.playerId === gamePlayer.id) {
     game.pendingPlay = undefined;
   }
+
+  game.restartReadyPlayerIds = game.restartReadyPlayerIds?.filter(
+    (id) => id !== gamePlayer.id,
+  );
+  game.eliminatedPlayers = game.eliminatedPlayers?.filter(
+    (player) => player.id !== gamePlayer.id,
+  );
 
   return true;
 }
@@ -156,12 +166,24 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     if (!room?.gameState) return;
 
     const player = room.players.find((candidate) => candidate.socketId === socket.id);
-    if (!player || !removePlayerFromGame(room, player.id)) return;
+    if (!player) return;
 
-    if (room.gameState?.players.length === 0) {
+    // Los jugadores eliminados ya no están en gameState.players, pero siguen
+    // siendo miembros de la sala y deben poder salir desde el Winner Screen.
+    room.gameState.restartReadyPlayerIds = room.gameState.restartReadyPlayerIds?.filter(
+      (id) => id !== player.id,
+    );
+    room.gameState.eliminatedPlayers = room.gameState.eliminatedPlayers?.filter(
+      (candidate) => candidate.id !== player.id,
+    );
+    removePlayerFromGame(room, player.id);
+
+    if (room.gameState?.players.length === 0 && !room.gameState.winnerId) {
       room.gameState = undefined;
     }
 
+    // Keep the player in the room: leaving the finished game means returning
+    // to the lobby, where the same id and avatar must remain assigned.
     io.to(room.code).emit('room-updated', createPublicRoom(room));
     if (room.gameState) {
       emitGameState(io, room, 'game-updated');

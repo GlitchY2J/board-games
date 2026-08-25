@@ -285,6 +285,7 @@ export interface ClientToServerEvents {
 
   // Restart Game
   'restart-game': (roomCode: string) => void;
+  'ready-restart': (roomCode: string) => void;
 
   // Toggle Debug Mode
   'toggle-debug-mode': (roomCode: string) => void;
