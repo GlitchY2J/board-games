@@ -536,9 +536,6 @@
 
 /* Escritorio intermedio: preserve a clear central play area for deck/discard. */
 @media (min-width: 1025px) and (max-width: 1600px) {
-  .chat-side {
-    display: none;
-  }
   .player-side,
   .players-7 .player-side,
   .players-8 .player-side {
@@ -1043,6 +1040,37 @@
   }
 }
 
+/* Mobile/tablet chat: replace the side panel with a reachable floating
+   control, including landscape phones whose width exceeds 640px. */
+@media (max-width: 1024px) {
+  .mobile-chat-toggle {
+    display: flex;
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 60;
+  }
+
+  .mobile-chat-panel {
+    display: block;
+    position: fixed;
+    top: 50%;
+    right: 16px;
+    left: auto;
+    z-index: 10001;
+    width: min(280px, calc(100vw - 32px));
+    max-height: min(70vh, 360px);
+    transform: translateY(-50%);
+  }
+
+  .mobile-chat-panel-inner .chat-panel {
+    width: 100%;
+    height: 100%;
+    max-height: min(70vh, 360px);
+    margin-top: 0;
+  }
+}
+
 /* Keep the compact table closer to the player's hand on short-width screens. */
 @media (max-width: 768px) {
   .game-area {
@@ -1063,5 +1091,44 @@
 
   .mobile-chat-panel {
     top: 58%;
+  }
+}
+
+/* Landscape mobile: keep the hand in the document flow so it cannot cover
+   the board or the turn order, and let the whole table scroll vertically. */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1024px) {
+  .board-layout {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .game-area {
+    height: auto;
+    min-height: 760px;
+    padding-bottom: 240px;
+    box-sizing: border-box;
+  }
+
+  .bottom-hand {
+    position: fixed;
+    right: auto;
+    bottom: -92px;
+    left: 50%;
+    width: 100%;
+    min-height: 190px;
+    margin-top: 0;
+    padding: 8px 8px 0;
+    box-sizing: border-box;
+    transform: translateX(-50%);
+    z-index: 30;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(8, 12, 22, 0.94) 0%, rgba(8, 12, 22, 0.62) 62%, transparent 100%);
+  }
+
+  .bottom-hand .player-hand {
+    pointer-events: auto;
   }
 }

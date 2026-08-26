@@ -52,6 +52,7 @@ export default function BoardLayout({
   const [playerNotification, setPlayerNotification] = useState<string | null>(
     null,
   );
+  const previousChatCountRef = useRef(gameState.chat?.length ?? 0);
   const localPlayer = spectator
     ? undefined
     : gameState.players.find((p) => p.socketId === socket.id);
@@ -115,6 +116,16 @@ export default function BoardLayout({
     window.addEventListener('keydown', onMobileChatShortcut);
     return () => window.removeEventListener('keydown', onMobileChatShortcut);
   }, [mobileChatOpen]);
+
+  useEffect(() => {
+    const messageCount = gameState.chat?.length ?? 0;
+    const hasNewMessage = messageCount > previousChatCountRef.current;
+    previousChatCountRef.current = messageCount;
+
+    if (hasNewMessage && window.innerWidth <= 1024) {
+      setMobileChatOpen(true);
+    }
+  }, [gameState.chat?.length]);
 
   // Keep the same seat map as a regular player. For spectators, the last
   // participant occupies the local seat visually, while remaining passive.

@@ -22,7 +22,7 @@ const COLORS = [
   { text: '#a3e635', bg: 'rgba(163,230,53,0.16)', border: 'rgba(163,230,53,0.45)' },
 ];
 
-const CHAT_IDLE_TIMEOUT = 4000;
+const CHAT_IDLE_TIMEOUT = 10000;
 
 export default function Chat({ gameState, initialOpen = false, onClose }: Props) {
   const [draft, setDraft] = useState('');

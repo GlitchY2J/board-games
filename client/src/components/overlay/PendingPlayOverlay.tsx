@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import PlayingCard from '../card/PlayingCard';
 import type { GameState } from '../../types/GameState';
 import { socket } from '../../services/socket';
@@ -339,11 +340,15 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
             </div>
         )}
 
-        <div className="pending-play-timer">
+        <div
+          className="pending-play-timer"
+          style={{ '--pending-progress': `${progress * 100}%` } as CSSProperties}
+        >
           <div
             className="pending-play-progress"
             style={{ width: `${progress * 100}%` }}
           />
+          <span className="pending-play-timer-seconds">{seconds}</span>
         </div>
 
           {canRespond && (

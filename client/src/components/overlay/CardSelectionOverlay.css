@@ -412,3 +412,37 @@
   border-color: rgba(16, 185, 129, 0.6);
   color: #34d399;
 }
+
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1024px) {
+  .card-selection-window {
+    width: min(900px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
+    padding: 14px 20px;
+    gap: 8px;
+    border-radius: 18px;
+  }
+
+  .card-selection-window h2 {
+    font-size: 16px;
+  }
+
+  .card-selection-window p {
+    font-size: 11px;
+  }
+
+  .card-selection-grid {
+    gap: 8px;
+    max-height: 42dvh;
+    padding: 6px;
+  }
+
+  .choice-actions {
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .choice-actions .choice-button {
+    min-width: 100px;
+    padding: 7px 12px;
+  }
+}

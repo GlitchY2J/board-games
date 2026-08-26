@@ -180,3 +180,58 @@
   50% { transform: translateY(-10px); }
   100% { transform: translateY(0px); }
 }
+
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1024px) {
+  .victory-overlay {
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  .victory-window {
+    width: min(560px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
+    box-sizing: border-box;
+    gap: 6px;
+    padding: 14px 22px;
+    border-radius: 20px;
+    overflow-y: auto;
+  }
+
+  .victory-crown {
+    font-size: 32px;
+  }
+
+  .victory-title {
+    font-size: 24px;
+  }
+
+  .victory-player {
+    font-size: 18px;
+  }
+
+  .victory-text,
+  .victory-waiting {
+    font-size: 10px;
+  }
+
+  .victory-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .victory-actions .victory-button {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 10px;
+  }
+
+  .victory-waiting {
+    flex: 1 1 100%;
+    max-width: none;
+    line-height: 1.25;
+  }
+}

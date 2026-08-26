@@ -251,3 +251,104 @@
     width: min(var(--hand-card-width, 76px), 76px);
   }
 }
+
+/* Mobile landscape: keep the selected card and its actions in one compact row. */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1024px) {
+  .card-select-backdrop {
+    padding: 12px 8px;
+    box-sizing: border-box;
+    align-items: center;
+  }
+
+  .card-select-pop {
+    width: auto;
+    max-width: calc(100vw - 24px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-select-pop > .playing-card {
+    flex: 0 0 auto;
+    width: 104px;
+    border-radius: 8px;
+  }
+
+  .card-select-pop > .flex {
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px !important;
+    border-radius: 14px;
+  }
+
+  .card-select-pop > .flex > button,
+  .card-select-pop .cat-combo-actions {
+    width: auto;
+  }
+
+  .card-select-pop > .flex > button {
+    justify-content: center;
+    padding: 7px 10px !important;
+    border-radius: 10px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .card-select-pop > .flex > p {
+    flex: 1 1 100%;
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .card-select-pop .cat-combo-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .card-select-pop .cat-combo-button {
+    width: auto;
+    padding: 8px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+  }
+}
+
+/* Portrait keeps the desktop composition: card above, actions below. */
+@media (orientation: portrait) and (max-width: 640px) {
+  .card-select-pop {
+    width: auto;
+    max-width: calc(100vw - 24px);
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card-select-pop > .playing-card {
+    width: 150px;
+  }
+
+  .card-select-pop > .flex {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px !important;
+  }
+
+  .card-select-pop > .flex > button {
+    padding: 8px 11px !important;
+    border-radius: 10px;
+    font-size: 10px;
+  }
+
+  .card-select-pop .cat-combo-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
