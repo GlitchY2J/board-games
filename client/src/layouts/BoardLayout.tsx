@@ -13,7 +13,7 @@ import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
 import PlayerNotification from '../components/player/PlayerNotification';
-import { RotateCcw, LogOut, Bot, Bug, MessageSquare, Copy, Check } from 'lucide-react';
+import { RotateCcw, LogOut, Bot, Bug, MessageSquare, Copy, Check, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { useState, useEffect, useRef } from 'react';
@@ -45,6 +45,7 @@ export default function BoardLayout({
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [autoEnabled, setAutoEnabled] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   const [wideTableLayout, setWideTableLayout] = useState(
     () => typeof window !== 'undefined' && window.innerWidth >= 1024,
@@ -413,7 +414,21 @@ export default function BoardLayout({
         spectator={spectator}
       />
 
-      <div className="corner-controls">
+      <button
+        className="game-menu-toggle"
+        type="button"
+        title="Abrir menú de partida"
+        aria-label="Abrir menú de partida"
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen((open) => !open)}
+      >
+        {menuOpen ? <X size={19} /> : <Menu size={19} />}
+      </button>
+
+      <aside className={`corner-controls game-menu-panel${menuOpen ? ' is-open' : ''}`}>
+        <div className="game-menu-header">
+          <span>Menú de partida</span>
+        </div>
         {!spectator && (
           <button
             className="room-code-display"
@@ -435,6 +450,7 @@ export default function BoardLayout({
             onClick={() => setAutoEnabled((v) => !v)}
           >
             <Bot size={16} />
+            <span>Modo automático</span>
           </button>
         )}
 
@@ -453,6 +469,7 @@ export default function BoardLayout({
             }
           >
             <Bug size={16} />
+            <span>Modo debug</span>
           </button>
         )}
 
@@ -465,6 +482,7 @@ export default function BoardLayout({
             }}
           >
             <RotateCcw size={16} />
+            <span>Reiniciar partida</span>
           </button>
         )}
 
@@ -474,8 +492,9 @@ export default function BoardLayout({
           onClick={() => setLeaveOpen(true)}
         >
           <LogOut size={16} />
+          <span>Salir de la partida</span>
         </button>
-      </div>
+      </aside>
 
       {leaveOpen && (
         <LeaveConfirm

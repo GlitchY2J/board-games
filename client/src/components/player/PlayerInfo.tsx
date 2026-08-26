@@ -54,16 +54,16 @@ export default function PlayerInfo({
         'player-info-card flex flex-col gap-2 px-3 py-2.5 rounded-2xl transition-all duration-300',
         'glass-panel border w-full',
       )}
-      style={{
-        backgroundColor: isActive
-          ? '#1e3a5f'
-          : 'rgba(15, 23, 42, 0.4)',
-        borderColor: isActive
-          ? 'rgba(59, 130, 246, 0.6)'
-          : 'rgba(71, 85, 105, 0.4)',
-        boxShadow: isActive
-          ? '0 0 0 1px rgba(59, 130, 246, 0.4)'
-          : 'none',
+        style={{
+          backgroundColor: isActive
+           ? '#12243a'
+           : 'rgba(15, 23, 42, 0.4)',
+          borderColor: isActive
+           ? 'rgba(59, 130, 246, 0.38)'
+           : 'rgba(71, 85, 105, 0.4)',
+          boxShadow: isActive
+           ? '0 0 0 1px rgba(59, 130, 246, 0.24)'
+           : 'none',
       }}
     >
       <div className="player-info-header flex w-full items-center justify-between gap-3 min-w-0">
