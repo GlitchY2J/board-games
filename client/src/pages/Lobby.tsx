@@ -9,7 +9,7 @@ import type { GameState } from '../../../shared/types/Game.ts';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
-import { Copy, Check, Users, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2, Bot, Plus, X, Eye, EyeOff } from 'lucide-react';
+import { Copy, Check, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2, Bot, Plus, X, Eye, EyeOff } from 'lucide-react';
 import LobbyChat from '../components/game/LobbyChat';
 
 export default function Lobby() {
@@ -270,7 +270,7 @@ export default function Lobby() {
   );
 
   return (
-    <div className="page-scroll w-full flex items-start justify-center p-6 relative">
+    <div className="platform-flat-page lobby-themed-page page-scroll w-full flex items-start justify-center p-6 relative">
       {/* Luces de fondo */}
       <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -287,10 +287,6 @@ export default function Lobby() {
 
         {/* Encabezado del Lobby */}
         <div className="text-center mt-6 mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full text-xs font-semibold tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 uppercase">
-            <Users size={12} />
-            Sala de Espera
-          </div>
           <h1 className="text-4xl font-extrabold tracking-tight">Lobby del Juego</h1>
           <p className="text-slate-400 text-sm mt-2">
             Invita a otros jugadores compartiendo el código

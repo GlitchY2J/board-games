@@ -52,6 +52,7 @@ export default function PlayerInfo({
     <div
       className={cn(
         'player-info-card flex flex-col gap-2 px-3 py-2.5 rounded-2xl transition-all duration-300',
+        isActive && 'is-active',
         'glass-panel border w-full',
       )}
         style={{
@@ -59,11 +60,9 @@ export default function PlayerInfo({
            ? '#12243a'
            : 'rgba(15, 23, 42, 0.4)',
           borderColor: isActive
-           ? 'rgba(59, 130, 246, 0.38)'
-           : 'rgba(71, 85, 105, 0.4)',
-          boxShadow: isActive
-           ? '0 0 0 1px rgba(59, 130, 246, 0.24)'
-           : 'none',
+           ? 'rgba(71, 85, 105, 0.7)'
+           : 'transparent',
+          boxShadow: 'none',
       }}
     >
       <div className="player-info-header flex w-full items-center justify-between gap-3 min-w-0">
@@ -110,7 +109,7 @@ export default function PlayerInfo({
         {canKick && roomCode && (
           <button
             type="button"
-            className="flex shrink-0 items-center gap-1 rounded-lg border border-rose-500/40 bg-rose-950/50 px-2 py-1 text-rose-300 transition-colors hover:bg-rose-900/60"
+             className="flex shrink-0 items-center gap-1 rounded-lg bg-rose-950/50 px-2 py-1 text-rose-300 transition-colors hover:bg-rose-900/60"
             title={`Expulsar a ${player.name}`}
             onClick={() => {
               if (window.confirm(`¿Expulsar a ${player.name} de la sala?`)) {
@@ -151,7 +150,7 @@ export default function PlayerInfo({
       <div className="flex items-center gap-1.5 text-xs shrink-0">
         {showStablePower && (
           <div
-            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-slate-800/50"
+            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg"
             title="Unicornios en el Establo"
           >
             <Sparkles size={11} className="text-amber-400" />
@@ -162,7 +161,7 @@ export default function PlayerInfo({
         )}
         {showTurns && (
           <div
-            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-orange-500/30"
+            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg"
             title="Turnos pendientes"
           >
             <RotateCcw size={11} className="text-orange-400" />
@@ -172,7 +171,7 @@ export default function PlayerInfo({
           </div>
         )}
         <div
-          className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-slate-800/50"
+          className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg"
           title="Cartas en Mano"
         >
           <Layers size={11} className="text-cyan-400" />
@@ -183,7 +182,7 @@ export default function PlayerInfo({
         {canView && (
           <button
             type="button"
-            className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg border border-cyan-500/40 hover:bg-cyan-900/40 transition-colors text-cyan-200 cursor-pointer"
+             className="flex items-center gap-1 bg-slate-950/50 px-2 py-1 rounded-lg hover:bg-cyan-900/40 transition-colors text-cyan-200 cursor-pointer"
             title={`Ver la mano de ${player.name} (Nanny Cam)`}
             onClick={() => setShowHand(true)}
           >

@@ -13,10 +13,19 @@ import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
 import PlayerNotification from '../components/player/PlayerNotification';
-import { RotateCcw, LogOut, Bot, Bug, MessageSquare, Copy, Check, Menu, X } from 'lucide-react';
+import { RotateCcw, LogOut, Bot, Bug, MessageSquare, Copy, Check, Menu, X, Settings as SettingsIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { useState, useEffect, useRef } from 'react';
+
+type PlatformTheme = 'classic' | 'midnight' | 'ember' | 'nebula';
+
+const PLATFORM_THEMES: { id: PlatformTheme; name: string; description: string; colors: string[] }[] = [
+  { id: 'classic', name: 'Obsidiana', description: 'Elegancia oscura y neutral', colors: ['#0b0d11', '#334155', '#94a3b8'] },
+  { id: 'midnight', name: 'Aurora nocturna', description: 'Azules profundos y energía eléctrica', colors: ['#050b1c', '#1d4ed8', '#22d3ee'] },
+  { id: 'ember', name: 'Volcán', description: 'Calidez intensa con tonos de fuego', colors: ['#180b0a', '#b45309', '#fb7185'] },
+  { id: 'nebula', name: 'Nebulosa', description: 'Violetas cósmicos y acentos magenta', colors: ['#10091f', '#7e22ce', '#f472b6'] },
+];
 
 interface Props {
   gameState: GameState;
@@ -46,6 +55,12 @@ export default function BoardLayout({
   const [autoEnabled, setAutoEnabled] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [platformTheme, setPlatformTheme] = useState<PlatformTheme>(() =>
+    (localStorage.getItem('platform-theme') as PlatformTheme | null) ?? 'classic',
+  );
+  const [pendingTheme, setPendingTheme] = useState<PlatformTheme>(platformTheme);
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   const [wideTableLayout, setWideTableLayout] = useState(
     () => typeof window !== 'undefined' && window.innerWidth >= 1024,
@@ -54,6 +69,11 @@ export default function BoardLayout({
     null,
   );
   const previousChatCountRef = useRef(gameState.chat?.length ?? 0);
+
+  useEffect(() => {
+    document.documentElement.dataset.platformTheme = platformTheme;
+    localStorage.setItem('platform-theme', platformTheme);
+  }, [platformTheme]);
   const localPlayer = spectator
     ? undefined
     : gameState.players.find((p) => p.socketId === socket.id);
@@ -473,6 +493,20 @@ export default function BoardLayout({
           </button>
         )}
 
+        <button
+          type="button"
+          className="ctrl-button ctrl-neutral"
+          title="Opciones"
+          onClick={() => {
+            setMenuOpen(false);
+            setPendingTheme(platformTheme);
+            setOptionsOpen(true);
+          }}
+        >
+          <SettingsIcon size={16} />
+          <span>Opciones</span>
+        </button>
+
         {isHost && (
           <button
             className="ctrl-button ctrl-reset"
@@ -495,6 +529,93 @@ export default function BoardLayout({
           <span>Salir de la partida</span>
         </button>
       </aside>
+
+      {optionsOpen && (
+        <div className="platform-options-backdrop" onClick={() => setOptionsOpen(false)}>
+          <section
+            className="platform-options-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="platform-options-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="platform-options-header">
+              <div>
+                <span className="platform-options-kicker">Personalización</span>
+                <h2 id="platform-options-title">Opciones</h2>
+              </div>
+              <button
+                type="button"
+                className="platform-options-close"
+                aria-label="Cerrar opciones"
+                onClick={() => setOptionsOpen(false)}
+              >
+                <X size={17} />
+              </button>
+            </div>
+
+            <div className="platform-options-section">
+              <label className="platform-theme-row" htmlFor="platform-theme-select">
+                <span className="platform-options-label">Tema de la plataforma</span>
+                <div className="platform-theme-combobox">
+                  <button
+                    id="platform-theme-select"
+                    type="button"
+                    className="platform-theme-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded={themeMenuOpen}
+                    onClick={() => setThemeMenuOpen((open) => !open)}
+                  >
+                    <span className="platform-theme-trigger-swatch">
+                      {PLATFORM_THEMES.find((theme) => theme.id === pendingTheme)?.colors.map((color) => (
+                        <span key={color} style={{ backgroundColor: color }} />
+                      ))}
+                    </span>
+                    <span>{PLATFORM_THEMES.find((theme) => theme.id === pendingTheme)?.name}</span>
+                    <span className="platform-theme-chevron">⌄</span>
+                  </button>
+                  {themeMenuOpen && (
+                    <div className="platform-theme-menu" role="listbox" aria-label="Temas disponibles">
+                      {PLATFORM_THEMES.map((theme) => (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          role="option"
+                          aria-selected={pendingTheme === theme.id}
+                          className={`platform-theme-menu-option${pendingTheme === theme.id ? ' is-selected' : ''}`}
+                          onClick={() => {
+                            setPendingTheme(theme.id);
+                            setThemeMenuOpen(false);
+                          }}
+                        >
+                          <span className="platform-theme-trigger-swatch">
+                            {theme.colors.map((color) => <span key={color} style={{ backgroundColor: color }} />)}
+                          </span>
+                          <span className="platform-theme-menu-copy">
+                            <strong>{theme.name}</strong>
+                            <small>{theme.description}</small>
+                          </span>
+                          {pendingTheme === theme.id && <span className="platform-theme-check">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </label>
+              <button
+                type="button"
+                className="platform-options-apply"
+                onClick={() => {
+                  setPlatformTheme(pendingTheme);
+                  setOptionsOpen(false);
+                }}
+              >
+                Aplicar cambios
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {leaveOpen && (
         <LeaveConfirm

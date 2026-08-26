@@ -106,7 +106,7 @@ export default function JoinRoom() {
   }
 
   return (
-      <div className="page-scroll min-h-screen w-full flex items-center justify-center p-6 relative">
+      <div className="platform-flat-page page-scroll min-h-screen w-full flex items-center justify-center p-6 relative">
       {/* Luces decorativas */}
       <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 

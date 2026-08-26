@@ -45,6 +45,387 @@ body {
   font-family: 'Outfit', 'Inter', sans-serif;
 }
 
+html[data-platform-theme='midnight'] body {
+  background-color: #050b1c;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(29, 78, 216, 0.28) 0, transparent 52%),
+    radial-gradient(at 100% 100%, rgba(34, 211, 238, 0.16) 0, transparent 48%),
+    linear-gradient(135deg, #050b1c, #0f172a);
+}
+
+html[data-platform-theme='ember'] body {
+  background-color: #180b0a;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(180, 83, 9, 0.28) 0, transparent 52%),
+    radial-gradient(at 100% 100%, rgba(251, 113, 133, 0.14) 0, transparent 48%),
+    linear-gradient(135deg, #180b0a, #241313);
+}
+
+html[data-platform-theme='nebula'] body {
+  background-color: #10091f;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(126, 34, 206, 0.3) 0, transparent 52%),
+    radial-gradient(at 100% 100%, rgba(244, 114, 182, 0.18) 0, transparent 48%),
+    linear-gradient(135deg, #10091f, #1e1035);
+}
+
+html[data-platform-theme='classic'] body,
+html[data-platform-theme='classic'] .platform-shell {
+  background-color: #080808;
+  background-image: linear-gradient(135deg, #080808, #161618);
+}
+
+html[data-platform-theme='classic'] {
+  --platform-accent: #94a3b8;
+  --platform-accent-strong: #cbd5e1;
+  --platform-surface: rgba(20, 20, 22, 0.82);
+  --platform-surface-solid: #0b0b0d;
+  --platform-border: rgba(148, 148, 152, 0.22);
+  --platform-glow: rgba(148, 163, 184, 0.16);
+  --platform-active: #19191c;
+}
+
+html[data-platform-theme='midnight'] {
+  --platform-accent: #22d3ee;
+  --platform-accent-strong: #67e8f9;
+  --platform-surface: rgba(8, 22, 48, 0.82);
+  --platform-surface-solid: #08152e;
+  --platform-border: rgba(34, 211, 238, 0.35);
+  --platform-glow: rgba(29, 78, 216, 0.28);
+  --platform-active: #102a4c;
+}
+
+html[data-platform-theme='ember'] {
+  --platform-accent: #fb923c;
+  --platform-accent-strong: #fdba74;
+  --platform-surface: rgba(48, 20, 16, 0.82);
+  --platform-surface-solid: #241313;
+  --platform-border: rgba(251, 146, 60, 0.36);
+  --platform-glow: rgba(180, 83, 9, 0.3);
+  --platform-active: #3a211b;
+}
+
+html[data-platform-theme='nebula'] {
+  --platform-accent: #e879f9;
+  --platform-accent-strong: #f5d0fe;
+  --platform-surface: rgba(30, 15, 54, 0.82);
+  --platform-surface-solid: #1e1035;
+  --platform-border: rgba(232, 121, 249, 0.36);
+  --platform-glow: rgba(126, 34, 206, 0.3);
+  --platform-active: #2d1846;
+}
+
+html[data-platform-theme] .glass-panel {
+  background: var(--platform-surface);
+  border-color: var(--platform-border);
+  box-shadow: 0 20px 50px var(--platform-glow);
+}
+
+html[data-platform-theme] .platform-shell,
+html[data-platform-theme] .game-menu-panel,
+html[data-platform-theme] .platform-options-panel,
+html[data-platform-theme] .platform-theme-menu {
+  border-color: var(--platform-border);
+}
+
+html[data-platform-theme] .game-menu-panel,
+html[data-platform-theme] .platform-options-panel,
+html[data-platform-theme] .platform-theme-menu {
+  background: var(--platform-surface-solid);
+}
+
+html[data-platform-theme] .game-menu-toggle,
+html[data-platform-theme] .mobile-chat-toggle,
+html[data-platform-theme] .ctrl-button,
+html[data-platform-theme] .room-code-display {
+  border-color: var(--platform-border);
+  box-shadow: 0 8px 22px var(--platform-glow);
+}
+
+html[data-platform-theme] .game-menu-toggle:hover,
+html[data-platform-theme] .platform-theme-trigger:hover,
+html[data-platform-theme] .platform-theme-trigger[aria-expanded='true'] {
+  border-color: var(--platform-accent);
+  color: var(--platform-accent-strong);
+}
+
+html[data-platform-theme] .game-menu-toggle,
+html[data-platform-theme] .room-code-display,
+html[data-platform-theme] .phase-panel-toggle {
+  background: var(--platform-surface-solid) !important;
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .game-menu-toggle:hover,
+html[data-platform-theme] .room-code-display:hover,
+html[data-platform-theme] .phase-panel-toggle:hover {
+  background: color-mix(in srgb, var(--platform-accent) 16%, var(--platform-surface-solid)) !important;
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .room-code-label,
+html[data-platform-theme] .phase-panel-toggle {
+  color: var(--platform-accent) !important;
+}
+
+html[data-platform-theme] .chat-panel,
+html[data-platform-theme] .chat-input,
+html[data-platform-theme] .platform-theme-trigger {
+  background-color: var(--platform-surface-solid);
+  border-color: var(--platform-border);
+}
+
+html[data-platform-theme] .chat-input:focus {
+  border-color: var(--platform-accent);
+  box-shadow: 0 0 12px var(--platform-glow);
+}
+
+html[data-platform-theme] .platform-options-apply,
+html[data-platform-theme] .glow-btn-emerald,
+html[data-platform-theme] .confirm-button,
+html[data-platform-theme] [data-card-confirm] {
+  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong));
+  box-shadow: 0 0 20px var(--platform-glow);
+}
+
+html[data-platform-theme] .choice-button,
+html[data-platform-theme] .pending-accept-btn {
+  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong));
+  color: #08111f;
+}
+
+html[data-platform-theme] .turn-order-row-active {
+  background: color-mix(in srgb, var(--platform-active) 88%, var(--platform-accent));
+  border-color: var(--platform-accent) !important;
+}
+
+html[data-platform-theme] .turn-order-row-active .turn-order-avatar {
+  border-color: var(--platform-accent) !important;
+}
+
+html[data-platform-theme] .turn-order-row-active .turn-order-name,
+html[data-platform-theme] .turn-order-row-active .text-emerald-400 {
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .turn-order-row-active .bg-gradient-to-br {
+  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong)) !important;
+}
+
+html[data-platform-theme] .turn-order-row-idle {
+  background: color-mix(in srgb, var(--platform-surface-solid) 72%, transparent) !important;
+  border-color: transparent !important;
+}
+
+html[data-platform-theme] .turn-order-row-idle:hover {
+  background: color-mix(in srgb, var(--platform-accent) 14%, var(--platform-surface-solid)) !important;
+  border-color: transparent !important;
+}
+
+html[data-platform-theme] .turn-order-row-idle .turn-order-avatar {
+  border-color: var(--platform-border) !important;
+}
+
+html[data-platform-theme] .turn-order-row-idle .bg-slate-700 {
+  background-color: color-mix(in srgb, var(--platform-accent) 18%, var(--platform-surface-solid)) !important;
+}
+
+html[data-platform-theme] .turn-order-row-idle .turn-order-name,
+html[data-platform-theme] .turn-order-eliminated-title {
+  color: color-mix(in srgb, var(--platform-accent-strong) 55%, #94a3b8) !important;
+}
+
+html[data-platform-theme] .turn-shuffle-card {
+  background: linear-gradient(135deg, var(--platform-surface-solid), var(--platform-active)) !important;
+  border-color: var(--platform-border) !important;
+}
+
+html[data-platform-theme] .turn-order-entry {
+  background-color: color-mix(in srgb, var(--platform-surface) 72%, transparent) !important;
+  border-color: var(--platform-border) !important;
+}
+
+html[data-platform-theme] .turn-shuffle-status,
+html[data-platform-theme] .turn-order-start-label {
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .turn-order-start-label {
+  background-color: var(--platform-glow) !important;
+}
+
+html[data-platform-theme] .turn-shuffle-progress {
+  background-color: var(--platform-accent) !important;
+}
+
+html[data-platform-theme] .turn-order-position-first {
+  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong)) !important;
+}
+
+html[data-platform-theme] .player-info-card[style] {
+  border-color: var(--platform-border) !important;
+}
+
+html[data-platform-theme] .player-info-card {
+  background-color: var(--platform-surface) !important;
+  border-color: var(--platform-border) !important;
+}
+
+html[data-platform-theme] .player-info-card.is-active {
+  background-color: var(--platform-active) !important;
+  border-color: var(--platform-accent) !important;
+}
+
+html[data-platform-theme] .player-info-card:not(.is-active) {
+  border-color: transparent !important;
+}
+
+html[data-platform-theme] .player-info-card.is-active .text-emerald-400 {
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .player-info-card.is-active .border-emerald-400\/60 {
+  border-color: var(--platform-accent) !important;
+}
+
+/* The platform UI uses flat surfaces; depth comes from spacing and borders. */
+.glass-panel,
+.player-info-card,
+.game-menu-toggle,
+.game-menu-panel,
+.ctrl-button,
+.room-code-display,
+.platform-options-panel,
+.platform-theme-menu,
+.platform-options-apply,
+.chat-panel,
+.victory-window,
+.pending-play-window,
+.card-selection-window {
+  box-shadow: none !important;
+}
+
+.center-area-shell {
+  border-color: transparent !important;
+}
+
+.glass-panel:hover,
+.ctrl-button:hover,
+.room-code-display:hover,
+.platform-options-apply:hover,
+.victory-button:hover,
+.pending-accept-btn:hover:not(:disabled),
+.pending-neigh-btn:hover:not(:disabled),
+.pending-super-neigh-btn:hover:not(:disabled) {
+  box-shadow: none !important;
+}
+
+/* Flat overlay treatment: keep the hierarchy in spacing and color, not
+   outlines around modal surfaces and their actions. */
+.pending-play-window,
+.pending-play-target,
+.pending-play-chain,
+.card-selection-window,
+.selection-card-content,
+.selection-list-item,
+.choice-button,
+.confirm-button,
+.cancel-button,
+.choice-actions .choice-button,
+.leave-confirm-card,
+.leave-confirm-btn,
+.victory-window,
+.victory-button {
+  border: 0 !important;
+}
+
+.card-select-actions {
+  border: 0 !important;
+}
+
+.game-menu-panel {
+  border-right: 0 !important;
+}
+
+.chat-panel,
+.chat-header,
+.chat-input-row,
+.chat-input {
+  border-width: 0 !important;
+}
+
+.phase-panel-body .border-b,
+.phase-panel-body > .w-full {
+  border: 0 !important;
+}
+
+button,
+button:hover,
+button:focus-visible,
+button:active {
+  border-width: 0 !important;
+  border-color: transparent !important;
+}
+
+.platform-flat-page * {
+  border-color: transparent !important;
+}
+
+html[data-platform-theme] .platform-flat-page input,
+html[data-platform-theme] .platform-avatar-picker {
+  background-color: var(--platform-surface-solid) !important;
+  color: var(--platform-accent-strong);
+}
+
+html[data-platform-theme] .platform-flat-page input::placeholder {
+  color: color-mix(in srgb, var(--platform-accent) 45%, #64748b);
+}
+
+html[data-platform-theme] .lobby-themed-page [class*='bg-slate-'] {
+  background-color: color-mix(in srgb, var(--platform-surface-solid) 78%, transparent) !important;
+}
+
+html[data-platform-theme] .lobby-themed-page [class*='text-cyan-'],
+html[data-platform-theme] .lobby-themed-page [class*='text-emerald-'],
+html[data-platform-theme] .lobby-themed-page [class*='text-amber-'] {
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .lobby-themed-page [class*='bg-cyan-'],
+html[data-platform-theme] .lobby-themed-page [class*='bg-emerald-'],
+html[data-platform-theme] .lobby-themed-page [class*='bg-amber-'] {
+  background-color: var(--platform-glow) !important;
+}
+
+html[data-platform-theme] .lobby-themed-page [class*='from-emerald-'],
+html[data-platform-theme] .lobby-themed-page [class*='from-cyan-'] {
+  --tw-gradient-from: var(--platform-accent) !important;
+}
+
+html[data-platform-theme] .lobby-themed-page [class*='to-teal-'],
+html[data-platform-theme] .lobby-themed-page [class*='to-cyan-'] {
+  --tw-gradient-to: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .lobby-themed-page [class*='text-slate-'] {
+  color: color-mix(in srgb, var(--platform-accent-strong) 58%, #94a3b8) !important;
+}
+
+html[data-platform-theme='midnight'] .platform-shell {
+  background-color: #050b1c;
+  background-image: linear-gradient(135deg, rgba(5, 11, 28, 0.96), rgba(15, 23, 42, 0.96));
+}
+
+html[data-platform-theme='ember'] .platform-shell {
+  background-color: #180b0a;
+  background-image: linear-gradient(135deg, rgba(24, 11, 10, 0.96), rgba(54, 24, 16, 0.96));
+}
+
+html[data-platform-theme='nebula'] .platform-shell {
+  background-color: #10091f;
+  background-image: linear-gradient(135deg, rgba(16, 9, 31, 0.96), rgba(30, 16, 53, 0.96));
+}
+
 .page-scroll {
   height: 100dvh;
   min-height: 0;

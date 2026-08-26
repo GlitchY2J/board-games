@@ -20,6 +20,11 @@ export default function App() {
   const location = useLocation();
 
   useEffect(() => {
+    const theme = localStorage.getItem('platform-theme') ?? 'classic';
+    document.documentElement.dataset.platformTheme = theme;
+  }, []);
+
+  useEffect(() => {
     if (status === 'loading') return;
 
     const path = location.pathname;

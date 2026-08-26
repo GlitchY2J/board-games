@@ -138,7 +138,7 @@ export default function StartingGame() {
                   return (
                     <motion.div
                       key={`${player.id}-${index}`}
-                      className="absolute w-60 h-32 rounded-2xl bg-gradient-to-br from-black to-slate-950 border border-slate-800/80 p-4 shadow-2xl flex flex-col justify-between"
+                      className="turn-shuffle-card absolute w-60 h-32 rounded-2xl bg-gradient-to-br from-black to-slate-950 border border-slate-800/80 p-4 shadow-2xl flex flex-col justify-between"
                       style={{ zIndex: 10 + index }}
                       animate={{
                         x: isLeft ? [0, -110, 10, 0] : [0, 110, -10, 0],
@@ -169,13 +169,13 @@ export default function StartingGame() {
                           <span className="text-sm font-bold text-slate-200 block truncate max-w-[140px]">
                             {player.name}
                           </span>
-                          <span className="text-[9px] text-cyan-400 font-medium animate-pulse">
+                           <span className="turn-shuffle-status text-[9px] text-cyan-400 font-medium animate-pulse">
                             Barajando...
                           </span>
                         </div>
                       </div>
-                      <div className="h-1 w-20 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-500 animate-pulse w-full" />
+                       <div className="turn-shuffle-track h-1 w-20 bg-slate-800 rounded-full overflow-hidden">
+                         <div className="turn-shuffle-progress h-full bg-cyan-500 animate-pulse w-full" />
                       </div>
                     </motion.div>
                   );
@@ -199,11 +199,11 @@ export default function StartingGame() {
                       visible: { opacity: 1, y: 0, scale: 1 },
                     }}
                     transition={{ type: 'spring', stiffness: 120, damping: 14 }}
-                    className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50"
+                     className="turn-order-entry flex items-center justify-between p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50"
                   >
                     <div className="flex items-center gap-3">
-                      <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-slate-950 font-black text-sm ${
-                        index === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-slate-700'
+                       <span className={`turn-order-position w-9 h-9 rounded-xl flex items-center justify-center text-slate-950 font-black text-sm ${
+                         index === 0 ? 'turn-order-position-first bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-slate-700'
                       }`}>
                         {index + 1}
                       </span>
@@ -222,7 +222,7 @@ export default function StartingGame() {
                         {player.name} {player.id === playerId && '(tú)'}
                       </span>
                     </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${
+                     <span className={`turn-order-start-label text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${
                       index === 0
                         ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                         : 'text-slate-500'

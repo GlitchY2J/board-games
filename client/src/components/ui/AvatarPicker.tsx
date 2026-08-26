@@ -19,7 +19,7 @@ export default function AvatarPicker({
       : 'focus:border-cyan-400/60 focus:ring-cyan-400/30';
 
   return (
-    <div className={`w-full rounded-2xl bg-slate-950/50 border border-slate-800 p-3 transition-all ${focusClasses}`}>
+    <div className={`platform-avatar-picker w-full rounded-2xl bg-slate-950/50 border border-slate-800 p-3 transition-all ${focusClasses}`}>
       <div className="flex items-center justify-between mb-3">
         <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
           Elige tu Avatar

@@ -298,7 +298,7 @@ export default function CardFan({
                 preview={false}
               />
 
-              <div className="flex items-center justify-center gap-4 px-6 py-4 rounded-3xl glass-panel bg-slate-950/90 border border-slate-900/60 shadow-2xl">
+               <div className="card-select-actions flex items-center justify-center gap-4 px-6 py-4 rounded-3xl glass-panel bg-slate-950/90 shadow-2xl">
                 <button
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all text-xs font-bold cursor-pointer active:scale-95"
                   onClick={() => setSelectedCardId(null)}
