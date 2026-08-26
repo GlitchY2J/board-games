@@ -250,7 +250,7 @@ export default function Lobby() {
       {/* Luces de fondo */}
       <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <Card className="w-full max-w-5xl relative z-10">
+      <Card className="w-full max-w-6xl relative z-10">
         <button
           onClick={() => {
             setShowLeaveConfirm(true);
@@ -301,19 +301,21 @@ export default function Lobby() {
           </button>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] items-start">
-        {/* Lista de Jugadores */}
-        <div className="mb-0">
-          <div className="flex justify-between items-center mb-4 px-2">
-            <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">
-              Jugadores Conectados
-            </span>
-            <span className="text-xs font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
-              {availablePlayers.length} / {selectedGame?.maxPlayers ?? '—'}
-            </span>
-          </div>
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
+        {/* Información de la sala */}
+        <div className="space-y-6">
+          <section className="rounded-3xl border border-slate-800/70 bg-slate-950/25 p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Sala</p>
+                <h2 className="mt-1 text-lg font-bold text-slate-100">Jugadores conectados</h2>
+              </div>
+              <span className="rounded-full border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs font-bold text-slate-400">
+                {availablePlayers.length} / {selectedGame?.maxPlayers ?? '—'}
+              </span>
+            </div>
 
-          <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+            <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
             {connectedPlayers.map((player) => (
               <div
                 key={player.id}
@@ -366,17 +368,21 @@ export default function Lobby() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </section>
+
+          <LobbyChat room={room} />
         </div>
 
         {/* Configuración de juego */}
-        <div className="mb-0 border-t border-slate-900 pt-6 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0 space-y-6">
-          <div className="flex justify-between items-center px-2">
-            <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">
-              Configuración de partida
-            </span>
+        <section className="space-y-6 rounded-3xl border border-slate-800/70 bg-slate-950/25 p-5 lg:border-l lg:border-t-0 lg:pl-7">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Juego</p>
+              <h2 className="mt-1 text-lg font-bold text-slate-100">Configuración de partida</h2>
+            </div>
             {!canEditSettings && (
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+              <span className="text-right text-[10px] uppercase tracking-wider text-slate-500">
                 Solo el host puede editar
               </span>
             )}
@@ -585,7 +591,7 @@ export default function Lobby() {
               )}
             </>
           )}
-        </div>
+        </section>
         </div>
 
         {/* Panel de Control/Inicio */}
@@ -629,10 +635,6 @@ export default function Lobby() {
           )}
         </div>
       </Card>
-
-      <div className="fixed right-6 bottom-6 z-30 w-80 max-w-[calc(100vw-3rem)]">
-        <LobbyChat room={room} />
-      </div>
 
       {showLeaveConfirm && (
         <LeaveConfirm
