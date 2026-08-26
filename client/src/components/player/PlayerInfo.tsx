@@ -41,11 +41,17 @@ export default function PlayerInfo({
   const showTurns = gameId === 'exploding-kittens';
   const displayedTurns = showTurns && isActive ? Math.max(1, turnsRemaining) : 0;
   const canKick = isHost && localPlayerId !== undefined && localPlayerId !== player.id;
+  const statusText = status ?? (isActive
+    ? gameId === 'exploding-kittens'
+      ? 'Jugando cartas...'
+      : 'Tu Turno'
+    : 'Esperando');
+  const shouldMarquee = statusText.length > 14;
 
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-3 px-4 py-2 rounded-2xl transition-all duration-300',
+        'player-info-card flex flex-col gap-2 px-3 py-2.5 rounded-2xl transition-all duration-300',
         'glass-panel border w-full',
       )}
       style={{
@@ -60,7 +66,8 @@ export default function PlayerInfo({
           : 'none',
       }}
     >
-      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+      <div className="player-info-header flex w-full items-center justify-between gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
         {player.avatar ? (
           <span
             className={cn(
@@ -88,7 +95,7 @@ export default function PlayerInfo({
             {player.name.substring(0, 2)}
           </span>
         )}
-        <div className="flex flex-col min-w-0">
+          <div className="flex flex-col min-w-0">
           <span
             className={cn(
               'text-[13px] font-bold tracking-wide truncate leading-tight',
@@ -97,23 +104,49 @@ export default function PlayerInfo({
           >
             {player.name}
           </span>
-          <span className="text-[9px] text-slate-500 flex items-center gap-1.5 font-semibold uppercase tracking-wider">
-            <span
-              className={cn(
-                'w-1.5 h-1.5 rounded-full',
-                isActive
-                  ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]'
-                  : 'bg-slate-600'
-              )}
-            ></span>
-            {status ?? (isActive
-              ? gameId === 'exploding-kittens'
-                ? 'Jugando cartas...'
-                : 'Tu Turno'
-              : 'Esperando')}
-          </span>
+          </div>
         </div>
+
+        {canKick && roomCode && (
+          <button
+            type="button"
+            className="flex shrink-0 items-center gap-1 rounded-lg border border-rose-500/40 bg-rose-950/50 px-2 py-1 text-rose-300 transition-colors hover:bg-rose-900/60"
+            title={`Expulsar a ${player.name}`}
+            onClick={() => {
+              if (window.confirm(`¿Expulsar a ${player.name} de la sala?`)) {
+                socket.emit('kick-player', { roomCode, playerId: player.id });
+              }
+            }}
+          >
+            <UserX size={11} />
+          </button>
+        )}
       </div>
+
+      <div className="player-info-details flex w-full min-w-0 items-center justify-between gap-2">
+        <span className="text-[9px] text-slate-500 flex min-w-0 items-center gap-1.5 font-semibold uppercase tracking-wider">
+          <span
+            className={cn(
+              'w-1.5 h-1.5 shrink-0 rounded-full',
+              isActive
+                ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]'
+                : 'bg-slate-600'
+            )}
+          ></span>
+          <span
+            className={`player-status-marquee${shouldMarquee ? ' is-marquee' : ''}`}
+            title={statusText}
+          >
+            {shouldMarquee ? (
+              <span className="player-status-track">
+                <span>{statusText}</span>
+                <span aria-hidden="true">{statusText}</span>
+              </span>
+            ) : (
+              <span>{statusText}</span>
+            )}
+          </span>
+        </span>
 
       <div className="flex items-center gap-1.5 text-xs shrink-0">
         {showStablePower && (
@@ -157,20 +190,7 @@ export default function PlayerInfo({
             <Eye size={11} />
           </button>
         )}
-        {canKick && roomCode && (
-          <button
-            type="button"
-            className="flex items-center gap-1 bg-rose-950/50 px-2 py-1 rounded-lg border border-rose-500/40 hover:bg-rose-900/60 transition-colors text-rose-300 cursor-pointer"
-            title={`Expulsar a ${player.name}`}
-            onClick={() => {
-              if (window.confirm(`¿Expulsar a ${player.name} de la sala?`)) {
-                socket.emit('kick-player', { roomCode, playerId: player.id });
-              }
-            }}
-          >
-            <UserX size={11} />
-          </button>
-        )}
+      </div>
       </div>
 
       {showHand &&

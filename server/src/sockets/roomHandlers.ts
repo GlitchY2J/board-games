@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import type { GameServer, GameSocket } from './socketTypes.ts';
 import { roomManager } from '../roomManagerInstance.ts';
 import { createGameStateForPlayer, emitGameState } from './gameStateEmitter.ts';
@@ -70,6 +71,37 @@ function removePlayerFromGame(room: Room, playerId: string): boolean {
 }
 
 export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
+  socket.on('add-dummy-player', (roomCode) => {
+    const room = roomManager.getRoom(roomCode);
+    const host = room?.players.find((player) => player.socketId === socket.id);
+    if (!room || !host || room.hostId !== host.id || room.gameState?.started) return;
+
+    const dummyNumber = room.players.filter((player) => player.isDummy).length + 1;
+    room.players.push({
+      id: crypto.randomUUID(),
+      sessionToken: crypto.randomUUID(),
+      socketId: null,
+      connected: true,
+      name: `Dummy ${dummyNumber}`,
+      avatar: ['fox', 'owl', 'cat', 'bear', 'wolf', 'bunny', 'koala'][dummyNumber - 1] ?? 'fox',
+      hand: [],
+      stable: [],
+      upgrades: [],
+      downgrades: [],
+      isDummy: true,
+    });
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
+  });
+
+  socket.on('remove-dummy-player', ({ roomCode, playerId }) => {
+    const room = roomManager.getRoom(roomCode);
+    const host = room?.players.find((player) => player.socketId === socket.id);
+    if (!room || !host || room.hostId !== host.id || room.gameState?.started) return;
+
+    room.players = room.players.filter((player) => !(player.id === playerId && player.isDummy));
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
+  });
+
   socket.on('join-room', ({ roomCode, playerName, avatar }) => {
     console.log(`[join-room] Petición recibida de socket ${socket.id} para unirse a la sala ${roomCode} con nombre ${playerName}`);
     const existingRoom = roomManager.getRoom(roomCode);

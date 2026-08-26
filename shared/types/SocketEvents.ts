@@ -248,6 +248,8 @@ export interface ClientToServerEvents {
   // Toggle Expansion
   'toggle-expansion': (payload: ToggleExpansionPayload) => void;
   'update-room-settings': (payload: UpdateRoomSettingsPayload) => void;
+  'add-dummy-player': (roomCode: string) => void;
+  'remove-dummy-player': (payload: { roomCode: string; playerId: string }) => void;
 
   // Start Game
   'start-game': (roomCode: string) => void;

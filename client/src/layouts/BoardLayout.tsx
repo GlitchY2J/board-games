@@ -46,6 +46,9 @@ export default function BoardLayout({
   const [autoEnabled, setAutoEnabled] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
+  const [wideTableLayout, setWideTableLayout] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 1024,
+  );
   const [playerNotification, setPlayerNotification] = useState<string | null>(
     null,
   );
@@ -54,6 +57,12 @@ export default function BoardLayout({
     (spectator ? gameState.players[0] : undefined);
   const cardSelectedRef = useRef(false);
   const notificationTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const onResize = () => setWideTableLayout(window.innerWidth >= 1024);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   function showPlayerNotification(message: string) {
     setPlayerNotification(message);
@@ -140,8 +149,57 @@ export default function BoardLayout({
     gameId,
   ]);
 
-  const positions: ('top' | 'bottom')[] =
-    totalPlayers === 4 ? ['top', 'top', 'bottom'] : ['top', 'top'];
+  type SeatPosition = 'top' | 'bottom' | 'left' | 'right';
+  const positions: SeatPosition[] = wideTableLayout
+    ? totalPlayers === 5
+      ? ['top', 'top', 'left', 'bottom']
+      : totalPlayers === 6
+        ? ['top', 'top', 'top', 'left', 'bottom']
+        : totalPlayers === 7
+          ? ['top', 'top', 'top', 'top', 'left', 'bottom']
+          : totalPlayers >= 8
+            ? ['top', 'top', 'top', 'top', 'left', 'right', 'bottom']
+            : totalPlayers === 4
+              ? ['top', 'top', 'bottom']
+              : ['top', 'top']
+    : totalPlayers === 5
+      ? ['top', 'top', 'left', 'right']
+      : totalPlayers === 6
+        ? ['top', 'top', 'top', 'left', 'right']
+        : totalPlayers === 7
+          ? ['top', 'top', 'top', 'top', 'left', 'right']
+          : totalPlayers >= 8
+            ? ['top', 'top', 'top', 'top', 'left', 'left', 'right']
+            : totalPlayers === 4
+              ? ['top', 'top', 'bottom']
+              : ['top', 'top'];
+  const localPlayerId = localPlayer?.id ?? '';
+
+  const renderOpponent = (opp: (typeof opponents)[number]) => (
+    <div
+      key={opp.id}
+      data-player-id={opp.id}
+      className="player-slot flex-col items-center gap-2"
+    >
+      <PlayerInfo
+        player={opp}
+        isActive={opp.id === activePlayer.id}
+        status={getPlayerStatus(gameState, opp.id, gameId)}
+        localPlayerId={localPlayerId}
+        gameId={gameId}
+        turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
+        isHost={isHost}
+        roomCode={gameState.roomCode}
+      />
+      {showPlayerBoards && (
+        <PlayerBoard
+          player={opp}
+          isLocalPlayer={false}
+          isMyTurn={opp.id === activePlayer.id}
+        />
+      )}
+    </div>
+  );
 
   const queenBeeOwner = gameState.players.find((p) =>
     p.stable.some((c) => c.id === 'queen_bee_unicorn'),
@@ -176,8 +234,6 @@ export default function BoardLayout({
     ...blockedBasicUnicornIds,
     ...blockedUpgradeIds,
   ]);
-  const localPlayerId = localPlayer?.id ?? '';
-
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement) {
@@ -213,44 +269,23 @@ export default function BoardLayout({
   if (!localPlayer) return null;
 
   return (
-    <div className={`board-layout ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}>
+    <div className={`board-layout players-${Math.min(totalPlayers, 8)} ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}>
       <div className="game-area">
         <div className="player-top">
-          {opponents.map((opp) => {
-            const position = positions[opponents.indexOf(opp)];
-            if (position !== 'top') return null;
-
-            return (
-              <div
-                key={opp.id}
-                data-player-id={opp.id}
-                className="player-slot flex-col items-center gap-2"
-              >
-                <PlayerInfo
-                  player={opp}
-                  isActive={opp.id === activePlayer.id}
-                  status={getPlayerStatus(gameState, opp.id, gameId)}
-                  localPlayerId={localPlayer.id}
-                  gameId={gameId}
-                  turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
-                  isHost={isHost}
-                  roomCode={gameState.roomCode}
-                />
-                {showPlayerBoards && (
-                  <PlayerBoard
-                    player={opp}
-                    isLocalPlayer={false}
-                    isMyTurn={opp.id === activePlayer.id}
-                  />
-                )}
-              </div>
-            );
-          })}
+          {opponents.filter((opp) => positions[opponents.indexOf(opp)] === 'top').map(renderOpponent)}
         </div>
 
         <div className="middle">
           <div className="turn-order-side">
             <TurnOrder gameState={gameState} localPlayerId={localPlayer.id} />
+          </div>
+
+          <div className="player-side player-side-left">
+            {opponents.filter((opp) => positions[opponents.indexOf(opp)] === 'left').map(renderOpponent)}
+          </div>
+
+          <div className="player-side player-side-right">
+            {opponents.filter((opp) => positions[opponents.indexOf(opp)] === 'right').map(renderOpponent)}
           </div>
 
           <div className="center-wrap">
@@ -299,7 +334,7 @@ export default function BoardLayout({
 
         <div className="player-bottom">
           <div
-            className="player-slot flex-col items-center gap-2"
+            className="player-slot local-player-slot flex-col items-center gap-2"
             data-player-id={localPlayer.id}
           >
             {playerNotification && (
@@ -329,32 +364,7 @@ export default function BoardLayout({
           {opponents.map((opp) => {
             const position = positions[opponents.indexOf(opp)];
             if (position !== 'bottom') return null;
-
-            return (
-              <div
-                key={opp.id}
-                data-player-id={opp.id}
-                className="player-slot flex-col items-center gap-2"
-              >
-                <PlayerInfo
-                  player={opp}
-                  isActive={opp.id === activePlayer.id}
-                  status={getPlayerStatus(gameState, opp.id, gameId)}
-                  localPlayerId={localPlayer.id}
-                  gameId={gameId}
-                  turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
-                  isHost={isHost}
-                  roomCode={gameState.roomCode}
-                />
-                {showPlayerBoards && (
-                  <PlayerBoard
-                    player={opp}
-                    isLocalPlayer={false}
-                    isMyTurn={opp.id === activePlayer.id}
-                  />
-                )}
-              </div>
-            );
+            return renderOpponent(opp);
           })}
         </div>
       </div>

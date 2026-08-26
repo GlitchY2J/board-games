@@ -34,6 +34,120 @@
   padding-top: 60px;
 }
 
+/* Tables with more than four players keep readable cards and expose the full
+   table through horizontal scrolling instead of shrinking every seat. */
+@media (min-width: 901px) {
+  .board-layout.players-5,
+  .board-layout.players-6,
+  .board-layout.players-7,
+  .board-layout.players-8 {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .board-layout.players-5 .game-area,
+  .board-layout.players-6 .game-area {
+    min-width: 1500px;
+  }
+
+  .board-layout.players-7 .game-area,
+  .board-layout.players-8 .game-area {
+    min-width: 1800px;
+  }
+}
+
+/* Extra seats for larger tables. Side seats keep the center area clear while
+   still giving every player a stable, reviewable position. */
+.player-top .player-slot {
+  width: min(300px, 24vw);
+}
+
+.players-7 .player-top .player-slot,
+.players-8 .player-top .player-slot {
+  width: min(260px, 21vw);
+}
+
+.player-side {
+  position: absolute;
+  top: 50%;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(300px, 24vw);
+  transform: translateY(-50%);
+}
+
+.player-side-left {
+  left: 330px;
+}
+
+.player-side-right {
+  right: 330px;
+}
+
+.player-side .player-slot {
+  width: 100%;
+  min-width: 0;
+}
+
+.players-7 .player-side,
+.players-8 .player-side {
+  width: min(260px, 21vw);
+}
+
+.player-side .player-info-card {
+  min-height: 58px;
+}
+
+.player-side .player-info-card .truncate {
+  overflow: visible;
+  white-space: normal;
+  line-height: 1.15;
+}
+
+.player-side {
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.player-status-marquee {
+  display: block;
+  width: 130px;
+  max-width: 130px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.player-status-marquee > span {
+  display: inline-block;
+}
+
+.player-status-track {
+  display: flex !important;
+  width: max-content;
+  gap: 34px;
+  animation: playerStatusMarquee 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes playerStatusMarquee {
+  0%, 12% {
+    transform: translateX(0);
+  }
+  45%, 62% {
+    transform: translateX(calc(-50% - 17px));
+  }
+  88%, 100% {
+    transform: translateX(0);
+  }
+}
+
+.player-side .player-slot .player-info {
+  max-width: 100%;
+}
+
 .middle {
   flex: 1;
   position: relative;
@@ -157,17 +271,39 @@
 }
 
 .player-bottom {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px minmax(0, 1fr);
+  justify-items: center;
   align-items: flex-start;
   gap: 20px;
   padding-bottom: 188px;
 }
 
+.player-bottom .local-player-slot {
+  grid-column: 2;
+  width: 100%;
+}
+
+.players-7 .player-bottom .local-player-slot,
+.players-8 .player-bottom .local-player-slot {
+  width: 100%;
+}
+
+.players-7 .player-bottom,
+.players-8 .player-bottom {
+  grid-template-columns: minmax(0, 1fr) 260px minmax(0, 1fr);
+}
+
+.player-bottom > .player-slot:not(.local-player-slot) {
+  grid-column: 3;
+  justify-self: start;
+  width: min(300px, 100%);
+}
+
 .bottom-hand {
-  position: absolute;
+  position: fixed;
   bottom: -92px;
-  left: 50%;
+  left: 50vw;
   width: min(1200px, calc(100vw - 16px));
   transform: translateX(-50%);
   z-index: 20;
@@ -372,6 +508,61 @@
   transform: translateY(0);
 }
 
+/* Escritorio intermedio: preserve a clear central play area for deck/discard. */
+@media (min-width: 1025px) and (max-width: 1600px) {
+  .chat-side {
+    display: none;
+  }
+  .player-side,
+  .players-7 .player-side,
+  .players-8 .player-side {
+    width: 300px;
+  }
+  .player-side-left {
+    left: 40px;
+  }
+  .player-side-right {
+    right: 40px;
+  }
+  .turn-order-side {
+    display: none;
+  }
+  .player-top .player-slot {
+    width: 300px;
+  }
+  .player-bottom .local-player-slot,
+  .players-7 .player-bottom .local-player-slot,
+  .players-8 .player-bottom .local-player-slot {
+    width: 100%;
+  }
+  .players-7 .player-top .player-slot,
+  .players-8 .player-top .player-slot {
+    width: 300px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .player-bottom {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .player-bottom .local-player-slot,
+  .player-bottom > .player-slot:not(.local-player-slot) {
+    width: 300px;
+    max-width: 300px;
+    flex: 0 0 300px;
+  }
+  .players-7 .player-bottom .local-player-slot,
+  .players-8 .player-bottom .local-player-slot,
+  .players-7 .player-bottom > .player-slot:not(.local-player-slot),
+  .players-8 .player-bottom > .player-slot:not(.local-player-slot) {
+    width: 260px;
+    max-width: 260px;
+    flex-basis: 260px;
+  }
+}
+
 /* ───────── Tablet ≤ 1024px ───────── */
 @media (max-width: 1024px) {
   .game-area {
@@ -379,6 +570,7 @@
   }
   .player-top,
   .player-bottom {
+    display: flex;
     gap: 10px;
   }
   .player-top {
@@ -398,22 +590,115 @@
     width: 190px;
   }
   .chat-side {
-    right: 12px;
-    width: 220px;
+    display: none;
+  }
+  .player-side-left {
+    left: 260px;
+  }
+  .player-side-right {
+    right: 260px;
+  }
+  .player-side {
+    width: min(300px, 24vw);
+  }
+  .center-wrap {
+    padding-left: 230px;
+    padding-right: 230px;
+  }
+}
+
+/* ───────── Pantallas compactas ≤ 900px ───────── */
+@media (max-width: 900px) {
+  .player-top {
+    flex-wrap: wrap;
+    max-height: 168px;
+    overflow-y: auto;
+  }
+  .player-top .player-slot,
+  .players-7 .player-top .player-slot,
+  .players-8 .player-top .player-slot {
+    width: min(210px, 29vw);
+  }
+  .player-side,
+  .players-7 .player-side,
+  .players-8 .player-side {
+    width: min(190px, 23vw);
+  }
+  .player-side-left {
+    left: 8px;
+  }
+  .player-side-right {
+    right: 8px;
+  }
+  .center-wrap {
+    padding-left: 205px;
+    padding-right: 205px;
+  }
+  .turn-order-side {
+    display: none;
   }
 }
 
 /* ───────── Móvil ≤ 640px ───────── */
 @media (max-width: 640px) {
+  .board-layout {
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
   .game-area {
+    height: auto;
+    min-height: 100dvh;
     padding: 8px;
+    justify-content: flex-start;
+  }
+  .middle {
+    order: 2;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    width: 100%;
+    padding: 10px 0 14px;
+  }
+  .center-wrap {
+    order: 2;
+  }
+  .player-side {
+    position: static;
+    order: 1;
+    width: 100%;
+    max-width: 460px;
+    max-height: none;
+    flex-direction: column;
+    gap: 6px;
+    overflow: visible;
+    transform: none;
+  }
+  .player-side-left,
+  .player-side-right {
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+  }
+  .player-side .player-slot {
+    width: 100%;
+    min-width: 0;
+  }
+  .player-slot .player-info-card {
+    margin-top: 30px;
+  }
+  .turn-order-side {
+    display: none;
   }
   .player-top {
-    padding-top: 52px;
+    order: 1;
+    padding-top: 8px;
     gap: 6px;
-    align-items: flex-end;
+    align-items: center;
   }
   .player-bottom {
+    order: 3;
     gap: 6px;
     padding-bottom: 138px;
   }
@@ -422,6 +707,68 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
+  }
+  .player-bottom .local-player-slot {
+    order: 2;
+  }
+  .player-bottom > .player-slot:not(.local-player-slot) {
+    order: 1;
+  }
+  .player-top .player-slot {
+    width: 100%;
+  }
+  .player-side {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-width: none;
+    flex-direction: row;
+    overflow-x: auto;
+    max-height: 92px;
+    overflow-y: hidden;
+    transform: none;
+  }
+  .player-side-left,
+  .player-side-right {
+    left: 8px;
+    right: 8px;
+  }
+  .player-side-right {
+    top: auto;
+    bottom: 142px;
+  }
+  .player-side .player-slot {
+    min-width: 180px;
+  }
+  /* Keep every opponent in its own row on mobile. */
+  .player-side {
+    position: static;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: 100%;
+    max-width: 460px;
+    max-height: none;
+    flex-direction: column;
+    overflow: visible;
+  }
+  .player-side-left,
+  .player-side-right {
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+  }
+  .player-side .player-slot {
+    width: 100%;
+    min-width: 0;
+  }
+  .center-wrap {
+    padding-left: 0;
+    padding-right: 0;
   }
   .player-slot .player-info {
     max-width: 100%;
@@ -533,5 +880,130 @@
   .ctrl-button {
     width: 36px;
     height: 36px;
+  }
+}
+
+/* Any compact viewport uses one opponent per row; never create a horizontal
+   player carousel for the mobile/tablet game flow. */
+@media (max-width: 900px) {
+  .board-layout {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .game-area {
+    height: auto;
+    min-height: 100dvh;
+    justify-content: flex-start;
+  }
+  .player-top {
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    padding-top: 8px;
+  }
+  .player-top .player-slot,
+  .players-7 .player-top .player-slot,
+  .players-8 .player-top .player-slot {
+    width: min(100%, 460px);
+  }
+  .middle {
+    order: 2;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    width: 100%;
+  }
+  .player-side,
+  .players-7 .player-side,
+  .players-8 .player-side {
+    position: static;
+    order: 1;
+    width: min(100%, 460px);
+    max-width: 460px;
+    max-height: none;
+    flex-direction: column;
+    overflow: visible;
+    transform: none;
+  }
+  .player-side-left,
+  .player-side-right {
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+  }
+  .player-side .player-slot {
+    width: 100%;
+    min-width: 0;
+  }
+  .center-wrap {
+    order: 2;
+    width: 100%;
+    margin-top: 30px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .turn-order-side {
+    display: none;
+  }
+  .player-bottom {
+    order: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  .player-bottom .local-player-slot {
+    order: 2;
+  }
+  .player-bottom > .player-slot:not(.local-player-slot) {
+    order: 1;
+  }
+  .player-slot .player-info-card {
+    margin-top: 30px;
+  }
+  .player-bottom .local-player-slot {
+    width: min(100%, 460px);
+  }
+}
+
+/* Tablet portrait: keep the local card aligned with its board instead of
+   stretching it across the available viewport. */
+@media (min-width: 641px) and (max-width: 900px) {
+  .player-bottom {
+    align-items: center;
+  }
+  .player-bottom .local-player-slot {
+    width: min(100%, 460px) !important;
+    max-width: 460px !important;
+    flex: 0 1 460px;
+  }
+  .player-bottom .local-player-slot .player-info-card,
+  .player-bottom .local-player-slot .player-board {
+    width: 100% !important;
+    max-width: 480px !important;
+  }
+}
+
+/* Tablet landscape: match the local seat to the top player seats. */
+@media (min-width: 901px) and (max-width: 1024px) {
+  .player-bottom .local-player-slot {
+    width: 300px;
+    max-width: 300px;
+  }
+  .players-7 .player-bottom .local-player-slot,
+  .players-8 .player-bottom .local-player-slot {
+    width: 260px;
+    max-width: 260px;
+  }
+  .player-bottom .local-player-slot .player-info-card,
+  .player-bottom .local-player-slot .player-board {
+    width: 100%;
+    max-width: 100%;
   }
 }

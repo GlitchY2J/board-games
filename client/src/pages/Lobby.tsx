@@ -8,7 +8,7 @@ import type { GameDefinition, RoomSettings } from '../../../shared/types/GameDef
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
-import { Copy, Check, Users, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Copy, Check, Users, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2, Bot, Plus, X } from 'lucide-react';
 import LobbyChat from '../components/game/LobbyChat';
 
 export default function Lobby() {
@@ -196,6 +196,14 @@ export default function Lobby() {
     navigate('/');
   };
 
+  const handleAddDummy = () => {
+    if (room) socket.emit('add-dummy-player', room.code);
+  };
+
+  const handleRemoveDummy = (dummyId: string) => {
+    if (room) socket.emit('remove-dummy-player', { roomCode: room.code, playerId: dummyId });
+  };
+
   // Genera un gradiente sutil único para el avatar basado en el nombre del jugador
   const getAvatarGradient = (name: string) => {
     const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -304,22 +312,39 @@ export default function Lobby() {
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
         {/* Información de la sala */}
         <div className="space-y-6">
-          <section className="rounded-3xl border border-slate-800/70 bg-slate-950/25 p-5">
-            <div className="mb-4 flex items-center justify-between">
+          <section className="rounded-3xl border border-slate-800/70 bg-slate-950/25 p-6">
+            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Sala</p>
                 <h2 className="mt-1 text-lg font-bold text-slate-100">Jugadores conectados</h2>
               </div>
-              <span className="rounded-full border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs font-bold text-slate-400">
-                {availablePlayers.length} / {selectedGame?.maxPlayers ?? '—'}
-              </span>
+              <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <span className="rounded-full border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs font-bold text-slate-400">
+                  {availablePlayers.length} / {selectedGame?.maxPlayers ?? '—'}
+                </span>
+                {canEditSettings && (
+                  <button
+                    type="button"
+                    onClick={handleAddDummy}
+                    disabled={!selectedGame || playersInGame.length > 0 || availablePlayers.length >= selectedGame.maxPlayers}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-200 shadow-sm transition hover:border-slate-400 hover:bg-slate-700 hover:text-white disabled:cursor-not-allowed disabled:border-slate-800 disabled:bg-slate-900 disabled:text-slate-600"
+                    title={!selectedGame ? 'Selecciona un juego primero' : playersInGame.length > 0 ? 'La partida ya comenzó' : 'Agregar jugador dummy'}
+                  >
+                    <Plus size={13} />
+                    <Bot size={13} />
+                    {selectedGame && availablePlayers.length >= selectedGame.maxPlayers && (
+                      <span className="sr-only">Sala llena</span>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
             {connectedPlayers.map((player) => (
               <div
                 key={player.id}
-                className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/30 border border-slate-800/40 hover:border-slate-800 transition-all"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-800/40 bg-slate-900/30 p-4 transition-all hover:border-slate-700"
               >
                 <div className="flex items-center gap-3">
                   {player.avatar ? (
@@ -353,7 +378,7 @@ export default function Lobby() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   {player.id === room.hostId && (
                     <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold uppercase">
                       <Crown size={10} />
@@ -365,6 +390,16 @@ export default function Lobby() {
                       ? 'bg-amber-400 shadow-amber-400/50'
                       : 'bg-emerald-500 shadow-emerald-500/50'
                   }`}></span>
+                  {canEditSettings && player.isDummy && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDummy(player.id)}
+                      className="rounded-lg p-1 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"
+                      title="Quitar jugador dummy"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

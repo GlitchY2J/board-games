@@ -4,4 +4,5 @@ export interface PublicPlayer {
   inGame: boolean;
   name: string;
   avatar: string;
+  isDummy?: boolean;
 }
