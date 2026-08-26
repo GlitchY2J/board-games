@@ -67,6 +67,12 @@
   width: var(--hand-card-width, 148px);
 }
 
+@media (max-width: 1024px) {
+  .card-fan-many .playing-card.large {
+    width: min(var(--hand-card-width, 148px), 112px);
+  }
+}
+
 .fan-card:hover {
   transform: translateY(-35px) scale(1.12) !important;
   z-index: 999;

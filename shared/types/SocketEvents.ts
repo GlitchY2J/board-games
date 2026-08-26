@@ -250,6 +250,7 @@ export interface ClientToServerEvents {
   'update-room-settings': (payload: UpdateRoomSettingsPayload) => void;
   'add-dummy-player': (roomCode: string) => void;
   'remove-dummy-player': (payload: { roomCode: string; playerId: string }) => void;
+  'toggle-spectator': (roomCode: string) => void;
 
   // Start Game
   'start-game': (roomCode: string) => void;

@@ -5,4 +5,5 @@ export interface PublicPlayer {
   name: string;
   avatar: string;
   isDummy?: boolean;
+  isSpectator?: boolean;
 }

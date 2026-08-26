@@ -5,10 +5,11 @@ import { useGame } from '../context/useGame';
 import { getGame, getGames } from '../services/api';
 import type { PublicRoom as Room } from '../../../shared/types/PublicRoom.ts';
 import type { GameDefinition, RoomSettings } from '../../../shared/types/GameDefinition.ts';
+import type { GameState } from '../../../shared/types/Game.ts';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
-import { Copy, Check, Users, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2, Bot, Plus, X } from 'lucide-react';
+import { Copy, Check, Users, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2, Bot, Plus, X, Eye, EyeOff } from 'lucide-react';
 import LobbyChat from '../components/game/LobbyChat';
 
 export default function Lobby() {
@@ -96,13 +97,24 @@ export default function Lobby() {
       navigate('/starting', { state: { turnOrder: players } });
     };
 
+    const onSpectatorGameStarted = (state: GameState) => {
+      const currentPlayer = roomRef.current?.players.find((player) => player.id === playerId);
+      if (currentPlayer?.isSpectator) {
+        navigate('/game', { state: { gameState: state } });
+      }
+    };
+
     socket.on('room-updated', onRoomUpdated);
     socket.on('turn-order-assigned', onTurnOrderAssigned);
+    socket.on('game-started', onSpectatorGameStarted);
+    socket.on('game-restarted', onSpectatorGameStarted);
 
     return () => {
       socket.off('connect', emitJoinRoom);
       socket.off('room-updated', onRoomUpdated);
       socket.off('turn-order-assigned', onTurnOrderAssigned);
+      socket.off('game-started', onSpectatorGameStarted);
+      socket.off('game-restarted', onSpectatorGameStarted);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -204,6 +216,10 @@ export default function Lobby() {
     if (room) socket.emit('remove-dummy-player', { roomCode: room.code, playerId: dummyId });
   };
 
+  const handleToggleSpectator = () => {
+    if (room) socket.emit('toggle-spectator', room.code);
+  };
+
   // Genera un gradiente sutil único para el avatar basado en el nombre del jugador
   const getAvatarGradient = (name: string) => {
     const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -228,7 +244,7 @@ export default function Lobby() {
 
   const connectedPlayers = room.players.filter((p) => p.connected);
   const playersInGame = connectedPlayers.filter((player) => player.inGame);
-  const availablePlayers = connectedPlayers.filter((player) => !player.inGame);
+  const availablePlayers = connectedPlayers.filter((player) => !player.inGame && !player.isSpectator);
   const roomSettings = getRoomSettings();
   const selectedGame = games.find((game) => game.id === roomSettings.gameId);
   const selectedVersion = selectedGame?.versions.find(
@@ -368,9 +384,11 @@ export default function Lobby() {
                     <span className="text-sm font-bold text-slate-200 block">
                       {player.name} {player.id === playerId && '(tú)'}
                     </span>
-                    <span className={`text-[10px] block mt-0.5 ${player.inGame ? 'text-amber-400' : 'text-slate-400'}`}>
+                    <span className={`text-[10px] block mt-0.5 ${player.inGame ? 'text-amber-400' : player.isSpectator ? 'text-cyan-300' : 'text-slate-400'}`}>
                       {player.inGame
                         ? 'En partida...'
+                        : player.isSpectator
+                          ? 'Espectador'
                         : player.id === room.hostId
                           ? 'Creador de la sala'
                           : 'Disponible'}
@@ -398,6 +416,16 @@ export default function Lobby() {
                       title="Quitar jugador dummy"
                     >
                       <X size={13} />
+                    </button>
+                  )}
+                  {player.id === playerId && !player.inGame && (
+                    <button
+                      type="button"
+                      onClick={handleToggleSpectator}
+                      className={`rounded-lg p-1.5 transition ${player.isSpectator ? 'bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400/20' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-200'}`}
+                      title={player.isSpectator ? 'Volver a jugar' : 'Elegir ser espectador'}
+                    >
+                      {player.isSpectator ? <EyeOff size={13} /> : <Eye size={13} />}
                     </button>
                   )}
                 </div>

@@ -282,6 +282,9 @@ export default function Game() {
   const activePlayer = gameState?.players[gameState.currentPlayer];
   const localPlayer = gameState?.players.find((p) => p.socketId === socket.id);
   const isMyTurn = !!activePlayer && activePlayer.socketId === socket.id;
+  const isSpectatorPlayer = roomFromContext?.players.some(
+    (player) => player.id === contextPlayerId && player.isSpectator,
+  ) ?? false;
 
   useEffect(() => {
     if (!gameState) return;
@@ -289,10 +292,10 @@ export default function Game() {
     const isEliminated = gameState.eliminatedPlayers?.some(
       (player) => player.id === contextPlayerId,
     );
-    if (!local && !isEliminated && !leavingToLobbyRef.current) {
+    if (!local && !isEliminated && !isSpectatorPlayer && !leavingToLobbyRef.current) {
       deactivate();
     }
-  }, [contextPlayerId, gameState, deactivate]);
+  }, [contextPlayerId, gameState, deactivate, isSpectatorPlayer]);
 
   // Ejecutar automáticamente los efectos de inicio de turno después del anuncio de turno
   useEffect(() => {
@@ -324,8 +327,91 @@ export default function Game() {
   const restartTotalPlayers = roomFromContext
     ? roomFromContext.players.filter((player) => victoryPlayerIds.has(player.id)).length
     : victoryPlayerIds.size;
+  const effectViewerId = localPlayer?.id ?? contextPlayerId ?? '';
+  const renderTransientEffects = () => (
+    <>
+      {turnAnnounce && (
+        <TurnAnnouncement
+          key={`${turnAnnounce.turn}-${turnAnnounce.currentPlayer}`}
+          playerName={turnAnnounce.name}
+          isActivePlayer={turnAnnounce.isActivePlayer}
+        />
+      )}
+      {removalAnims.map(({ animation, rect }) => (
+        <CardRemovalAnimation
+          key={animation.animId}
+          animation={animation}
+          rect={rect}
+          onDone={() => removeRemovalAnim(animation.animId)}
+        />
+      ))}
+      {neighAnims.length > 0 && (
+        <NeighAnnouncement
+          key={neighAnims[0].animId}
+          animation={neighAnims[0]}
+          onDone={() => removeNeighAnim(neighAnims[0].animId)}
+        />
+      )}
+      {drawAnims.map((animation) => (
+        <CardDrawEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={effectViewerId}
+          onDone={() => removeDrawAnim(animation.animId)}
+        />
+      ))}
+      {stealAnims.map((animation) => (
+        <CardStealEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={effectViewerId}
+          onDone={() => removeStealAnim(animation.animId)}
+        />
+      ))}
+      {discardAnims.map((animation) => (
+        <CardDiscardEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={effectViewerId}
+          onDone={() => removeDiscardAnim(animation.animId)}
+        />
+      ))}
+      {playAnims.map((animation) => (
+        <CardPlayEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={effectViewerId}
+          onDone={() => removePlayAnim(animation.animId)}
+        />
+      ))}
+      {shuffleAnims.map((animation) => (
+        <ShuffleDeckEffect
+          key={animation.animId}
+          animation={animation}
+          onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
+        />
+      ))}
+    </>
+  );
 
   if (!localPlayer) {
+    if (isSpectatorPlayer) {
+      return (
+        <>
+          <BoardLayout
+            gameState={gameState}
+            gameId={gameId}
+            isMyTurn={false}
+            isHost={false}
+            onPlay={() => undefined}
+            spectator
+            onLeaveLobby={leaveToLobby}
+          />
+          {renderTransientEffects()}
+        </>
+      );
+    }
+
     const eliminated = gameState.eliminatedPlayers?.find(
       (player) => player.id === contextPlayerId,
     );
@@ -510,67 +596,7 @@ export default function Game() {
           isRestartReady={gs.restartReadyPlayerIds?.includes(localPlayer.id) ?? false}
         />
       )}
-      {turnAnnounce && (
-        <TurnAnnouncement
-          key={`${turnAnnounce.turn}-${turnAnnounce.currentPlayer}`}
-          playerName={turnAnnounce.name}
-          isActivePlayer={turnAnnounce.isActivePlayer}
-        />
-      )}
-      {removalAnims.map(({ animation, rect }) => (
-        <CardRemovalAnimation
-          key={animation.animId}
-          animation={animation}
-          rect={rect}
-          onDone={() => removeRemovalAnim(animation.animId)}
-        />
-      ))}
-      {neighAnims.length > 0 && (
-        <NeighAnnouncement
-          key={neighAnims[0].animId}
-          animation={neighAnims[0]}
-          onDone={() => removeNeighAnim(neighAnims[0].animId)}
-        />
-      )}
-      {drawAnims.map((animation) => (
-        <CardDrawEffect
-          key={animation.animId}
-          animation={animation}
-          localPlayerId={localPlayer.id}
-          onDone={() => removeDrawAnim(animation.animId)}
-        />
-      ))}
-      {stealAnims.map((animation) => (
-        <CardStealEffect
-          key={animation.animId}
-          animation={animation}
-          localPlayerId={localPlayer.id}
-          onDone={() => removeStealAnim(animation.animId)}
-        />
-      ))}
-      {discardAnims.map((animation) => (
-        <CardDiscardEffect
-          key={animation.animId}
-          animation={animation}
-          localPlayerId={localPlayer.id}
-          onDone={() => removeDiscardAnim(animation.animId)}
-        />
-      ))}
-      {playAnims.map((animation) => (
-        <CardPlayEffect
-          key={animation.animId}
-          animation={animation}
-          localPlayerId={localPlayer.id}
-          onDone={() => removePlayAnim(animation.animId)}
-        />
-      ))}
-      {shuffleAnims.map((animation) => (
-        <ShuffleDeckEffect
-          key={animation.animId}
-          animation={animation}
-          onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
-        />
-      ))}
+      {renderTransientEffects()}
     </>
   );
 }

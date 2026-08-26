@@ -35,6 +35,10 @@ function isExplodingKittensRoom(room: Room): boolean {
   return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
 }
 
+function playablePlayers(room: Room) {
+  return room.players.filter((player) => !player.isSpectator);
+}
+
 function isReactionEffect(effect: string | null, explodingKittens: boolean): boolean {
   return (
     effect === 'neigh' ||
@@ -409,15 +413,19 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
     if (!validateRoomConfiguration(socket, room, 'start-game')) return;
 
     // Asignar el orden de turnos al azar
-    room.players = shuffleArray(room.players);
+    const players = shuffleArray(playablePlayers(room));
 
-    const order = room.players.map((p) => ({
+    const order = players.map((p) => ({
       id: p.id,
       name: p.name,
       avatar: p.avatar,
     }));
 
-    io.to(room.code).emit('turn-order-assigned', order);
+    for (const candidate of players) {
+      if (candidate.socketId) {
+        io.to(candidate.socketId).emit('turn-order-assigned', order);
+      }
+    }
 
     console.log(`Orden de turnos asignado en ${room.code}:`, order.map((p) => p.name));
   });
@@ -466,7 +474,7 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    room.gameState = engine.createState(room);
+    room.gameState = engine.createState({ ...room, players: playablePlayers(room) });
 
     addLog(room.gameState, 'Partida iniciada');
 
@@ -539,7 +547,9 @@ function validateRoomConfiguration(
     return false;
   }
 
-  const connectedPlayers = room.players.filter((player) => player.connected).length;
+  const connectedPlayers = room.players.filter(
+    (player) => player.connected && !player.isSpectator,
+  ).length;
   if (connectedPlayers < game.minPlayers) {
     emitGameError(
       socket,
@@ -1167,15 +1177,19 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    room.players = shuffleArray(room.players);
+    const players = shuffleArray(playablePlayers(room));
 
-    const order = room.players.map((p) => ({
+    const order = players.map((p) => ({
       id: p.id,
       name: p.name,
       avatar: p.avatar,
     }));
 
-    io.to(room.code).emit('turn-order-assigned', order);
+    for (const candidate of players) {
+      if (candidate.socketId) {
+        io.to(candidate.socketId).emit('turn-order-assigned', order);
+      }
+    }
 
     console.log(`Nuevo orden de turnos asignado para reinicio en ${roomCode}`);
   });

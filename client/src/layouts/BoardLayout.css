@@ -279,6 +279,32 @@
   padding-bottom: 188px;
 }
 
+.spectator-result {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  padding: 9px 16px;
+  border: 1px solid rgba(203, 213, 225, 0.2);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+.spectator-result strong {
+  color: #e5e7eb;
+}
+
 .player-bottom .local-player-slot {
   grid-column: 2;
   width: 100%;
@@ -524,9 +550,6 @@
   .player-side-right {
     right: 40px;
   }
-  .turn-order-side {
-    display: none;
-  }
   .player-top .player-slot {
     width: 300px;
   }
@@ -572,6 +595,9 @@
   .player-bottom {
     display: flex;
     gap: 10px;
+  }
+  .player-bottom {
+    justify-content: center;
   }
   .player-top {
     padding-top: 52px;
@@ -792,13 +818,7 @@
     padding: 14px !important;
   }
   .turn-order-side {
-    display: block;
-    top: 50%;
-    left: 8px;
-    width: 38px;
-    max-width: 38px;
-    transform: translateY(-50%);
-    z-index: 20;
+    display: none;
   }
   .chat-side {
     display: none;
@@ -889,6 +909,12 @@
   .board-layout {
     overflow-x: hidden;
     overflow-y: auto;
+  }
+  .spectator-result {
+    top: 16px;
+    max-width: calc(100vw - 120px);
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .game-area {
     height: auto;
@@ -1005,5 +1031,37 @@
   .player-bottom .local-player-slot .player-board {
     width: 100%;
     max-width: 100%;
+  }
+}
+
+@media (min-width: 720px) and (max-width: 900px) {
+  .turn-order-side {
+    display: block;
+    left: 8px;
+    width: 190px;
+    max-width: 190px;
+  }
+}
+
+/* Keep the compact table closer to the player's hand on short-width screens. */
+@media (max-width: 768px) {
+  .game-area {
+    padding-top: 76px;
+  }
+
+  /* Do not leave a large vertical gap between a player's board and the next
+     PlayerInfo card in the compact stacked layout. */
+  .player-slot .player-info-card {
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .mobile-chat-toggle {
+    bottom: 24px;
+  }
+
+  .mobile-chat-panel {
+    top: 58%;
   }
 }

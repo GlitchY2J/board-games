@@ -52,9 +52,9 @@ export default function BoardLayout({
   const [playerNotification, setPlayerNotification] = useState<string | null>(
     null,
   );
-  const localPlayer =
-    gameState.players.find((p) => p.socketId === socket.id) ??
-    (spectator ? gameState.players[0] : undefined);
+  const localPlayer = spectator
+    ? undefined
+    : gameState.players.find((p) => p.socketId === socket.id);
   const cardSelectedRef = useRef(false);
   const notificationTimerRef = useRef<number | null>(null);
 
@@ -116,7 +116,12 @@ export default function BoardLayout({
     return () => window.removeEventListener('keydown', onMobileChatShortcut);
   }, [mobileChatOpen]);
 
-  const opponents = gameState.players.filter((P) => P.id !== localPlayer?.id);
+  // Keep the same seat map as a regular player. For spectators, the last
+  // participant occupies the local seat visually, while remaining passive.
+  const layoutLocalPlayer = spectator
+    ? gameState.players[gameState.players.length - 1]
+    : localPlayer;
+  const opponents = gameState.players.filter((P) => P.id !== layoutLocalPlayer?.id);
   const totalPlayers = gameState.players.length;
   const activePlayer = gameState.players[gameState.currentPlayer];
   const isActivePlayer = activePlayer?.socketId === socket.id;
@@ -173,6 +178,7 @@ export default function BoardLayout({
             : totalPlayers === 4
               ? ['top', 'top', 'bottom']
               : ['top', 'top'];
+  const seatPositions = positions;
   const localPlayerId = localPlayer?.id ?? '';
 
   const renderOpponent = (opp: (typeof opponents)[number]) => (
@@ -266,26 +272,30 @@ export default function BoardLayout({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isMyTurn, gameState, localPlayerId]);
 
-  if (!localPlayer) return null;
+  if (!localPlayer && !spectator) return null;
+  const winner = gameState.winnerId
+    ? gameState.players.find((player) => player.id === gameState.winnerId)
+      ?? (gameState.winnerName ? { name: gameState.winnerName } : undefined)
+    : undefined;
 
   return (
     <div className={`board-layout players-${Math.min(totalPlayers, 8)} ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}>
       <div className="game-area">
         <div className="player-top">
-          {opponents.filter((opp) => positions[opponents.indexOf(opp)] === 'top').map(renderOpponent)}
+          {opponents.filter((opp) => seatPositions[opponents.indexOf(opp)] === 'top').map(renderOpponent)}
         </div>
 
         <div className="middle">
           <div className="turn-order-side">
-            <TurnOrder gameState={gameState} localPlayerId={localPlayer.id} />
+            <TurnOrder gameState={gameState} localPlayerId={localPlayerId} />
           </div>
 
           <div className="player-side player-side-left">
-            {opponents.filter((opp) => positions[opponents.indexOf(opp)] === 'left').map(renderOpponent)}
+             {opponents.filter((opp) => seatPositions[opponents.indexOf(opp)] === 'left').map(renderOpponent)}
           </div>
 
           <div className="player-side player-side-right">
-            {opponents.filter((opp) => positions[opponents.indexOf(opp)] === 'right').map(renderOpponent)}
+             {opponents.filter((opp) => seatPositions[opponents.indexOf(opp)] === 'right').map(renderOpponent)}
           </div>
 
           <div className="center-wrap">
@@ -295,7 +305,7 @@ export default function BoardLayout({
                   <CenterArea
                     gameState={gameState}
                     isMyTurn={isMyTurn}
-                    localPlayerId={localPlayer.id}
+                    localPlayerId={localPlayerId}
                     gameId={gameId}
                   />
 
@@ -333,68 +343,77 @@ export default function BoardLayout({
         </div>
 
         <div className="player-bottom">
-          <div
+          {layoutLocalPlayer && <div
             className="player-slot local-player-slot flex-col items-center gap-2"
-            data-player-id={localPlayer.id}
+            data-player-id={layoutLocalPlayer.id}
           >
             {playerNotification && (
               <PlayerNotification message={playerNotification} />
             )}
 
             <PlayerInfo
-              player={localPlayer}
-              isActive={isMyTurn}
-              status={getPlayerStatus(gameState, localPlayer.id, gameId)}
-              localPlayerId={localPlayer.id}
+              player={layoutLocalPlayer}
+              isActive={layoutLocalPlayer.id === activePlayer?.id}
+              status={getPlayerStatus(gameState, layoutLocalPlayer.id, gameId)}
+              localPlayerId={localPlayerId}
               gameId={gameId}
-              turnsRemaining={isMyTurn ? gameState.turnsRemaining : 0}
+              turnsRemaining={layoutLocalPlayer.id === activePlayer?.id ? gameState.turnsRemaining : 0}
               isHost={isHost}
               roomCode={gameState.roomCode}
             />
 
             {showPlayerBoards && (
                 <PlayerBoard
-                  player={localPlayer}
+                  player={layoutLocalPlayer}
                   isLocalPlayer={!spectator}
-                  isMyTurn={isMyTurn && !spectator}
+                  isMyTurn={layoutLocalPlayer.id === activePlayer?.id && !spectator}
               />
             )}
-          </div>
+          </div>}
 
           {opponents.map((opp) => {
-            const position = positions[opponents.indexOf(opp)];
+             const position = seatPositions[opponents.indexOf(opp)];
             if (position !== 'bottom') return null;
             return renderOpponent(opp);
           })}
         </div>
       </div>
 
+      {spectator && winner && (
+        <div className="spectator-result" role="status">
+          <span>Partida terminada</span>
+          <strong>{winner.name} ganó</strong>
+        </div>
+      )}
+
       {!spectator && (
         <GameOverlay
           gameState={gameState}
-          localPlayerId={localPlayer.id}
+          localPlayerId={localPlayerId}
           hide={hidePendingPlay}
         />
       )}
 
       <PendingPlayOverlay
         gameState={gameState}
-        localPlayerId={spectator ? '' : localPlayer.id}
+        localPlayerId={spectator ? '' : localPlayerId}
         gameId={gameId}
         hide={hidePendingPlay}
         spectator={spectator}
       />
 
       <div className="corner-controls">
-        <button
-          className="room-code-display"
-          title="Copiar código de sala"
-          onClick={copyRoomCode}
-        >
-          <span className="room-code-label">Sala</span>
-          <strong>{gameState.roomCode}</strong>
-          {roomCodeCopied ? <Check size={14} /> : <Copy size={14} />}
-        </button>
+        {!spectator && (
+          <button
+            className="room-code-display"
+            title="Copiar código de sala"
+            onClick={copyRoomCode}
+          >
+            <span className="room-code-label">Sala</span>
+            <strong>{gameState.roomCode}</strong>
+            {roomCodeCopied ? <Check size={14} /> : <Copy size={14} />}
+          </button>
+        )}
 
         {gameId !== 'exploding-kittens' && (
           <button
@@ -482,7 +501,7 @@ export default function BoardLayout({
         </div>
       )}
 
-      {(showPhases || gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens') && (
+      {!spectator && (showPhases || gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens') && (
         <>
           <div className="phase-panel-anchor">
             <PhasePanel gameState={gameState} showRoundPhase={showPhases} />
@@ -499,7 +518,7 @@ export default function BoardLayout({
       {!spectator && (
         <div className="bottom-hand" data-hand>
           <PlayerHand
-            player={localPlayer}
+            player={localPlayer!}
             isLocalPlayer
             isMyTurn={isMyTurn}
             gamePhase={showPhases ? gameState.phase : 'ACTION'}

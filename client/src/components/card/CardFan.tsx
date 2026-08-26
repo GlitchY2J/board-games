@@ -196,7 +196,7 @@ export default function CardFan({
       <div className="card-fan-wrap">
         <div
           ref={fanRef}
-          className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}`}
+          className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}${cards.length > 10 ? ' card-fan-many' : ''}`}
           style={{
             '--hand-card-width': `${cardWidth}px`,
             '--hand-card-overlap': `-${overlap}px`,

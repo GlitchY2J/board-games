@@ -12,4 +12,5 @@ export interface Player {
   upgrades: Card[];
   downgrades: Card[];
   isDummy?: boolean;
+  isSpectator?: boolean;
 }

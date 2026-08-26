@@ -71,6 +71,15 @@ function removePlayerFromGame(room: Room, playerId: string): boolean {
 }
 
 export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
+  socket.on('toggle-spectator', (roomCode) => {
+    const room = roomManager.getRoom(roomCode);
+    const player = room?.players.find((candidate) => candidate.socketId === socket.id);
+    if (!room || !player || room.gameState?.started) return;
+
+    player.isSpectator = !player.isSpectator;
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
+  });
+
   socket.on('add-dummy-player', (roomCode) => {
     const room = roomManager.getRoom(roomCode);
     const host = room?.players.find((player) => player.socketId === socket.id);
@@ -202,13 +211,15 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
 
     // Los jugadores eliminados ya no están en gameState.players, pero siguen
     // siendo miembros de la sala y deben poder salir desde el Winner Screen.
-    room.gameState.restartReadyPlayerIds = room.gameState.restartReadyPlayerIds?.filter(
-      (id) => id !== player.id,
-    );
-    room.gameState.eliminatedPlayers = room.gameState.eliminatedPlayers?.filter(
-      (candidate) => candidate.id !== player.id,
-    );
-    removePlayerFromGame(room, player.id);
+    if (!player.isSpectator) {
+      room.gameState.restartReadyPlayerIds = room.gameState.restartReadyPlayerIds?.filter(
+        (id) => id !== player.id,
+      );
+      room.gameState.eliminatedPlayers = room.gameState.eliminatedPlayers?.filter(
+        (candidate) => candidate.id !== player.id,
+      );
+      removePlayerFromGame(room, player.id);
+    }
 
     if (room.gameState?.players.length === 0 && !room.gameState.winnerId) {
       room.gameState = undefined;
