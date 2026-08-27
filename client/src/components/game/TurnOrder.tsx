@@ -73,16 +73,12 @@ export default function TurnOrder({ gameState, localPlayerId }: Props) {
               <span
                 className={cn(
                   'turn-order-name truncate',
+                  isLocal && 'turn-order-local',
                   isCurrent ? 'text-emerald-400 font-bold' : 'text-slate-300/80',
                 )}
               >
                 {player.name}
               </span>
-              {isLocal && (
-                <span className="text-[10px] font-bold text-cyan-400/80 ml-1">
-                  (Tú)
-                </span>
-              )}
             </div>
           </motion.div>
         );

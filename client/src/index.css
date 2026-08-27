@@ -194,6 +194,70 @@ html[data-platform-theme] .pending-accept-btn {
   color: #08111f;
 }
 
+html[data-platform-theme] .card-select-cancel {
+  background: var(--platform-surface-solid) !important;
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .card-select-cancel:hover {
+  background: color-mix(in srgb, var(--platform-accent) 16%, var(--platform-surface-solid)) !important;
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .card-selection-window,
+html[data-platform-theme] .pending-play-window,
+html[data-platform-theme] .leave-confirm-card,
+html[data-platform-theme] .victory-window {
+  background: var(--platform-surface-solid) !important;
+}
+
+html[data-platform-theme] .card-selection-window h2,
+html[data-platform-theme] .selection-title,
+html[data-platform-theme] .pending-play-title,
+html[data-platform-theme] .victory-title {
+  background: linear-gradient(135deg, var(--platform-accent-strong), var(--platform-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html[data-platform-theme] .card-selection-window p,
+html[data-platform-theme] .selection-subtitle,
+html[data-platform-theme] .pending-play-subtitle,
+html[data-platform-theme] .victory-text,
+html[data-platform-theme] .victory-waiting {
+  color: color-mix(in srgb, var(--platform-accent-strong) 58%, #94a3b8) !important;
+}
+
+html[data-platform-theme] .selection-card-content,
+html[data-platform-theme] .selection-list-item,
+html[data-platform-theme] .pending-play-target {
+  background-color: color-mix(in srgb, var(--platform-surface) 86%, transparent) !important;
+}
+
+html[data-platform-theme] .selection-card.selected {
+  outline-color: var(--platform-accent) !important;
+  box-shadow: none !important;
+}
+
+html[data-platform-theme] .selection-badge {
+  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong)) !important;
+  color: #08111f !important;
+  box-shadow: none !important;
+}
+
+html[data-platform-theme] .draw-hint {
+  background-color: var(--platform-surface-solid) !important;
+  border-color: transparent !important;
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .space-key {
+  background-color: var(--platform-glow) !important;
+  border-color: transparent !important;
+  color: var(--platform-accent-strong) !important;
+}
+
 html[data-platform-theme] .turn-order-row-active {
   background: color-mix(in srgb, var(--platform-active) 88%, var(--platform-accent));
   border-color: var(--platform-accent) !important;
@@ -230,9 +294,20 @@ html[data-platform-theme] .turn-order-row-idle .bg-slate-700 {
   background-color: color-mix(in srgb, var(--platform-accent) 18%, var(--platform-surface-solid)) !important;
 }
 
+html[data-platform-theme] .card-hotkey,
+html[data-platform-theme] .deck-count-badge {
+  background-color: var(--platform-surface-solid) !important;
+  border-color: var(--platform-border) !important;
+  color: var(--platform-accent-strong) !important;
+}
+
 html[data-platform-theme] .turn-order-row-idle .turn-order-name,
 html[data-platform-theme] .turn-order-eliminated-title {
   color: color-mix(in srgb, var(--platform-accent-strong) 55%, #94a3b8) !important;
+}
+
+html[data-platform-theme] .turn-order-local {
+  color: var(--platform-accent-strong) !important;
 }
 
 html[data-platform-theme] .turn-shuffle-card {
@@ -409,6 +484,10 @@ html[data-platform-theme] .lobby-themed-page [class*='to-cyan-'] {
 
 html[data-platform-theme] .lobby-themed-page [class*='text-slate-'] {
   color: color-mix(in srgb, var(--platform-accent-strong) 58%, #94a3b8) !important;
+}
+
+html[data-platform-theme] .lobby-themed-page button.glow-btn-emerald {
+  color: #080808 !important;
 }
 
 html[data-platform-theme='midnight'] .platform-shell {

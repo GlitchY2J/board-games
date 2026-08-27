@@ -134,7 +134,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
           >
             <X size={14} />
           </button>
-          {showRoundPhase && <div className="w-full px-4 py-1.5 rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 flex items-center justify-center gap-3 relative">
+          {showRoundPhase && <div className="phase-round-summary w-full px-4 py-1.5 rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 flex items-center justify-center gap-3 relative">
               <>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Ronda{' '}
@@ -150,7 +150,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
                 </span>
               </>
             </div>}
-            <div className="w-full rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 overflow-hidden">
+            <div className="phase-history w-full rounded-xl glass-panel bg-slate-950/20 border border-slate-900/60 overflow-hidden">
               <div className="px-4 py-2 border-b border-slate-900/60 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
                 Historial
               </div>

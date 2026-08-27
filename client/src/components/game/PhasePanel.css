@@ -52,6 +52,10 @@
   animation: phasePanelExpand 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.phase-history {
+  margin-top: 10px;
+}
+
 .phase-panel-close {
   position: absolute;
   top: 6px;
