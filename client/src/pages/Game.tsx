@@ -162,7 +162,7 @@ export default function Game() {
     };
     const onKickedFromRoom = () => {
       deactivate();
-      navigate('/lobby');
+      navigate('/');
     };
     const onGameTerminated = () => {
       navigate('/lobby');

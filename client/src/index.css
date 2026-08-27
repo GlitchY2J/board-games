@@ -554,6 +554,40 @@ html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
   color: var(--platform-accent-strong) !important;
 }
 
+.lobby-player-menu {
+  position: fixed !important;
+  background-color: rgb(15 23 42);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.lobby-player-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 11px;
+  text-align: left;
+}
+
+.lobby-player-menu button:hover {
+  background-color: rgb(51 65 85 / 0.7);
+  color: #f8fafc;
+}
+
+html[data-platform-theme] .lobby-player-menu {
+  background-color: var(--platform-surface-solid) !important;
+}
+
+html[data-platform-theme] .lobby-player-menu button {
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .lobby-player-menu button:hover {
+  background-color: color-mix(in srgb, var(--platform-accent) 16%, var(--platform-surface-solid)) !important;
+}
+
 html[data-platform-theme='midnight'] .platform-shell {
   background-color: #050b1c;
   background-image: linear-gradient(135deg, rgba(5, 11, 28, 0.96), rgba(15, 23, 42, 0.96));

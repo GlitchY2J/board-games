@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { socket } from '../services/socket';
 import { useGame } from '../context/useGame';
 import { getGame, getGames } from '../services/api';
@@ -9,7 +10,7 @@ import type { GameState } from '../../../shared/types/Game.ts';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
-import { Copy, Check, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2, Bot, Plus, X } from 'lucide-react';
+import { Copy, Check, Crown, Loader2, ArrowLeft, Sparkles, ChevronDown, CheckCircle2, Bot, Plus, MoreVertical } from 'lucide-react';
 import LobbyChat from '../components/game/LobbyChat';
 
 export default function Lobby() {
@@ -39,6 +40,8 @@ export default function Lobby() {
   const [catalogError, setCatalogError] = useState('');
   const [versionMenuOpen, setVersionMenuOpen] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [openPlayerMenuId, setOpenPlayerMenuId] = useState<string | null>(null);
+  const [playerMenuPosition, setPlayerMenuPosition] = useState<{ top: number; left: number } | null>(null);
 
   const roomRef = useRef(room);
   useEffect(() => {
@@ -103,18 +106,24 @@ export default function Lobby() {
         navigate('/game', { state: { gameState: state } });
       }
     };
+    const onKickedFromRoom = () => {
+      deactivate();
+      navigate('/');
+    };
 
     socket.on('room-updated', onRoomUpdated);
     socket.on('turn-order-assigned', onTurnOrderAssigned);
     socket.on('game-started', onSpectatorGameStarted);
     socket.on('game-restarted', onSpectatorGameStarted);
+    socket.on('kicked-from-room', onKickedFromRoom);
 
     return () => {
       socket.off('connect', emitJoinRoom);
       socket.off('room-updated', onRoomUpdated);
       socket.off('turn-order-assigned', onTurnOrderAssigned);
-      socket.off('game-started', onSpectatorGameStarted);
-      socket.off('game-restarted', onSpectatorGameStarted);
+    socket.off('game-started', onSpectatorGameStarted);
+    socket.off('game-restarted', onSpectatorGameStarted);
+    socket.off('kicked-from-room', onKickedFromRoom);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -212,8 +221,16 @@ export default function Lobby() {
     if (room) socket.emit('add-dummy-player', room.code);
   };
 
-  const handleRemoveDummy = (dummyId: string) => {
-    if (room) socket.emit('remove-dummy-player', { roomCode: room.code, playerId: dummyId });
+  const handleKickPlayer = (targetPlayerId: string) => {
+    if (!room) return;
+    socket.emit('kick-player', { roomCode: room.code, playerId: targetPlayerId });
+    setOpenPlayerMenuId(null);
+  };
+
+  const handleTransferHost = (targetPlayerId: string) => {
+    if (!room) return;
+    socket.emit('transfer-host', { roomCode: room.code, playerId: targetPlayerId });
+    setOpenPlayerMenuId(null);
   };
 
   const handleToggleSpectator = () => {
@@ -286,6 +303,20 @@ export default function Lobby() {
 
   return (
     <div className="platform-flat-page lobby-themed-page page-scroll w-full flex items-start justify-center p-6 relative">
+      {openPlayerMenuId && playerMenuPosition && createPortal(
+        <div
+          className="lobby-player-menu fixed z-50 w-36 rounded-xl p-1 shadow-xl"
+          style={{ top: playerMenuPosition.top, left: playerMenuPosition.left }}
+        >
+          <button type="button" onClick={() => handleTransferHost(openPlayerMenuId)}>
+            Dar host
+          </button>
+          <button type="button" onClick={() => handleKickPlayer(openPlayerMenuId)}>
+            Sacar de la sala
+          </button>
+        </div>,
+        document.body,
+      )}
       {/* Luces de fondo */}
       <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -392,7 +423,12 @@ export default function Lobby() {
                     </div>
                   )}
                   <div>
-                    <span className={`lobby-player-name text-sm font-bold block ${player.id === playerId ? 'lobby-local-player-name' : 'text-slate-200'}`}>
+                    <span className={`lobby-player-name text-sm font-bold flex items-center gap-2 ${player.id === playerId ? 'lobby-local-player-name' : 'text-slate-200'}`}>
+                      <span className={`h-2 w-2 shrink-0 rounded-full animate-pulse shadow-sm ${
+                        player.inGame
+                          ? 'bg-amber-400 shadow-amber-400/50'
+                          : 'bg-emerald-500 shadow-emerald-500/50'
+                      }`} />
                       {player.name}
                     </span>
                     <span className={`text-[10px] block mt-0.5 ${player.inGame ? 'text-amber-400' : player.isSpectator ? 'text-cyan-300' : player.isReady ? 'text-emerald-400' : 'text-slate-400'}`}>
@@ -402,34 +438,39 @@ export default function Lobby() {
                           ? 'Espectador'
                         : player.isDummy || player.isReady
                           ? 'Listo'
-                        : player.id === room.hostId
-                          ? 'Creador de la sala'
-                          : 'Disponible'}
+                        : 'Disponible'}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="relative flex shrink-0 items-center gap-2">
                   {player.id === room.hostId && (
                     <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold uppercase">
                       <Crown size={10} />
                       Host
                     </span>
                   )}
-                  <span className={`w-2 h-2 rounded-full animate-pulse shadow-sm ${
-                    player.inGame
-                      ? 'bg-amber-400 shadow-amber-400/50'
-                      : 'bg-emerald-500 shadow-emerald-500/50'
-                  }`}></span>
-                  {canEditSettings && player.isDummy && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveDummy(player.id)}
-                      className="rounded-lg p-1 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"
-                      title="Quitar jugador dummy"
-                    >
-                      <X size={13} />
-                    </button>
+                  {canEditSettings && player.id !== playerId && (
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          if (openPlayerMenuId === player.id) {
+                            setOpenPlayerMenuId(null);
+                            setPlayerMenuPosition(null);
+                            return;
+                          }
+                          const rect = event.currentTarget.getBoundingClientRect();
+                          setPlayerMenuPosition({ top: rect.bottom + 4, left: rect.right - 144 });
+                          setOpenPlayerMenuId(player.id);
+                        }}
+                        className="rounded-lg p-1 text-slate-500 transition hover:bg-slate-800 hover:text-slate-200"
+                        title={`Opciones para ${player.name}`}
+                        aria-label={`Opciones para ${player.name}`}
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

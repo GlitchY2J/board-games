@@ -292,6 +292,20 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     }
   });
 
+  socket.on('transfer-host', ({ roomCode, playerId }) => {
+    const room = roomManager.getRoom(roomCode);
+    if (!room) return;
+
+    const host = room.players.find((player) => player.socketId === socket.id);
+    const target = room.players.find((player) => player.id === playerId);
+    if (!host || host.id !== room.hostId || !target || target.id === host.id) return;
+
+    host.isReady = false;
+    room.hostId = target.id;
+    target.isReady = false;
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
+  });
+
   socket.on('room:create', ({ hostName, game, avatar }, callback) => {
     const room = roomManager.createRoom(hostName, game ?? null, socket.id, avatar);
 

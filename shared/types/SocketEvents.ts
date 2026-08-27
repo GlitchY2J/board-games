@@ -245,6 +245,7 @@ export interface ClientToServerEvents {
   'leave-room': (payload: LeaveRoomPayload) => void;
   'leave-game': (payload: LeaveRoomPayload) => void;
   'kick-player': (payload: KickPlayerPayload) => void;
+  'transfer-host': (payload: KickPlayerPayload) => void;
 
   // Toggle Expansion
   'toggle-expansion': (payload: ToggleExpansionPayload) => void;
