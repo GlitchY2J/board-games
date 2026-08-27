@@ -290,22 +290,13 @@ export default function Game() {
   }, [applyGameState, deactivate, isSpectatorState, navigate]);
 
   const activePlayer = gameState?.players[gameState.currentPlayer];
-  const localPlayer = gameState?.players.find((p) => p.socketId === socket.id);
+  const localPlayer = gameState?.players.find(
+    (p) => p.socketId === socket.id || p.id === contextPlayerId,
+  );
   const isMyTurn = !!activePlayer && activePlayer.socketId === socket.id;
   const isSpectatorPlayer = roomFromContext?.players.some(
     (player) => player.id === contextPlayerId && player.isSpectator,
   ) ?? false;
-
-  useEffect(() => {
-    if (!gameState) return;
-    const local = gameState.players.find((p) => p.socketId === socket.id);
-    const isEliminated = gameState.eliminatedPlayers?.some(
-      (player) => player.id === contextPlayerId,
-    );
-    if (!local && !isEliminated && !isSpectatorPlayer && !leavingToLobbyRef.current) {
-      deactivate();
-    }
-  }, [contextPlayerId, gameState, deactivate, isSpectatorPlayer]);
 
   // Ejecutar automáticamente los efectos de inicio de turno después del anuncio de turno
   useEffect(() => {

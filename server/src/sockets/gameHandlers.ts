@@ -1277,7 +1277,9 @@ function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
     }
 
     const restartPlayerIds = new Set(room.gameState.restartReadyPlayerIds ?? []);
-    const restartPlayers = room.players.filter((candidate) => restartPlayerIds.has(candidate.id));
+    const restartPlayers = restartPlayerIds.size > 0
+      ? room.players.filter((candidate) => restartPlayerIds.has(candidate.id))
+      : playablePlayers(room);
     const restartRoom = { ...room, players: restartPlayers };
 
     room.gameState = engine.createState(restartRoom);
