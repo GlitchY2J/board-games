@@ -301,6 +301,24 @@ export default function Lobby() {
       availablePlayers.length >= selectedGame.minPlayers &&
       availablePlayers.length <= selectedGame.maxPlayers,
   );
+  const hostStartControl = !selectedGame ? (
+    <Button fullWidth disabled>Selecciona un juego para continuar</Button>
+  ) : !selectedGame.available ? (
+    <Button fullWidth disabled>Este juego estará disponible próximamente</Button>
+  ) : playersInGame.length > 0 ? (
+    <Button fullWidth disabled>Esperando a que todos vuelvan al lobby ({playersInGame.length} en partida)</Button>
+  ) : availablePlayers.length < selectedGame.minPlayers ? (
+    <Button fullWidth disabled>
+      <Loader2 className="animate-spin mr-2 inline" size={14} />
+      Esperando jugadores ({availablePlayers.length}/{selectedGame.minPlayers})...
+    </Button>
+  ) : availablePlayers.length > selectedGame.maxPlayers ? (
+    <Button fullWidth disabled>Demasiados jugadores para este juego</Button>
+  ) : (
+    <Button onClick={handleStartGame} fullWidth disabled={!canStart || !allPlayersReady}>
+      {allPlayersReady ? 'Iniciar partida' : `Esperando jugadores... (${readyPlayerCount}/${playersRequiringReady.length})`}
+    </Button>
+  );
 
   return (
     <div className="platform-flat-page lobby-themed-page page-scroll w-full flex items-start justify-center p-6 relative">
@@ -477,15 +495,6 @@ export default function Lobby() {
               </div>
             ))}
             </div>
-            {!isHost && !localPlayerIsSpectator && (
-              <button
-                type="button"
-                onClick={handleToggleReady}
-                className={`lobby-ready-button mt-3 w-full rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${localPlayerIsReady ? 'is-ready' : ''}`}
-              >
-                {localPlayerIsReady ? 'Listo' : 'Listo?'} ({readyPlayerCount}/{playersRequiringReady.length})
-              </button>
-            )}
             <div className="lobby-spectator-section mt-5 flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
               <div>
                 <span className="block text-sm font-bold text-slate-200">Modo espectador</span>
@@ -504,6 +513,22 @@ export default function Lobby() {
                 <span className="lobby-spectator-switch-thumb absolute top-1 h-4 w-4 rounded-full transition-transform" />
               </button>
             </div>
+            {!isHost && (
+              <div className="mt-6 flex items-center justify-center gap-2 text-slate-400 text-xs font-semibold">
+                <Loader2 className="animate-spin text-emerald-400" size={14} />
+                Esperando que el creador inicie la partida...
+              </div>
+            )}
+            {!isHost && !localPlayerIsSpectator && (
+              <button
+                type="button"
+                onClick={handleToggleReady}
+                className={`lobby-ready-button mt-6 w-full rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${localPlayerIsReady ? 'is-ready' : ''}`}
+              >
+                {localPlayerIsReady ? 'Listo' : 'Listo?'} ({readyPlayerCount}/{playersRequiringReady.length})
+              </button>
+            )}
+            {isHost && <div className="mt-6">{hostStartControl}</div>}
           </section>
 
           <LobbyChat room={room} />
@@ -596,19 +621,30 @@ export default function Lobby() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-4">
-                  <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider block">
-                    Juego seleccionado
-                  </span>
-                  <span className="text-lg font-bold text-slate-100 block mt-2">
-                    {selectedGame?.name ?? 'Esperando selección del host'}
-                  </span>
-                  {selectedGame && (
-                    <span className="text-xs text-slate-400 block mt-1">
-                      {selectedGame.description}
+                selectedGame && (selectedGame.id === 'unstable-unicorns' || selectedGame.id === 'exploding-kittens') ? (
+                  <div className="lobby-game-card relative mx-auto w-1/2 overflow-hidden rounded-2xl">
+                    <img
+                      src={`/covers/${selectedGame.id}.jpeg`}
+                      alt={`Portada de ${selectedGame.name}`}
+                      className="lobby-game-cover absolute inset-0 h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                    <div className="absolute bottom-3 left-4">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                        Juego seleccionado
+                      </span>
+                      <span className="mt-1 block text-lg font-bold text-white">{selectedGame.name}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-4">
+                    <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider block">Juego seleccionado</span>
+                    <span className="text-lg font-bold text-slate-100 block mt-2">
+                      {selectedGame?.name ?? 'Esperando selección del host'}
                     </span>
-                  )}
-                </div>
+                    {selectedGame && <span className="text-xs text-slate-400 block mt-1">{selectedGame.description}</span>}
+                  </div>
+                )
               )}
 
               {selectedGame && (
@@ -751,48 +787,6 @@ export default function Lobby() {
         </section>
         </div>
 
-        {/* Panel de Control/Inicio */}
-        <div className="border-t border-slate-900 pt-6 flex justify-center">
-          {isHost ? (
-            !selectedGame ? (
-              <Button fullWidth disabled>
-                Selecciona un juego para continuar
-              </Button>
-            ) : !selectedGame.available ? (
-              <Button fullWidth disabled>
-                Este juego estará disponible próximamente
-              </Button>
-            ) : playersInGame.length > 0 ? (
-              <Button fullWidth disabled>
-                Esperando a que todos vuelvan al lobby ({playersInGame.length} en partida)
-              </Button>
-            ) : availablePlayers.length < selectedGame.minPlayers ? (
-              <Button fullWidth disabled>
-                <Loader2 className="animate-spin mr-2 inline" size={14} />
-                Esperando jugadores ({availablePlayers.length}/{selectedGame.minPlayers})...
-              </Button>
-            ) : availablePlayers.length > selectedGame.maxPlayers ? (
-              <Button fullWidth disabled>
-                Demasiados jugadores para este juego
-              </Button>
-            ) : (
-              <Button
-                onClick={handleStartGame}
-                fullWidth
-                disabled={!canStart || !allPlayersReady}
-              >
-                Iniciar partida
-              </Button>
-            )
-          ) : (
-            <div className="flex w-full flex-col items-center gap-3">
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
-                <Loader2 className="animate-spin text-emerald-400" size={14} />
-                Esperando que el creador inicie la partida...
-              </div>
-            </div>
-          )}
-        </div>
       </Card>
 
       {showLeaveConfirm && (

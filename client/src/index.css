@@ -550,8 +550,8 @@ html[data-platform-theme] .lobby-spectator-switch.is-off {
 }
 
 html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
-  background-color: var(--platform-surface-solid) !important;
-  color: var(--platform-accent-strong) !important;
+  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong)) !important;
+  color: #08111f !important;
 }
 
 .lobby-player-menu {
