@@ -555,8 +555,8 @@ export default function Lobby() {
                             isSelected ? 'lobby-game-card-selected' : ''
                           } ${
                             game.id === 'unstable-unicorns' || game.id === 'exploding-kittens'
-                              ? 'relative h-36 overflow-hidden p-0'
-                              : 'h-36 p-4'
+                              ? 'relative overflow-hidden p-0'
+                              : 'p-4'
                           } ${
                             isSelected
                               ? 'bg-cyan-500/10 border-cyan-400/50 shadow-lg shadow-cyan-500/5'

@@ -567,6 +567,10 @@ html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
   object-position: center;
 }
 
+.lobby-game-card {
+  aspect-ratio: 3 / 2;
+}
+
 .lobby-expansion-cover {
   display: block;
   object-fit: fill !important;
