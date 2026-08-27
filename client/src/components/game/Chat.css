@@ -11,11 +11,13 @@
 
 .lobby-chat {
   margin-top: 0;
-  min-height: 250px;
+  height: 250px;
 }
 
 .lobby-chat .chat-list {
-  max-height: 220px;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
 }
 
 .chat-header {
@@ -100,6 +102,7 @@
 
 .chat-input-row {
   display: flex;
+  flex-shrink: 0;
   gap: 6px;
   padding: 8px;
   border-top: 1px solid rgba(51, 65, 85, 0.6);
