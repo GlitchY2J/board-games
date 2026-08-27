@@ -28,7 +28,7 @@ export default function Home() {
           <Button onClick={() => navigate('/create')} className="w-full sm:w-48">
             Crear sala
           </Button>
-          <Button variant="secondary" onClick={() => navigate('/join')} className="w-full sm:w-48">
+          <Button variant="secondary" onClick={() => navigate('/join')} className="home-join-button w-full sm:w-48">
             Unirse
           </Button>
         </div>

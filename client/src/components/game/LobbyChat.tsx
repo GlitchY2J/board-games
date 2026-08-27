@@ -13,7 +13,6 @@ export default function LobbyChat({ room }: Props) {
   const [draft, setDraft] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
   const messages: ChatMessage[] = room.chat ?? [];
-  const localPlayerId = getLocalPlayerId();
   const colors = useMemo(() => {
     const map = new Map<string, string>();
     room.players.forEach((player, index) => map.set(player.id, ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#c084fc'][index % 5]));
@@ -38,7 +37,7 @@ export default function LobbyChat({ room }: Props) {
         {messages.map((message) => (
           <div key={message.id} className="chat-msg">
             <span className="chat-name" style={{ color: colors.get(message.playerId) ?? '#94a3b8' }}>
-              {message.playerName}{message.playerId === localPlayerId ? ' (Tú)' : ''}
+              {message.playerName}
             </span>
             <span className="chat-text">{message.text}</span>
           </div>
@@ -67,11 +66,3 @@ export default function LobbyChat({ room }: Props) {
   );
 }
 
-function getLocalPlayerId(): string | undefined {
-  try {
-    const session = localStorage.getItem('board-games-session');
-    return session ? JSON.parse(session).playerId : undefined;
-  } catch {
-    return undefined;
-  }
-}

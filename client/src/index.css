@@ -490,6 +490,70 @@ html[data-platform-theme] .lobby-themed-page button.glow-btn-emerald {
   color: #080808 !important;
 }
 
+html[data-platform-theme] .lobby-themed-page .lobby-local-player-name {
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .home-join-button {
+  background: var(--platform-surface-solid) !important;
+  border-color: transparent !important;
+  color: var(--platform-accent-strong) !important;
+}
+
+html[data-platform-theme] .home-join-button:hover {
+  background: color-mix(in srgb, var(--platform-accent) 16%, var(--platform-surface-solid)) !important;
+  color: var(--platform-accent-strong) !important;
+}
+
+.lobby-spectator-section {
+  background-color: rgb(15 23 42 / 0.45);
+}
+
+.lobby-spectator-switch {
+  background-color: rgb(51 65 85);
+}
+
+.lobby-spectator-switch.is-on {
+  background-color: var(--platform-accent);
+}
+
+.lobby-spectator-switch-thumb {
+  left: 4px;
+  background-color: #f8fafc;
+}
+
+.lobby-spectator-switch.is-on .lobby-spectator-switch-thumb {
+  transform: translateX(20px);
+}
+
+.lobby-spectator-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+html[data-platform-theme] .lobby-spectator-section {
+  background-color: color-mix(in srgb, var(--platform-surface) 82%, transparent) !important;
+}
+
+html[data-platform-theme] .lobby-spectator-switch.is-off {
+  background-color: var(--platform-surface-solid) !important;
+}
+
+.lobby-ready-button {
+  background-color: rgb(30 41 59 / 0.7);
+  color: #cbd5e1;
+}
+
+.lobby-ready-button.is-ready {
+  background-color: var(--platform-accent);
+  color: #08111f;
+}
+
+html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
+  background-color: var(--platform-surface-solid) !important;
+  color: var(--platform-accent-strong) !important;
+}
+
 html[data-platform-theme='midnight'] .platform-shell {
   background-color: #050b1c;
   background-image: linear-gradient(135deg, rgba(5, 11, 28, 0.96), rgba(15, 23, 42, 0.96));

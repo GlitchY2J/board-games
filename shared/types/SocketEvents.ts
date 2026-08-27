@@ -251,6 +251,7 @@ export interface ClientToServerEvents {
   'add-dummy-player': (roomCode: string) => void;
   'remove-dummy-player': (payload: { roomCode: string; playerId: string }) => void;
   'toggle-spectator': (roomCode: string) => void;
+  'toggle-ready': (roomCode: string) => void;
 
   // Start Game
   'start-game': (roomCode: string) => void;

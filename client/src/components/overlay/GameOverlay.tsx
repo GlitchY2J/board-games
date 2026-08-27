@@ -288,7 +288,7 @@ export default function GameOverlay({
           .filter((player) => action.playerIds.includes(player.id))
           .map((player) => ({
             id: player.id,
-            title: player.id === localPlayerId ? `${player.name} (Tú)` : player.name,
+            title: player.name,
             avatar: player.avatar || undefined,
             subtitle: `${player.hand.length} carta(s) en mano`,
           }));
@@ -368,7 +368,7 @@ export default function GameOverlay({
 
         const items = eligiblePlayers.map((p) => ({
           id: p.id,
-          title: p.id === localPlayerId ? `${p.name} (Tú)` : p.name,
+          title: p.name,
           avatar: p.avatar || undefined,
           subtitle: isPlayDowngrade
             ? `Downgrades actuales: ${p.downgrades.length}`

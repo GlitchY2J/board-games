@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { roomManager } from '../roomManagerInstance.ts';
 import { createPublicRoom } from '../sockets/publicRoom.ts';
+import { markPlayerAsSpectatorIfRoomIsFull } from '../roomCapacity.ts';
 
 const router = Router();
 
@@ -44,6 +45,8 @@ router.post('/join', (req, res) => {
       error: 'Sala no encontrada',
     });
   }
+
+  if (player) markPlayerAsSpectatorIfRoomIsFull(room, player.id);
 
   res.json({
     room: createPublicRoom(room),

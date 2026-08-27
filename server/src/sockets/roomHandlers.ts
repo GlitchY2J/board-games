@@ -8,6 +8,7 @@ import { Card } from '../game/models/Card.ts';
 import { GameState } from '../game/models/GameState.ts';
 import { gameRegistry } from '../games/catalog.ts';
 import { createPublicRoom } from './publicRoom.ts';
+import { isRoomFull, markPlayerAsSpectatorIfRoomIsFull } from '../roomCapacity.ts';
 
 function sendCardsOnLeave(game: GameState, cards: Card[]): void {
   for (const card of cards) {
@@ -75,8 +76,19 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     const room = roomManager.getRoom(roomCode);
     const player = room?.players.find((candidate) => candidate.socketId === socket.id);
     if (!room || !player || room.gameState?.started) return;
+    if (player.isSpectator && isRoomFull(room)) return;
 
     player.isSpectator = !player.isSpectator;
+    player.isReady = false;
+    io.to(room.code).emit('room-updated', createPublicRoom(room));
+  });
+
+  socket.on('toggle-ready', (roomCode) => {
+    const room = roomManager.getRoom(roomCode);
+    const player = room?.players.find((candidate) => candidate.socketId === socket.id);
+    if (!room || !player || room.gameState?.started || player.isSpectator || player.isDummy) return;
+
+    player.isReady = !player.isReady;
     io.to(room.code).emit('room-updated', createPublicRoom(room));
   });
 
@@ -167,6 +179,9 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
       });
       return;
     }
+
+    const joinedPlayer = room.players.find((player) => player.socketId === socket.id);
+    if (joinedPlayer) markPlayerAsSpectatorIfRoomIsFull(room, joinedPlayer.id);
 
     socket.join(room.code);
     console.log(`[join-room] Sockets en la sala ${room.code} tras el join:`);
@@ -395,6 +410,7 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
 
     const updatedRoom = roomManager.updateRoomSettings(roomCode, settings);
     if (updatedRoom) {
+      for (const candidate of updatedRoom.players) candidate.isReady = false;
       io.to(updatedRoom.code).emit('room-updated', createPublicRoom(updatedRoom));
     }
   });

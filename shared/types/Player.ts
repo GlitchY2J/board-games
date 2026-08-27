@@ -13,4 +13,5 @@ export interface Player {
   downgrades: Card[];
   isDummy?: boolean;
   isSpectator?: boolean;
+  isReady?: boolean;
 }

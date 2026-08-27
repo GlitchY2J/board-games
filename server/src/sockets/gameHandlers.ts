@@ -410,6 +410,9 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
       return;
     }
 
+    const playersToReady = room.players.filter((candidate) => candidate.connected && !candidate.isSpectator);
+    if (!playersToReady.every((candidate) => candidate.id === room.hostId || candidate.isDummy || candidate.isReady)) return;
+
     if (!validateRoomConfiguration(socket, room, 'start-game')) return;
 
     // Asignar el orden de turnos al azar
@@ -421,7 +424,7 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
       avatar: p.avatar,
     }));
 
-    for (const candidate of players) {
+    for (const candidate of room.players) {
       if (candidate.socketId) {
         io.to(candidate.socketId).emit('turn-order-assigned', order);
       }

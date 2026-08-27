@@ -14,7 +14,7 @@ export function createPublicRoom(room: Room): PublicRoom {
           expansionIds: [...room.settings.expansionIds],
         }
       : undefined,
-    players: room.players.map(({ id, connected, name, avatar, isDummy, isSpectator }) => ({
+    players: room.players.map(({ id, connected, name, avatar, isDummy, isSpectator, isReady }) => ({
       id,
       connected,
       inGame: room.gameState?.players.some((player) => player.id === id) ?? false,
@@ -22,6 +22,7 @@ export function createPublicRoom(room: Room): PublicRoom {
       avatar,
       isDummy,
       isSpectator,
+      isReady,
     })),
     chat: [...room.chat],
   };

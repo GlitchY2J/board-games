@@ -418,10 +418,10 @@ export default function BoardLayout({
         </div>
       )}
 
-      {!spectator && (
+      {(!spectator || gameState.pendingAction?.type === 'exploding_kitten') && (
         <GameOverlay
           gameState={gameState}
-          localPlayerId={localPlayerId}
+          localPlayerId={spectator ? '' : localPlayerId}
           hide={hidePendingPlay}
         />
       )}

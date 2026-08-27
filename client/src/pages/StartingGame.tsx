@@ -219,7 +219,7 @@ export default function StartingGame() {
                         </div>
                       )}
                       <span className="text-sm font-bold text-slate-100">
-                        {player.name} {player.id === playerId && '(tú)'}
+                        {player.name}
                       </span>
                     </div>
                      <span className={`turn-order-start-label text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${
