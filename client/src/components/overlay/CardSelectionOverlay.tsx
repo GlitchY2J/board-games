@@ -21,6 +21,8 @@ interface Props {
   hide?: boolean;
   onConfirm(cardIds: string[]): void;
   onCancel?(): void;
+  secondaryText?: string;
+  onSecondary?(): void;
 }
 
 export default function CardSelectionOverlay({
@@ -33,6 +35,8 @@ export default function CardSelectionOverlay({
   hide = false,
   onConfirm,
   onCancel,
+  secondaryText,
+  onSecondary,
 }: Props) {
   const [selected, setSelected] = useState<string[]>(() =>
     maxSelection === 1 && items.length === 1 ? [items[0].id] : [],
@@ -133,6 +137,11 @@ export default function CardSelectionOverlay({
           {onCancel && (
             <button className="cancel-button" onClick={onCancel}>
               Cancelar
+            </button>
+          )}
+          {onSecondary && (
+            <button className="cancel-button" onClick={onSecondary}>
+              {secondaryText ?? 'Otra opción'}
             </button>
           )}
           <button

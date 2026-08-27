@@ -71,6 +71,14 @@ function removePlayerFromGame(room: Room, playerId: string): boolean {
   return true;
 }
 
+function shouldTerminateDummyOnlyGame(room: Room): boolean {
+  const players = room.gameState?.players ?? [];
+  return players.length > 0 && players.every((gamePlayer) => {
+    const roomPlayer = room.players.find((candidate) => candidate.id === gamePlayer.id);
+    return roomPlayer?.isDummy === true;
+  });
+}
+
 export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
   socket.on('toggle-spectator', (roomCode) => {
     const room = roomManager.getRoom(roomCode);
@@ -195,8 +203,8 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     if (!room) return;
 
     const game = room.gameState;
+    const leavingId = room.players.find((p) => p.socketId === socket.id)?.id;
     if (game) {
-      const leavingId = room.players.find((p) => p.socketId === socket.id)?.id;
       if (leavingId) removePlayerFromGame(room, leavingId);
     }
 
@@ -207,6 +215,11 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     if (!updatedRoom) {
       // La sala se eliminó (sin jugadores restantes)
       return;
+    }
+
+    if (room.hostId === leavingId && shouldTerminateDummyOnlyGame(updatedRoom)) {
+      updatedRoom.gameState = undefined;
+      io.to(roomCode).emit('game-terminated');
     }
 
     socket.leave(roomCode);
@@ -234,6 +247,11 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
         (candidate) => candidate.id !== player.id,
       );
       removePlayerFromGame(room, player.id);
+    }
+
+    if (player.id === room.hostId && shouldTerminateDummyOnlyGame(room)) {
+      room.gameState = undefined;
+      io.to(room.code).emit('game-terminated');
     }
 
     if (room.gameState?.players.length === 0 && !room.gameState.winnerId) {

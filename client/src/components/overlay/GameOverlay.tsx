@@ -2214,6 +2214,15 @@ export default function GameOverlay({
             items={items}
             maxSelection={1}
             confirmText={isExplodingKittenDefuse ? 'Colocar' : isDebugDraw ? 'Robar' : 'Tomar'}
+            secondaryText={isExplodingKittenDefuse ? 'Ubicación aleatoria' : undefined}
+            onSecondary={isExplodingKittenDefuse ? () => {
+              dismiss();
+              const randomPosition = Math.floor(Math.random() * (gameState.deck.length + 1));
+              socket.emit('select-deck-card', {
+                roomCode: gameState.roomCode,
+                cardId: `deck-position-${randomPosition}`,
+              });
+            } : undefined}
             onConfirm={([cardId]) => {
               dismiss();
               socket.emit('select-deck-card', {

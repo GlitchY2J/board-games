@@ -164,6 +164,9 @@ export default function Game() {
       deactivate();
       navigate('/lobby');
     };
+    const onGameTerminated = () => {
+      navigate('/lobby');
+    };
 
     const onGameUpdated = (state: GameState) => {
       if (isSpectatorState(state)) {
@@ -191,6 +194,7 @@ export default function Game() {
     socket.on('game-restarted', onGameRestarted);
     socket.on('turn-order-assigned', onTurnOrderAssigned);
     socket.on('kicked-from-room', onKickedFromRoom);
+    socket.on('game-terminated', onGameTerminated);
 
     const onCardAnimations = (animations: CardAnimation[]) => {
       const found = animations
@@ -269,6 +273,7 @@ export default function Game() {
       socket.off('game-restarted', onGameRestarted);
       socket.off('turn-order-assigned', onTurnOrderAssigned);
       socket.off('kicked-from-room', onKickedFromRoom);
+      socket.off('game-terminated', onGameTerminated);
       socket.off('card-animations');
       socket.off('neigh-animations');
       socket.off('draw-animations');
