@@ -477,6 +477,15 @@ export default function Lobby() {
               </div>
             ))}
             </div>
+            {!isHost && !localPlayerIsSpectator && (
+              <button
+                type="button"
+                onClick={handleToggleReady}
+                className={`lobby-ready-button mt-3 w-full rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${localPlayerIsReady ? 'is-ready' : ''}`}
+              >
+                {localPlayerIsReady ? 'Listo' : 'Listo?'} ({readyPlayerCount}/{playersRequiringReady.length})
+              </button>
+            )}
             <div className="lobby-spectator-section mt-5 flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
               <div>
                 <span className="block text-sm font-bold text-slate-200">Modo espectador</span>
@@ -781,15 +790,6 @@ export default function Lobby() {
                 <Loader2 className="animate-spin text-emerald-400" size={14} />
                 Esperando que el creador inicie la partida...
               </div>
-              {!localPlayerIsSpectator && (
-                <button
-                  type="button"
-                  onClick={handleToggleReady}
-                  className={`lobby-ready-button w-full rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${localPlayerIsReady ? 'is-ready' : ''}`}
-                >
-                  {localPlayerIsReady ? 'Listo' : 'Confirmar que estoy listo'} ({readyPlayerCount}/{playersRequiringReady.length})
-                </button>
-              )}
             </div>
           )}
         </div>
