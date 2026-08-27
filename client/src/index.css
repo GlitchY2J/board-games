@@ -561,6 +561,79 @@ html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
   white-space: nowrap;
 }
 
+.lobby-game-cover {
+  display: block;
+  object-fit: fill !important;
+  object-position: center;
+}
+
+.lobby-expansion-cover {
+  display: block;
+  object-fit: fill !important;
+  object-position: center;
+}
+
+.lobby-expansion-progress {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.lobby-game-availability {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+.lobby-game-card-selected {
+  position: relative;
+  outline: none !important;
+}
+
+.lobby-game-card-selected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border: 2px solid #22d3ee;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.lobby-expansion-card-selected {
+  position: relative;
+}
+
+.lobby-expansion-card-selected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border: 2px solid #fbbf24;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+html[data-platform-theme] .lobby-expansion-card-selected::after {
+  border-color: var(--platform-accent) !important;
+}
+
+.lobby-game-status.is-available {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+.lobby-game-status.is-unavailable {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+html[data-platform-theme] .lobby-game-card-selected {
+  outline-color: var(--platform-accent) !important;
+}
+
+html[data-platform-theme] .lobby-game-card-selected::after {
+  border-color: var(--platform-accent) !important;
+}
+
 .lobby-player-menu button {
   display: block;
   width: 100%;

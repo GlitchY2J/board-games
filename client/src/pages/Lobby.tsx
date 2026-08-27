@@ -156,6 +156,7 @@ export default function Lobby() {
   };
 
   const handleSelectGame = (game: GameDefinition) => {
+    if (getRoomSettings().gameId === game.id) return;
     handleUpdateSettings({
       gameId: game.id,
       versionId: game.versions[0]?.id ?? null,
@@ -532,7 +533,7 @@ export default function Lobby() {
                       Elige un juego
                     </span>
                   </div>
-                  <div className="grid gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {games.map((game) => {
                       const isSelected = game.id === roomSettings.gameId;
                       return (
@@ -541,7 +542,13 @@ export default function Lobby() {
                           type="button"
                           disabled={false}
                           onClick={() => handleSelectGame(game)}
-                          className={`w-full text-left p-4 rounded-2xl border transition-all ${
+                          className={`lobby-game-card w-full text-left rounded-2xl border transition-all ${
+                            isSelected ? 'lobby-game-card-selected' : ''
+                          } ${
+                            game.id === 'unstable-unicorns' || game.id === 'exploding-kittens'
+                              ? 'relative h-36 overflow-hidden p-0'
+                              : 'h-36 p-4'
+                          } ${
                             isSelected
                               ? 'bg-cyan-500/10 border-cyan-400/50 shadow-lg shadow-cyan-500/5'
                               : 'bg-slate-900/30 border-slate-800/50'
@@ -551,26 +558,29 @@ export default function Lobby() {
                               : 'cursor-pointer opacity-60 hover:border-slate-600'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <span className="text-sm font-bold text-slate-100 block">
-                                {game.name}
-                              </span>
-                              <span className="text-xs text-slate-400 block mt-1">
-                                {game.description}
-                              </span>
-                              <span className="text-[10px] text-slate-500 block mt-2">
+                          {game.id === 'unstable-unicorns' || game.id === 'exploding-kittens' ? (
+                            <>
+                              <img
+                                src={`/covers/${game.id}.jpeg`}
+                                alt={`Portada de ${game.name}`}
+                                className="lobby-game-cover absolute inset-0 h-full w-full object-cover object-center"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-slate-950/20" />
+                              <span className="absolute left-4 bottom-3 text-[10px] font-bold text-white">
                                 {game.minPlayers}-{game.maxPlayers} jugadores
                               </span>
+                            </>
+                          ) : (
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <span className="text-sm font-bold text-slate-100 block">{game.name}</span>
+                                <span className="text-xs text-slate-400 block mt-1">{game.description}</span>
+                                <span className="text-[10px] text-slate-500 block mt-2">
+                                  {game.minPlayers}-{game.maxPlayers} jugadores
+                                </span>
+                              </div>
                             </div>
-                            <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-full shrink-0 ${
-                              game.available
-                                ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20'
-                                : 'bg-slate-800 text-slate-500 border border-slate-700'
-                            }`}>
-                              {game.available ? (isSelected ? 'Seleccionado' : 'Disponible') : 'Próximamente'}
-                            </span>
-                          </div>
+                          )}
                         </button>
                       );
                     })}
@@ -681,7 +691,7 @@ export default function Lobby() {
                         : 'No hay expansiones activas.'}
                     </p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {visibleExpansions.map((expansion) => {
                         const active = roomSettings.expansionIds.includes(expansion.id);
                         return (
@@ -690,23 +700,36 @@ export default function Lobby() {
                             type="button"
                             disabled={!canEditSettings}
                             onClick={() => handleToggleExpansion(expansion.id)}
-                            className={`w-full flex items-center justify-between gap-4 p-4 rounded-2xl border text-left transition-all ${
+                            className={`w-full flex items-center justify-between gap-4 rounded-2xl border text-left transition-all ${
+                              active ? 'lobby-expansion-card-selected' : ''
+                            } ${
+                              expansion.id === 'rainbow_apocalypse' ? 'relative h-40 w-full max-w-[100px] overflow-hidden p-0' : 'p-4'
+                            } ${
                               active
                                 ? 'bg-amber-500/10 border-amber-500/40'
                                 : 'bg-slate-900/30 border-slate-800/40'
                             } ${canEditSettings ? 'cursor-pointer hover:border-amber-400/40' : 'cursor-default'}`}
                           >
-                            <span>
-                              <span className="text-sm font-bold text-slate-200 block">
-                                {expansion.name}
-                              </span>
-                              <span className="text-xs text-slate-400 block mt-1">
-                                {expansion.description}
-                              </span>
-                            </span>
-                            <span className={`w-11 h-6 flex items-center rounded-full p-1 shrink-0 ${active ? 'bg-amber-400' : 'bg-slate-800 border border-slate-700'}`}>
-                              <span className={`bg-slate-950 w-4 h-4 rounded-full shadow-md transition-transform ${active ? 'translate-x-5' : 'translate-x-0'}`} />
-                            </span>
+                            {expansion.id === 'rainbow_apocalypse' ? (
+                              <>
+                                <img
+                                  src="/covers/expansions/rainbow-apocalypse.jpeg"
+                                  alt={`Portada de ${expansion.name}`}
+                                  className="lobby-expansion-cover absolute inset-0 h-full w-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-transparent to-slate-950/35" />
+                                <span className="lobby-expansion-progress absolute bottom-3 left-3 rounded-full px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider">
+                                  En progreso
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span>
+                                  <span className="text-sm font-bold text-slate-200 block">{expansion.name}</span>
+                                  <span className="text-xs text-slate-400 block mt-1">{expansion.description}</span>
+                                </span>
+                              </>
+                            )}
                           </button>
                         );
                       })}
