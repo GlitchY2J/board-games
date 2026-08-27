@@ -13,7 +13,8 @@ import CardRemovalAnimation from '../components/effects/CardRemovalAnimation';
 import CardStealEffect from '../components/effects/CardStealEffect';
 import ShuffleDeckEffect from '../components/effects/ShuffleDeckEffect';
 import NeighAnnouncement from '../components/game/NeighAnnouncement';
-import type { CardAnimation, NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
+import ExplosionAnnouncement from '../components/game/ExplosionAnnouncement';
+import type { CardAnimation, NeighAnimation, ExplosionAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface TurnAnnounce {
@@ -64,6 +65,7 @@ export default function Game() {
   const [discardAnims, setDiscardAnims] = useState<DiscardAnimation[]>([]);
   const [playAnims, setPlayAnims] = useState<PlayAnimation[]>([]);
   const [shuffleAnims, setShuffleAnims] = useState<ShuffleAnimation[]>([]);
+  const [explosionAnims, setExplosionAnims] = useState<ExplosionAnimation[]>([]);
 
   const pendingGameStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
@@ -169,12 +171,6 @@ export default function Game() {
     };
 
     const onGameUpdated = (state: GameState) => {
-      if (isSpectatorState(state)) {
-        activeAnimationsCountRef.current = 0;
-        pendingGameStateRef.current = null;
-        applyGameState(state);
-        return;
-      }
       if (activeAnimationsCountRef.current > 0) {
         pendingGameStateRef.current = state;
       } else {
@@ -260,6 +256,13 @@ export default function Game() {
       setShuffleAnims((prev) => [...prev, ...animations]);
     };
 
+    const onExplosionAnimations = (animations: ExplosionAnimation[]) => {
+      if (animations.length > 0) {
+        activeAnimationsCountRef.current += animations.length;
+        setExplosionAnims((prev) => [...prev, ...animations]);
+      }
+    };
+
     socket.on('card-animations', onCardAnimations);
     socket.on('neigh-animations', onNeighAnimations);
     socket.on('draw-animations', onDrawAnimations);
@@ -267,6 +270,7 @@ export default function Game() {
     socket.on('discard-animations', onDiscardAnimations);
     socket.on('play-animations', onPlayAnimations);
     socket.on('shuffle-animations', onShuffleAnimations);
+    socket.on('explosion-animations', onExplosionAnimations);
 
     return () => {
       socket.off('game-updated', onGameUpdated);
@@ -281,6 +285,7 @@ export default function Game() {
       socket.off('discard-animations');
       socket.off('play-animations');
       socket.off('shuffle-animations', onShuffleAnimations);
+      socket.off('explosion-animations', onExplosionAnimations);
     };
   }, [applyGameState, deactivate, isSpectatorState, navigate]);
 
@@ -355,6 +360,14 @@ export default function Game() {
           key={neighAnims[0].animId}
           animation={neighAnims[0]}
           onDone={() => removeNeighAnim(neighAnims[0].animId)}
+        />
+      )}
+      {explosionAnims.length > 0 && (
+        <ExplosionAnnouncement
+          key={explosionAnims[0].animId}
+          animation={explosionAnims[0]}
+          localPlayerId={effectViewerId}
+          onDone={() => removeExplosionAnim(explosionAnims[0].animId)}
         />
       )}
       {drawAnims.map((animation) => (
@@ -572,9 +585,25 @@ export default function Game() {
     setPlayAnims((prev) => prev.filter((a) => a.animId !== animId));
   }
 
+  function removeExplosionAnim(animId: string) {
+    setExplosionAnims((prev) => {
+      const next = prev.filter((a) => a.animId !== animId);
+      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+
+      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
+        const pendingState = pendingGameStateRef.current;
+        pendingGameStateRef.current = null;
+        applyGameState(pendingState);
+      }
+
+      return next;
+    });
+  }
+
   const hasActiveAnims =
     removalAnims.length > 0 ||
     neighAnims.length > 0 ||
+    explosionAnims.length > 0 ||
     drawAnims.length > 0 ||
     discardAnims.length > 0;
 

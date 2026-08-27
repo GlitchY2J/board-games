@@ -61,7 +61,7 @@ export default function GameOverlay({
 
   const dismiss = () => setDismissedKey(actionKey);
 
-  if (!action) {
+  if (!action || hide) {
     return null;
   }
 
@@ -165,20 +165,26 @@ export default function GameOverlay({
                   {defuse && (
                     <button
                       className="confirm-button choice-button"
-                      onClick={() => socket.emit('resolve-exploding-kitten', {
-                        roomCode: gameState.roomCode,
-                        useDefuse: true,
-                      })}
+                      onClick={() => {
+                        dismiss();
+                        socket.emit('resolve-exploding-kitten', {
+                          roomCode: gameState.roomCode,
+                          useDefuse: true,
+                        });
+                      }}
                     >
                       Usar Defuse
                     </button>
                   )}
                   <button
                     className="cancel-button choice-button"
-                    onClick={() => socket.emit('resolve-exploding-kitten', {
-                      roomCode: gameState.roomCode,
-                      useDefuse: false,
-                    })}
+                    onClick={() => {
+                      dismiss();
+                      socket.emit('resolve-exploding-kitten', {
+                        roomCode: gameState.roomCode,
+                        useDefuse: false,
+                      });
+                    }}
                   >
                     Aceptar
                   </button>

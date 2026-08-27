@@ -2,7 +2,7 @@ import type { GameServer } from './socketTypes.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { GameState } from '../game/models/GameState.ts';
 import type { Card } from '../game/models/Card.ts';
-import { drainCardAnimations, drainNeighAnimations, drainDrawAnimations, drainDiscardAnimations, drainPlayAnimations, drainStealAnimations, drainShuffleAnimations } from '../game/cardAnimations.ts';
+import { drainCardAnimations, drainNeighAnimations, drainExplosionAnimations, drainDrawAnimations, drainDiscardAnimations, drainPlayAnimations, drainStealAnimations, drainShuffleAnimations } from '../game/cardAnimations.ts';
 import { checkTinyStable } from '../game/cards/effects/tinyStable.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
 
@@ -185,6 +185,10 @@ export function emitGameState(
   const shuffleAnims = drainShuffleAnimations(game.roomCode);
   if (shuffleAnims.length > 0) {
     io.to(room.code).emit('shuffle-animations', shuffleAnims);
+  }
+  const explosionAnims = drainExplosionAnimations(game.roomCode);
+  if (explosionAnims.length > 0) {
+    io.to(room.code).emit('explosion-animations', explosionAnims);
   }
 
   for (const roomPlayer of room.players) {

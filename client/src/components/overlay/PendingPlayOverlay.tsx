@@ -30,7 +30,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     return () => clearInterval(interval);
   }, [pending]);
 
-  if (!pending) return null;
+  if (!pending || hide) return null;
 
   const isMyPlay = !spectator && pending.playerId === localPlayerId;
   const remainingMs = Math.max(

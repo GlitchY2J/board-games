@@ -64,6 +64,40 @@ export default function CardFan({
   const [fanWidth, setFanWidth] = useState(0);
   const { hidePreview } = useCardPreview();
 
+  const [newCardUids, setNewCardUids] = useState<Set<string>>(new Set());
+  const prevCardsRef = useRef<Set<string> | null>(null);
+  const seenCardUidsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const currentUids = new Set(cards.map((c) => c.uid));
+
+    if (prevCardsRef.current === null) {
+      seenCardUidsRef.current = new Set(currentUids);
+      prevCardsRef.current = currentUids;
+      return;
+    }
+
+    const freshUids = cards
+      .map((card) => card.uid)
+      .filter((uid) => !seenCardUidsRef.current.has(uid));
+    freshUids.forEach((uid) => seenCardUidsRef.current.add(uid));
+
+    if (freshUids.length > 0) {
+      const newestUid = freshUids[freshUids.length - 1];
+
+      setNewCardUids(new Set([newestUid]));
+
+      const timer = setTimeout(() => {
+        setNewCardUids(new Set());
+      }, 5000);
+
+      prevCardsRef.current = currentUids;
+      return () => clearTimeout(timer);
+    }
+
+    prevCardsRef.current = currentUids;
+  }, [cards]);
+
   useLayoutEffect(() => {
     const element = fanRef.current;
     if (!element) return;
@@ -207,15 +241,17 @@ export default function CardFan({
           const middle = (total - 1) / 2;
           const rotation = (index - middle) * 5;
           const hotkey = index < 9 ? index + 1 : index === 9 ? 0 : null;
+          const isNew = newCardUids.has(card.uid);
 
           return (
             <div
               key={card.uid}
-              className="fan-card"
+              className={`fan-card${isNew ? ' arrived-glow' : ''}`}
+              data-card-uid={card.uid}
               data-card-hotkey={index}
-              style={{ transform: `rotate(${rotation}deg)`, zIndex: index }}
+              style={{ transform: `rotate(${rotation}deg)`, zIndex: isNew ? 100 : index }}
             >
-              {hotkey !== null && (
+              {hotkey !== null && !isNew && (
                 <span className="card-hotkey" aria-hidden="true">
                   {hotkey}
                 </span>

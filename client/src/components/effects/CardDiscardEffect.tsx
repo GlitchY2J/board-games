@@ -23,13 +23,18 @@ export default function CardDiscardEffect({ animation, localPlayerId, onDone }: 
     const discardEl = document.querySelector('[data-discard]');
     const isMe = animation.playerId === localPlayerId;
 
-    const sourceEl = isMe
+    // Target exact card in hand if discarded by local player
+    const cardEl = isMe
+      ? document.querySelector(`[data-card-uid="${animation.card.uid}"]`)
+      : null;
+
+    const sourceEl = cardEl ?? (isMe
       ? document.querySelector('[data-hand]')
-      : document.querySelector(`[data-player-id="${animation.playerId}"]`);
+      : document.querySelector(`[data-player-id="${animation.playerId}"]`));
 
     const start = {
       x: isMe ? window.innerWidth / 2 - 55 : 50,
-      y: isMe ? window.innerHeight - 200 : 50,
+      y: isMe ? window.innerHeight - 150 : 50,
     };
     const end = {
       x: window.innerWidth / 2 - 55,
@@ -48,33 +53,60 @@ export default function CardDiscardEffect({ animation, localPlayerId, onDone }: 
       end.y = rect.top + rect.height / 2 - 77;
     }
 
-    const anim = el.animate(
-      [
-        {
-          transform: `translate(${start.x}px, ${start.y}px) scale(${isMe ? 1 : 0.5}) rotate(0deg)`,
-          opacity: 0,
-        },
-        {
-          transform: `translate(${start.x}px, ${start.y}px) scale(${isMe ? 1 : 0.6}) rotate(-10deg)`,
-          opacity: 1,
-          offset: 0.15,
-        },
-        {
-          transform: `translate(${end.x}px, ${end.y}px) scale(0.6) rotate(15deg)`,
-          opacity: 1,
-          offset: 0.85,
-        },
-        {
-          transform: `translate(${end.x}px, ${end.y}px) scale(0.4) rotate(25deg)`,
-          opacity: 0,
-        },
-      ],
-      {
-        duration: 850,
-        easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
-        fill: 'forwards',
-      }
-    );
+    const duration = isMe ? 1000 : 850;
+
+    const keyframes = isMe
+      ? [
+          {
+            transform: `translate(${start.x}px, ${start.y}px) scale(0.85) rotate(0deg)`,
+            opacity: 0,
+          },
+          {
+            transform: `translate(${start.x}px, ${start.y - 50}px) scale(1.18) rotate(-6deg)`,
+            opacity: 1,
+            offset: 0.2,
+          },
+          {
+            transform: `translate(${start.x}px, ${start.y - 50}px) scale(1.18) rotate(-6deg)`,
+            opacity: 1,
+            offset: 0.38,
+          },
+          {
+            transform: `translate(${end.x}px, ${end.y}px) scale(0.55) rotate(15deg)`,
+            opacity: 1,
+            offset: 0.88,
+          },
+          {
+            transform: `translate(${end.x}px, ${end.y}px) scale(0.35) rotate(22deg)`,
+            opacity: 0,
+          },
+        ]
+      : [
+          {
+            transform: `translate(${start.x}px, ${start.y}px) scale(0.5) rotate(0deg)`,
+            opacity: 0,
+          },
+          {
+            transform: `translate(${start.x}px, ${start.y}px) scale(0.65) rotate(-10deg)`,
+            opacity: 1,
+            offset: 0.15,
+          },
+          {
+            transform: `translate(${end.x}px, ${end.y}px) scale(0.6) rotate(15deg)`,
+            opacity: 1,
+            offset: 0.85,
+          },
+          {
+            transform: `translate(${end.x}px, ${end.y}px) scale(0.4) rotate(25deg)`,
+            opacity: 0,
+          },
+        ];
+
+    const anim = el.animate(keyframes, {
+      duration,
+      easing: 'cubic-bezier(0.25, 1, 0.38, 1)',
+      fill: 'forwards',
+    });
 
     anim.onfinish = () => onDoneRef.current();
     return () => anim.cancel();
@@ -85,7 +117,7 @@ export default function CardDiscardEffect({ animation, localPlayerId, onDone }: 
       ref={cardRef}
       src={animation.card.image}
       alt={animation.card.name}
-      className="card-discard-item"
+      className={`card-discard-item ${animation.playerId === localPlayerId ? 'from-me' : ''}`}
     />
   );
 }

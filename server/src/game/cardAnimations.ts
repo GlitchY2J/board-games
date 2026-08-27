@@ -1,5 +1,5 @@
 import type { Card } from './models/Card.ts';
-import type { NeighAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { NeighAnimation, ExplosionAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
 
 export type CardAnimType = 'sacrifice' | 'destroy';
 
@@ -253,3 +253,34 @@ export function drainPlayAnimations(roomCode: string): PlayAnimation[] {
   }
   return drained.reverse();
 }
+
+interface QueuedExplosionAnimation extends ExplosionAnimation {
+  roomCode: string;
+}
+
+const explosionBuffer: QueuedExplosionAnimation[] = [];
+
+export function enqueueExplosionAnimation(
+  roomCode: string,
+  playerId: string,
+  playerName: string,
+): void {
+  explosionBuffer.push({
+    animId: `explosion-${Math.random().toString(36).slice(2, 8)}`,
+    roomCode,
+    playerId,
+    playerName,
+  });
+}
+
+export function drainExplosionAnimations(roomCode: string): ExplosionAnimation[] {
+  const drained: ExplosionAnimation[] = [];
+  for (let i = explosionBuffer.length - 1; i >= 0; i--) {
+    if (explosionBuffer[i].roomCode === roomCode) {
+      const [item] = explosionBuffer.splice(i, 1);
+      drained.push(item);
+    }
+  }
+  return drained.reverse();
+}
+

@@ -50,6 +50,7 @@ export default function PlayerInfo({
 
   return (
     <div
+      data-player-id={player.id}
       className={cn(
         'player-info-card flex flex-col gap-2 px-3 py-2.5 rounded-2xl transition-all duration-300',
         isActive && 'is-active',

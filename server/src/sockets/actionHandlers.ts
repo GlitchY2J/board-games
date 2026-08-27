@@ -13,6 +13,7 @@ import { GameState } from '../game/models/GameState.ts';
 import {
   enqueueCardAnimation,
   enqueueDrawAnimation,
+  enqueueExplosionAnimation,
   enqueueStealAnimation,
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
@@ -610,6 +611,8 @@ export function registerActionHandlers(
       addLog(game, `${player.name} fue eliminado por un Exploding Kitten`, {
         playerId: player.id,
       });
+
+      enqueueExplosionAnimation(room.code, player.id, player.name);
 
       if (game.players.length === 1) {
         game.winnerId = game.players[0].id;

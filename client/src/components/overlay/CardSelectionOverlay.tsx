@@ -38,6 +38,8 @@ export default function CardSelectionOverlay({
   secondaryText,
   onSecondary,
 }: Props) {
+  if (hide) return null;
+
   const [selected, setSelected] = useState<string[]>(() =>
     maxSelection === 1 && items.length === 1 ? [items[0].id] : [],
   );
