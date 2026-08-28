@@ -502,6 +502,35 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'zombie_unicorn') {
+          const player = gameState.players.find((p) => p.id === localPlayerId);
+          if (!player) return null;
+
+          const unicorns = player.hand.filter((card) => card.cardType === 'unicorn');
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🧟 Zombie Unicorn"
+              subtitle="Descarta una carta de Unicornio de tu mano"
+              items={unicorns.map((card, idx) => ({
+                id: `${card.id}_${idx}`,
+                value: card.uid,
+                title: card.name,
+                image: card.image,
+              }))}
+              maxSelection={1}
+              confirmText="Descartar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-hand-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         const target = gameState.players.find(
           (p) => p.id === action.targetPlayerId,
         );
@@ -1410,42 +1439,6 @@ export default function GameOverlay({
                 }))}
               maxSelection={1}
               confirmText="Sacrificar"
-              onConfirm={([cardId]) => {
-                dismiss();
-                socket.emit('select-stable-card', {
-                  roomCode: gameState.roomCode,
-                  cardId,
-                });
-              }}
-            />
-          );
-        }
-
-        if (action.reason === 'zombie_unicorn') {
-          const localPlayer = gameState.players.find(
-            (p) => p.id === localPlayerId,
-          );
-          if (!localPlayer) return null;
-
-          return (
-            <CardSelectionOverlay
-              hide={hide}
-              title="🧟 Zombie Unicorn"
-              subtitle="Elige un unicornio de TU establo para descartar."
-              items={localPlayer.stable
-                .filter(
-                  (card) =>
-                    card.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(localPlayer, card),
-                )
-                .map((card, idx) => ({
-                  id: `${card.id}_${idx}`,
-                  value: card.uid,
-                  title: card.name,
-                  image: card.image,
-                }))}
-              maxSelection={1}
-              confirmText="Descartar"
               onConfirm={([cardId]) => {
                 dismiss();
                 socket.emit('select-stable-card', {

@@ -984,7 +984,7 @@ export function registerActionHandlers(
       } else if (pending.reason === 'zombie_unicorn') {
         if (choice === 'yes') {
           room.gameState.pendingAction = {
-            type: 'select_stable_card',
+            type: 'select_hand_card',
             reason: 'zombie_unicorn',
             sourcePlayerId: player.id,
             targetPlayerId: player.id,
@@ -1879,10 +1879,11 @@ export function registerActionHandlers(
       if (pending.reason === 'zombie_unicorn') {
         addLog(
           room.gameState,
-          `${player.name} trajo ${broughtFromDiscard.name} al establo por Zombie Unicorn y terminó su turno`,
+          `${player.name} trajo ${broughtFromDiscard.name} al establo por Zombie Unicorn y pasó a la fase de fin de turno`,
           { playerId: player.id },
         );
-        TurnManager.endTurnImmediately(room.gameState);
+        room.gameState.phase = TurnPhase.END;
+        TurnManager.skipEndIfNoTriggers(room.gameState);
         emitGameState(io, room, 'game-updated');
         return;
       }

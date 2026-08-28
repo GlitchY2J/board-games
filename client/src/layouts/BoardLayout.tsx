@@ -55,6 +55,8 @@ export default function BoardLayout({
   const [autoEnabled, setAutoEnabled] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLElement>(null);
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [platformTheme, setPlatformTheme] = useState<PlatformTheme>(() =>
     (localStorage.getItem('platform-theme') as PlatformTheme | null) ?? 'classic',
@@ -62,6 +64,27 @@ export default function BoardLayout({
   const [pendingTheme, setPendingTheme] = useState<PlatformTheme>(platformTheme);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const closeMenuOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    const closeMenuOnOutsideClick = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!menuRef.current?.contains(target) && !menuToggleRef.current?.contains(target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', closeMenuOnEscape);
+    document.addEventListener('pointerdown', closeMenuOnOutsideClick);
+    return () => {
+      document.removeEventListener('keydown', closeMenuOnEscape);
+      document.removeEventListener('pointerdown', closeMenuOnOutsideClick);
+    };
+  }, [menuOpen]);
   const [wideTableLayout, setWideTableLayout] = useState(
     () => typeof window !== 'undefined' && window.innerWidth >= 1024,
   );
@@ -120,7 +143,7 @@ export default function BoardLayout({
   useEffect(() => {
     const onMobileChatShortcut = (event: KeyboardEvent) => {
       if (event.key !== 'Enter' && event.code !== 'Enter') return;
-      if (window.innerWidth > 640 || mobileChatOpen) return;
+      if (window.innerWidth > 1024 || mobileChatOpen) return;
 
       const target = event.target;
       if (
@@ -435,6 +458,7 @@ export default function BoardLayout({
       />
 
       <button
+        ref={menuToggleRef}
         className="game-menu-toggle"
         type="button"
         title="Abrir menú de partida"
@@ -445,7 +469,7 @@ export default function BoardLayout({
         {menuOpen ? <X size={19} /> : <Menu size={19} />}
       </button>
 
-      <aside className={`corner-controls game-menu-panel${menuOpen ? ' is-open' : ''}`}>
+      <aside ref={menuRef} className={`corner-controls game-menu-panel${menuOpen ? ' is-open' : ''}`}>
         <div className="game-menu-header">
           <span>Menú de partida</span>
         </div>

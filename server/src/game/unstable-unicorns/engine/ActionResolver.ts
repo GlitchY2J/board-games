@@ -960,32 +960,6 @@ export class ActionResolver {
       return false;
     }
 
-    if (
-      pending.type === 'select_stable_card' &&
-      pending.reason === 'zombie_unicorn'
-    ) {
-      const player = state.players.find((p) => p.id === sourcePlayerId);
-      if (!player) return false;
-
-      const idx = player.stable.findIndex(
-        (card) =>
-          card.uid === cardId &&
-          card.cardType === 'unicorn' &&
-          !isPandamoniumProtected(player, card),
-      );
-      if (idx === -1) return false;
-
-      const [sacrificed] = player.stable.splice(idx, 1);
-      CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
-      state.pendingAction = {
-        type: 'select_discard_card',
-        reason: 'zombie_unicorn',
-        playerId: sourcePlayerId,
-        cardType: 'unicorn',
-      };
-      return true;
-    }
-
     // Glitter Bomb: sacrificar una carta propia, luego destruir una carta
     if (
       pending.type === 'select_stable_card' &&
@@ -1971,6 +1945,26 @@ export class ActionResolver {
       const [upgrade] = sourcePlayer.hand.splice(cardIdx, 1);
       sourcePlayer.upgrades.push(upgrade);
       state.pendingAction = undefined;
+      return true;
+    }
+
+    if (pending.reason === 'zombie_unicorn') {
+      if (targetPlayer.id !== sourcePlayer.id) return false;
+
+      const cardIdx = sourcePlayer.hand.findIndex(
+        (card) => card.uid === cardId && card.cardType === 'unicorn',
+      );
+      if (cardIdx === -1) return false;
+
+      const [discarded] = sourcePlayer.hand.splice(cardIdx, 1);
+      enqueueDiscardAnimation(state.roomCode, sourcePlayer.id, discarded);
+      state.discard.push(discarded);
+      state.pendingAction = {
+        type: 'select_discard_card',
+        reason: 'zombie_unicorn',
+        playerId: sourcePlayerId,
+        cardType: 'unicorn',
+      };
       return true;
     }
 

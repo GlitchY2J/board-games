@@ -317,6 +317,7 @@ export class TurnManager {
         };
         return true;
       case 'zombie_unicorn':
+        if (!activePlayer.hand.some((card) => card.cardType === 'unicorn')) return false;
         game.pendingAction = {
           type: 'select_choice',
           reason: 'zombie_unicorn',

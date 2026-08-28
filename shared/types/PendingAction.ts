@@ -93,7 +93,6 @@ export type PendingAction =
          | "unicorn_of_death_sacrifice"
          | "unicorn_of_death_destroy"
          | "unicorn_of_war_destroy"
-         | "zombie_unicorn"
          | "tiny_stable"
         | "rainbow_lasso_steal"
         | "stable_artillery_destroy"
@@ -104,7 +103,7 @@ export type PendingAction =
     }
   | {
       type: "select_hand_card";
-        reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor";
+         reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor" | "zombie_unicorn";
         sourcePlayerId: string;
         targetPlayerId: string;
         requestedCardType?: string;

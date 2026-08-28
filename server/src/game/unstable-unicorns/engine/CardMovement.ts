@@ -147,7 +147,11 @@ export class CardMovement {
     animType: CardAnimType = 'destroy',
     pandamoniumApplies = true,
   ): boolean {
-    if (animType !== 'sacrifice' && isImmuneToDestruction(card.id)) {
+    if (
+      animType !== 'sacrifice' &&
+      card.id !== 'the_tiniest_unicorn' &&
+      isImmuneToDestruction(card.id)
+    ) {
       if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
         player.stable.push(card);
       }
