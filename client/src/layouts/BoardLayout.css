@@ -126,6 +126,16 @@
     gap: 50px;
   }
 
+  .players-7 .player-top,
+  .players-8 .player-top {
+    gap: 80px;
+  }
+
+  .players-7 .player-bottom,
+  .players-8 .player-bottom {
+    gap: 80px;
+  }
+
   .players-2 .center-wrap {
     transform: translateY(20px);
     position: relative;
@@ -191,9 +201,21 @@
     top: 52%;
   }
 
+  .players-7 .player-side,
+  .players-8 .player-side {
+    max-height: none;
+    overflow: visible;
+  }
+
   .players-3 .player-side .player-slot,
   .players-4 .player-side .player-slot,
   .players-5 .player-side .player-slot {
+    width: max-content;
+    max-width: none;
+  }
+
+  .players-7 .player-side .player-slot,
+  .players-8 .player-side .player-slot {
     width: max-content;
     max-width: none;
   }
@@ -205,9 +227,20 @@
     max-width: 300px;
   }
 
+  .players-7 .player-side .player-info-card,
+  .players-8 .player-side .player-info-card {
+    width: min(260px, 21vw);
+    max-width: 260px;
+  }
+
   .players-3 .player-side-right .player-slot,
   .players-4 .player-side-right .player-slot,
   .players-5 .player-side-right .player-slot {
+    align-self: flex-end;
+  }
+
+  .players-7 .player-side-right .player-slot,
+  .players-8 .player-side-right .player-slot {
     align-self: flex-end;
   }
 

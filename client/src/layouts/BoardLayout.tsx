@@ -276,8 +276,8 @@ export default function BoardLayout({
             : totalPlayers === 6
               ? ['left', 'top', 'top', 'right', 'bottom-right']
               : totalPlayers === 7
-                ? ['left', 'top', 'top', 'top', 'top', 'right']
-                : ['left', 'top', 'top', 'top', 'top', 'top', 'right'];
+                ? ['left', 'top', 'top', 'top', 'right', 'bottom']
+                : ['left', 'top', 'top', 'top', 'right', 'bottom', 'bottom'];
   const seatPositions = positions;
   const localPlayerId = localPlayer?.id ?? '';
 
@@ -304,7 +304,6 @@ export default function BoardLayout({
           player={opp}
           isLocalPlayer={false}
           isMyTurn={opp.id === activePlayer.id}
-          debugMode={gameState.debugMode}
         />
       )}
     </div>
@@ -507,7 +506,6 @@ export default function BoardLayout({
                   isMyTurn={
                     layoutLocalPlayer.id === activePlayer?.id && !spectator
                   }
-                  debugMode={gameState.debugMode}
                 />
               )}
             </div>
