@@ -417,6 +417,10 @@ function registerStartGame(io: GameServer, socket: GameSocket): void {
 
     // Asignar el orden de turnos al azar
     const players = shuffleArray(playablePlayers(room));
+    room.players = [
+      ...players,
+      ...room.players.filter((candidate) => candidate.isSpectator),
+    ];
 
     const order = players.map((p) => ({
       id: p.id,
@@ -1181,6 +1185,10 @@ function registerRestartGame(io: GameServer, socket: GameSocket): void {
     }
 
     const players = shuffleArray(playablePlayers(room));
+    room.players = [
+      ...players,
+      ...room.players.filter((candidate) => candidate.isSpectator),
+    ];
 
     const order = players.map((p) => ({
       id: p.id,
@@ -1222,6 +1230,10 @@ function registerReadyRestart(io: GameServer, socket: GameSocket): void {
     ) {
       const restartPlayers = room.players.filter((candidate) => eligiblePlayerIds.has(candidate.id));
       const order = shuffleArray(restartPlayers);
+      room.players = [
+        ...order,
+        ...room.players.filter((candidate) => candidate.isSpectator),
+      ];
       const turnOrder = order.map((candidate) => ({
           id: candidate.id,
           name: candidate.name,

@@ -1,5 +1,6 @@
 import type { GameState } from '../../types/GameState';
 import PlayingCard from '../card/PlayingCard';
+import './Stable.css';
 
 type Player = GameState['players'][number];
 
@@ -13,11 +14,14 @@ export default function Stable({ player }: Props) {
   const hasDowngrades = player.downgrades.length > 0;
 
   return (
-    <div className="flex flex-col gap-2 w-full max-w-3xl" data-stable-id={player.id}>
+    <div
+      className="stable stable-compact flex flex-col gap-2 w-max max-w-none"
+      data-stable-id={player.id}
+    >
       {/* Fila 1: Unicornios */}
-      <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-visible">
+      <div className="flex items-center gap-2 flex-nowrap rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-visible">
         {hasUnicorns ? (
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-nowrap shrink-0">
             {player.stable.map((card) => (
               <div
                 key={card.uid}
@@ -40,7 +44,7 @@ export default function Stable({ player }: Props) {
       {(hasUpgrades || hasDowngrades) && (
         <div className="flex items-center gap-2 rounded-2xl bg-slate-950/40 border border-slate-900/60 px-3 py-2 min-h-[76px] overflow-visible">
           {hasUpgrades && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-nowrap shrink-0">
               {player.upgrades.map((card) => (
                 <div key={card.uid} data-card-uid={card.uid}>
                   <PlayingCard
@@ -54,7 +58,7 @@ export default function Stable({ player }: Props) {
           )}
 
           {hasDowngrades && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-nowrap shrink-0">
               {player.downgrades.map((card) => (
                 <div key={card.uid} data-card-uid={card.uid}>
                   <PlayingCard

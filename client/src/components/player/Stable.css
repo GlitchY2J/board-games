@@ -1,1 +1,29 @@
-/* Vaciado de estilos ya que se usan clases de Tailwind */
+.stable-compact .playing-card.small {
+  width: 32px;
+}
+
+.stable-compact {
+  gap: 4px;
+}
+
+.stable-compact > div {
+  min-height: 58px;
+  gap: 4px;
+  padding: 4px 6px;
+}
+
+.stable-compact > div > div {
+  gap: 4px;
+}
+
+@media (max-width: 1024px) {
+  .stable-compact .playing-card.small {
+    width: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .stable-compact .playing-card.small {
+    width: 24px;
+  }
+}

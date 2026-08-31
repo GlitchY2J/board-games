@@ -13,18 +13,54 @@ import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
 import PlayerNotification from '../components/player/PlayerNotification';
-import { RotateCcw, LogOut, Bot, Bug, MessageSquare, Copy, Check, Menu, X, Settings as SettingsIcon } from 'lucide-react';
+import {
+  RotateCcw,
+  LogOut,
+  Bot,
+  Bug,
+  MessageSquare,
+  Copy,
+  Check,
+  Menu,
+  X,
+  Settings as SettingsIcon,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import { useState, useEffect, useRef } from 'react';
 
 type PlatformTheme = 'classic' | 'midnight' | 'ember' | 'nebula';
 
-const PLATFORM_THEMES: { id: PlatformTheme; name: string; description: string; colors: string[] }[] = [
-  { id: 'classic', name: 'Obsidiana', description: 'Elegancia oscura y neutral', colors: ['#0b0d11', '#334155', '#94a3b8'] },
-  { id: 'midnight', name: 'Aurora nocturna', description: 'Azules profundos y energía eléctrica', colors: ['#050b1c', '#1d4ed8', '#22d3ee'] },
-  { id: 'ember', name: 'Volcán', description: 'Calidez intensa con tonos de fuego', colors: ['#180b0a', '#b45309', '#fb7185'] },
-  { id: 'nebula', name: 'Nebulosa', description: 'Violetas cósmicos y acentos magenta', colors: ['#10091f', '#7e22ce', '#f472b6'] },
+const PLATFORM_THEMES: {
+  id: PlatformTheme;
+  name: string;
+  description: string;
+  colors: string[];
+}[] = [
+  {
+    id: 'classic',
+    name: 'Obsidiana',
+    description: 'Elegancia oscura y neutral',
+    colors: ['#0b0d11', '#334155', '#94a3b8'],
+  },
+  {
+    id: 'midnight',
+    name: 'Aurora nocturna',
+    description: 'Azules profundos y energía eléctrica',
+    colors: ['#050b1c', '#1d4ed8', '#22d3ee'],
+  },
+  {
+    id: 'ember',
+    name: 'Volcán',
+    description: 'Calidez intensa con tonos de fuego',
+    colors: ['#180b0a', '#b45309', '#fb7185'],
+  },
+  {
+    id: 'nebula',
+    name: 'Nebulosa',
+    description: 'Violetas cósmicos y acentos magenta',
+    colors: ['#10091f', '#7e22ce', '#f472b6'],
+  },
 ];
 
 interface Props {
@@ -58,10 +94,13 @@ export default function BoardLayout({
   const menuRef = useRef<HTMLElement>(null);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
-  const [platformTheme, setPlatformTheme] = useState<PlatformTheme>(() =>
-    (localStorage.getItem('platform-theme') as PlatformTheme | null) ?? 'classic',
+  const [platformTheme, setPlatformTheme] = useState<PlatformTheme>(
+    () =>
+      (localStorage.getItem('platform-theme') as PlatformTheme | null) ??
+      'classic',
   );
-  const [pendingTheme, setPendingTheme] = useState<PlatformTheme>(platformTheme);
+  const [pendingTheme, setPendingTheme] =
+    useState<PlatformTheme>(platformTheme);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
 
@@ -73,7 +112,10 @@ export default function BoardLayout({
     };
     const closeMenuOnOutsideClick = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (!menuRef.current?.contains(target) && !menuToggleRef.current?.contains(target)) {
+      if (
+        !menuRef.current?.contains(target) &&
+        !menuToggleRef.current?.contains(target)
+      ) {
         setMenuOpen(false);
       }
     };
@@ -85,9 +127,6 @@ export default function BoardLayout({
       document.removeEventListener('pointerdown', closeMenuOnOutsideClick);
     };
   }, [menuOpen]);
-  const [wideTableLayout, setWideTableLayout] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth >= 1024,
-  );
   const [playerNotification, setPlayerNotification] = useState<string | null>(
     null,
   );
@@ -102,12 +141,6 @@ export default function BoardLayout({
     : gameState.players.find((p) => p.socketId === socket.id);
   const cardSelectedRef = useRef(false);
   const notificationTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const onResize = () => setWideTableLayout(window.innerWidth >= 1024);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
 
   function showPlayerNotification(message: string) {
     setPlayerNotification(message);
@@ -176,15 +209,28 @@ export default function BoardLayout({
   const layoutLocalPlayer = spectator
     ? gameState.players[gameState.players.length - 1]
     : localPlayer;
-  const opponents = gameState.players.filter((P) => P.id !== layoutLocalPlayer?.id);
   const totalPlayers = gameState.players.length;
+  const localIndex = layoutLocalPlayer
+    ? gameState.players.findIndex(
+        (player) => player.id === layoutLocalPlayer.id,
+      )
+    : -1;
+  const opponents =
+    localIndex >= 0
+      ? Array.from(
+          { length: totalPlayers - 1 },
+          (_, index) =>
+            gameState.players[(localIndex + index + 1) % totalPlayers],
+        )
+      : gameState.players;
   const activePlayer = gameState.players[gameState.currentPlayer];
   const isActivePlayer = activePlayer?.socketId === socket.id;
   const showPlayerBoards = gameId !== 'exploding-kittens';
   const showPhases = gameId !== 'exploding-kittens';
 
   useEffect(() => {
-    if (gameId === 'exploding-kittens' || !autoEnabled || !isActivePlayer) return;
+    if (gameId === 'exploding-kittens' || !autoEnabled || !isActivePlayer)
+      return;
     if (gameState.pendingAction || gameState.pendingPlay) return;
 
     const canAutoAdvance =
@@ -209,30 +255,29 @@ export default function BoardLayout({
     gameId,
   ]);
 
-  type SeatPosition = 'top' | 'bottom' | 'left' | 'right';
-  const positions: SeatPosition[] = wideTableLayout
-    ? totalPlayers === 5
-      ? ['top', 'top', 'left', 'bottom']
-      : totalPlayers === 6
-        ? ['top', 'top', 'top', 'left', 'bottom']
-        : totalPlayers === 7
-          ? ['top', 'top', 'top', 'top', 'left', 'bottom']
-          : totalPlayers >= 8
-            ? ['top', 'top', 'top', 'top', 'left', 'right', 'bottom']
-            : totalPlayers === 4
-              ? ['top', 'top', 'bottom']
-              : ['top', 'top']
-    : totalPlayers === 5
-      ? ['top', 'top', 'left', 'right']
-      : totalPlayers === 6
-        ? ['top', 'top', 'top', 'left', 'right']
-        : totalPlayers === 7
-          ? ['top', 'top', 'top', 'top', 'left', 'right']
-          : totalPlayers >= 8
-            ? ['top', 'top', 'top', 'top', 'left', 'left', 'right']
-            : totalPlayers === 4
-              ? ['top', 'top', 'bottom']
-              : ['top', 'top'];
+  type SeatPosition =
+    | 'top'
+    | 'bottom'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'left'
+    | 'right';
+  const localSeatPosition: SeatPosition =
+    totalPlayers === 6 ? 'bottom-left' : 'bottom';
+  const positions: SeatPosition[] =
+    totalPlayers <= 2
+      ? ['top']
+      : totalPlayers === 3
+        ? ['left', 'top']
+        : totalPlayers === 4
+          ? ['left', 'top', 'right']
+          : totalPlayers === 5
+            ? ['left', 'top', 'top', 'right']
+            : totalPlayers === 6
+              ? ['left', 'top', 'top', 'right', 'bottom-right']
+              : totalPlayers === 7
+                ? ['left', 'top', 'top', 'top', 'top', 'right']
+                : ['left', 'top', 'top', 'top', 'top', 'top', 'right'];
   const seatPositions = positions;
   const localPlayerId = localPlayer?.id ?? '';
 
@@ -248,7 +293,9 @@ export default function BoardLayout({
         status={getPlayerStatus(gameState, opp.id, gameId)}
         localPlayerId={localPlayerId}
         gameId={gameId}
-        turnsRemaining={opp.id === activePlayer.id ? gameState.turnsRemaining : 0}
+        turnsRemaining={
+          opp.id === activePlayer.id ? gameState.turnsRemaining : 0
+        }
         isHost={isHost}
         roomCode={gameState.roomCode}
       />
@@ -257,6 +304,7 @@ export default function BoardLayout({
           player={opp}
           isLocalPlayer={false}
           isMyTurn={opp.id === activePlayer.id}
+          debugMode={gameState.debugMode}
         />
       )}
     </div>
@@ -274,7 +322,7 @@ export default function BoardLayout({
 
   const blockedBasicUnicornIds = new Set(
     queenBeeOwnerId !== undefined && queenBeeOwnerId !== localPlayer?.id
-        ? (localPlayer?.hand ?? [])
+      ? (localPlayer?.hand ?? [])
           .filter((c) => c.cardType === 'unicorn' && c.unicornClass === 'basic')
           .map((c) => c.uid)
       : [],
@@ -329,15 +377,23 @@ export default function BoardLayout({
 
   if (!localPlayer && !spectator) return null;
   const winner = gameState.winnerId
-    ? gameState.players.find((player) => player.id === gameState.winnerId)
-      ?? (gameState.winnerName ? { name: gameState.winnerName } : undefined)
+    ? (gameState.players.find((player) => player.id === gameState.winnerId) ??
+      (gameState.winnerName ? { name: gameState.winnerName } : undefined))
     : undefined;
 
   return (
-    <div className={`board-layout players-${Math.min(totalPlayers, 8)} ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}>
+    <div
+      className={`board-layout players-${Math.min(totalPlayers, 8)} ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}
+    >
       <div className="game-area">
         <div className="player-top">
-          {opponents.filter((opp) => seatPositions[opponents.indexOf(opp)] === 'top').map(renderOpponent)}
+          {opponents
+            .filter((opp) =>
+              ['top', 'top-left', 'top-right'].includes(
+                seatPositions[opponents.indexOf(opp)],
+              ),
+            )
+            .map(renderOpponent)}
         </div>
 
         <div className="middle">
@@ -346,11 +402,17 @@ export default function BoardLayout({
           </div>
 
           <div className="player-side player-side-left">
-             {opponents.filter((opp) => seatPositions[opponents.indexOf(opp)] === 'left').map(renderOpponent)}
+            {opponents
+              .filter((opp) => seatPositions[opponents.indexOf(opp)] === 'left')
+              .map(renderOpponent)}
           </div>
 
           <div className="player-side player-side-right">
-             {opponents.filter((opp) => seatPositions[opponents.indexOf(opp)] === 'right').map(renderOpponent)}
+            {opponents
+              .filter(
+                (opp) => seatPositions[opponents.indexOf(opp)] === 'right',
+              )
+              .map(renderOpponent)}
           </div>
 
           <div className="center-wrap">
@@ -366,7 +428,8 @@ export default function BoardLayout({
 
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
-                      Presiona <kbd className="space-key">Space</kbd> para robar una carta
+                      Presiona <kbd className="space-key">Space</kbd> para robar
+                      una carta
                     </span>
                   )}
 
@@ -375,16 +438,19 @@ export default function BoardLayout({
                     !gameState.pendingAction &&
                     !gameState.pendingPlay && (
                       <span className="draw-hint">
-                        Presiona <kbd className="space-key">Space</kbd> para robar una carta y terminar tu turno
+                        Presiona <kbd className="space-key">Space</kbd> para
+                        robar una carta y terminar tu turno
                       </span>
                     )}
 
-                  {showPhases && isMyTurn &&
+                  {showPhases &&
+                    isMyTurn &&
                     gameState.phase === 'ACTION' &&
                     !gameState.actionUsed &&
                     !gameState.pendingPlay && (
                       <span className="draw-hint">
-                        Juega una carta o presiona <kbd className="space-key">Space</kbd> para robar
+                        Juega una carta o presiona{' '}
+                        <kbd className="space-key">Space</kbd> para robar
                       </span>
                     )}
                 </div>
@@ -397,37 +463,58 @@ export default function BoardLayout({
           </div>
         </div>
 
+        <div className="player-bottom-right">
+          {opponents
+            .filter(
+              (opp) => seatPositions[opponents.indexOf(opp)] === 'bottom-right',
+            )
+            .map(renderOpponent)}
+        </div>
+
         <div className="player-bottom">
-          {layoutLocalPlayer && <div
-            className="player-slot local-player-slot flex-col items-center gap-2"
-            data-player-id={layoutLocalPlayer.id}
-          >
-            {playerNotification && (
-              <PlayerNotification message={playerNotification} />
-            )}
+          {layoutLocalPlayer && (
+            <div
+              className={`player-slot local-player-slot ${localSeatPosition} flex-col items-center gap-2`}
+              data-player-id={layoutLocalPlayer.id}
+            >
+              {playerNotification && (
+                <PlayerNotification message={playerNotification} />
+              )}
 
-            <PlayerInfo
-              player={layoutLocalPlayer}
-              isActive={layoutLocalPlayer.id === activePlayer?.id}
-              status={getPlayerStatus(gameState, layoutLocalPlayer.id, gameId)}
-              localPlayerId={localPlayerId}
-              gameId={gameId}
-              turnsRemaining={layoutLocalPlayer.id === activePlayer?.id ? gameState.turnsRemaining : 0}
-              isHost={isHost}
-              roomCode={gameState.roomCode}
-            />
+              <PlayerInfo
+                player={layoutLocalPlayer}
+                isActive={layoutLocalPlayer.id === activePlayer?.id}
+                status={getPlayerStatus(
+                  gameState,
+                  layoutLocalPlayer.id,
+                  gameId,
+                )}
+                localPlayerId={localPlayerId}
+                gameId={gameId}
+                turnsRemaining={
+                  layoutLocalPlayer.id === activePlayer?.id
+                    ? gameState.turnsRemaining
+                    : 0
+                }
+                isHost={isHost}
+                roomCode={gameState.roomCode}
+              />
 
-            {showPlayerBoards && (
+              {showPlayerBoards && (
                 <PlayerBoard
                   player={layoutLocalPlayer}
                   isLocalPlayer={!spectator}
-                  isMyTurn={layoutLocalPlayer.id === activePlayer?.id && !spectator}
-              />
-            )}
-          </div>}
+                  isMyTurn={
+                    layoutLocalPlayer.id === activePlayer?.id && !spectator
+                  }
+                  debugMode={gameState.debugMode}
+                />
+              )}
+            </div>
+          )}
 
           {opponents.map((opp) => {
-             const position = seatPositions[opponents.indexOf(opp)];
+            const position = seatPositions[opponents.indexOf(opp)];
             if (position !== 'bottom') return null;
             return renderOpponent(opp);
           })}
@@ -469,7 +556,10 @@ export default function BoardLayout({
         {menuOpen ? <X size={19} /> : <Menu size={19} />}
       </button>
 
-      <aside ref={menuRef} className={`corner-controls game-menu-panel${menuOpen ? ' is-open' : ''}`}>
+      <aside
+        ref={menuRef}
+        className={`corner-controls game-menu-panel${menuOpen ? ' is-open' : ''}`}
+      >
         <div className="game-menu-header">
           <span>Menú de partida</span>
         </div>
@@ -489,7 +579,9 @@ export default function BoardLayout({
           <button
             className={`ctrl-button ctrl-neutral${autoEnabled ? ' auto-on' : ''}`}
             title={
-              autoEnabled ? 'Desactivar modo automático' : 'Activar modo automático'
+              autoEnabled
+                ? 'Desactivar modo automático'
+                : 'Activar modo automático'
             }
             onClick={() => setAutoEnabled((v) => !v)}
           >
@@ -508,9 +600,7 @@ export default function BoardLayout({
                 ? 'Desactivar modo debug'
                 : 'Activar modo debug (elegir carta del mazo en la fase de robo)'
             }
-            onClick={() =>
-              socket.emit('toggle-debug-mode', gameState.roomCode)
-            }
+            onClick={() => socket.emit('toggle-debug-mode', gameState.roomCode)}
           >
             <Bug size={16} />
             <span>Modo debug</span>
@@ -555,7 +645,10 @@ export default function BoardLayout({
       </aside>
 
       {optionsOpen && (
-        <div className="platform-options-backdrop" onClick={() => setOptionsOpen(false)}>
+        <div
+          className="platform-options-backdrop"
+          onClick={() => setOptionsOpen(false)}
+        >
           <section
             className="platform-options-panel"
             role="dialog"
@@ -579,8 +672,13 @@ export default function BoardLayout({
             </div>
 
             <div className="platform-options-section">
-              <label className="platform-theme-row" htmlFor="platform-theme-select">
-                <span className="platform-options-label">Tema de la plataforma</span>
+              <label
+                className="platform-theme-row"
+                htmlFor="platform-theme-select"
+              >
+                <span className="platform-options-label">
+                  Tema de la plataforma
+                </span>
                 <div className="platform-theme-combobox">
                   <button
                     id="platform-theme-select"
@@ -591,15 +689,27 @@ export default function BoardLayout({
                     onClick={() => setThemeMenuOpen((open) => !open)}
                   >
                     <span className="platform-theme-trigger-swatch">
-                      {PLATFORM_THEMES.find((theme) => theme.id === pendingTheme)?.colors.map((color) => (
+                      {PLATFORM_THEMES.find(
+                        (theme) => theme.id === pendingTheme,
+                      )?.colors.map((color) => (
                         <span key={color} style={{ backgroundColor: color }} />
                       ))}
                     </span>
-                    <span>{PLATFORM_THEMES.find((theme) => theme.id === pendingTheme)?.name}</span>
+                    <span>
+                      {
+                        PLATFORM_THEMES.find(
+                          (theme) => theme.id === pendingTheme,
+                        )?.name
+                      }
+                    </span>
                     <span className="platform-theme-chevron">⌄</span>
                   </button>
                   {themeMenuOpen && (
-                    <div className="platform-theme-menu" role="listbox" aria-label="Temas disponibles">
+                    <div
+                      className="platform-theme-menu"
+                      role="listbox"
+                      aria-label="Temas disponibles"
+                    >
                       {PLATFORM_THEMES.map((theme) => (
                         <button
                           key={theme.id}
@@ -613,13 +723,20 @@ export default function BoardLayout({
                           }}
                         >
                           <span className="platform-theme-trigger-swatch">
-                            {theme.colors.map((color) => <span key={color} style={{ backgroundColor: color }} />)}
+                            {theme.colors.map((color) => (
+                              <span
+                                key={color}
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
                           </span>
                           <span className="platform-theme-menu-copy">
                             <strong>{theme.name}</strong>
                             <small>{theme.description}</small>
                           </span>
-                          {pendingTheme === theme.id && <span className="platform-theme-check">✓</span>}
+                          {pendingTheme === theme.id && (
+                            <span className="platform-theme-check">✓</span>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -676,19 +793,26 @@ export default function BoardLayout({
         </div>
       )}
 
-      {!spectator && (showPhases || gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens') && (
-        <>
-          <div className="phase-panel-anchor">
-            <PhasePanel gameState={gameState} showRoundPhase={showPhases} />
-          </div>
-
-          {showPhases && (
-            <div className="phase-action-anchor">
-              <PhaseActionButton gameState={gameState} autoEnabled={autoEnabled} />
+      {!spectator &&
+        (showPhases ||
+          gameId === 'exploding-kittens' ||
+          gameId === 'exploding_kittens' ||
+          gameId === 'explodingKittens') && (
+          <>
+            <div className="phase-panel-anchor">
+              <PhasePanel gameState={gameState} showRoundPhase={showPhases} />
             </div>
-          )}
-        </>
-      )}
+
+            {showPhases && (
+              <div className="phase-action-anchor">
+                <PhaseActionButton
+                  gameState={gameState}
+                  autoEnabled={autoEnabled}
+                />
+              </div>
+            )}
+          </>
+        )}
 
       {!spectator && (
         <div className="bottom-hand" data-hand>
@@ -702,7 +826,11 @@ export default function BoardLayout({
             blockedCardIds={blockedCardIds}
             onPlay={onPlay}
             onPlayCards={(cardIds) => onPlay(cardIds[0], cardIds)}
-            compact={gameId === 'exploding-kittens' || gameId === 'exploding_kittens' || gameId === 'explodingKittens'}
+            compact={
+              gameId === 'exploding-kittens' ||
+              gameId === 'exploding_kittens' ||
+              gameId === 'explodingKittens'
+            }
             gameId={gameId}
             sortHandMode={sortHandMode}
             onInvalidAction={showPlayerNotification}

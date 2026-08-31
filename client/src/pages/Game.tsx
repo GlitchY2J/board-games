@@ -404,6 +404,24 @@ export default function Game() {
   );
 
   if (!localPlayer) {
+    const eliminated = gameState.eliminatedPlayers?.find(
+      (player) => player.id === contextPlayerId,
+    );
+
+    if (eliminated && gameState.winnerId) {
+      return (
+        <VictoryScreen
+          gameState={gameState}
+          localPlayerId={contextPlayerId ?? ''}
+          onReadyRestart={() => socket.emit('ready-restart', gameState.roomCode)}
+          onLeaveLobby={leaveToLobby}
+          restartReadyCount={gameState.restartReadyPlayerIds?.length ?? 0}
+          restartTotalPlayers={restartTotalPlayers}
+          isRestartReady={contextPlayerId ? gameState.restartReadyPlayerIds?.includes(contextPlayerId) ?? false : false}
+        />
+      );
+    }
+
     if (isSpectatorPlayer) {
       return (
         <>
@@ -421,9 +439,6 @@ export default function Game() {
       );
     }
 
-    const eliminated = gameState.eliminatedPlayers?.find(
-      (player) => player.id === contextPlayerId,
-    );
     if (eliminated) {
       if (gameState.winnerId) {
         return (

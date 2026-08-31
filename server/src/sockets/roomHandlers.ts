@@ -237,6 +237,8 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     const player = room.players.find((candidate) => candidate.socketId === socket.id);
     if (!player) return;
 
+    player.isReady = false;
+
     // Los jugadores eliminados ya no están en gameState.players, pero siguen
     // siendo miembros de la sala y deben poder salir desde el Winner Screen.
     if (!player.isSpectator) {
