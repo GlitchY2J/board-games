@@ -332,7 +332,8 @@ export default function GameOverlay({
         const isPlayDowngrade = action.reason === 'play_downgrade';
         const isMermaid = action.reason === 'mermaid_unicorn';
         const isUnfairBargain = action.reason === 'unfair_bargain';
-        const isUnicornSwap = action.reason === 'unicorn_swap';
+         const isUnicornSwap = action.reason === 'unicorn_swap';
+         const isACuteAttack = action.reason === 'a_cute_attack';
         const isReTargetSource = action.reason === 're_target_source';
         const isReTargetDestination = action.reason === 're_target_destination';
         const needsHand =
@@ -364,7 +365,9 @@ export default function GameOverlay({
           if (needsHand) return p.hand.length > 0;
           if (isUnicornSwap)
             return p.stable.some((c) => c.cardType === 'unicorn');
-          if (isUnicornPoison) return p.stable.length > 0;
+           if (isUnicornPoison) return p.stable.length > 0;
+           if (isACuteAttack)
+             return p.stable.some((c) => c.cardType === 'unicorn');
           return (
             p.stable.length > 0 ||
             p.upgrades.length > 0 ||
@@ -399,7 +402,8 @@ export default function GameOverlay({
           if (isPlayDowngrade) return '⏬ Jugar Downgrade';
           if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
           if (isUnfairBargain) return '🤝 Unfair Bargain';
-          if (isUnicornSwap) return '🦄 Unicorn Swap';
+           if (isUnicornSwap) return '🦄 Unicorn Swap';
+           if (isACuteAttack) return '💖 A Cute Attack';
           if (isReTargetSource) return '🎯 Re-Target';
           if (isReTargetDestination) return '🎯 Re-Target: destino';
           return 'Seleccionar Objetivo';
@@ -428,8 +432,10 @@ export default function GameOverlay({
             return 'Elige a un jugador para devolver una carta de su establo a su mano';
           if (isUnfairBargain)
             return 'Elige a un jugador para intercambiar manos con él';
-          if (isUnicornSwap)
-            return 'Elige a un jugador para intercambiar un unicornio con él';
+           if (isUnicornSwap)
+             return 'Elige a un jugador para intercambiar un unicornio con él';
+           if (isACuteAttack)
+             return 'Elige un rival para destruir hasta 3 unicornios y reemplazarlos por Baby Unicorns';
           if (isReTargetSource)
             return 'Elige de qué jugador moverás un Upgrade o Downgrade';
           if (isReTargetDestination)
@@ -675,6 +681,41 @@ export default function GameOverlay({
 
       case 'select_stable_card': {
         if (action.sourcePlayerId !== localPlayerId) return null;
+
+        if (action.reason === 'a_cute_attack_destroy') {
+          const target = gameState.players.find(
+            (p) => p.id === action.targetPlayerId,
+          );
+          if (!target) return null;
+          const items = target.stable
+            .filter((card) => card.cardType === 'unicorn')
+            .map((card, index) => ({
+              id: `${card.uid}_${index}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: `Establo de ${target.name}`,
+              image: card.image,
+            }));
+          const count = action.remainingToDestroy ?? 0;
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="💖 A Cute Attack"
+              subtitle={`Elige ${count} unicornio(s) para destruir del establo de ${target.name}`}
+              items={items}
+              minSelection={count}
+              maxSelection={count}
+              confirmText="Destruir y reemplazar"
+              onConfirm={(values) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId: values,
+                });
+              }}
+            />
+          );
+        }
 
         if (action.reason === 're_target_card') {
           const source = gameState.players.find(
@@ -2213,6 +2254,8 @@ export default function GameOverlay({
             items={items}
             maxSelection={1}
             confirmText={isExplodingKittenDefuse ? 'Colocar' : isDebugDraw ? 'Robar' : 'Tomar'}
+            searchable={isDebugDraw}
+            searchPlaceholder="Buscar carta en el mazo..."
             secondaryText={isExplodingKittenDefuse ? 'Ubicación aleatoria' : undefined}
             onSecondary={isExplodingKittenDefuse ? () => {
               dismiss();

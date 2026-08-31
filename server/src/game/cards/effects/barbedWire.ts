@@ -2,6 +2,7 @@ import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import type { PendingAction } from '../../models/PendingAction.ts';
+import { hasPandamonium } from './pandamonium.ts';
 
 export const BARBED_WIRE_ID = 'barbed_wire';
 
@@ -89,6 +90,10 @@ export function maybeTriggerBarbedWireLeave(
   state: GameState,
   player: Player,
 ): void {
+  // Pandamonium suppresses effects caused by a unicorn leaving this stable.
+  // Entry is handled separately by CardMovement.enterStable and still triggers
+  // Barbed Wire normally.
+  if (hasPandamonium(player)) return;
   if (!hasBarbedWire(player)) return;
   triggerBarbedWireDiscard(state, player);
 }

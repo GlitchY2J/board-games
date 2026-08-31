@@ -62,7 +62,8 @@ export type PendingAction =
         | "unicorn_swap"
          | "re_target_source"
          | "re_target_destination"
-         | "favor";
+         | "favor"
+         | "a_cute_attack";
        sourcePlayerId: string;
        targetPlayerId?: string;
        cardIds?: string[];
@@ -96,10 +97,12 @@ export type PendingAction =
          | "tiny_stable"
         | "rainbow_lasso_steal"
         | "stable_artillery_destroy"
-        | "sadistic_ritual";
-       sourcePlayerId: string;
-       targetPlayerId?: string;
-       remainingPlayerIds?: string[];
+          | "sadistic_ritual"
+          | "a_cute_attack_destroy";
+        sourcePlayerId: string;
+        targetPlayerId?: string;
+        remainingPlayerIds?: string[];
+        remainingToDestroy?: number;
     }
   | {
       type: "select_hand_card";

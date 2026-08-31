@@ -23,6 +23,8 @@ interface Props {
   onCancel?(): void;
   secondaryText?: string;
   onSecondary?(): void;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 export default function CardSelectionOverlay({
@@ -37,7 +39,10 @@ export default function CardSelectionOverlay({
   onCancel,
   secondaryText,
   onSecondary,
+  searchable = false,
+  searchPlaceholder = 'Buscar carta...',
 }: Props) {
+  const [search, setSearch] = useState('');
   if (hide) return null;
 
   const [selected, setSelected] = useState<string[]>(() =>
@@ -72,6 +77,16 @@ export default function CardSelectionOverlay({
     });
   }, [selected, items]);
 
+  const visibleItems = useMemo(() => {
+    const normalizedSearch = search.trim().toLocaleLowerCase();
+    if (!normalizedSearch) return items;
+    return items.filter((item) =>
+      `${item.title} ${item.subtitle ?? ''}`
+        .toLocaleLowerCase()
+        .includes(normalizedSearch),
+    );
+  }, [items, search]);
+
   return (
     <div className={`overlay-backdrop ${hide ? 'animating-out' : ''}`}>
       <div className={`card-selection-window ${hide ? 'animating-out' : ''}`}>
@@ -79,8 +94,19 @@ export default function CardSelectionOverlay({
 
         {subtitle && <p>{subtitle}</p>}
 
+        {searchable && (
+          <input
+            className="selection-search"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
+          />
+        )}
+
         <div className="card-selection-grid">
-          {items.map((item) => {
+          {visibleItems.map((item) => {
             const active = selected.includes(item.id);
 
             return (

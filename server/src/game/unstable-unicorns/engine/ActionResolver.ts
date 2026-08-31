@@ -13,6 +13,7 @@ import { drawForSadisticRitual } from '../../cards/effects/sadisticRitual.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
 import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
+import { hasBlindingLight } from '../../cards/effects/blindingLight.ts';
 import { nextUnicornOfWarChoice } from '../../cards/effects/unicornOfWar.ts';
 import {
   drawRainbowPrincessCards,
@@ -345,6 +346,26 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'a_cute_attack') {
+      const target = state.players.find((p) => p.id === targetPlayerId);
+      if (!target || target.id === sourcePlayerId) return false;
+      const available = target.stable.filter(
+        (card) =>
+          card.cardType === 'unicorn' &&
+          !isImmuneToDestruction(card.id) &&
+          !isPandamoniumProtected(target, card),
+      );
+      if (available.length === 0) return false;
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 'a_cute_attack_destroy',
+        sourcePlayerId,
+        targetPlayerId,
+        remainingToDestroy: Math.min(3, available.length),
+      };
+      return true;
+    }
+
     if (pending.reason === 'annoying_flying_unicorn') {
       state.pendingAction = {
         type: 'discard',
@@ -482,6 +503,56 @@ export class ActionResolver {
       pending.type !== 'cotton_candy_unicorn'
     ) {
       return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'a_cute_attack_destroy'
+    ) {
+      const ids = Array.isArray(cardId) ? cardId : [cardId];
+      const target = state.players.find((p) => p.id === pending.targetPlayerId);
+      const count = pending.remainingToDestroy ?? 0;
+      if (!target || ids.length !== count || new Set(ids).size !== ids.length) {
+        return false;
+      }
+
+      const selected = ids.map((uid) =>
+        target.stable.find((card) => card.uid === uid),
+      );
+      if (
+        selected.some(
+          (card) =>
+            !card ||
+            card.cardType !== 'unicorn' ||
+            isImmuneToDestruction(card.id) ||
+            isPandamoniumProtected(target, card),
+        )
+      ) {
+        return false;
+      }
+
+      for (const uid of ids) {
+        const index = target.stable.findIndex((card) => card.uid === uid);
+        const [destroyed] = target.stable.splice(index, 1);
+        CardMovement.destroyOrSacrifice(state, target, destroyed, 'destroy');
+      }
+
+      const babyIndexes = state.nursery
+        .map((card, index) =>
+          card.cardType === 'unicorn' && card.unicornClass === 'baby'
+            ? index
+            : -1,
+        )
+        .filter((index) => index !== -1)
+        .slice(0, count)
+        .reverse();
+      for (const index of babyIndexes) {
+        const [baby] = state.nursery.splice(index, 1);
+        CardMovement.enterStable(state, target, baby);
+      }
+
+      state.pendingAction = undefined;
+      return true;
     }
 
     if (
@@ -1108,6 +1179,7 @@ export class ActionResolver {
       if (
         targetCard.cardType === 'unicorn' &&
         hasBlackKnight &&
+        !hasBlindingLight(targetPlayer) &&
         targetCard.id !== 'black_knight_unicorn'
       ) {
         state.pendingAction = {

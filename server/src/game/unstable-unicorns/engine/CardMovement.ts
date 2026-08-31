@@ -11,6 +11,7 @@ import {
   triggerBarbedWireDiscard,
 } from '../../cards/effects/barbedWire.ts';
 import { isEffectBlockedByBlindingLight } from '../../cards/effects/blindingLight.ts';
+import { hasBlindingLight } from '../../cards/effects/blindingLight.ts';
 import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 
 export function hasUpgrade(player: Player, id: string): boolean {
@@ -111,6 +112,7 @@ export class CardMovement {
     player: Player,
     card: Card,
   ): boolean {
+    if (hasBlindingLight(player)) return false;
     if (card.id === 'black_knight_unicorn') return false;
     if (card.cardType !== 'unicorn') return false;
 
@@ -180,7 +182,10 @@ export class CardMovement {
       return true;
     }
 
-    if (card.id.includes('flying_unicorn') || card.effect === 'llamacorn') {
+    if (
+      card.id.includes('flying_unicorn') &&
+      !isEffectBlockedByBlindingLight(player, card)
+    ) {
       maybeTriggerBarbedWireLeave(state, player);
       player.hand.push(card);
       return false;
