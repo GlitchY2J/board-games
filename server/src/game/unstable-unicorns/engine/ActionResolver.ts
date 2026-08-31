@@ -278,10 +278,25 @@ export class ActionResolver {
       return true;
     }
 
+    if (reason === 'hand_limit') {
+      TurnManager.nextPhase(state);
+    }
+
+    // Change of Luck grants an extra turn, but Double Dutch must still allow
+    // the remaining action play before the current turn ends.
     if (
-      reason === 'hand_limit' ||
-      reason === 'good_deal' ||
-      reason === 'change_of_luck'
+      reason === 'change_of_luck' &&
+      state.actionPlaysRemaining === undefined
+    ) {
+      TurnManager.nextPhase(state);
+    }
+
+    // Good Deal can be the first card played with Double Dutch. In that case
+    // the discard resolves the card effect, but the player still has one play
+    // remaining in the action phase.
+    if (
+      reason === 'good_deal' &&
+      state.actionPlaysRemaining === undefined
     ) {
       TurnManager.nextPhase(state);
     }

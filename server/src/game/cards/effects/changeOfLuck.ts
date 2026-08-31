@@ -25,7 +25,7 @@ export const changeOfLuck: CardEffect = {
         playerId: player.id,
         cardsToDiscard,
       };
-    } else {
+    } else if (state.actionPlaysRemaining === undefined) {
       TurnManager.nextPhase(state);
     }
   },
