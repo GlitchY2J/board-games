@@ -1121,5 +1121,165 @@
     "effect": "zombie_unicorn",
     "copies": 2,
     "expansion": "rainbow"
+  },
+  {
+    "id": "a_cute_attack",
+    "name": "A Cute Attack",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/a_cute_attack.png",
+    "description": "Choose another player. DESTROYE 3 Unicorn cards in that player's Stable and bring 3 Baby Unicorn cards from the Nursery into that player's Stable.",
+    "effect": "a_cute_attack",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "fire_and_brimstone",
+    "name": "Fire And Brimstone",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/fire_and_brimstone.png",
+    "description": "SACRIFICE all of your Unicorn cards, then DESTROY a Unicorn card in each other player's Stable. Search the deck for a Unicorn Phoenix card and bring it into your Stable, then Shuffle the deck.",
+    "effect": "fire_and_brimstone",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorns_of_the_apocalypse",
+    "name": "Unicorns Of The Apocalypse",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/unicorns_of_the_apocalypse.png",
+    "description": "SACRIFICE 4 Unicorn cards, then search the deck for 4 Unicorn cards and bring them into your Stable. Shuffle the deck.",
+    "effect": "unicorns_of_the_apocalypse",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "heavenly_smite",
+    "name": "Heavenly Smite",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/heavenly_smite.png",
+    "description": "SACRIFICE all of your Unicorn cards, then DESTROY a Unicorn card in each other player's Stable. Search the deck for an Angel Unicorn card and bring it into your Stable, then Shuffle the deck.",
+    "effect": "heavenly_smite",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "llamapocalypse",
+    "name": "Llamapocalypse",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/llamapocalypse.png",
+    "description": "SACRIFICE all of your Unicorn cards, then DESTROY a Unicorn card in each other player's Stable, Search the deck for a Llamacorn card and  bring it into your Stable, then Shuffle the deck.",
+    "effect": "llamapocalypse",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "overpopulation",
+    "name": "Overpopulation",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/overpopulation.png",
+    "description": "SACRIFICE all of your Unicorn cards, then DESTROY a Unicorn card in each other player's Stable. Search the deck for an Extremely Fertile Unicorn and bring it into your Stable, then Shuffle the deck.",
+    "effect": "overpopulation",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "plague_of_death",
+    "name": "Plague Of Death",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/plague_of_death.png",
+    "description": "SACRIFICE any number of cards, then DESTROY the same number of cards.",
+    "effect": "plague_of_death",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "spray_bottle_of_youth",
+    "name": "Spray Bottle Of Youth",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/spray_bottle_of_youth.png",
+    "description": "DESTROY a Unicorn card in each other player's Stable. Each other player may bring a Baby Unicorn from the Nursery into their Stable.",
+    "effect": "spray_bottle_of_youth",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "storm_of_cuteness",
+    "name": "Storm Of Cuteness",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/storm_of_cuteness.png",
+    "description": "SACRIFICE all of your Unicorn cards, then DESTROY a Unicorn card in each other player's Stable, then Shuffle the deck.",
+    "effect": "storm_of_cuteness",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "ultimate_destruction",
+    "name": "Ultimate Destruction",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/ultimate_destruction.png",
+    "description": "SACRIFICE all of your Unicorn cards, then DESTROY a Unicorn card in each other player's Stable. Search the deck for an Extremely Destructive Unicorn card and bring it into your Stable, then Shuffle the deck",
+    "effect": "ultimate_destruction",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "unicorn_nap",
+    "name": "Unicorn Nap",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/unicorn_nap.png",
+    "description": "Force another player to skip their next turn.",
+    "effect": "unicorn_nap",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "zombie_apocalypse",
+    "name": "Zombie Apocalypse",
+    "cardType": "magic",
+    "image": "/cards/rainbow apocalypse/zombie_apocalypse.png",
+    "description": "SACRIFICE all of your Unicorn cards, then DESTROY a Unicorn card in each other player's Stable. Search the deck for a Zombie Unicorn card and bring it into your Stable, then Shuffle the deck.",
+    "effect": "zombie_apocalypse",
+    "copies": 1,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "neigh_thank_you",
+    "name": "Neigh",
+    "cardType": "instant",
+    "image": "/cards/base/neigh_thank_you.png",
+    "description": "Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile. Both you and that player may DRAW card.",
+    "effect": "neigh_thank_you",
+    "copies": 3,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "rainbow_sprinkles",
+    "name": "Rainbow Sprinkles",
+    "cardType": "upgrade",
+    "image": "/cards/base/rainbow_sprinkles.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DRAW 3 cards. If you do, immediately end your turn.",
+    "effect": "rainbow_sprinkles",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "special_delivery",
+    "name": "Special Delivery",
+    "cardType": "upgrade",
+    "image": "/cards/base/special_delivery.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may bring a Baby Unicorn card from the Nursery into your Stable. If you do, skip your Action phase.",
+    "effect": "special_delivery",
+    "copies": 2,
+    "expansion": "rainbow"
+  },
+  {
+    "id": "tiny_hooves",
+    "name": "Tiny Hooves",
+    "cardType": "downgrade",
+    "image": "/cards/base/tiny_hooves.png",
+    "description": "Your hand limit is reduced by 4 cards.",
+    "effect": "tiny_hooves",
+    "copies": 1,
+    "expansion": "rainbow"
   }
 ]
