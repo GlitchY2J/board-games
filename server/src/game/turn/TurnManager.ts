@@ -108,6 +108,11 @@ export class TurnManager {
       uids.push(...lasso.map((c) => c.uid));
     }
 
+    const sprinkles = allCards.filter((c) => c.id === 'rainbow_sprinkles');
+    if (sprinkles.length > 0) {
+      uids.push(...sprinkles.map((c) => c.uid));
+    }
+
     // Stable Artillery: descartar 2 cartas y luego destruir un unicornio de
     // OTRO jugador (no del propio establo). Igual que Lasso: opcional.
     const artillery = allCards.filter((c) => c.id === 'stable_artillery');
@@ -257,6 +262,20 @@ export class TurnManager {
           options: [
             { value: 'yes', text: 'Sí, descartar 3 y robar un unicornio' },
             { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'rainbow_sprinkles':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'rainbow_sprinkles',
+          playerId: activePlayer.id,
+          title: '🌈 Rainbow Sprinkles',
+          description: '¿Deseas ROBAR 3 cartas y terminar tu turno inmediatamente?',
+          options: [
+            { value: 'yes', text: 'Sí, robar 3 y terminar turno' },
+            { value: 'no', text: 'No, continuar mi turno' },
           ],
           effectCardId: uid,
         };

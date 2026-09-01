@@ -80,6 +80,11 @@ export interface SelectChoicePayload {
 
 export interface SelectDiscardCardPayload {
   roomCode: string;
+  cardId: string;
+}
+
+export interface SelectDeckCardPayload {
+  roomCode: string;
   cardId: string | string[];
 }
 
@@ -314,7 +319,7 @@ export interface ClientToServerEvents {
   'select-discard-card': (payload: SelectDiscardCardPayload) => void;
 
   // Select Deck Card
-  'select-deck-card': (payload: SelectDiscardCardPayload) => void;
+  'select-deck-card': (payload: SelectDeckCardPayload) => void;
 
   // Select Nursery Card
   'select-nursery-card': (payload: SelectDiscardCardPayload) => void;

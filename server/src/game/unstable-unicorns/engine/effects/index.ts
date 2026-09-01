@@ -33,6 +33,7 @@ import { necromancerUnicorn } from '../../../cards/effects/necromancerUnicorn.ts
 import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import { queenBeeUnicorn } from '../../../cards/effects/queenBeeUnicorn.ts';
 import { rainbowUnicorn } from '../../../cards/effects/rainbowUnicorn.ts';
+import { rainbowSprinkles } from '../../../cards/effects/rainbowSprinkles.ts';
 import { seductiveUnicorn } from '../../../cards/effects/seductiveUnicorn.ts';
 import { sharkWithAHorn } from '../../../cards/effects/sharkWithAHorn.ts';
 import { stabbyTheUnicorn } from '../../../cards/effects/stabbyTheUnicorn.ts';
@@ -122,6 +123,7 @@ export const effects: Record<string, CardEffect> = {
   necromancer_unicorn: necromancerUnicorn,
   queen_bee_unicorn: queenBeeUnicorn,
   rainbow_unicorn: rainbowUnicorn,
+  rainbow_sprinkles: rainbowSprinkles,
   seductive_unicorn: seductiveUnicorn,
   shark_with_a_horn: sharkWithAHorn,
   stabby_the_unicorn: stabbyTheUnicorn,

@@ -1507,6 +1507,34 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'rainbow_sprinkles') {
+        if (choice === 'yes') {
+          for (let index = 0; index < 3; index += 1) {
+            const drawn = room.gameState.deck.shift();
+            if (!drawn) break;
+            enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
+            player.hand.push(drawn);
+          }
+
+          room.gameState.pendingAction = undefined;
+          room.gameState.phase = TurnPhase.END;
+          TurnManager.skipEndIfNoTriggers(room.gameState);
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usó Rainbow Sprinkles, robó hasta 3 cartas y terminó su turno`
+            : `${player.name} omitió el efecto de Rainbow Sprinkles`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'stable_artillery') {
         const used =
           choice === 'yes' &&
@@ -1999,7 +2027,8 @@ export function registerActionHandlers(
       }
 
       if (pending.reason === 'exploding_kitten_defuse') {
-        const position = Number(cardId.replace('deck-position-', ''));
+        const positionCardId = Array.isArray(cardId) ? cardId[0] : cardId;
+        const position = Number(positionCardId.replace('deck-position-', ''));
         if (!Number.isInteger(position) || position < 0 || position > room.gameState.deck.length) {
           emitGameError(socket, 'INVALID_SELECTION', 'La posición del mazo no es válida.', 'select-deck-card');
           return;

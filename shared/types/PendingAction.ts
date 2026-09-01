@@ -35,7 +35,7 @@ export type PendingAction =
          | "claw_machine"
          | "extremely_fertile_unicorn"
          | "rainbow_lasso"
-        | "stable_artillery"
+         | "stable_artillery"
         | "barbed_wire";
       playerId: string;
       cardsToDiscard: number;
@@ -205,8 +205,9 @@ export type PendingAction =
          | "unicorn_rainbow_princess"
          | "zombie_unicorn"
         | "beginning_effect_picker"
-        | "rainbow_lasso"
-        | "stable_artillery"
+         | "rainbow_lasso"
+         | "rainbow_sprinkles"
+         | "stable_artillery"
          | "angel_unicorn"
         | "three_of_a_kind"
         | "favor";
