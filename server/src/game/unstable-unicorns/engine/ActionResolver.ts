@@ -20,6 +20,7 @@ import {
   drawRainbowPrincessCards,
   nextRainbowPrincessChoice,
 } from '../../cards/effects/unicornRainbowPrincess.ts';
+import { nextSprayBottleChoice } from '../../cards/effects/sprayBottleOfYouth.ts';
 
 export class ActionResolver {
   static handleSelectPlayers(
@@ -714,8 +715,13 @@ export class ActionResolver {
         pending.reason === 'heavenly_smite_destroy' ||
         pending.reason === 'storm_of_cuteness_destroy' ||
         pending.reason === 'zombie_apocalypse_destroy' ||
-        pending.reason === 'ultimate_destruction_destroy')
+         pending.reason === 'ultimate_destruction_destroy' ||
+         pending.reason === 'spray_bottle_of_youth_destroy')
     ) {
+      if (pending.reason === 'spray_bottle_of_youth_destroy' && pending.sourcePlayerId !== sourcePlayerId) {
+        return false;
+      }
+
       const target = state.players.find((p) => p.id === pending.targetPlayerId);
       if (!target) return false;
       const index = target.stable.findIndex((card) => card.uid === cardId);
@@ -768,6 +774,15 @@ export class ActionResolver {
                   : pending.reason === 'ultimate_destruction_destroy'
                     ? 'extremely_destructive_unicorn'
                     : 'unicorn_phoenix';
+      if (pending.reason === 'spray_bottle_of_youth_destroy') {
+        state.pendingAction = nextSprayBottleChoice(
+          state,
+          pending.sourcePlayerId,
+          pending.sprayPlayerIds ?? [],
+        );
+        return true;
+      }
+
       const phoenixIndex = state.deck.findIndex(
         (deckCard) => deckCard.id === searchedCardId,
       );

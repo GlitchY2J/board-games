@@ -728,8 +728,9 @@ export default function GameOverlay({
           action.reason === 'llamapocalypse_destroy' ||
           action.reason === 'heavenly_smite_destroy' ||
           action.reason === 'storm_of_cuteness_destroy' ||
-          action.reason === 'zombie_apocalypse_destroy' ||
-          action.reason === 'ultimate_destruction_destroy'
+           action.reason === 'zombie_apocalypse_destroy' ||
+           action.reason === 'ultimate_destruction_destroy' ||
+           action.reason === 'spray_bottle_of_youth_destroy'
         ) {
           const target = gameState.players.find(
             (p) => p.id === action.targetPlayerId,
@@ -758,9 +759,11 @@ export default function GameOverlay({
                       ? '🌪️ Storm of Cuteness'
                         : action.reason === 'zombie_apocalypse_destroy'
                         ? '🧟 Zombie Apocalypse'
-                          : action.reason === 'ultimate_destruction_destroy'
+                           : action.reason === 'ultimate_destruction_destroy'
                             ? '💥 Ultimate Destruction'
-                            : '🔥 Fire and Brimstone'
+                            : action.reason === 'spray_bottle_of_youth_destroy'
+                              ? '🧴 Spray Bottle Of Youth'
+                              : '🔥 Fire and Brimstone'
               }
               subtitle={`Destruye 1 unicornio del establo de ${target.name}`}
               items={items}

@@ -106,12 +106,14 @@ export type PendingAction =
           | "heavenly_smite_destroy"
           | "storm_of_cuteness_destroy"
           | "zombie_apocalypse_destroy"
-           | "ultimate_destruction_destroy"
+         | "ultimate_destruction_destroy"
+         | "spray_bottle_of_youth_destroy"
            | "unicorns_of_the_apocalypse_sacrifice";
         sourcePlayerId: string;
         targetPlayerId?: string;
         remainingPlayerIds?: string[];
         remainingToDestroy?: number;
+        sprayPlayerIds?: string[];
      }
   | {
       type: "plague_of_death";
@@ -212,7 +214,8 @@ export type PendingAction =
          | "angel_unicorn"
         | "three_of_a_kind"
          | "favor"
-         | "neigh_thank_you";
+         | "neigh_thank_you"
+         | "spray_bottle_of_youth";
       playerId: string;
       title: string;
       description: string;
@@ -259,8 +262,10 @@ export type PendingAction =
     }
   | {
       type: "select_nursery_card";
-       reason: "mother_goose_unicorn" | "extremely_fertile_unicorn" | "special_delivery";
-      playerId: string;
+       reason: "mother_goose_unicorn" | "extremely_fertile_unicorn" | "special_delivery" | "spray_bottle_of_youth";
+       playerId: string;
+       sourcePlayerId?: string;
+       remainingPlayerIds?: string[];
     }
   | {
       type: "select_own_hand_card";

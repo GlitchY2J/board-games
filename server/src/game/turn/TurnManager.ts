@@ -18,7 +18,7 @@ const END_OF_TURN_EFFECTS = new Set<string>([
 ]);
 
 export class TurnManager {
-  private static drawCard(game: GameState) {
+  static drawCard(game: GameState) {
     const player = game.players[game.currentPlayer];
 
     const card = game.deck.shift();

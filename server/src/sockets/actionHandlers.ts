@@ -25,6 +25,7 @@ import {
   drawRainbowPrincessCards,
   nextRainbowPrincessChoice,
 } from '../game/cards/effects/unicornRainbowPrincess.ts';
+import { nextSprayBottleChoice } from '../game/cards/effects/sprayBottleOfYouth.ts';
 
 function isExplodingKittensRoom(room: Room): boolean {
   return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
@@ -1587,6 +1588,31 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'spray_bottle_of_youth') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_nursery_card',
+            reason: 'spray_bottle_of_youth',
+            playerId: player.id,
+            sourcePlayerId: pending.sourcePlayerId,
+            remainingPlayerIds: pending.remainingPlayerIds,
+          };
+        } else {
+          room.gameState.pendingAction = nextSprayBottleChoice(
+            room.gameState,
+            pending.sourcePlayerId ?? player.id,
+            pending.remainingPlayerIds ?? [],
+          );
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} aceptó traer un Baby Unicorn por Spray Bottle Of Youth`
+            : `${player.name} omitió traer un Baby Unicorn por Spray Bottle Of Youth`,
+          { playerId: player.id },
+        );
+        emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'stable_artillery') {
         const used =
           choice === 'yes' &&
@@ -1801,7 +1827,8 @@ export function registerActionHandlers(
         pending.playerId !== player.id ||
         pending.reason !== 'mother_goose_unicorn' &&
          pending.reason !== 'extremely_fertile_unicorn' &&
-         pending.reason !== 'special_delivery'
+         pending.reason !== 'special_delivery' &&
+         pending.reason !== 'spray_bottle_of_youth'
       ) {
         return;
       }
@@ -1831,8 +1858,27 @@ export function registerActionHandlers(
           `${player.name} trajo ${removed.name} de la Nursery por Special Delivery y saltó su fase de acción`,
           { playerId: player.id },
         );
+        // Special Delivery skips only ACTION: the normal DRAW phase still
+        // happens before the turn moves to END.
+        room.gameState.phase = TurnPhase.DRAW;
+        TurnManager.drawCard(room.gameState);
         room.gameState.phase = TurnPhase.END;
         TurnManager.skipEndIfNoTriggers(room.gameState);
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'spray_bottle_of_youth') {
+        room.gameState.pendingAction = nextSprayBottleChoice(
+          room.gameState,
+          pending.sourcePlayerId ?? player.id,
+          pending.remainingPlayerIds ?? [],
+        );
+        addLog(
+          room.gameState,
+          `${player.name} trajo ${removed.name} de la Nursery por Spray Bottle Of Youth`,
+          { playerId: player.id },
+        );
         emitGameState(io, room, 'game-updated');
         return;
       }
