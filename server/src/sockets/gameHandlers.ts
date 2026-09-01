@@ -171,7 +171,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   } else {
     // Los Neighs ya salieron de las manos al jugarse; conservar su orden real.
     for (let i = 1; i < n; i++) {
-      if (chain[i].card.effect === 'nope') {
+      if (isReactionEffect(chain[i].card.effect, explodingKittens)) {
         game.discard.push(chain[i].card);
       }
     }

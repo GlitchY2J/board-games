@@ -476,7 +476,10 @@ export function registerActionHandlers(
         }
       }
       const stolenCard =
-        (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind')
+        (pending.reason === 'americorn' ||
+          pending.reason === 'blatant_thievery' ||
+          pending.reason === 'two_of_a_kind' ||
+          pending.reason === 'three_of_a_kind')
         ? game.players
             .find((candidate) => candidate.id === pending.targetPlayerId)
             ?.hand.find((card) => card.uid === resolvedCardId)
@@ -516,7 +519,12 @@ export function registerActionHandlers(
         return;
       }
 
-      if (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
+      if (
+        pending.reason === 'americorn' ||
+        pending.reason === 'blatant_thievery' ||
+        pending.reason === 'two_of_a_kind' ||
+        pending.reason === 'three_of_a_kind'
+      ) {
         if (stolenCard) {
           enqueueStealAnimation(
             game.roomCode,

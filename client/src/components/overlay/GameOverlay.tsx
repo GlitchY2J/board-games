@@ -2438,146 +2438,67 @@ function UnicornOracleOverlay({
   candidates: { uid: string; id: string; name: string; image: string }[];
   onDone: () => void;
 }) {
-  const [chosenCardId, setChosenCardId] = useState<string | null>(null);
-  const [order, setOrder] = useState<
-    { uid: string; id: string; name: string; image: string }[]
-  >([]);
-
-  const remaining = order.length;
-  const totalToOrder = candidates.length - 1;
+  const [order, setOrder] = useState(candidates);
+  const [draggedUid, setDraggedUid] = useState<string | null>(null);
 
   function confirm() {
-    if (!chosenCardId || order.length !== totalToOrder) return;
+    if (order.length !== 3) return;
     socket.emit('select-oracle-cards', {
       roomCode,
-      handCardId: chosenCardId,
-      orderCardIds: order.map((c) => c.uid),
+      handCardId: order[0].uid,
+      orderCardIds: [order[1].uid, order[2].uid],
     });
     onDone();
   }
 
-  function clickCandidate(card: (typeof candidates)[number]) {
-    if (chosenCardId === card.uid) {
-      setChosenCardId(null);
-      return;
-    }
-    if (chosenCardId) return;
-    setChosenCardId(card.uid);
+  function moveOrderCard(targetUid: string) {
+    if (!draggedUid || draggedUid === targetUid) return;
+    setOrder((prev) => {
+      const fromIndex = prev.findIndex((card) => card.uid === draggedUid);
+      const toIndex = prev.findIndex((card) => card.uid === targetUid);
+      if (fromIndex === -1 || toIndex === -1) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+    setDraggedUid(null);
   }
-
-  function clickOrderCard(card: (typeof candidates)[number]) {
-    setOrder((prev) =>
-      prev.some((c) => c.uid === card.uid)
-        ? prev // ya está ordenada, ignorar
-        : [...prev, card],
-    );
-  }
-
-  function removeFromOrder(card: (typeof candidates)[number]) {
-    setOrder((prev) => prev.filter((c) => c.uid !== card.uid));
-  }
-
-  const unselected = candidates.filter(
-    (c) => c.uid !== chosenCardId && !order.some((o) => o.uid === c.uid),
-  );
 
   return (
     <div className="overlay-backdrop">
-      <div className="card-selection-window choice-window">
+      <div className="card-selection-window choice-window oracle-overlay-window">
         <h2>🔮 Unicorn Oracle</h2>
         <p>
-          Elige <strong>1 carta</strong> para añadir a tu mano, luego cliquea el
-          resto en el orden en que volverán a la parte superior del mazo
-          (primero = arriba).
+          Arrastra las 3 cartas para ordenarlas. Izquierda: tu mano. Centro:
+          cima del mazo. Derecha: debajo de la segunda carta.
         </p>
 
-        {!chosenCardId ? (
-          <>
-            <p className="text-sm text-slate-400 mb-2">
-              ¿Cuál carta añades a tu mano?
-            </p>
-            <div className="flex gap-3 flex-wrap justify-center">
-              {candidates.map((card) => (
-                <button
-                  key={card.uid}
-                  className="choice-button confirm-button"
-                  onClick={() => clickCandidate(card)}
-                >
-                  <img
-                    src={card.image}
-                    alt={card.name}
-                    className="w-20 h-auto rounded-lg"
-                  />
-                  <span className="text-xs">{card.name}</span>
-                </button>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-slate-400 mb-2">
-              Añadiste{' '}
-              <strong>
-                {candidates.find((c) => c.uid === chosenCardId)?.name}
-              </strong>{' '}
-              a tu mano. Cliquea las {unselected.length} restantes para definir
-              el tope del mazo ({remaining}/{totalToOrder}).
-            </p>
-            <div className="flex gap-3 flex-wrap justify-center">
-              {unselected.map((card) => (
-                <button
-                  key={card.uid}
-                  className="choice-button confirm-button"
-                  onClick={() => clickOrderCard(card)}
-                >
-                  <img
-                    src={card.image}
-                    alt={card.name}
-                    className="w-16 h-auto rounded-lg"
-                  />
-                  <span className="text-xs">{card.name}</span>
-                </button>
-              ))}
-            </div>
+        <div className="oracle-order-row oracle-single-row">
+          {order.map((card, i) => (
+            <button
+              key={card.uid}
+              className={`oracle-order-card choice-button ${draggedUid === card.uid ? 'oracle-dragging' : ''}`}
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', card.uid);
+                setDraggedUid(card.uid);
+              }}
+              onDragEnd={() => setDraggedUid(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => moveOrderCard(card.uid)}
+            >
+              <span className="oracle-position">{i === 0 ? 'MANO' : i === 1 ? 'CIMA' : 'DEBAJO'}</span>
+              <img src={card.image} alt={card.name} />
+              <span className="text-xs">{card.name}</span>
+            </button>
+          ))}
+        </div>
 
-            {order.length > 0 && (
-              <div className="mt-3">
-                <p className="text-sm text-slate-400 mb-1">
-                  Orden al tope del mazo (de arriba a abajo):
-                </p>
-                <div className="flex gap-2 flex-wrap justify-center">
-                  {order.map((card, i) => (
-                    <button
-                      key={card.uid}
-                      className="choice-button"
-                      onClick={() => removeFromOrder(card)}
-                    >
-                      <span className="text-xs">
-                        {i + 1}. {card.name} ✕
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-center gap-4 mt-4">
-              <button
-                className="choice-button"
-                onClick={() => setChosenCardId(null)}
-              >
-                Cambiar carta a robar
-              </button>
-              <button
-                className="confirm-button choice-button"
-                disabled={order.length !== totalToOrder}
-                onClick={confirm}
-              >
-                Confirmar
-              </button>
-            </div>
-          </>
-        )}
+        <button className="confirm-button choice-button" onClick={confirm}>
+          Confirmar
+        </button>
       </div>
     </div>
   );

@@ -12,8 +12,12 @@
 }
 
 @keyframes backdropFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .card-selection-window {
@@ -56,7 +60,9 @@
   opacity: 0;
   transform: scale(0.95) translateY(12px);
   pointer-events: none;
-  transition: opacity 0.25s ease-in, transform 0.25s ease-in;
+  transition:
+    opacity 0.25s ease-in,
+    transform 0.25s ease-in;
 }
 
 .card-selection-window h2 {
@@ -162,8 +168,12 @@
 }
 
 @keyframes badgePop {
-  0% { transform: scale(0); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .selection-list-item {
@@ -289,7 +299,11 @@
   padding: 16px;
   font-size: 16px;
   border: 1px solid rgba(34, 211, 238, 0.24);
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(8, 47, 73, 0.72));
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.92),
+    rgba(8, 47, 73, 0.72)
+  );
   color: #e2e8f0;
   box-shadow: 0 4px 16px rgba(2, 6, 23, 0.28);
   text-transform: none;
@@ -298,7 +312,11 @@
 
 .choice-button:hover:not(:disabled) {
   border-color: rgba(45, 212, 191, 0.65);
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(13, 148, 136, 0.38));
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.98),
+    rgba(13, 148, 136, 0.38)
+  );
   box-shadow: 0 6px 22px rgba(13, 148, 136, 0.2);
 }
 
@@ -427,6 +445,133 @@
 .selection-search:focus {
   border-color: rgba(52, 211, 153, 0.7);
   box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
+}
+
+.oracle-card-row,
+.oracle-order-row {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52, 211, 153, 0.65) rgba(15, 23, 42, 0.5);
+}
+
+.oracle-order-row {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(6, 78, 59, 0.2),
+    rgba(15, 23, 42, 0.55)
+  );
+  min-height: 92px;
+  align-items: center;
+}
+
+.oracle-order-card {
+  display: flex;
+  flex: 0 0 150px;
+  width: auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.72);
+  cursor: grab;
+}
+
+.oracle-order-card:active {
+  cursor: grabbing;
+}
+
+.oracle-order-card img {
+  width: 142px;
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+.oracle-single-row {
+  justify-content: center;
+  gap: 18px;
+  padding: 18px;
+  border: 0;
+  background: transparent;
+}
+
+.oracle-order-card > .text-xs {
+  display: none;
+}
+
+.oracle-overlay-window {
+  width: min(600px, 86vw);
+  max-width: none;
+  max-height: 98vh;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .oracle-overlay-window {
+    width: 92vw;
+    padding: 18px;
+    gap: 14px;
+  }
+
+  .oracle-order-card {
+    flex-basis: 120px;
+  }
+
+  .oracle-order-card img {
+    width: 112px;
+  }
+}
+
+@media (max-width: 640px) {
+  .oracle-overlay-window {
+    width: 94vw;
+    padding: 12px;
+  }
+
+  .oracle-single-row {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .oracle-order-card {
+    flex-basis: 92px;
+    padding: 6px;
+  }
+
+  .oracle-order-card img {
+    width: 84px;
+  }
+}
+
+.oracle-position {
+  color: var(--platform-accent-strong, #6ee7b7);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.oracle-overlay-window > .confirm-button {
+  width: min(260px, 80%);
+  padding: clamp(9px, 1.5vw, 16px);
+  font-size: clamp(13px, 1.5vw, 16px);
+}
+
+@media (max-width: 640px) {
+  .oracle-overlay-window > .confirm-button {
+    width: min(220px, 80%);
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+}
+
+.oracle-order-card.oracle-dragging {
+  opacity: 0.45;
+  transform: scale(0.96);
 }
 
 @media (orientation: landscape) and (max-height: 500px) and (max-width: 1024px) {
