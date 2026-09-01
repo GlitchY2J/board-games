@@ -67,6 +67,8 @@ import { stormOfCuteness } from '../../../cards/effects/stormOfCuteness.ts';
 import { zombieApocalypse } from '../../../cards/effects/zombieApocalypse.ts';
 import { ultimateDestruction } from '../../../cards/effects/ultimateDestruction.ts';
 import { plagueOfDeath } from '../../../cards/effects/plagueOfDeath.ts';
+import { unicornNap } from '../../../cards/effects/unicornNap.ts';
+import { unicornsOfTheApocalypse } from '../../../cards/effects/unicornsOfTheApocalypse.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -82,6 +84,8 @@ export const effects: Record<string, CardEffect> = {
   zombie_apocalypse: zombieApocalypse,
   ultimate_destruction: ultimateDestruction,
   plague_of_death: plagueOfDeath,
+  unicorn_nap: unicornNap,
+  unicorns_of_the_apocalypse: unicornsOfTheApocalypse,
   cotton_candy_llamacorn: cottonCandyUnicorn,
   alluring_narwhal: AlluringNarwhal,
   changeOfLuck,

@@ -14,4 +14,5 @@ export interface Player {
   isDummy?: boolean;
   isSpectator?: boolean;
   isReady?: boolean;
+  skipTurns?: number;
 }

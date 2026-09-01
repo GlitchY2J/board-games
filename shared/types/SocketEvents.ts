@@ -80,7 +80,7 @@ export interface SelectChoicePayload {
 
 export interface SelectDiscardCardPayload {
   roomCode: string;
-  cardId: string;
+  cardId: string | string[];
 }
 
 export interface SelectOracleCardsPayload {

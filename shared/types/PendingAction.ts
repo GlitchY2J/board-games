@@ -63,7 +63,8 @@ export type PendingAction =
          | "re_target_source"
          | "re_target_destination"
          | "favor"
-         | "a_cute_attack";
+         | "a_cute_attack"
+         | "unicorn_nap";
        sourcePlayerId: string;
        targetPlayerId?: string;
        cardIds?: string[];
@@ -105,7 +106,8 @@ export type PendingAction =
           | "heavenly_smite_destroy"
           | "storm_of_cuteness_destroy"
           | "zombie_apocalypse_destroy"
-           | "ultimate_destruction_destroy";
+           | "ultimate_destruction_destroy"
+           | "unicorns_of_the_apocalypse_sacrifice";
         sourcePlayerId: string;
         targetPlayerId?: string;
         remainingPlayerIds?: string[];
@@ -240,11 +242,12 @@ export type PendingAction =
     }
   | {
       type: "select_deck_card";
-      reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse";
+       reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse" | "unicorns_of_the_apocalypse";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
       candidates: Card[];
       card?: Card;
+      requiredCards?: number;
     }
   | {
       type: "select_oracle_cards";

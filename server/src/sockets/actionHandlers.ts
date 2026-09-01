@@ -15,6 +15,7 @@ import {
   enqueueDrawAnimation,
   enqueueExplosionAnimation,
   enqueueStealAnimation,
+  enqueueShuffleAnimation,
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
 import { advanceTurnAfterDraw } from '../game/exploding-kittens/turn.ts';
@@ -1937,9 +1938,52 @@ export function registerActionHandlers(
         pending.reason !== 'the_great_narwhal' &&
         pending.reason !== 'shabby_the_narwhal' &&
         pending.reason !== 'debug_draw' &&
-        pending.reason !== 'exploding_kitten_defuse'
+        pending.reason !== 'exploding_kitten_defuse' &&
+        pending.reason !== 'unicorns_of_the_apocalypse'
       )
         return;
+
+      if (pending.reason === 'unicorns_of_the_apocalypse') {
+        if (
+          !Array.isArray(cardId) ||
+          cardId.length !== 4 ||
+          new Set(cardId).size !== cardId.length ||
+          cardId.some(
+            (uid) =>
+              !pending.candidates.some((candidate) => candidate.uid === uid),
+          )
+        ) {
+          emitGameError(
+            socket,
+            'INVALID_SELECTION',
+            'Debes elegir exactamente 4 Unicornios del mazo.',
+            'select-deck-card',
+          );
+          return;
+        }
+
+        const selected = cardId.map((uid) =>
+          room.gameState!.deck.find((card) => card.uid === uid),
+        );
+        if (selected.some((card) => !card || card.cardType !== 'unicorn')) return;
+
+        for (const uid of cardId) {
+          const index = room.gameState.deck.findIndex((card) => card.uid === uid);
+          const [unicorn] = room.gameState.deck.splice(index, 1);
+          CardMovement.enterStable(room.gameState, player, unicorn);
+        }
+        for (let i = room.gameState.deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [room.gameState.deck[i], room.gameState.deck[j]] = [
+            room.gameState.deck[j],
+            room.gameState.deck[i],
+          ];
+        }
+        enqueueShuffleAnimation(room.gameState.roomCode, player.id);
+        room.gameState.pendingAction = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
 
       if (
         pending.candidates.length > 0 &&

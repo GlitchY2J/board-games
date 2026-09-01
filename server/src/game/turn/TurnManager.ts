@@ -478,13 +478,22 @@ export class TurnManager {
     if (game.currentPlayer === 0) {
       game.turn++;
     }
+
+    const startingPlayer = game.players[game.currentPlayer];
+    if (startingPlayer && (startingPlayer.skipTurns ?? 0) > 0) {
+      startingPlayer.skipTurns = (startingPlayer.skipTurns ?? 0) - 1;
+      addLog(game, `${startingPlayer.name} pierde este turno por Unicorn Nap`, {
+        playerId: startingPlayer.id,
+      });
+      this.passTurn(game);
+      return;
+    }
+
     game.phase = TurnPhase.BEGINNING;
     const presented = this.activateBeginningTriggers(game);
     if (!presented) {
       this.skipBeginningIfNoTriggers(game);
     }
-
-    const startingPlayer = game.players[game.currentPlayer];
 
     if (startingPlayer) {
       addLog(

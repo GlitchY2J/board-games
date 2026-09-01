@@ -334,6 +334,7 @@ export default function GameOverlay({
         const isUnfairBargain = action.reason === 'unfair_bargain';
          const isUnicornSwap = action.reason === 'unicorn_swap';
          const isACuteAttack = action.reason === 'a_cute_attack';
+         const isUnicornNap = action.reason === 'unicorn_nap';
         const isReTargetSource = action.reason === 're_target_source';
         const isReTargetDestination = action.reason === 're_target_destination';
         const needsHand =
@@ -368,6 +369,7 @@ export default function GameOverlay({
            if (isUnicornPoison) return p.stable.length > 0;
            if (isACuteAttack)
              return p.stable.some((c) => c.cardType === 'unicorn');
+           if (isUnicornNap) return p.id !== localPlayerId;
           return (
             p.stable.length > 0 ||
             p.upgrades.length > 0 ||
@@ -404,6 +406,7 @@ export default function GameOverlay({
           if (isUnfairBargain) return '🤝 Unfair Bargain';
            if (isUnicornSwap) return '🦄 Unicorn Swap';
            if (isACuteAttack) return '💖 A Cute Attack';
+           if (isUnicornNap) return '😴 Unicorn Nap';
           if (isReTargetSource) return '🎯 Re-Target';
           if (isReTargetDestination) return '🎯 Re-Target: destino';
           return 'Seleccionar Objetivo';
@@ -436,6 +439,8 @@ export default function GameOverlay({
              return 'Elige a un jugador para intercambiar un unicornio con él';
            if (isACuteAttack)
              return 'Elige un rival para destruir hasta 3 unicornios y reemplazarlos por Baby Unicorns';
+           if (isUnicornNap)
+             return 'Elige a un rival para que se salte su próximo turno';
           if (isReTargetSource)
             return 'Elige de qué jugador moverás un Upgrade o Downgrade';
           if (isReTargetDestination)
@@ -2322,12 +2327,16 @@ export default function GameOverlay({
         const isGreatNarwhal = action.reason === 'the_great_narwhal';
         const isShabbyNarwhal = action.reason === 'shabby_the_narwhal';
         const isDebugDraw = action.reason === 'debug_draw';
+        const isApocalypseSearch =
+          action.reason === 'unicorns_of_the_apocalypse';
         const isExplodingKittenDefuse = action.reason === 'exploding_kitten_defuse';
 
         const title = isExplodingKittenDefuse
           ? '🛡️ Coloca el Exploding Kitten'
           : isDebugDraw
           ? '🐛 Modo Debug — Roba una carta'
+          : isApocalypseSearch
+            ? '☄️ Unicorns of the Apocalypse'
           : isGreatNarwhal
             ? '🐋 The Great Narwhal'
             : isShabbyNarwhal
@@ -2338,6 +2347,8 @@ export default function GameOverlay({
           ? 'Elige en qué posición del mazo quieres devolver el Exploding Kitten'
           : isDebugDraw
           ? 'Elige qué carta del mazo quieres tomar en tu fase de robo'
+          : isApocalypseSearch
+            ? 'Elige 4 Unicornios del mazo para traerlos a tu establo'
           : isGreatNarwhal
             ? 'Elige una carta con "Narwhal" en su nombre para agregarla a tu mano (luego se barajará el mazo)'
             : isShabbyNarwhal
@@ -2355,8 +2366,11 @@ export default function GameOverlay({
                   : `Posición ${idx + 1}`,
               image: '/cards/base/card_back.png',
             }))
-          : isDebugDraw
-          ? gameState.deck.map((card, idx) => ({
+          : isDebugDraw || isApocalypseSearch
+          ? (isApocalypseSearch
+            ? action.candidates
+            : gameState.deck
+          ).map((card, idx) => ({
               id: `${card.id}_${idx}`,
               value: card.uid,
               title: card.name,
@@ -2375,8 +2389,9 @@ export default function GameOverlay({
             title={title}
             subtitle={subtitle}
             items={items}
-            maxSelection={1}
-            confirmText={isExplodingKittenDefuse ? 'Colocar' : isDebugDraw ? 'Robar' : 'Tomar'}
+            maxSelection={isApocalypseSearch ? 4 : 1}
+            minSelection={isApocalypseSearch ? 4 : 1}
+            confirmText={isExplodingKittenDefuse ? 'Colocar' : isDebugDraw ? 'Robar' : isApocalypseSearch ? 'Traer al establo' : 'Tomar'}
             searchable={isDebugDraw}
             searchPlaceholder="Buscar carta en el mazo..."
             secondaryText={isExplodingKittenDefuse ? 'Ubicación aleatoria' : undefined}
@@ -2388,11 +2403,11 @@ export default function GameOverlay({
                 cardId: `deck-position-${randomPosition}`,
               });
             } : undefined}
-            onConfirm={([cardId]) => {
+            onConfirm={(cardIds) => {
               dismiss();
               socket.emit('select-deck-card', {
                 roomCode: gameState.roomCode,
-                cardId,
+                cardId: isApocalypseSearch ? cardIds : cardIds[0],
               });
             }}
           />

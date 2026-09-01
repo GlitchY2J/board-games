@@ -382,6 +382,15 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'unicorn_nap') {
+      if (targetPlayerId === sourcePlayerId) return false;
+      const target = state.players.find((p) => p.id === targetPlayerId);
+      if (!target) return false;
+      target.skipTurns = (target.skipTurns ?? 0) + 1;
+      state.pendingAction = undefined;
+      return true;
+    }
+
     if (pending.reason === 'annoying_flying_unicorn') {
       state.pendingAction = {
         type: 'discard',
@@ -520,6 +529,39 @@ export class ActionResolver {
       pending.type !== 'plague_of_death'
     ) {
       return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'unicorns_of_the_apocalypse_sacrifice'
+    ) {
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
+      const ids = Array.isArray(cardId) ? cardId : [cardId];
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player || ids.length === 0 || new Set(ids).size !== ids.length) return false;
+
+      const selected = ids.map((uid) => player.stable.find((card) => card.uid === uid));
+      if (selected.some((card) => !card || card.cardType !== 'unicorn')) return false;
+      const sacrificeValue = selected.reduce(
+        (total, card) => total + (card?.id === 'ginormous_unicorn' ? 2 : 1),
+        0,
+      );
+      if (sacrificeValue !== 4) return false;
+
+      for (const uid of ids) {
+        const index = player.stable.findIndex((card) => card.uid === uid);
+        const [sacrificed] = player.stable.splice(index, 1);
+        CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+      }
+
+      state.pendingAction = {
+        type: 'select_deck_card',
+        reason: 'unicorns_of_the_apocalypse',
+        playerId: sourcePlayerId,
+        candidates: state.deck.filter((card) => card.cardType === 'unicorn'),
+        requiredCards: 4,
+      };
+      return true;
     }
 
     if (pending.type === 'plague_of_death') {
