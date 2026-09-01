@@ -1535,6 +1535,29 @@ export function registerActionHandlers(
         );
 
         emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'special_delivery') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_nursery_card',
+            reason: 'special_delivery',
+            playerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} usará Special Delivery para traer un Baby Unicorn`
+            : `${player.name} omitió el efecto de Special Delivery`,
+          { playerId: player.id },
+        );
+
+        emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'stable_artillery') {
         const used =
           choice === 'yes' &&
@@ -1748,7 +1771,8 @@ export function registerActionHandlers(
         pending.type !== 'select_nursery_card' ||
         pending.playerId !== player.id ||
         pending.reason !== 'mother_goose_unicorn' &&
-        pending.reason !== 'extremely_fertile_unicorn'
+         pending.reason !== 'extremely_fertile_unicorn' &&
+         pending.reason !== 'special_delivery'
       ) {
         return;
       }
@@ -1771,6 +1795,18 @@ export function registerActionHandlers(
       room.gameState.pendingAction = undefined;
 
       CardMovement.enterStable(room.gameState, player, removed);
+
+      if (pending.reason === 'special_delivery') {
+        addLog(
+          room.gameState,
+          `${player.name} trajo ${removed.name} de la Nursery por Special Delivery y saltó su fase de acción`,
+          { playerId: player.id },
+        );
+        room.gameState.phase = TurnPhase.END;
+        TurnManager.skipEndIfNoTriggers(room.gameState);
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
 
       if (
         room.gameState.phase === TurnPhase.BEGINNING &&

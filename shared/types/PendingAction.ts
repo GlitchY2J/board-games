@@ -207,6 +207,7 @@ export type PendingAction =
         | "beginning_effect_picker"
          | "rainbow_lasso"
          | "rainbow_sprinkles"
+         | "special_delivery"
          | "stable_artillery"
          | "angel_unicorn"
         | "three_of_a_kind"
@@ -257,7 +258,7 @@ export type PendingAction =
     }
   | {
       type: "select_nursery_card";
-       reason: "mother_goose_unicorn" | "extremely_fertile_unicorn";
+       reason: "mother_goose_unicorn" | "extremely_fertile_unicorn" | "special_delivery";
       playerId: string;
     }
   | {

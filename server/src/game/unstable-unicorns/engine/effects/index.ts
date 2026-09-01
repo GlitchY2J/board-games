@@ -34,6 +34,7 @@ import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
 import { queenBeeUnicorn } from '../../../cards/effects/queenBeeUnicorn.ts';
 import { rainbowUnicorn } from '../../../cards/effects/rainbowUnicorn.ts';
 import { rainbowSprinkles } from '../../../cards/effects/rainbowSprinkles.ts';
+import { specialDelivery } from '../../../cards/effects/specialDelivery.ts';
 import { seductiveUnicorn } from '../../../cards/effects/seductiveUnicorn.ts';
 import { sharkWithAHorn } from '../../../cards/effects/sharkWithAHorn.ts';
 import { stabbyTheUnicorn } from '../../../cards/effects/stabbyTheUnicorn.ts';
@@ -53,6 +54,7 @@ import { resetButton } from '../../../cards/effects/resetButton.ts';
 import { targetedDestruction } from '../../../cards/effects/targetedDestruction.ts';
 import { pandamonium } from '../../../cards/effects/pandamonium.ts';
 import { tinyStable } from '../../../cards/effects/tinyStable.ts';
+import { tinyHooves } from '../../../cards/effects/tinyHooves.ts';
 import { doubleDutch } from '../../../cards/effects/doubleDutch.ts';
 import { barbedWire } from '../../../cards/effects/barbedWire.ts';
 import { sadisticRitual } from '../../../cards/effects/sadisticRitual.ts';
@@ -124,6 +126,7 @@ export const effects: Record<string, CardEffect> = {
   queen_bee_unicorn: queenBeeUnicorn,
   rainbow_unicorn: rainbowUnicorn,
   rainbow_sprinkles: rainbowSprinkles,
+  special_delivery: specialDelivery,
   seductive_unicorn: seductiveUnicorn,
   shark_with_a_horn: sharkWithAHorn,
   stabby_the_unicorn: stabbyTheUnicorn,
@@ -143,6 +146,7 @@ export const effects: Record<string, CardEffect> = {
   targeted_destruction: targetedDestruction,
   pandamonium,
   tiny_stable: tinyStable,
+  tiny_hooves: tinyHooves,
   double_dutch: doubleDutch,
   barbed_wire: barbedWire,
   sadistic_ritual: sadisticRitual,

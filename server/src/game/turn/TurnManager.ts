@@ -113,6 +113,16 @@ export class TurnManager {
       uids.push(...sprinkles.map((c) => c.uid));
     }
 
+    const specialDelivery = allCards.filter((c) => c.id === 'special_delivery');
+    if (
+      specialDelivery.length > 0 &&
+      game.nursery.some(
+        (c) => c.cardType === 'unicorn' && c.unicornClass === 'baby',
+      )
+    ) {
+      uids.push(...specialDelivery.map((c) => c.uid));
+    }
+
     // Stable Artillery: descartar 2 cartas y luego destruir un unicornio de
     // OTRO jugador (no del propio establo). Igual que Lasso: opcional.
     const artillery = allCards.filter((c) => c.id === 'stable_artillery');
@@ -275,6 +285,21 @@ export class TurnManager {
           description: '¿Deseas ROBAR 3 cartas y terminar tu turno inmediatamente?',
           options: [
             { value: 'yes', text: 'Sí, robar 3 y terminar turno' },
+            { value: 'no', text: 'No, continuar mi turno' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'special_delivery':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'special_delivery',
+          playerId: activePlayer.id,
+          title: '📦 Special Delivery',
+          description:
+            '¿Deseas traer un Baby Unicorn de la Nursery a tu establo y saltar tu fase de acción?',
+          options: [
+            { value: 'yes', text: 'Sí, traer Baby Unicorn y saltar acción' },
             { value: 'no', text: 'No, continuar mi turno' },
           ],
           effectCardId: uid,
@@ -532,7 +557,7 @@ export class TurnManager {
 
     const activePlayer = game.players[game.currentPlayer];
 
-    const handLimit = getHandLimit(game);
+    const handLimit = getHandLimit(game, activePlayer.id);
     if (activePlayer.hand.length > handLimit) {
       game.pendingAction = {
         type: 'discard',
@@ -590,7 +615,7 @@ export class TurnManager {
       case TurnPhase.END:
         const currentPlayer = game.players[game.currentPlayer];
 
-        const handLimit = getHandLimit(game);
+        const handLimit = getHandLimit(game, currentPlayer.id);
         if (currentPlayer.hand.length > handLimit) {
           game.pendingAction = {
             type: 'discard',
