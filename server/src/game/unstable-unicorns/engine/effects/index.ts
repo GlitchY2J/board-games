@@ -59,6 +59,7 @@ import { adorableFlyingUnicorn } from '../../../cards/effects/adorableFlyingUnic
 import { angelUnicorn } from '../../../cards/effects/angelUnicorn.ts';
 import { cottonCandyUnicorn } from '../../../cards/effects/cottonCandyUnicorn.ts';
 import { aCuteAttack } from '../../../cards/effects/aCuteAttack.ts';
+import { fireAndBrimstone } from '../../../cards/effects/fireAndBrimstone.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -66,6 +67,7 @@ export const effects: Record<string, CardEffect> = {
   angel_unicorn: angelUnicorn,
   cotton_candy_unicorn: cottonCandyUnicorn,
   a_cute_attack: aCuteAttack,
+  fire_and_brimstone: fireAndBrimstone,
   cotton_candy_llamacorn: cottonCandyUnicorn,
   alluring_narwhal: AlluringNarwhal,
   changeOfLuck,

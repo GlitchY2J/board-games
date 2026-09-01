@@ -11,6 +11,7 @@ import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import { maybeTriggerBarbedWireLeave } from '../../cards/effects/barbedWire.ts';
 import { drawForSadisticRitual } from '../../cards/effects/sadisticRitual.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
+import { enqueueShuffleAnimation } from '../../cardAnimations.ts';
 import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 import { hasBlindingLight } from '../../cards/effects/blindingLight.ts';
@@ -566,6 +567,59 @@ export class ActionResolver {
         CardMovement.enterStable(state, target, baby);
       }
 
+      state.pendingAction = undefined;
+      return true;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'fire_and_brimstone_destroy'
+    ) {
+      const target = state.players.find((p) => p.id === pending.targetPlayerId);
+      if (!target) return false;
+      const index = target.stable.findIndex((card) => card.uid === cardId);
+      if (index === -1) return false;
+      const card = target.stable[index];
+      if (
+        card.cardType !== 'unicorn' ||
+        isImmuneToDestruction(card.id) ||
+        isPandamoniumProtected(target, card)
+      ) {
+        return false;
+      }
+
+      const [removed] = target.stable.splice(index, 1);
+      CardMovement.destroyOrSacrifice(state, target, removed, 'destroy');
+
+      const remaining = (pending.remainingPlayerIds ?? []).filter(
+        (id) => id !== target.id,
+      );
+      const nextTarget = remaining.find((id) => {
+        const player = state.players.find((candidate) => candidate.id === id);
+        return player?.stable.some((stableCard) => stableCard.cardType === 'unicorn');
+      });
+
+      if (nextTarget) {
+        state.pendingAction = {
+          ...pending,
+          targetPlayerId: nextTarget,
+          remainingPlayerIds: remaining,
+        };
+        return true;
+      }
+
+      const phoenixIndex = state.deck.findIndex((deckCard) => deckCard.id === 'unicorn_phoenix');
+      if (phoenixIndex !== -1) {
+        const [phoenix] = state.deck.splice(phoenixIndex, 1);
+        const source = state.players.find((p) => p.id === pending.sourcePlayerId);
+        if (source) CardMovement.enterStable(state, source, phoenix);
+      }
+
+      for (let i = state.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
+      }
+      enqueueShuffleAnimation(state.roomCode, pending.sourcePlayerId);
       state.pendingAction = undefined;
       return true;
     }

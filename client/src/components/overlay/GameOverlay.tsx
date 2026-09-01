@@ -717,6 +717,39 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'fire_and_brimstone_destroy') {
+          const target = gameState.players.find(
+            (p) => p.id === action.targetPlayerId,
+          );
+          if (!target) return null;
+          const items = target.stable
+            .filter((card) => card.cardType === 'unicorn')
+            .map((card, index) => ({
+              id: `${card.uid}_${index}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: `Establo de ${target.name}`,
+              image: card.image,
+            }));
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🔥 Fire and Brimstone"
+              subtitle={`Destruye 1 unicornio del establo de ${target.name}`}
+              items={items}
+              maxSelection={1}
+              confirmText="Destruir"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 're_target_card') {
           const source = gameState.players.find(
             (p) => p.id === action.targetPlayerId,

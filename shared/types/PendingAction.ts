@@ -97,8 +97,9 @@ export type PendingAction =
          | "tiny_stable"
         | "rainbow_lasso_steal"
         | "stable_artillery_destroy"
-          | "sadistic_ritual"
-          | "a_cute_attack_destroy";
+         | "sadistic_ritual"
+          | "a_cute_attack_destroy"
+          | "fire_and_brimstone_destroy";
         sourcePlayerId: string;
         targetPlayerId?: string;
         remainingPlayerIds?: string[];
