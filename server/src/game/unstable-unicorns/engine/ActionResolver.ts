@@ -573,7 +573,13 @@ export class ActionResolver {
 
     if (
       pending.type === 'select_stable_card' &&
-      pending.reason === 'fire_and_brimstone_destroy'
+      (pending.reason === 'fire_and_brimstone_destroy' ||
+        pending.reason === 'overpopulation_destroy' ||
+        pending.reason === 'llamapocalypse_destroy' ||
+        pending.reason === 'heavenly_smite_destroy' ||
+        pending.reason === 'storm_of_cuteness_destroy' ||
+        pending.reason === 'zombie_apocalypse_destroy' ||
+        pending.reason === 'ultimate_destruction_destroy')
     ) {
       const target = state.players.find((p) => p.id === pending.targetPlayerId);
       if (!target) return false;
@@ -596,7 +602,12 @@ export class ActionResolver {
       );
       const nextTarget = remaining.find((id) => {
         const player = state.players.find((candidate) => candidate.id === id);
-        return player?.stable.some((stableCard) => stableCard.cardType === 'unicorn');
+        return player?.stable.some(
+          (stableCard) =>
+            stableCard.cardType === 'unicorn' &&
+            !isImmuneToDestruction(stableCard.id) &&
+            !isPandamoniumProtected(player, stableCard),
+        );
       });
 
       if (nextTarget) {
@@ -608,11 +619,27 @@ export class ActionResolver {
         return true;
       }
 
-      const phoenixIndex = state.deck.findIndex((deckCard) => deckCard.id === 'unicorn_phoenix');
+      const searchedCardId =
+        pending.reason === 'overpopulation_destroy'
+          ? 'extremely_fertile_unicorn'
+          : pending.reason === 'llamapocalypse_destroy'
+            ? 'llamacorn'
+            : pending.reason === 'heavenly_smite_destroy'
+              ? 'angel_unicorn'
+              : pending.reason === 'storm_of_cuteness_destroy'
+              ? 'magical_kittencorn'
+                : pending.reason === 'zombie_apocalypse_destroy'
+                  ? 'zombie_unicorn'
+                  : pending.reason === 'ultimate_destruction_destroy'
+                    ? 'extremely_destructive_unicorn'
+                    : 'unicorn_phoenix';
+      const phoenixIndex = state.deck.findIndex(
+        (deckCard) => deckCard.id === searchedCardId,
+      );
       if (phoenixIndex !== -1) {
-        const [phoenix] = state.deck.splice(phoenixIndex, 1);
+        const [searchedCard] = state.deck.splice(phoenixIndex, 1);
         const source = state.players.find((p) => p.id === pending.sourcePlayerId);
-        if (source) CardMovement.enterStable(state, source, phoenix);
+        if (source) CardMovement.enterStable(state, source, searchedCard);
       }
 
       for (let i = state.deck.length - 1; i > 0; i--) {

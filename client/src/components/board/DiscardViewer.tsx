@@ -1,5 +1,6 @@
 import { Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import PlayingCard from '../card/PlayingCard';
 import type { GameState } from '../../types/GameState';
 import './DiscardViewer.css';
@@ -46,7 +47,8 @@ export default function DiscardViewer({ gameState, onClose, gameId }: Props) {
     { value: 'instant', label: 'Instantáneas' },
   ];
 
-  return (
+  return createPortal(
+    (
     <div className="overlay-backdrop" onClick={onClose}>
       <div
         className="card-selection-window"
@@ -121,6 +123,8 @@ export default function DiscardViewer({ gameState, onClose, gameId }: Props) {
         </div>
       </div>
     </div>
+    ),
+    document.body,
   );
 }
 

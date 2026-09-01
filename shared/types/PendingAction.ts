@@ -99,7 +99,13 @@ export type PendingAction =
         | "stable_artillery_destroy"
          | "sadistic_ritual"
           | "a_cute_attack_destroy"
-          | "fire_and_brimstone_destroy";
+          | "fire_and_brimstone_destroy"
+          | "overpopulation_destroy"
+          | "llamapocalypse_destroy"
+          | "heavenly_smite_destroy"
+          | "storm_of_cuteness_destroy"
+          | "zombie_apocalypse_destroy"
+          | "ultimate_destruction_destroy";
         sourcePlayerId: string;
         targetPlayerId?: string;
         remainingPlayerIds?: string[];

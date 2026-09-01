@@ -717,7 +717,15 @@ export default function GameOverlay({
           );
         }
 
-        if (action.reason === 'fire_and_brimstone_destroy') {
+        if (
+          action.reason === 'fire_and_brimstone_destroy' ||
+          action.reason === 'overpopulation_destroy' ||
+          action.reason === 'llamapocalypse_destroy' ||
+          action.reason === 'heavenly_smite_destroy' ||
+          action.reason === 'storm_of_cuteness_destroy' ||
+          action.reason === 'zombie_apocalypse_destroy' ||
+          action.reason === 'ultimate_destruction_destroy'
+        ) {
           const target = gameState.players.find(
             (p) => p.id === action.targetPlayerId,
           );
@@ -734,7 +742,21 @@ export default function GameOverlay({
           return (
             <CardSelectionOverlay
               hide={hide}
-              title="🔥 Fire and Brimstone"
+              title={
+                action.reason === 'overpopulation_destroy'
+                  ? '🌱 Overpopulation'
+                  : action.reason === 'llamapocalypse_destroy'
+                    ? '🦙 Llamapocalypse'
+                    : action.reason === 'heavenly_smite_destroy'
+                      ? '✨ Heavenly Smite'
+                      : action.reason === 'storm_of_cuteness_destroy'
+                      ? '🌪️ Storm of Cuteness'
+                        : action.reason === 'zombie_apocalypse_destroy'
+                        ? '🧟 Zombie Apocalypse'
+                          : action.reason === 'ultimate_destruction_destroy'
+                            ? '💥 Ultimate Destruction'
+                            : '🔥 Fire and Brimstone'
+              }
               subtitle={`Destruye 1 unicornio del establo de ${target.name}`}
               items={items}
               maxSelection={1}
