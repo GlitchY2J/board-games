@@ -105,11 +105,17 @@ export type PendingAction =
           | "heavenly_smite_destroy"
           | "storm_of_cuteness_destroy"
           | "zombie_apocalypse_destroy"
-          | "ultimate_destruction_destroy";
+           | "ultimate_destruction_destroy";
         sourcePlayerId: string;
         targetPlayerId?: string;
         remainingPlayerIds?: string[];
         remainingToDestroy?: number;
+     }
+  | {
+      type: "plague_of_death";
+      sourcePlayerId: string;
+      phase: "sacrifice" | "destroy";
+      cardsToDestroy: number;
     }
   | {
       type: "select_hand_card";

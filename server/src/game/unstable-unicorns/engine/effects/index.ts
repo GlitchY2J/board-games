@@ -66,6 +66,7 @@ import { heavenlySmite } from '../../../cards/effects/heavenlySmite.ts';
 import { stormOfCuteness } from '../../../cards/effects/stormOfCuteness.ts';
 import { zombieApocalypse } from '../../../cards/effects/zombieApocalypse.ts';
 import { ultimateDestruction } from '../../../cards/effects/ultimateDestruction.ts';
+import { plagueOfDeath } from '../../../cards/effects/plagueOfDeath.ts';
 import type { CardEffect } from './CardEffect.ts';
 
 export const effects: Record<string, CardEffect> = {
@@ -80,6 +81,7 @@ export const effects: Record<string, CardEffect> = {
   storm_of_cuteness: stormOfCuteness,
   zombie_apocalypse: zombieApocalypse,
   ultimate_destruction: ultimateDestruction,
+  plague_of_death: plagueOfDeath,
   cotton_candy_llamacorn: cottonCandyUnicorn,
   alluring_narwhal: AlluringNarwhal,
   changeOfLuck,

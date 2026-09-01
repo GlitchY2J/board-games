@@ -516,9 +516,102 @@ export class ActionResolver {
       pending.type !== 'alluring_narwhal' &&
       pending.type !== 'extremely_destructive_unicorn' &&
       pending.type !== 'adorable_flying_unicorn' &&
-      pending.type !== 'cotton_candy_unicorn'
+      pending.type !== 'cotton_candy_unicorn' &&
+      pending.type !== 'plague_of_death'
     ) {
       return false;
+    }
+
+    if (pending.type === 'plague_of_death') {
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
+      const ids = Array.isArray(cardId) ? cardId : [cardId];
+      if (pending.phase === 'sacrifice') {
+        const player = state.players.find((p) => p.id === sourcePlayerId);
+        if (!player || new Set(ids).size !== ids.length) return false;
+        const zones = ['stable', 'upgrades', 'downgrades'] as const;
+        const selected = ids.map((uid) => {
+          for (const zone of zones) {
+            const index = player[zone].findIndex((card) => card.uid === uid);
+            if (index !== -1) return { zone, index };
+          }
+          return undefined;
+        });
+        if (selected.some((entry) => !entry)) return false;
+
+        for (const uid of ids) {
+          for (const zone of zones) {
+            const index = player[zone].findIndex((card) => card.uid === uid);
+            if (index !== -1) {
+              const [sacrificed] = player[zone].splice(index, 1);
+              CardMovement.destroyOrSacrifice(
+                state,
+                player,
+                sacrificed,
+                'sacrifice',
+              );
+              break;
+            }
+          }
+        }
+
+        if (ids.length === 0) {
+          state.pendingAction = undefined;
+        } else {
+          state.pendingAction = {
+            type: 'plague_of_death',
+            sourcePlayerId,
+            phase: 'destroy',
+            cardsToDestroy: ids.length,
+          };
+        }
+        return true;
+      }
+
+      if (
+        ids.length !== pending.cardsToDestroy ||
+        new Set(ids).size !== ids.length
+      ) {
+        return false;
+      }
+
+      const zones = ['stable', 'upgrades', 'downgrades'] as const;
+      const located = ids.map((uid) => {
+        for (const player of state.players) {
+          for (const zone of zones) {
+            const index = player[zone].findIndex((card) => card.uid === uid);
+            if (index !== -1) return { player, zone, index };
+          }
+        }
+        return undefined;
+      });
+      if (
+        located.some(
+          (entry) =>
+            !entry ||
+            isImmuneToDestruction(entry.player[entry.zone][entry.index].id) ||
+            isPandamoniumProtected(
+              entry.player,
+              entry.player[entry.zone][entry.index],
+            ),
+        )
+      ) {
+        return false;
+      }
+
+      for (const uid of ids) {
+        for (const player of state.players) {
+          for (const zone of zones) {
+            const index = player[zone].findIndex((card) => card.uid === uid);
+            if (index !== -1) {
+              const [destroyed] = player[zone].splice(index, 1);
+              CardMovement.destroyOrSacrifice(state, player, destroyed, 'destroy');
+              break;
+            }
+          }
+        }
+      }
+      state.pendingAction = undefined;
+      return true;
     }
 
     if (

@@ -1820,6 +1820,74 @@ export default function GameOverlay({
         );
       }
 
+      case 'plague_of_death': {
+        if (action.sourcePlayerId !== localPlayerId) return null;
+        const localPlayer = gameState.players.find((p) => p.id === localPlayerId);
+        if (!localPlayer) return null;
+
+        if (action.phase === 'sacrifice') {
+          const items = [
+            ...localPlayer.stable,
+            ...localPlayer.upgrades,
+            ...localPlayer.downgrades,
+          ].map((card, index) => ({
+            id: `${card.uid}_${index}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: 'Tu establo',
+            image: card.image,
+          }));
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="☠️ Plague of Death"
+              subtitle="Sacrifica cualquier número de cartas. Cero también es válido."
+              items={items}
+              minSelection={0}
+              maxSelection={items.length}
+              confirmText="Continuar"
+              onConfirm={(values) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId: values,
+                });
+              }}
+            />
+          );
+        }
+
+        const items = gameState.players.flatMap((player) =>
+          [...player.stable, ...player.upgrades, ...player.downgrades].map(
+            (card, index) => ({
+              id: `${player.id}_${card.uid}_${index}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: `Establo de ${player.name}`,
+              image: card.image,
+            }),
+          ),
+        );
+        return (
+          <CardSelectionOverlay
+            hide={hide}
+            title="☠️ Plague of Death"
+            subtitle={`Destruye ${action.cardsToDestroy} carta(s) de cualquier establo`}
+            items={items}
+            minSelection={action.cardsToDestroy}
+            maxSelection={action.cardsToDestroy}
+            confirmText="Destruir"
+            onConfirm={(values) => {
+              dismiss();
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId: values,
+              });
+            }}
+          />
+        );
+      }
+
       // ───────────────────────────────────
       // LLAMACORN — cada jugador descarta 1 carta en orden
       // ───────────────────────────────────
