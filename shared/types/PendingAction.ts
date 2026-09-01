@@ -211,7 +211,8 @@ export type PendingAction =
          | "stable_artillery"
          | "angel_unicorn"
         | "three_of_a_kind"
-        | "favor";
+         | "favor"
+         | "neigh_thank_you";
       playerId: string;
       title: string;
       description: string;

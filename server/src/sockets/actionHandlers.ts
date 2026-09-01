@@ -846,6 +846,35 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'neigh_thank_you') {
+        if (choice === 'yes') {
+          const drawn = room.gameState.deck.shift();
+          if (drawn) {
+            enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
+            player.hand.push(drawn);
+          }
+        }
+
+        if (player.id === pending.sourcePlayerId && pending.targetPlayerId) {
+          room.gameState.pendingAction = {
+            ...pending,
+            playerId: pending.targetPlayerId,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+        }
+
+        addLog(
+          room.gameState,
+          choice === 'yes'
+            ? `${player.name} robó una carta por Neigh, Thank You`
+            : `${player.name} decidió no robar por Neigh, Thank You`,
+          { playerId: player.id },
+        );
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (pending.reason === 'annoying_flying_unicorn') {
         if (choice === 'yes') {
           const rivals = room.gameState.players.filter(

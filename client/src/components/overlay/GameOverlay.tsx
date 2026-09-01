@@ -2265,7 +2265,8 @@ export default function GameOverlay({
               card.id !== 'dark_angel_unicorn') &&
             (!isSwiftFlyingUnicorn ||
               card.effect === 'neigh' ||
-              card.effect === 'super_neigh'),
+              card.effect === 'super_neigh' ||
+              card.effect === 'neigh_thank_you'),
         );
 
         return (

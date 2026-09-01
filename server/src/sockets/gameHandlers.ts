@@ -26,7 +26,7 @@ import { advanceTurnAfterDraw, calculateAttackTurns, startAttack } from '../game
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
 
-const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh']);
+const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh', 'neigh_thank_you']);
 const NO_NEIGH_CARDS = new Set(['ginormous_unicorn']);
 
 const pendingTimers = new Map<string, NodeJS.Timeout>();
@@ -43,6 +43,7 @@ function isReactionEffect(effect: string | null, explodingKittens: boolean): boo
   return (
     effect === 'neigh' ||
     effect === 'super_neigh' ||
+    effect === 'neigh_thank_you' ||
     (explodingKittens && effect === 'nope')
   );
 }
@@ -179,6 +180,9 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
   const original = chain[0];
   const activePlayer = game.players.find((p) => p.id === original.playerId);
+  const thankYouLink = chain.find(
+    (link) => link.card.effect === 'neigh_thank_you',
+  );
 
   if (linkCanceled[0]) {
     if (activePlayer && !explodingKittens) {
@@ -351,6 +355,22 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   }
 
   game.pendingPlay = undefined;
+
+  if (linkCanceled[0] && thankYouLink) {
+    game.pendingAction = {
+      type: 'select_choice',
+      reason: 'neigh_thank_you',
+      playerId: thankYouLink.playerId,
+      sourcePlayerId: thankYouLink.playerId,
+      targetPlayerId: original.playerId,
+      title: '🙏 Neigh, Thank You',
+      description: '¿Deseas robar una carta? También se ofrecerá al jugador cuya carta fue cancelada.',
+      options: [
+        { value: 'yes', text: 'Sí, robar una carta' },
+        { value: 'no', text: 'No, omitir robo' },
+      ],
+    };
+  }
 
   emitGameState(io, room, 'game-updated');
 }

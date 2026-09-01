@@ -13,7 +13,7 @@ import {
   GameActionResult,
 } from '../../../../../shared/types/GameActionResult.ts';
 
-const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh']);
+const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh', 'neigh_thank_you']);
 
 export class RulesEngine {
   static stagePlay(

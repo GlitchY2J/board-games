@@ -55,6 +55,7 @@ import { targetedDestruction } from '../../../cards/effects/targetedDestruction.
 import { pandamonium } from '../../../cards/effects/pandamonium.ts';
 import { tinyStable } from '../../../cards/effects/tinyStable.ts';
 import { tinyHooves } from '../../../cards/effects/tinyHooves.ts';
+import { neighThankYou } from '../../../cards/effects/neighThankYou.ts';
 import { doubleDutch } from '../../../cards/effects/doubleDutch.ts';
 import { barbedWire } from '../../../cards/effects/barbedWire.ts';
 import { sadisticRitual } from '../../../cards/effects/sadisticRitual.ts';
@@ -147,6 +148,7 @@ export const effects: Record<string, CardEffect> = {
   pandamonium,
   tiny_stable: tinyStable,
   tiny_hooves: tinyHooves,
+  neigh_thank_you: neighThankYou,
   double_dutch: doubleDutch,
   barbed_wire: barbedWire,
   sadistic_ritual: sadisticRitual,

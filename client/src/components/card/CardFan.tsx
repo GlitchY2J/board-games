@@ -218,7 +218,9 @@ export default function CardFan({
   };
 
   const isNeigh = (card: CardType) =>
-    card.effect === 'neigh' || card.effect === 'super_neigh';
+    card.effect === 'neigh' ||
+    card.effect === 'super_neigh' ||
+    card.effect === 'neigh_thank_you';
 
   function selectCard(cardId: string) {
     hidePreview();

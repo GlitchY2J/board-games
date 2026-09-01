@@ -52,6 +52,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const topIsReaction =
     pending.card.effect === 'neigh' ||
     pending.card.effect === 'super_neigh' ||
+    pending.card.effect === 'neigh_thank_you' ||
     (isExplodingKittens && pending.card.effect === 'nope');
   const isAttackPlay =
     isExplodingKittens &&
@@ -89,6 +90,8 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     localPlayer?.hand.some((c) => c.effect === 'neigh') ?? false;
   const hasSuperNeigh =
     localPlayer?.hand.some((c) => c.effect === 'super_neigh') ?? false;
+  const hasNeighThankYou =
+    localPlayer?.hand.some((c) => c.effect === 'neigh_thank_you') ?? false;
   const hasNope = localPlayer?.hand.some((c) => c.effect === 'nope') ?? false;
   const hasAttack =
     localPlayer?.hand.some(
@@ -159,6 +162,16 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     socket.emit('play-neigh', {
       roomCode: gameState.roomCode,
       cardId: superNeighCard.uid,
+    });
+  }
+
+  function playNeighThankYou() {
+    const card = localPlayer?.hand.find((c) => c.effect === 'neigh_thank_you');
+    if (!card) return;
+
+    socket.emit('play-neigh', {
+      roomCode: gameState.roomCode,
+      cardId: card.uid,
     });
   }
 
@@ -384,6 +397,14 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
                 onClick={playSuperNeigh}
               >
                 Super Neigh
+              </button>
+            )}
+            {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasNeighThankYou && (
+              <button
+                className="pending-neigh-btn"
+                onClick={playNeighThankYou}
+              >
+                Neigh, Thank You
               </button>
             )}
           </div>
