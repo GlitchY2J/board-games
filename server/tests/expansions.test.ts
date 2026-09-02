@@ -70,3 +70,46 @@ test('createGameState: inicializa el mazo de juego con las expansiones de la sal
   const state = createGameState(room);
   assert.ok(state.deck.length > 0);
 });
+
+test('createGameState: usa la configuración especial de 2 jugadores', () => {
+  const room: Room = {
+    code: 'ROOM_TWO',
+    game: 'unstable-unicorns',
+    hostId: 'p1',
+    players: [
+      {
+        id: 'p1', sessionToken: 'p1', socketId: 's1', connected: true,
+        name: 'P1', avatar: 'panda', hand: [], stable: [], upgrades: [], downgrades: [],
+      },
+      {
+        id: 'p2', sessionToken: 'p2', socketId: 's2', connected: true,
+        name: 'P2', avatar: 'fox', hand: [], stable: [], upgrades: [], downgrades: [],
+      },
+    ],
+    expansions: ['rainbow_apocalypse'],
+  };
+
+  const state = createGameState(room);
+  const forbiddenIds = new Set([
+    'queen_bee_unicorn', 'seductive_unicorn', 'rainbow_unicorn', 'nanny_cam',
+    'sadistic_ritual', 'slowdown', 'yay', 'mother_goose_unicorn',
+    'necromancer_unicorn', 'fire_and_brimstone', 'unicorn_phoenix',
+    'storm_of_cuteness', 'magical_kittencorn', 'llamapocalypse', 'llamacorn',
+    'adorable_flying_unicorn', 'unicorn_nap',
+  ]);
+  const allGameCards = [
+    ...state.deck,
+    ...state.discard,
+    ...state.nursery,
+    ...state.players.flatMap((player) => [
+      ...player.hand, ...player.stable, ...player.upgrades, ...player.downgrades,
+    ]),
+  ];
+
+  assert.deepEqual(state.players.map((player) => player.hand.length), [6, 6]);
+  assert.ok(state.players.every((player) =>
+    player.hand.some((card) => card.effect === 'neigh'),
+  ));
+  assert.equal(allGameCards.some((card) => card.unicornClass === 'basic'), false);
+  assert.equal(allGameCards.some((card) => forbiddenIds.has(card.id)), false);
+});

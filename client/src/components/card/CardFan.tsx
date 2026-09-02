@@ -251,7 +251,7 @@ export default function CardFan({
               className={`fan-card${isNew ? ' arrived-glow' : ''}`}
               data-card-uid={card.uid}
               data-card-hotkey={index}
-              style={{ transform: `rotate(${rotation}deg)`, zIndex: isNew ? 100 : index }}
+              style={{ transform: `rotate(${rotation}deg)`, zIndex: index }}
             >
               {hotkey !== null && !isNew && (
                 <span className="card-hotkey" aria-hidden="true">

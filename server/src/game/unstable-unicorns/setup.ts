@@ -8,7 +8,44 @@ import { TurnPhase } from '../turn/TurnPhase.ts';
 import { TurnManager } from '../turn/TurnManager.ts';
 
 export function createGameState(room: Room): GameState {
-  const deck = CardRepository.load(room.expansions);
+  let deck = CardRepository.load(room.expansions);
+  const isTwoPlayerGame = room.players.length === 2;
+  const guaranteedNeighs: Card[] = [];
+
+  if (isTwoPlayerGame) {
+    const removedCardIds = new Set([
+      'queen_bee_unicorn',
+      'seductive_unicorn',
+      'rainbow_unicorn',
+      'nanny_cam',
+      'sadistic_ritual',
+      'slowdown',
+      'yay',
+      'mother_goose_unicorn',
+      'necromancer_unicorn',
+      'fire_and_brimstone',
+      'unicorn_phoenix',
+      'storm_of_cuteness',
+      'magical_kittencorn',
+      'llamapocalypse',
+      'llamacorn',
+      'adorable_flying_unicorn',
+      'unicorn_nap',
+    ]);
+
+    deck = deck.filter(
+      (card) =>
+        card.unicornClass !== 'basic' && !removedCardIds.has(card.id),
+    );
+
+    for (let index = 0; index < 2; index += 1) {
+      const neighIndex = deck.findIndex((card) => card.effect === 'neigh');
+      if (neighIndex === -1) break;
+      guaranteedNeighs.push(deck.splice(neighIndex, 1)[0]);
+    }
+
+  }
+
   const { nursery, deck: gameDeck } = extractNursery(deck);
   const deckManager = new DeckManager(gameDeck);
 
@@ -49,7 +86,14 @@ export function createGameState(room: Room): GameState {
     giveBabyUnicorn(nursery, player);
   }
 
-  // Repartir 5 cartas
+  if (isTwoPlayerGame) {
+    players.forEach((player, index) => {
+      const neigh = guaranteedNeighs[index];
+      if (neigh) player.hand.push(neigh);
+    });
+  }
+
+  // Repartir 5 cartas adicionales (6 cartas totales en partidas de 2 jugadores)
   for (const player of players) {
     for (let i = 0; i < 5; i++) {
       const card = deckManager.draw();
