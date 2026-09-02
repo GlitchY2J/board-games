@@ -269,6 +269,29 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         return;
       }
 
+      if (original.card.effect === 'draw_from_the_bottom') {
+        const drawn = game.deck.pop();
+        const drawingPlayer = game.players.find(
+          (player) => player.id === original.playerId,
+        );
+        if (drawn && drawingPlayer) {
+          enqueueDrawAnimation(game.roomCode, drawingPlayer.id, drawn);
+          drawingPlayer.hand.push(drawn);
+        }
+
+        clearPendingTimer(room.code);
+        game.pendingPlay = undefined;
+        game.pendingAction = undefined;
+        advanceTurnAfterDraw(game);
+        addLog(
+          game,
+          `${original.playerName} robó la carta del fondo del mazo y terminó su turno`,
+          { playerId: original.playerId },
+        );
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (original.card.effect === 'alter_the_future') {
         game.pendingAction = {
           type: 'alter_the_future',
