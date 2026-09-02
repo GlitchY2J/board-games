@@ -184,6 +184,39 @@ export function registerActionHandlers(
       if (
         isExplodingKittensRoom(room) &&
         pendingAction?.type === 'select_player' &&
+        pendingAction.reason === 'targeted_attack'
+      ) {
+        if (pendingAction.sourcePlayerId !== sourcePlayer.id || playerId === sourcePlayer.id) return;
+        const targetPlayer = room.gameState.players.find((candidate) => candidate.id === playerId);
+        if (!targetPlayer || !pendingAction.card) return;
+
+        room.gameState.pendingAction = undefined;
+        const previousPendingPlay = pendingAction.pendingPlay;
+        room.gameState.pendingPlay = {
+          playerId: sourcePlayer.id,
+          playerName: sourcePlayer.name,
+          card: pendingAction.card,
+          startedAt: Date.now(),
+          durationMs: 5000,
+          acceptedIds: [],
+          targetPlayerId: targetPlayer.id,
+          targetPlayerName: targetPlayer.name,
+          attackCount: (previousPendingPlay?.attackCount ?? 0) + 1,
+          chain: [
+            ...(previousPendingPlay?.chain ?? []),
+            { playerId: sourcePlayer.id, playerName: sourcePlayer.name, card: pendingAction.card, group: 0 },
+          ],
+        };
+        addLog(room.gameState, `${sourcePlayer.name} dirigió Targeted Attack contra ${targetPlayer.name}`, {
+          playerId: sourcePlayer.id,
+        });
+        emitGameState(io, room, 'game-updated');
+        startPendingTimer(io, room, room.gameState.pendingPlay.startedAt);
+        return;
+      }
+      if (
+        isExplodingKittensRoom(room) &&
+        pendingAction?.type === 'select_player' &&
         (pendingAction.reason === 'two_of_a_kind' ||
           pendingAction.reason === 'three_of_a_kind')
       ) {
@@ -656,7 +689,6 @@ export function registerActionHandlers(
         emitGameError(socket, 'NO_PENDING_ACTION', 'No hay una visión del futuro pendiente.', 'select-choice');
         return;
       }
-
       if (pending.type === 'alter_the_future') {
         const orderedIds = payload.orderedCardIds ?? pending.candidates.map((card) => card.uid);
         if (

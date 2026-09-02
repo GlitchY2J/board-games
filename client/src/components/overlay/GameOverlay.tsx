@@ -326,7 +326,8 @@ export default function GameOverlay({
          const isBlatantThievery = action.reason === 'blatant_thievery';
          const isAmericorn = action.reason === 'americorn';
          const isTwoOfAKind = action.reason === 'two_of_a_kind';
-         const isThreeOfAKind = action.reason === 'three_of_a_kind';
+          const isThreeOfAKind = action.reason === 'three_of_a_kind';
+          const isTargetedAttack = action.reason === 'targeted_attack';
          const isFavor = action.reason === 'favor';
         const isUnicornPoison = action.reason === 'unicorn_poison';
         const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
@@ -364,6 +365,7 @@ export default function GameOverlay({
             );
           }
           if (p.id === localPlayerId) return false;
+          if (isTargetedAttack) return true;
           if (needsHand) return p.hand.length > 0;
           if (isUnicornSwap)
             return p.stable.some((c) => c.cardType === 'unicorn');
@@ -400,6 +402,7 @@ export default function GameOverlay({
              if (isThreeOfAKind) return '🎴 Three of a Kind';
             if (isFavor) return '🃏 Favor';
             if (isThreeOfAKind) return '🎴 Three of a Kind';
+            if (isTargetedAttack) return '🎯 Targeted Attack';
           if (isUnicornPoison) return '🧪 Unicorn Poison';
           if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
           if (isPlayDowngrade) return '⏬ Jugar Downgrade';
@@ -420,8 +423,10 @@ export default function GameOverlay({
              return 'Elige a un jugador para tomar una carta de su mano al azar';
            if (isTwoOfAKind)
              return 'Elige a un jugador para tomarle una carta al azar';
-           if (isThreeOfAKind)
-             return 'Elige a un jugador para elegir una carta de su mano';
+            if (isThreeOfAKind)
+              return 'Elige a un jugador para elegir una carta de su mano';
+            if (isTargetedAttack)
+              return 'Elige al jugador que recibirá el ataque';
            if (isFavor)
              return 'Elige a un jugador que tenga al menos una carta para entregarte';
            if (isThreeOfAKind)

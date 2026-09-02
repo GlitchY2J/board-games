@@ -1,4 +1,5 @@
 import type { Card } from "./Card.ts";
+import type { PendingPlay } from "./Game.ts";
 
 export type PendingAction =
   | {
@@ -59,6 +60,7 @@ export type PendingAction =
          | "blatant_thievery"
          | "two_of_a_kind"
          | "three_of_a_kind"
+         | "targeted_attack"
          | "unicorn_poison"
         | "annoying_flying_unicorn"
         | "play_downgrade"
@@ -74,6 +76,7 @@ export type PendingAction =
        targetPlayerId?: string;
        cardIds?: string[];
        card?: Card;
+       pendingPlay?: PendingPlay;
       /** Jugador dueño original de la carta que se mueve (Re-Target). */
       fromPlayerId?: string;
     }

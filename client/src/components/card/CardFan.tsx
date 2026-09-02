@@ -67,6 +67,7 @@ export default function CardFan({
   const [newCardUids, setNewCardUids] = useState<Set<string>>(new Set());
   const prevCardsRef = useRef<Set<string> | null>(null);
   const seenCardUidsRef = useRef<Set<string>>(new Set());
+  const arrivalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const currentUids = new Set(cards.map((c) => c.uid));
@@ -85,18 +86,28 @@ export default function CardFan({
     if (freshUids.length > 0) {
       const newestUid = freshUids[freshUids.length - 1];
 
+      if (arrivalTimerRef.current) clearTimeout(arrivalTimerRef.current);
       setNewCardUids(new Set([newestUid]));
 
-      const timer = setTimeout(() => {
+      arrivalTimerRef.current = setTimeout(() => {
         setNewCardUids(new Set());
+        arrivalTimerRef.current = null;
       }, 5000);
 
       prevCardsRef.current = currentUids;
-      return () => clearTimeout(timer);
+      return;
     }
 
     prevCardsRef.current = currentUids;
   }, [cards]);
+
+  useEffect(() => {
+    setNewCardUids(new Set());
+  }, [sortHandMode]);
+
+  useEffect(() => () => {
+    if (arrivalTimerRef.current) clearTimeout(arrivalTimerRef.current);
+  }, []);
 
   useLayoutEffect(() => {
     const element = fanRef.current;

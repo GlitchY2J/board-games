@@ -21,7 +21,7 @@ import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, e
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
-import { advanceTurnAfterDraw, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack } from '../game/exploding-kittens/turn.ts';
+import { advanceTurnAfterDraw, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack, startTargetedAttack } from '../game/exploding-kittens/turn.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -210,13 +210,19 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   } else if (activePlayer) {
     if (explodingKittens) {
       const successfulAttacks = chain.filter(
-        (link, index) => link.card.id === 'attack' && !linkCanceled[index],
+        (link, index) =>
+          (link.card.id === 'attack' || link.card.id === 'targeted_attack') &&
+          !linkCanceled[index],
       );
       if (successfulAttacks.length > 0) {
         const lastAttacker = successfulAttacks[successfulAttacks.length - 1];
         const stackedAttacks = pending.attackCount ?? successfulAttacks.length;
         const turnPendings = Math.max(0, game.turnsRemaining ?? 0);
-        startAttack(game, lastAttacker.playerId, stackedAttacks);
+        if (lastAttacker.card.id === 'targeted_attack' && pending.targetPlayerId) {
+          startTargetedAttack(game, pending.targetPlayerId, stackedAttacks);
+        } else {
+          startAttack(game, lastAttacker.playerId, stackedAttacks);
+        }
         game.turnsRemaining = calculateAttackTurns(stackedAttacks, turnPendings);
       }
 
@@ -736,11 +742,13 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       const canStackAttack =
         !!pending &&
         (pending.chain[pending.chain.length - 1]?.card.id === 'attack' ||
-          pending.chain[pending.chain.length - 1]?.card.effect === 'attack') &&
+          pending.chain[pending.chain.length - 1]?.card.effect === 'attack' ||
+          pending.chain[pending.chain.length - 1]?.card.id === 'targeted_attack' ||
+          pending.chain[pending.chain.length - 1]?.card.effect === 'targeted_attack') &&
         (pending.targetPlayerId ?? fallbackAttackTargetId) === context.player.id &&
         card.cardType === 'action' &&
-        card.id === 'attack' &&
-        card.effect === 'attack';
+        (card.id === 'attack' || card.id === 'targeted_attack') &&
+        (card.effect === 'attack' || card.effect === 'targeted_attack');
 
       if (!canStackAttack && !isNow && context.game.players[context.game.currentPlayer]?.id !== context.player.id) {
         emitGameError(socket, 'NOT_YOUR_TURN', 'No es tu turno.', 'play-card');
@@ -792,6 +800,27 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
           card,
         };
         addLog(context.game, `${context.player.name} jugó Favor`, { playerId: context.player.id });
+        emitGameState(io, context.room, 'game-updated');
+        return;
+      }
+
+      if (card.id === 'targeted_attack' || card.effect === 'targeted_attack') {
+        const previousPendingPlay = context.game.pendingPlay;
+        if (previousPendingPlay) {
+          clearPendingTimer(context.room.code);
+          context.game.pendingPlay = undefined;
+        }
+        context.game.pendingAction = {
+          type: 'select_player',
+          reason: 'targeted_attack',
+          sourcePlayerId: context.player.id,
+          targetPlayerId: '',
+          card,
+          pendingPlay: previousPendingPlay,
+        };
+        addLog(context.game, `${context.player.name} debe elegir el objetivo de Targeted Attack`, {
+          playerId: context.player.id,
+        });
         emitGameState(io, context.room, 'game-updated');
         return;
       }
@@ -850,7 +879,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
 
       const startedAt = Date.now();
       const targetPlayer =
-        card.id === 'attack'
+          (card.id === 'attack' || card.id === 'targeted_attack')
           ? context.game.players[
               nextPlayerIndex(context.game, context.game.currentPlayer)
             ]
@@ -1065,6 +1094,21 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
           playerId: player.id,
         });
         emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (card.id === 'targeted_attack' || card.effect === 'targeted_attack') {
+        context.game.pendingAction = {
+          type: 'select_player',
+          reason: 'targeted_attack',
+          sourcePlayerId: context.player.id,
+          targetPlayerId: '',
+          card,
+        };
+        addLog(context.game, `${context.player.name} debe elegir el objetivo de Targeted Attack`, {
+          playerId: context.player.id,
+        });
+        emitGameState(io, context.room, 'game-updated');
         return;
       }
       if (card.id === 'exploding_kitten') {

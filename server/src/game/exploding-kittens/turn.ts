@@ -74,6 +74,24 @@ export function reverseTurnOrder(game: GameState): void {
   game.pendingPlay = undefined;
 }
 
+export function startTargetedAttack(
+  game: GameState,
+  targetPlayerId: string,
+  attackCount = 1,
+): void {
+  const targetIndex = game.players.findIndex((player) => player.id === targetPlayerId);
+  if (targetIndex < 0) return;
+
+  game.currentPlayer = targetIndex;
+  game.turn += 1;
+  game.turnsRemaining = Math.max(1, attackCount * 2);
+  game.phase = 'DRAW';
+  game.actionUsed = false;
+  game.actionPlaysRemaining = undefined;
+  game.pendingAction = undefined;
+  game.pendingPlay = undefined;
+}
+
 export function nextPlayerIndex(game: GameState, playerIndex: number): number {
   const direction = game.turnDirection ?? 1;
   return (playerIndex + direction + game.players.length) % game.players.length;

@@ -44,7 +44,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const seconds = Math.ceil(remainingMs / 1000);
 
   const chainNeighCount = pending.chain.length - 1;
-  const attackCount = pending.attackCount ?? pending.chain.filter((link) => link.card.id === 'attack').length;
+  const attackCount = pending.attackCount ?? pending.chain.filter((link) => link.card.id === 'attack' || link.card.id === 'targeted_attack').length;
   const isCatComboPlay =
     isExplodingKittens &&
     pending.chain.length > 1 &&
@@ -56,7 +56,8 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     (isExplodingKittens && pending.card.effect === 'nope');
   const isAttackPlay =
     isExplodingKittens &&
-    (pending.card.id === 'attack' || pending.card.effect === 'attack');
+    (pending.card.id === 'attack' || pending.card.effect === 'attack' ||
+      pending.card.id === 'targeted_attack' || pending.card.effect === 'targeted_attack');
   const isTwoOfAKind =
     isExplodingKittens &&
     pending.card.effect === 'cat_pair' &&
@@ -98,8 +99,8 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
       (card) =>
         card.uid &&
         card.cardType === 'action' &&
-        card.id === 'attack' &&
-        card.effect === 'attack',
+        (card.id === 'attack' || card.id === 'targeted_attack') &&
+        (card.effect === 'attack' || card.effect === 'targeted_attack'),
     ) ?? false;
   const hasBlindingLight =
     localPlayer?.downgrades.some((c) => c.id === 'blinding_light') ?? false;
@@ -133,7 +134,9 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const canStackAttack =
     isExplodingKittens &&
     (pending.chain[pending.chain.length - 1]?.card.id === 'attack' ||
-      pending.chain[pending.chain.length - 1]?.card.effect === 'attack') &&
+      pending.chain[pending.chain.length - 1]?.card.effect === 'attack' ||
+      pending.chain[pending.chain.length - 1]?.card.id === 'targeted_attack' ||
+      pending.chain[pending.chain.length - 1]?.card.effect === 'targeted_attack') &&
     (pending.targetPlayerId ?? fallbackAttackTargetId) === localPlayerId &&
     hasAttack;
 
