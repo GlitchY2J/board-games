@@ -641,15 +641,37 @@ export function registerActionHandlers(
   }
 
   function registerResolveSeeTheFuture(io: GameServer, socket: GameSocket): void {
-    socket.on('resolve-see-the-future', ({ roomCode }) => {
+    socket.on('resolve-see-the-future', (payload) => {
+      const { roomCode } = payload;
       const context = getSocketGameContext(socket, roomCode);
       if (!context) return;
 
       const { game, player, room } = context;
       const pending = game.pendingAction;
-      if (!pending || pending.type !== 'see_the_future' || pending.playerId !== player.id) {
+      if (
+        (!pending ||
+          (pending.type !== 'see_the_future' && pending.type !== 'alter_the_future') ||
+          pending.playerId !== player.id)
+      ) {
         emitGameError(socket, 'NO_PENDING_ACTION', 'No hay una visión del futuro pendiente.', 'select-choice');
         return;
+      }
+
+      if (pending.type === 'alter_the_future') {
+        const orderedIds = payload.orderedCardIds ?? pending.candidates.map((card) => card.uid);
+        if (
+          orderedIds.length !== pending.candidates.length ||
+          new Set(orderedIds).size !== orderedIds.length ||
+          orderedIds.some((id) => !pending.candidates.some((card) => card.uid === id))
+        ) {
+          emitGameError(socket, 'INVALID_SELECTION', 'El orden de las cartas no es válido.', 'select-choice');
+          return;
+        }
+
+        const orderedCards = orderedIds.map((id) =>
+          pending.candidates.find((card) => card.uid === id)!,
+        );
+        game.deck.splice(0, orderedCards.length, ...orderedCards);
       }
 
       game.pendingAction = undefined;

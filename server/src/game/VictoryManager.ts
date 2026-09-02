@@ -22,6 +22,7 @@ function getUnicornNameLetters(player: Player): number {
 
 export class VictoryManager {
   static checkWinner(game: GameState) {
+    if (game.gameId === 'exploding-kittens') return;
     if (game.winnerId) return;
 
     // Regla 1: el primer jugador en alcanzar la cantidad objetivo de unicornios

@@ -269,6 +269,22 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         return;
       }
 
+      if (original.card.effect === 'alter_the_future') {
+        game.pendingAction = {
+          type: 'alter_the_future',
+          playerId: original.playerId,
+          candidates: game.deck.slice(0, 3).map((futureCard) => ({ ...futureCard })),
+          card: original.card,
+          turnsRemaining: game.turnsRemaining,
+        };
+        addLog(game, `${original.playerName} puede alterar el futuro`, {
+          playerId: original.playerId,
+        });
+        game.pendingPlay = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         original.card.effect === 'cat_pair' &&
         (() => {

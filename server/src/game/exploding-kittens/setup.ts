@@ -148,7 +148,7 @@ const IMPLODING_KITTENS_CARD_SPECS: CardSpec[] = [
     id: 'alter_the_future',
     name: 'Alter the Future',
     cardType: 'action',
-    effect: 'none',
+    effect: 'alter_the_future',
     description: 'Carta de Imploding Kittens. Efecto pendiente de implementación.',
     copies: 4,
     variantCount: 4,
@@ -275,6 +275,7 @@ export function createExplodingKittensState(room: Room): GameState {
 
   return {
     roomCode: room.code,
+    gameId: 'exploding-kittens',
     started: true,
     turn: 1,
     currentPlayer: 0,

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import type { GameState } from '../../types/GameState';
 import CardSelectionOverlay from './CardSelectionOverlay';
 import PlayingCard from '../card/PlayingCard';
+import AlterTheFutureOverlay from './AlterTheFutureOverlay';
 
 function isPandamoniumProtected(
   player: { downgrades: { id: string }[] },
@@ -2450,6 +2451,22 @@ export default function GameOverlay({
               </button>
             </div>
           </div>
+        );
+      }
+
+      case 'alter_the_future': {
+        if (action.playerId !== localPlayerId) return null;
+        return (
+          <AlterTheFutureOverlay
+            candidates={action.candidates}
+            onConfirm={(orderedIds) => {
+              dismiss();
+              socket.emit('resolve-see-the-future', {
+                roomCode: gameState.roomCode,
+                orderedCardIds: orderedIds,
+              });
+            }}
+          />
         );
       }
 

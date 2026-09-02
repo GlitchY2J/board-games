@@ -64,6 +64,7 @@ export interface ChatMessage {
 
 export interface GameState {
   roomCode: string;
+  gameId?: string;
   started: boolean;
   turn: number;
   currentPlayer: number;

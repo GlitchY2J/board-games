@@ -175,6 +175,7 @@ export interface ResolveExplodingKittenPayload {
 
 export interface ResolveSeeTheFuturePayload {
   roomCode: string;
+  orderedCardIds?: string[];
 }
 
 export interface StealAnimation {

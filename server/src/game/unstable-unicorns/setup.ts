@@ -105,6 +105,7 @@ export function createGameState(room: Room): GameState {
 
   const gameState: GameState = {
     roomCode: room.code,
+    gameId: 'unstable-unicorns',
     started: true,
     turn: 1,
     currentPlayer: 0,

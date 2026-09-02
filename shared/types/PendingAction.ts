@@ -247,6 +247,13 @@ export type PendingAction =
       turnsRemaining?: number;
     }
   | {
+      type: "alter_the_future";
+      playerId: string;
+      candidates: Card[];
+      card: Card;
+      turnsRemaining?: number;
+    }
+  | {
       type: "select_deck_card";
        reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse" | "unicorns_of_the_apocalypse";
       playerId: string;

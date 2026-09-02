@@ -757,18 +757,15 @@ export default function Lobby() {
                           >
                             {expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' ? (
                               <>
-                                <img
-                                  src={expansion.id === 'rainbow_apocalypse'
-                                    ? '/covers/unstable-unicorns/expansions/rainbow-apocalypse.jpeg'
-                                    : '/covers/exploding-kittens/expansions/imploding-kittens.jpeg'}
-                                  alt={`Portada de ${expansion.name}`}
-                                  className="lobby-expansion-cover absolute inset-0 h-full w-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-transparent to-slate-950/35" />
-                                <span className="lobby-expansion-progress absolute bottom-3 left-3 rounded-full px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider">
-                                  En progreso
-                                </span>
-                              </>
+                                 <img
+                                   src={expansion.id === 'rainbow_apocalypse'
+                                     ? '/covers/unstable-unicorns/expansions/rainbow-apocalypse.jpeg'
+                                     : '/covers/exploding-kittens/expansions/imploding-kittens.jpeg'}
+                                   alt={`Portada de ${expansion.name}`}
+                                   className="lobby-expansion-cover absolute inset-0 h-full w-full object-cover"
+                                 />
+                                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-transparent to-slate-950/35" />
+                               </>
                             ) : (
                               <>
                                 <span>
