@@ -142,7 +142,7 @@ export default function CardSelectionOverlay({
                       ) : (
                         <PlayingCard
                           name={item.title}
-                          image="/cards/base/card_back.png"
+                          image="/cards/unstable-unicorns/base/card_back.png"
                           size="small"
                           preview={false}
                         />

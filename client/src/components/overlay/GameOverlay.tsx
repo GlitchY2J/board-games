@@ -583,7 +583,7 @@ export default function GameOverlay({
                   : revealAmericorn
                 ? card.image
                 : isAmericorn || isTwoOfAKind || isThreeOfAKind
-                  ? '/cards/base/card_back.png'
+                  ? '/cards/unstable-unicorns/base/card_back.png'
                   : card.image,
             }))}
             maxSelection={1}
@@ -2368,7 +2368,7 @@ export default function GameOverlay({
                 : idx === gameState.deck.length
                   ? 'Parte inferior'
                   : `Posición ${idx + 1}`,
-              image: '/cards/base/card_back.png',
+              image: '/cards/unstable-unicorns/base/card_back.png',
             }))
           : isDebugDraw || isApocalypseSearch
           ? (isApocalypseSearch

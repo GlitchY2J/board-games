@@ -6,7 +6,7 @@ import { drainCardAnimations, drainNeighAnimations, drainExplosionAnimations, dr
 import { checkTinyStable } from '../game/cards/effects/tinyStable.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
 
-const CARD_BACK_IMAGE = '/cards/base/card_back.png';
+const CARD_BACK_IMAGE = '/cards/unstable-unicorns/base/card_back.png';
 
 function createHiddenCard(id: string): Card {
   return {

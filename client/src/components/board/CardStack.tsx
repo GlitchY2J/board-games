@@ -17,7 +17,7 @@ export default function CardStack({ top, count, size = 'medium' }: Props) {
       {Array.from({ length: layers }).map((_, i) => (
         <img
           key={i}
-          src="/cards/base/card_back.png"
+          src="/cards/unstable-unicorns/base/card_back.png"
           alt=""
           draggable={false}
           className={`card-stack-layer ${size} layer-${i}`}
