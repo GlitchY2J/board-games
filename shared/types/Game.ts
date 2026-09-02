@@ -68,6 +68,8 @@ export interface GameState {
   started: boolean;
   turn: number;
   currentPlayer: number;
+  /** Exploding Kittens: direction of turn order (1 clockwise, -1 reverse). */
+  turnDirection?: 1 | -1;
   players: Player[];
   deck: Card[];
   nursery: Card[];

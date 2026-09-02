@@ -15,7 +15,10 @@ export function startAttack(game: GameState, attackerId?: string, attackCount = 
   const attackerIndex = attackerId
     ? game.players.findIndex((player) => player.id === attackerId)
     : game.currentPlayer;
-  game.currentPlayer = ((attackerIndex < 0 ? game.currentPlayer : attackerIndex) + 1) % game.players.length;
+  game.currentPlayer = nextPlayerIndex(
+    game,
+    attackerIndex < 0 ? game.currentPlayer : attackerIndex,
+  );
   game.turn += 1;
   game.turnsRemaining = Math.max(1, attackCount * 2);
   game.phase = 'DRAW';
@@ -37,7 +40,7 @@ export function advanceTurnAfterDraw(game: GameState): void {
     return;
   }
 
-  game.currentPlayer = (game.currentPlayer + 1) % game.players.length;
+  game.currentPlayer = nextPlayerIndex(game, game.currentPlayer);
   game.turn += 1;
   game.turnsRemaining = 1;
   game.phase = 'DRAW';
@@ -45,4 +48,33 @@ export function advanceTurnAfterDraw(game: GameState): void {
   game.actionPlaysRemaining = undefined;
   game.pendingAction = undefined;
   game.pendingPlay = undefined;
+}
+
+export function reverseTurnOrder(game: GameState): void {
+  if (game.players.length === 0) return;
+
+  game.turnDirection = game.turnDirection === -1 ? 1 : -1;
+  const turnsRemaining = game.turnsRemaining ?? 1;
+
+  if (turnsRemaining > 1) {
+    game.turnsRemaining = turnsRemaining - 1;
+    game.phase = 'DRAW';
+    game.actionUsed = false;
+    game.actionPlaysRemaining = undefined;
+    return;
+  }
+
+  game.currentPlayer = nextPlayerIndex(game, game.currentPlayer);
+  game.turn += 1;
+  game.turnsRemaining = 1;
+  game.phase = 'DRAW';
+  game.actionUsed = false;
+  game.actionPlaysRemaining = undefined;
+  game.pendingAction = undefined;
+  game.pendingPlay = undefined;
+}
+
+export function nextPlayerIndex(game: GameState, playerIndex: number): number {
+  const direction = game.turnDirection ?? 1;
+  return (playerIndex + direction + game.players.length) % game.players.length;
 }

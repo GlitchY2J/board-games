@@ -21,7 +21,7 @@ import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, e
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
-import { advanceTurnAfterDraw, calculateAttackTurns, startAttack } from '../game/exploding-kittens/turn.ts';
+import { advanceTurnAfterDraw, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack } from '../game/exploding-kittens/turn.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -247,6 +247,18 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         game.pendingPlay = undefined;
         game.pendingAction = undefined;
         addLog(game, `${original.playerName} usó Skip y terminó un turno`, {
+          playerId: original.playerId,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (original.card.effect === 'reverse' || original.card.id === 'reverse') {
+        clearPendingTimer(room.code);
+        game.pendingPlay = undefined;
+        game.pendingAction = undefined;
+        reverseTurnOrder(game);
+        addLog(game, `${original.playerName} usó Reverse y terminó un turno`, {
           playerId: original.playerId,
         });
         emitGameState(io, room, 'game-updated');
@@ -840,7 +852,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       const targetPlayer =
         card.id === 'attack'
           ? context.game.players[
-              (context.game.currentPlayer + 1) % context.game.players.length
+              nextPlayerIndex(context.game, context.game.currentPlayer)
             ]
           : undefined;
       context.game.pendingPlay = {

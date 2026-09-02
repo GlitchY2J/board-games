@@ -14,16 +14,17 @@ export default function TurnOrder({ gameState, localPlayerId }: Props) {
     const total = gameState.players.length;
     if (total === 0) return [];
 
+    const direction = gameState.turnDirection ?? 1;
     const list = [];
     for (let i = 0; i < total; i++) {
-      const idx = (gameState.currentPlayer + i) % total;
+      const idx = (gameState.currentPlayer + i * direction + total) % total;
       list.push({
         ...gameState.players[idx],
         isCurrent: i === 0,
       });
     }
     return list;
-  }, [gameState.players, gameState.currentPlayer]);
+  }, [gameState.players, gameState.currentPlayer, gameState.turnDirection]);
 
   if (orderedPlayers.length === 0) return null;
 
