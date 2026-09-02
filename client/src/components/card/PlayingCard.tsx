@@ -48,7 +48,7 @@ export default function PlayingCard({
       onClick={disabled ? undefined : onClick}
     >
       <img
-        src={isCardBack ? '/cards/base/card_back.png' : image}
+        src={isCardBack ? '/cards/unstable-unicorns/base/card_back.png' : image}
         alt={name}
         draggable={false}
       />

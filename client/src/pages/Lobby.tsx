@@ -595,7 +595,7 @@ export default function Lobby() {
                           {game.id === 'unstable-unicorns' || game.id === 'exploding-kittens' ? (
                             <>
                               <img
-                                src={`/covers/${game.id}.jpeg`}
+                                src={`/covers/${game.id}/${game.id}.jpeg`}
                                 alt={`Portada de ${game.name}`}
                                 className="lobby-game-cover absolute inset-0 h-full w-full object-cover object-center"
                               />
@@ -624,7 +624,7 @@ export default function Lobby() {
                 selectedGame && (selectedGame.id === 'unstable-unicorns' || selectedGame.id === 'exploding-kittens') ? (
                   <div className="lobby-game-card relative mx-auto w-1/2 overflow-hidden rounded-2xl">
                     <img
-                      src={`/covers/${selectedGame.id}.jpeg`}
+                      src={`/covers/${selectedGame.id}/${selectedGame.id}.jpeg`}
                       alt={`Portada de ${selectedGame.name}`}
                       className="lobby-game-cover absolute inset-0 h-full w-full object-cover"
                     />
@@ -748,17 +748,19 @@ export default function Lobby() {
                             className={`w-full flex items-center justify-between gap-4 rounded-2xl border text-left transition-all ${
                               active ? 'lobby-expansion-card-selected' : ''
                             } ${
-                              expansion.id === 'rainbow_apocalypse' ? 'relative h-40 w-full max-w-[100px] overflow-hidden p-0' : 'p-4'
+                               (expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens') ? 'relative h-40 w-full max-w-[100px] overflow-hidden p-0' : 'p-4'
                             } ${
                               active
                                 ? 'bg-amber-500/10 border-amber-500/40'
                                 : 'bg-slate-900/30 border-slate-800/40'
                             } ${canEditSettings ? 'cursor-pointer hover:border-amber-400/40' : 'cursor-default'}`}
                           >
-                            {expansion.id === 'rainbow_apocalypse' ? (
+                            {expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' ? (
                               <>
                                 <img
-                                  src="/covers/expansions/rainbow-apocalypse.jpeg"
+                                  src={expansion.id === 'rainbow_apocalypse'
+                                    ? '/covers/unstable-unicorns/expansions/rainbow-apocalypse.jpeg'
+                                    : '/covers/exploding-kittens/expansions/imploding-kittens.jpeg'}
                                   alt={`Portada de ${expansion.name}`}
                                   className="lobby-expansion-cover absolute inset-0 h-full w-full object-cover"
                                 />

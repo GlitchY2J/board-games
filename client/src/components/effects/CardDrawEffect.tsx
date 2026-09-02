@@ -111,7 +111,7 @@ export default function CardDrawEffect({ animation, localPlayerId, onDone }: Pro
   }, [animation, localPlayerId]);
 
   const isMe = animation.playerId === localPlayerId;
-  const cardSrc = isMe ? animation.card.image : '/cards/base/card_back.png';
+  const cardSrc = isMe ? animation.card.image : '/cards/unstable-unicorns/base/card_back.png';
 
   return (
     <img

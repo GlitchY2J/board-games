@@ -48,7 +48,16 @@ export const explodingKittens: GameDefinition = {
       available: true,
     },
   ],
-  expansions: [],
+  expansions: [
+    {
+      id: 'imploding_kittens',
+      gameId: 'exploding-kittens',
+      name: 'Imploding Kittens',
+      description: 'Añade las cartas de la expansión Imploding Kittens al mazo.',
+      versionIds: ['exploding-kittens-base'],
+      available: true,
+    },
+  ],
 };
 
 export const gameRegistry = new GameRegistry();

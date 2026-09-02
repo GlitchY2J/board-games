@@ -28,7 +28,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/cards/exploding-kittens/back-card.png');
+  background-image: url('/cards/exploding-kittens/base/back-card.png');
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;

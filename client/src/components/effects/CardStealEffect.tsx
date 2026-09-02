@@ -120,7 +120,7 @@ export default function CardStealEffect({ animation, localPlayerId, onDone }: Pr
     <img
       ref={cardRef}
       className={`card-steal-item ${animation.sourcePlayerId === localPlayerId ? 'from-me' : ''}`}
-      src={showCardFace ? animation.card.image : '/cards/base/card_back.png'}
+      src={showCardFace ? animation.card.image : '/cards/unstable-unicorns/base/card_back.png'}
       alt={animation.card.name}
     />
   );

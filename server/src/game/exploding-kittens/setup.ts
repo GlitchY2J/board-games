@@ -4,7 +4,7 @@ import type { Player } from '../models/Player.ts';
 import type { Room } from '../models/Room.ts';
 import { DeckManager } from '../DeckManager.ts';
 
-const CARD_PATH = '/cards/exploding-kittens';
+const CARD_PATH = '/cards/exploding-kittens/base';
 
 interface CardSpec {
   id: string;
@@ -14,6 +14,8 @@ interface CardSpec {
   description: string;
   copies: number;
   variantCount?: number;
+  extension?: 'jpg' | 'png';
+  path?: string;
 }
 
 const CARD_SPECS: CardSpec[] = [
@@ -131,16 +133,88 @@ const CARD_SPECS: CardSpec[] = [
   },
 ];
 
-function createCards(): Card[] {
-  return CARD_SPECS.flatMap((spec) =>
+const IMPLODING_KITTENS_CARD_SPECS: CardSpec[] = [
+  {
+    id: 'imploding_kitten',
+    name: 'Imploding Kitten',
+    cardType: 'action',
+    effect: 'none',
+    description: 'Carta de Imploding Kittens. Efecto pendiente de implementación.',
+    copies: 1,
+    extension: 'jpg',
+    path: '/cards/exploding-kittens/imploding kittens',
+  },
+  {
+    id: 'alter_the_future',
+    name: 'Alter the Future',
+    cardType: 'action',
+    effect: 'none',
+    description: 'Carta de Imploding Kittens. Efecto pendiente de implementación.',
+    copies: 4,
+    variantCount: 4,
+    extension: 'jpg',
+    path: '/cards/exploding-kittens/imploding kittens',
+  },
+  {
+    id: 'draw_from_the_bottom',
+    name: 'Draw from the Bottom',
+    cardType: 'action',
+    effect: 'none',
+    description: 'Carta de Imploding Kittens. Efecto pendiente de implementación.',
+    copies: 4,
+    variantCount: 4,
+    extension: 'png',
+    path: '/cards/exploding-kittens/imploding kittens',
+  },
+  {
+    id: 'feral_cat',
+    name: 'Feral Cat',
+    cardType: 'cat',
+    effect: 'none',
+    description: 'Carta de Imploding Kittens. Efecto pendiente de implementación.',
+    copies: 1,
+    extension: 'jpg',
+    path: '/cards/exploding-kittens/imploding kittens',
+  },
+  {
+    id: 'reverse',
+    name: 'Reverse',
+    cardType: 'action',
+    effect: 'none',
+    description: 'Carta de Imploding Kittens. Efecto pendiente de implementación.',
+    copies: 4,
+    variantCount: 4,
+    extension: 'jpg',
+    path: '/cards/exploding-kittens/imploding kittens',
+  },
+  {
+    id: 'targeted_attack',
+    name: 'Targeted Attack',
+    cardType: 'action',
+    effect: 'none',
+    description: 'Carta de Imploding Kittens. Efecto pendiente de implementación.',
+    copies: 3,
+    variantCount: 3,
+    extension: 'jpg',
+    path: '/cards/exploding-kittens/imploding kittens',
+  },
+];
+
+function createCards(includeImplodingKittens = false): Card[] {
+  const cardSpecs = includeImplodingKittens
+    ? [...CARD_SPECS, ...IMPLODING_KITTENS_CARD_SPECS]
+    : CARD_SPECS;
+
+  return cardSpecs.flatMap((spec) =>
     Array.from({ length: spec.copies }, (_, index) => {
       const variantNumber = spec.variantCount
         ? (index % spec.variantCount) + 1
         : undefined;
       const variantId = variantNumber ? `${spec.id}_${variantNumber}` : spec.id;
+      const extension = spec.extension ?? 'jpg';
       const filename = variantNumber
-        ? `${spec.id}_${variantNumber}.jpg`
-        : `${spec.id}.jpg`;
+        ? `${spec.id}_${variantNumber}.${extension}`
+        : `${spec.id}.${extension}`;
 
       return {
         uid: `${spec.id}__${index + 1}`,
@@ -148,11 +222,13 @@ function createCards(): Card[] {
         variantId,
         name: spec.name,
         cardType: spec.cardType,
-        image: `${CARD_PATH}/${filename}`,
+        image: `${spec.path ?? CARD_PATH}/${filename}`,
         description: spec.description,
         effect: spec.effect,
         copies: 1,
-        expansion: 'exploding-kittens-base',
+        expansion: spec === CARD_SPECS.find((baseSpec) => baseSpec.id === spec.id)
+          ? 'exploding-kittens-base'
+          : 'imploding-kittens',
       };
     }),
   );
@@ -169,7 +245,7 @@ function resetPlayer(player: Player): Player {
 }
 
 export function createExplodingKittensState(room: Room): GameState {
-  const allCards = createCards();
+  const allCards = createCards(room.expansions?.includes('imploding_kittens'));
   const kittens = allCards.filter((card) => card.id === 'exploding_kitten');
   const defuses = allCards.filter((card) => card.id === 'defuse');
   const drawCards = allCards.filter(
