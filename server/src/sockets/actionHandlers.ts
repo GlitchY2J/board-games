@@ -2171,21 +2171,7 @@ export function registerActionHandlers(
         if (!pending.card) return;
         room.gameState.deck.splice(position, 0, pending.card);
         room.gameState.pendingAction = undefined;
-        const defusingPlayerIndex = room.gameState.players.findIndex(
-          (candidate) => candidate.id === player.id,
-        );
-        if (defusingPlayerIndex >= 0) {
-          room.gameState.currentPlayer = defusingPlayerIndex;
-        }
-        room.gameState.currentPlayer =
-          (room.gameState.currentPlayer + 1) % room.gameState.players.length;
-        room.gameState.turn += 1;
-        room.gameState.turnsRemaining = 1;
-        room.gameState.phase = TurnPhase.DRAW;
-        room.gameState.actionUsed = false;
-        room.gameState.actionPlaysRemaining = undefined;
-        room.gameState.pendingAction = undefined;
-        room.gameState.pendingPlay = undefined;
+        advanceTurnAfterDraw(room.gameState);
         addLog(room.gameState, `${player.name} terminó su turno después de usar Defuse`, {
           playerId: player.id,
         });
@@ -2205,20 +2191,7 @@ export function registerActionHandlers(
         pending.card.faceUp = true;
         room.gameState.deck.splice(position, 0, pending.card);
         room.gameState.pendingAction = undefined;
-        const placingPlayerIndex = room.gameState.players.findIndex(
-          (candidate) => candidate.id === player.id,
-        );
-        if (placingPlayerIndex >= 0) {
-          room.gameState.currentPlayer = placingPlayerIndex;
-        }
-        room.gameState.currentPlayer =
-          (room.gameState.currentPlayer + 1) % room.gameState.players.length;
-        room.gameState.turn += 1;
-        room.gameState.turnsRemaining = 1;
-        room.gameState.phase = TurnPhase.DRAW;
-        room.gameState.actionUsed = false;
-        room.gameState.actionPlaysRemaining = undefined;
-        room.gameState.pendingPlay = undefined;
+        advanceTurnAfterDraw(room.gameState);
         addLog(room.gameState, `${player.name} colocó el Imploding Kitten boca arriba en el mazo`, {
           playerId: player.id,
         });

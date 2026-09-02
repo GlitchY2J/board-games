@@ -412,7 +412,7 @@ export default function Game() {
       (player) => player.id === contextPlayerId,
     );
 
-    if (eliminated && gameState.winnerId) {
+    if (eliminated && gameState.winnerId && explosionAnims.length === 0) {
       return (
         <VictoryScreen
           gameState={gameState}
@@ -426,7 +426,7 @@ export default function Game() {
       );
     }
 
-    if (isSpectatorPlayer && !(eliminated && gameState.winnerId)) {
+    if (isSpectatorPlayer && !(eliminated && gameState.winnerId && explosionAnims.length === 0)) {
       return (
         <>
           <BoardLayout
@@ -444,7 +444,7 @@ export default function Game() {
     }
 
     if (eliminated) {
-      if (gameState.winnerId) {
+      if (gameState.winnerId && explosionAnims.length === 0) {
         return (
           <VictoryScreen
             gameState={gameState}
@@ -471,14 +471,7 @@ export default function Game() {
           <div className="pointer-events-none fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-full border border-rose-400/30 bg-slate-950/85 px-4 py-2 text-center text-xs font-bold text-rose-200 shadow-xl backdrop-blur">
             Espectador · Eliminado en {eliminated.placement}° lugar
           </div>
-          {shuffleAnims.map((animation) => (
-            <ShuffleDeckEffect
-              key={animation.animId}
-              animation={animation}
-              gameId={gameId}
-              onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
-            />
-          ))}
+          {renderTransientEffects()}
         </div>
       );
     }
