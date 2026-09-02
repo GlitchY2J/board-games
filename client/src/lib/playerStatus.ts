@@ -31,6 +31,12 @@ export function getPlayerStatus(
         case 'select_discard_card':
           return 'Seleccionando carta del descarte...';
         case 'select_deck_card':
+          if (pending.reason === 'exploding_kitten_defuse') {
+            return 'Colocando Exploding Kitten...';
+          }
+          if (pending.reason === 'imploding_kitten_place') {
+            return 'Colocando Imploding Kitten...';
+          }
           return 'Buscando carta...';
         case 'select_nursery_card':
           return 'Eligiendo Baby Unicorn...';

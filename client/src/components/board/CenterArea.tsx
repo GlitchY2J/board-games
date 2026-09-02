@@ -28,15 +28,13 @@ export default function CenterArea({
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-950/30 px-3 py-1.5 rounded-2xl">
             Deck
           </span>
-          <div
-            data-deck
-            className="relative cursor-pointer"
-          >
+          <div data-deck className="relative cursor-pointer">
             <div className="absolute inset-0 bg-cyan-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <Deck
               gameState={gameState}
               isMyTurn={isMyTurn}
               localPlayerId={localPlayerId}
+              gameId={gameId}
             />
           </div>
         </div>

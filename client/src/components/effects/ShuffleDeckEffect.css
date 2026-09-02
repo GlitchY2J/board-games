@@ -29,6 +29,10 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
 }
 
+.shuffle-deck-effect.game-exploding-kittens .shuffle-deck-stack span {
+  background-image: url('/cards/exploding-kittens/base/back-card.png');
+}
+
 .shuffle-deck-stack span:nth-child(1) { animation: shuffle-card-left 0.7s ease-in-out infinite alternate; }
 .shuffle-deck-stack span:nth-child(2) { transform: translate(0, -4px); }
 .shuffle-deck-stack span:nth-child(3) { animation: shuffle-card-right 0.7s ease-in-out infinite alternate; }

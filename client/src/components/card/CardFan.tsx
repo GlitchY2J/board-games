@@ -199,10 +199,32 @@ export default function CardFan({
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
   const isCat = selectedCard?.cardType === 'cat';
   const matchingCats = isCat
-    ? cards.filter((card) => card.id === selectedCard.id && card.uid !== selectedCard.uid)
+    ? cards.filter(
+        (card) =>
+          card.cardType === 'cat' &&
+          card.uid !== selectedCard.uid &&
+          (selectedCard.id === 'feral_cat' ||
+            card.id === selectedCard.id ||
+            card.id === 'feral_cat'),
+      )
     : [];
-  const canPlayPair = matchingCats.length >= 1;
-  const canPlayTrio = matchingCats.length >= 2;
+  const comboCats = selectedCard?.id === 'feral_cat'
+    ? (() => {
+        const nonFeralGroups = new Map<string, CardType[]>();
+        matchingCats.forEach((card) => {
+          if (card.id === 'feral_cat') return;
+          const group = nonFeralGroups.get(card.id) ?? [];
+          group.push(card);
+          nonFeralGroups.set(card.id, group);
+        });
+        const matchingGroup = [...nonFeralGroups.values()].find((group) => group.length >= 2);
+        if (matchingGroup) return matchingGroup;
+        return matchingCats.filter((card) => card.id === 'feral_cat').slice(0, 1)
+          .concat(matchingCats.filter((card) => card.id !== 'feral_cat').slice(0, 1));
+      })()
+    : matchingCats;
+  const canPlayPair = comboCats.length >= 1;
+  const canPlayTrio = comboCats.length >= 2;
   const isBlocked = (cardId: string) => blockedCardIds?.has(cardId) ?? false;
 
   const blockedReason = (card: CardType): string => {
@@ -369,7 +391,7 @@ export default function CardFan({
                       <button
                         className="cat-combo-button cat-combo-pair"
                         onClick={() => {
-                          onPlayCards?.([selectedCardId, matchingCats[0].uid]);
+                           onPlayCards?.([selectedCardId, comboCats[0].uid]);
                           setSelectedCardId(null);
                         }}
                       >
@@ -382,8 +404,8 @@ export default function CardFan({
                         onClick={() => {
                           onPlayCards?.([
                             selectedCardId,
-                            matchingCats[0].uid,
-                            matchingCats[1].uid,
+                             comboCats[0].uid,
+                             comboCats[1].uid,
                           ]);
                           setSelectedCardId(null);
                         }}

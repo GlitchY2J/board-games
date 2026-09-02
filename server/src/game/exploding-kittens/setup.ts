@@ -170,9 +170,9 @@ const IMPLODING_KITTENS_CARD_SPECS: CardSpec[] = [
     id: 'feral_cat',
     name: 'Feral Cat',
     cardType: 'cat',
-    effect: 'none',
+    effect: 'cat_pair',
     description: 'Carta de Imploding Kittens. Efecto pendiente de implementación.',
-    copies: 1,
+    copies: 4,
     extension: 'jpg',
     path: '/cards/exploding-kittens/imploding kittens',
   },
@@ -247,9 +247,13 @@ function resetPlayer(player: Player): Player {
 export function createExplodingKittensState(room: Room): GameState {
   const allCards = createCards(room.expansions?.includes('imploding_kittens'));
   const kittens = allCards.filter((card) => card.id === 'exploding_kitten');
+  const implodingKittens = allCards.filter((card) => card.id === 'imploding_kitten');
   const defuses = allCards.filter((card) => card.id === 'defuse');
   const drawCards = allCards.filter(
-    (card) => card.id !== 'exploding_kitten' && card.id !== 'defuse',
+    (card) =>
+      card.id !== 'exploding_kitten' &&
+      card.id !== 'imploding_kitten' &&
+      card.id !== 'defuse',
   );
   const deck = new DeckManager(drawCards);
   const defuseDeck = new DeckManager(defuses);
@@ -268,8 +272,9 @@ export function createExplodingKittensState(room: Room): GameState {
   }
 
    deck.drawPile.push(
-     ...defuseDeck.drawPile,
-     ...kittens.slice(0, Math.max(0, players.length - 1)),
+      ...defuseDeck.drawPile,
+      ...kittens.slice(0, Math.max(0, players.length - 1)),
+      ...implodingKittens,
    );
   deck.shuffle();
 

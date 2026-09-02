@@ -2100,6 +2100,7 @@ export function registerActionHandlers(
         pending.reason !== 'shabby_the_narwhal' &&
         pending.reason !== 'debug_draw' &&
         pending.reason !== 'exploding_kitten_defuse' &&
+        pending.reason !== 'imploding_kitten_place' &&
         pending.reason !== 'unicorns_of_the_apocalypse'
       )
         return;
@@ -2186,6 +2187,39 @@ export function registerActionHandlers(
         room.gameState.pendingAction = undefined;
         room.gameState.pendingPlay = undefined;
         addLog(room.gameState, `${player.name} terminó su turno después de usar Defuse`, {
+          playerId: player.id,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'imploding_kitten_place') {
+        const positionCardId = Array.isArray(cardId) ? cardId[0] : cardId;
+        const position = Number(positionCardId.replace('deck-position-', ''));
+        if (!Number.isInteger(position) || position < 0 || position > room.gameState.deck.length) {
+          emitGameError(socket, 'INVALID_SELECTION', 'La posición del mazo no es válida.', 'select-deck-card');
+          return;
+        }
+
+        if (!pending.card) return;
+        pending.card.faceUp = true;
+        room.gameState.deck.splice(position, 0, pending.card);
+        room.gameState.pendingAction = undefined;
+        const placingPlayerIndex = room.gameState.players.findIndex(
+          (candidate) => candidate.id === player.id,
+        );
+        if (placingPlayerIndex >= 0) {
+          room.gameState.currentPlayer = placingPlayerIndex;
+        }
+        room.gameState.currentPlayer =
+          (room.gameState.currentPlayer + 1) % room.gameState.players.length;
+        room.gameState.turn += 1;
+        room.gameState.turnsRemaining = 1;
+        room.gameState.phase = TurnPhase.DRAW;
+        room.gameState.actionUsed = false;
+        room.gameState.actionPlaysRemaining = undefined;
+        room.gameState.pendingPlay = undefined;
+        addLog(room.gameState, `${player.name} colocó el Imploding Kitten boca arriba en el mazo`, {
           playerId: player.id,
         });
         emitGameState(io, room, 'game-updated');

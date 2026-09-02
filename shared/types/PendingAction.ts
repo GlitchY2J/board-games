@@ -7,6 +7,11 @@ export type PendingAction =
       card: Card;
     }
   | {
+      type: "imploding_kitten";
+      playerId: string;
+      card: Card;
+    }
+  | {
       type: "select_discard_count";
       reason: "unicorn_of_pestilence";
       playerId: string;
@@ -255,7 +260,7 @@ export type PendingAction =
     }
   | {
       type: "select_deck_card";
-       reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse" | "unicorns_of_the_apocalypse";
+       reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse" | "imploding_kitten_place" | "unicorns_of_the_apocalypse";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
       candidates: Card[];

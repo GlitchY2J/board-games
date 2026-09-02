@@ -171,7 +171,10 @@ export default function Game() {
     };
 
     const onGameUpdated = (state: GameState) => {
-      if (activeAnimationsCountRef.current > 0) {
+      const eliminatedPlayerWonState =
+        !!state.winnerId && isSpectatorState(state);
+
+      if (activeAnimationsCountRef.current > 0 && !eliminatedPlayerWonState) {
         pendingGameStateRef.current = state;
       } else {
         applyGameState(state);
@@ -397,6 +400,7 @@ export default function Game() {
         <ShuffleDeckEffect
           key={animation.animId}
           animation={animation}
+          gameId={gameId}
           onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
         />
       ))}
@@ -422,7 +426,7 @@ export default function Game() {
       );
     }
 
-    if (isSpectatorPlayer) {
+    if (isSpectatorPlayer && !(eliminated && gameState.winnerId)) {
       return (
         <>
           <BoardLayout
@@ -471,6 +475,7 @@ export default function Game() {
             <ShuffleDeckEffect
               key={animation.animId}
               animation={animation}
+              gameId={gameId}
               onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
             />
           ))}

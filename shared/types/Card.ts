@@ -22,4 +22,6 @@ export interface Card {
   effect: string | null;
   copies: number;
   expansion: string;
+  /** Used by Exploding Kittens for an Imploding Kitten placed face up. */
+  faceUp?: boolean;
 }

@@ -17,7 +17,7 @@ import { createPublicRoom } from './publicRoom.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
-import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueuePlayAnimation, enqueueStealAnimation, enqueueShuffleAnimation } from '../game/cardAnimations.ts';
+import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueueExplosionAnimation, enqueuePlayAnimation, enqueueStealAnimation, enqueueShuffleAnimation } from '../game/cardAnimations.ts';
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
@@ -691,10 +691,13 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       const isCatCombo = requestedCardIds.length === 2 || requestedCardIds.length === 3;
 
       if (requestedCardIds.length > 1) {
+        const concreteCatIds = selectedCards
+          .filter((selected) => selected?.id !== 'feral_cat')
+          .map((selected) => selected?.id);
         const validCatCombo =
           isCatCombo &&
           selectedCards.every((selected) => selected?.cardType === 'cat') &&
-          selectedCards.every((selected) => selected?.id === card.id);
+          new Set(concreteCatIds).size <= 1;
 
         if (!validCatCombo) {
           emitGameError(
@@ -995,8 +998,63 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
         return;
       }
 
-      enqueueDrawAnimation(game.roomCode, gamePlayer.id, card);
-      gamePlayer.hand.push(card);
+      enqueueDrawAnimation(
+        game.roomCode,
+        gamePlayer.id,
+        card,
+        card.id === 'imploding_kitten',
+      );
+      if (card.id !== 'imploding_kitten') {
+        gamePlayer.hand.push(card);
+      }
+      if (card.id === 'imploding_kitten') {
+        if (card.faceUp) {
+          const playerIndex = game.players.findIndex((candidate) => candidate.id === player.id);
+          game.discard.push(...gamePlayer.hand);
+          game.discard.push(card);
+          game.eliminatedPlayers ??= [];
+          game.eliminatedPlayers.push({
+            id: player.id,
+            name: player.name,
+            avatar: player.avatar,
+            placement: game.players.length,
+          });
+          game.players.splice(playerIndex, 1);
+          game.pendingAction = undefined;
+          enqueueExplosionAnimation(room.code, player.id, player.name, 'imploding', 'eliminated');
+          if (game.players.length === 1) {
+            game.winnerId = game.players[0].id;
+            game.phase = TurnPhase.END;
+          } else {
+            game.currentPlayer = playerIndex % game.players.length;
+            game.turn += 1;
+            game.phase = TurnPhase.DRAW;
+            game.turnsRemaining = 1;
+            game.actionUsed = false;
+            game.actionPlaysRemaining = undefined;
+          }
+          addLog(game, `${player.name} fue eliminado por un Imploding Kitten`, {
+            playerId: player.id,
+          });
+          emitGameState(io, room, 'game-updated');
+          return;
+        }
+
+        card.faceUp = true;
+        enqueueExplosionAnimation(room.code, player.id, player.name, 'imploding', 'revealed');
+        game.pendingAction = {
+          type: 'select_deck_card',
+          reason: 'imploding_kitten_place',
+          playerId: player.id,
+          candidates: [],
+          card,
+        };
+        addLog(game, `${player.name} reveló un Imploding Kitten y debe colocarlo boca arriba`, {
+          playerId: player.id,
+        });
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
       if (card.id === 'exploding_kitten') {
         game.pendingAction = {
           type: 'exploding_kitten',

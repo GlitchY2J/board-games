@@ -10,6 +10,7 @@ interface Props {
   selected?: boolean;
   preview?: boolean;
   plain?: boolean;
+  backImage?: string;
   onClick?: () => void;
 }
 
@@ -22,6 +23,7 @@ export default function PlayingCard({
   selected = false,
   preview = true,
   plain = false,
+  backImage = '/cards/unstable-unicorns/base/card_back.png',
   onClick,
 }: Props) {
   const { showPreview, hidePreview } = useCardPreview();
@@ -48,7 +50,7 @@ export default function PlayingCard({
       onClick={disabled ? undefined : onClick}
     >
       <img
-        src={isCardBack ? '/cards/unstable-unicorns/base/card_back.png' : image}
+         src={isCardBack ? backImage : image}
         alt={name}
         draggable={false}
       />

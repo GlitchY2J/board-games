@@ -138,6 +138,7 @@ export function enqueueDrawAnimation(
   roomCode: string,
   playerId: string,
   card: Card,
+  revealToOthers = false,
 ): void {
   drawBuffer.push({
     animId: `draw-${Math.random().toString(36).slice(2, 8)}`,
@@ -149,6 +150,7 @@ export function enqueueDrawAnimation(
       name: card.name,
       image: card.image,
     },
+    revealToOthers,
   });
 }
 
@@ -264,12 +266,16 @@ export function enqueueExplosionAnimation(
   roomCode: string,
   playerId: string,
   playerName: string,
+  type: 'exploding' | 'imploding' = 'exploding',
+  stage: 'revealed' | 'eliminated' = 'eliminated',
 ): void {
   explosionBuffer.push({
     animId: `explosion-${Math.random().toString(36).slice(2, 8)}`,
     roomCode,
     playerId,
     playerName,
+    type,
+    stage,
   });
 }
 

@@ -2335,8 +2335,11 @@ export default function GameOverlay({
         const isApocalypseSearch =
           action.reason === 'unicorns_of_the_apocalypse';
         const isExplodingKittenDefuse = action.reason === 'exploding_kitten_defuse';
+        const isImplodingKittenPlace = action.reason === 'imploding_kitten_place';
 
-        const title = isExplodingKittenDefuse
+        const title = isImplodingKittenPlace
+          ? '💥 Coloca el Imploding Kitten'
+          : isExplodingKittenDefuse
           ? '🛡️ Coloca el Exploding Kitten'
           : isDebugDraw
           ? '🐛 Modo Debug — Roba una carta'
@@ -2348,7 +2351,9 @@ export default function GameOverlay({
               ? '🦄 Shabby The Narwhal'
               : '🐳 Classy Narwhal';
 
-        const subtitle = isExplodingKittenDefuse
+        const subtitle = isImplodingKittenPlace
+          ? 'Elige en qué posición del mazo quieres colocar el Imploding Kitten boca arriba'
+          : isExplodingKittenDefuse
           ? 'Elige en qué posición del mazo quieres devolver el Exploding Kitten'
           : isDebugDraw
           ? 'Elige qué carta del mazo quieres tomar en tu fase de robo'
@@ -2360,7 +2365,7 @@ export default function GameOverlay({
               ? 'Elige una carta de Downgrade del mazo para agregarla a tu mano (luego se barajará el mazo)'
               : 'Elige una carta de Upgrade del mazo para agregarla a tu mano (luego se barajará el mazo)';
 
-        const items = isExplodingKittenDefuse
+        const items = isExplodingKittenDefuse || isImplodingKittenPlace
           ? Array.from({ length: gameState.deck.length + 1 }, (_, idx) => ({
               id: `deck-position-${idx}`,
               value: `deck-position-${idx}`,
@@ -2369,7 +2374,9 @@ export default function GameOverlay({
                 : idx === gameState.deck.length
                   ? 'Parte inferior'
                   : `Posición ${idx + 1}`,
-              image: '/cards/unstable-unicorns/base/card_back.png',
+              image: gameState.deck[idx]?.faceUp
+                ? gameState.deck[idx].image
+                : '/cards/exploding-kittens/base/back-card.png',
             }))
           : isDebugDraw || isApocalypseSearch
           ? (isApocalypseSearch
@@ -2396,11 +2403,11 @@ export default function GameOverlay({
             items={items}
             maxSelection={isApocalypseSearch ? 4 : 1}
             minSelection={isApocalypseSearch ? 4 : 1}
-            confirmText={isExplodingKittenDefuse ? 'Colocar' : isDebugDraw ? 'Robar' : isApocalypseSearch ? 'Traer al establo' : 'Tomar'}
+             confirmText={isExplodingKittenDefuse || isImplodingKittenPlace ? 'Colocar' : isDebugDraw ? 'Robar' : isApocalypseSearch ? 'Traer al establo' : 'Tomar'}
             searchable={isDebugDraw}
             searchPlaceholder="Buscar carta en el mazo..."
             secondaryText={isExplodingKittenDefuse ? 'Ubicación aleatoria' : undefined}
-            onSecondary={isExplodingKittenDefuse ? () => {
+             onSecondary={isExplodingKittenDefuse || isImplodingKittenPlace ? () => {
               dismiss();
               const randomPosition = Math.floor(Math.random() * (gameState.deck.length + 1));
               socket.emit('select-deck-card', {

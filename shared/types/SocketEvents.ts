@@ -154,6 +154,8 @@ export interface ExplosionAnimation {
   animId: string;
   playerId: string;
   playerName: string;
+  type?: 'exploding' | 'imploding';
+  stage?: 'revealed' | 'eliminated';
 }
 
 
@@ -166,6 +168,7 @@ export interface DrawAnimation {
     name: string;
     image: string;
   };
+  revealToOthers?: boolean;
 }
 
 export interface ResolveExplodingKittenPayload {
