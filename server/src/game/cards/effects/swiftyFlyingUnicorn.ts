@@ -3,7 +3,11 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 export const swiftyFlyingUnicorn: CardEffect = {
   onEnterStable(state, player) {
     const discardHasNeigh = state.discard.some(
-      (c) => c.cardType === 'instant' && (c.effect === 'neigh' || c.effect === 'super_neigh'),
+      (c) =>
+        c.cardType === 'instant' &&
+        (c.effect === 'neigh' ||
+          c.effect === 'super_neigh' ||
+          c.effect === 'neigh_thank_you'),
     );
 
     if (!discardHasNeigh) return;

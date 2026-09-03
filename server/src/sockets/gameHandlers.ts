@@ -187,6 +187,18 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   const thankYouLink = thankYouIndex >= 0
     ? chain[thankYouIndex]
     : undefined;
+  const thankYouGroup = thankYouLink?.group ?? 0;
+  let thankYouTargetIndex = -1;
+  for (let index = thankYouIndex - 1; index >= 0; index -= 1) {
+    if ((chain[index].group ?? 0) < thankYouGroup) {
+      thankYouTargetIndex = index;
+      break;
+    }
+  }
+  const thankYouTargetLink =
+    thankYouTargetIndex >= 0 && linkCanceled[thankYouTargetIndex]
+      ? chain[thankYouTargetIndex]
+      : undefined;
 
   if (linkCanceled[0]) {
     if (activePlayer && !explodingKittens) {
@@ -417,17 +429,17 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
   game.pendingPlay = undefined;
 
-  if (linkCanceled[0] && thankYouLink) {
+  if (thankYouLink && thankYouTargetLink) {
     const affectedPlayerIds = [...new Set([
       thankYouLink.playerId,
-      original.playerId,
+      thankYouTargetLink.playerId,
     ])];
     game.pendingAction = {
       type: 'select_choice',
       reason: 'neigh_thank_you',
       playerId: affectedPlayerIds[0],
       sourcePlayerId: thankYouLink.playerId,
-      targetPlayerId: original.playerId,
+      targetPlayerId: thankYouTargetLink.playerId,
       remainingPlayerIds: affectedPlayerIds,
       resolvedPlayerIds: [],
       title: '🙏 Neigh, Thank You',

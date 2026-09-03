@@ -1734,7 +1734,9 @@ export function registerActionHandlers(
           const neighInDiscard = room.gameState.discard.some(
             (card) =>
               card.cardType === 'instant' &&
-              (card.effect === 'neigh' || card.effect === 'super_neigh'),
+              (card.effect === 'neigh' ||
+                card.effect === 'super_neigh' ||
+                card.effect === 'neigh_thank_you'),
           );
 
           if (neighInDiscard) {
@@ -2032,7 +2034,8 @@ export function registerActionHandlers(
       if (
         pending.reason === 'swift_flying_unicorn' &&
         selectedCard.effect !== 'neigh' &&
-        selectedCard.effect !== 'super_neigh'
+        selectedCard.effect !== 'super_neigh' &&
+        selectedCard.effect !== 'neigh_thank_you'
       ) {
         emitGameError(
           socket,
@@ -2053,6 +2056,13 @@ export function registerActionHandlers(
         pending.reason === 'frenchiecorn'
       ) {
         player.hand.push(removed);
+
+        if (
+          pending.reason === 'swift_flying_unicorn' &&
+          room.gameState.phase === TurnPhase.BEGINNING
+        ) {
+          TurnManager.processBeginningQueue(room.gameState);
+        }
 
         addLog(
           room.gameState,
