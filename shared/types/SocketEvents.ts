@@ -218,6 +218,11 @@ export interface PlayAnimation {
 export interface ShuffleAnimation {
   animId: string;
   playerId: string;
+  returnedCards?: Array<{
+    uid: string;
+    name: string;
+    image: string;
+  }>;
 }
 
 export interface ResumeSessionResponse {

@@ -66,6 +66,9 @@ export default function Game() {
   const [playAnims, setPlayAnims] = useState<PlayAnimation[]>([]);
   const [shuffleAnims, setShuffleAnims] = useState<ShuffleAnimation[]>([]);
   const [explosionAnims, setExplosionAnims] = useState<ExplosionAnimation[]>([]);
+  const [shakeUpHiddenCards, setShakeUpHiddenCards] = useState<Set<string>>(new Set());
+  const [shakeUpPlayerId, setShakeUpPlayerId] = useState<string | null>(null);
+  const [shakeUpVisibleDraws, setShakeUpVisibleDraws] = useState<Set<string>>(new Set());
 
   const pendingGameStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
@@ -257,6 +260,14 @@ export default function Game() {
 
     const onShuffleAnimations = (animations: ShuffleAnimation[]) => {
       setShuffleAnims((prev) => [...prev, ...animations]);
+      const shakeUp = animations.find((animation) => animation.returnedCards?.length);
+      if (shakeUp?.returnedCards) {
+        requestAnimationFrame(() => {
+          setShakeUpPlayerId(shakeUp.playerId);
+          setShakeUpVisibleDraws(new Set());
+          setShakeUpHiddenCards(new Set(shakeUp.returnedCards!.map((card) => card.uid)));
+        });
+      }
     };
 
     const onExplosionAnimations = (animations: ExplosionAnimation[]) => {
@@ -364,7 +375,7 @@ export default function Game() {
           onDone={() => removeExplosionAnim(explosionAnims[0].animId)}
         />
       )}
-      {drawAnims.map((animation) => (
+      {shuffleAnims.length === 0 && drawAnims.slice(0, 1).map((animation) => (
         <CardDrawEffect
           key={animation.animId}
           animation={animation}
@@ -396,11 +407,12 @@ export default function Game() {
           onDone={() => removePlayAnim(animation.animId)}
         />
       ))}
-      {shuffleAnims.map((animation) => (
+      {shuffleAnims.slice(0, 1).map((animation) => (
         <ShuffleDeckEffect
           key={animation.animId}
           animation={animation}
           gameId={gameId}
+          localPlayerId={effectViewerId}
           onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
         />
       ))}
@@ -541,18 +553,24 @@ export default function Game() {
   }
 
   function removeDrawAnim(animId: string) {
-    setDrawAnims((prev) => {
-      const next = prev.filter((a) => a.animId !== animId);
-      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+    const completed = drawAnims.find((animation) => animation.animId === animId);
+    if (!completed) return;
 
-      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
-        const pendingState = pendingGameStateRef.current;
-        pendingGameStateRef.current = null;
-        applyGameState(pendingState);
-      }
+    setDrawAnims((prev) => prev.filter((animation) => animation.animId !== animId));
+    activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
 
-      return next;
-    });
+    if (completed.playerId === shakeUpPlayerId) {
+      setShakeUpVisibleDraws((visible) => new Set(visible).add(completed.card.uid));
+    }
+
+    if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
+      const pendingState = pendingGameStateRef.current;
+      pendingGameStateRef.current = null;
+      applyGameState(pendingState);
+      setShakeUpHiddenCards(new Set());
+      setShakeUpPlayerId(null);
+      setShakeUpVisibleDraws(new Set());
+    }
   }
 
   function removeStealAnim(animId: string) {
@@ -610,6 +628,13 @@ export default function Game() {
     explosionAnims.length > 0 ||
     drawAnims.length > 0 ||
     discardAnims.length > 0;
+  const pendingShakeUpPlayer = shakeUpPlayerId
+    ? pendingGameStateRef.current?.players.find((player) => player.id === shakeUpPlayerId)
+    : undefined;
+  const isLocalShakeUpPlayer = shakeUpPlayerId === localPlayer.id;
+  const shakeUpHandOverride = isLocalShakeUpPlayer && pendingShakeUpPlayer
+    ? pendingShakeUpPlayer.hand.filter((card) => shakeUpVisibleDraws.has(card.uid))
+    : undefined;
 
   return (
     <>
@@ -620,6 +645,10 @@ export default function Game() {
         isHost={isHost}
         onPlay={play}
         sortHandMode={sortHandMode}
+        hiddenHandCardIds={isLocalShakeUpPlayer ? shakeUpHiddenCards : undefined}
+        localHandOverride={shakeUpHandOverride}
+        animatedHandPlayerId={shakeUpPlayerId ?? undefined}
+        animatedHandCount={shakeUpVisibleDraws.size}
         hidePendingPlay={hasActiveAnims}
         onLeaveLobby={leaveToLobby}
       />

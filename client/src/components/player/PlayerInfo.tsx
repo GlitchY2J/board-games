@@ -19,6 +19,7 @@ interface Props {
   turnsRemaining?: number;
   isHost?: boolean;
   roomCode?: string;
+  handCount?: number;
 }
 
 export default function PlayerInfo({
@@ -30,8 +31,10 @@ export default function PlayerInfo({
   turnsRemaining = 0,
   isHost = false,
   roomCode,
+  handCount,
 }: Props) {
   const [showHand, setShowHand] = useState(false);
+  const displayedHandCount = handCount ?? player.hand.length;
 
   const hasNannyCam =
     player.downgrades.some((c) => c.id === 'nanny_cam') ?? false;
@@ -177,7 +180,7 @@ export default function PlayerInfo({
         >
           <Layers size={11} className="text-cyan-400" />
           <span className="font-extrabold text-slate-200 min-w-[16px] text-center">
-            {player.hand.length}
+            {displayedHandCount}
           </span>
         </div>
         {canView && (
@@ -214,7 +217,7 @@ export default function PlayerInfo({
                 </button>
               </div>
               <div className="nanny-cam-cards">
-                {player.hand.length === 0 && (
+                {displayedHandCount === 0 && (
                   <span className="nanny-cam-empty">Sin cartas en mano</span>
                 )}
                 {player.hand.map((c) => (

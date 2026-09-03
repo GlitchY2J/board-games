@@ -95,10 +95,10 @@ export default function CardDrawEffect({ animation, localPlayerId, onDone }: Pro
         },
       );
 
-      // Release state lock when card visually arrives, before the fade-out ends.
+      // Finish each draw before starting the next queued card animation.
       releaseTimer = setTimeout(() => {
         onDoneRef.current();
-      }, DURATION * ARRIVE_AT);
+      }, DURATION);
 
     });
 

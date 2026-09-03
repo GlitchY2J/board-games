@@ -10,13 +10,21 @@ function shuffle<T>(arr: T[]): void {
 
 export const shakeUp: CardEffect = {
   onPlay(state, player, card) {
-    // Baraja esta carta, tu mano y el descarte dentro del mazo
-    state.deck.push(card, ...player.hand, ...state.discard);
+    const playedCardIndex = player.hand.findIndex((handCard) => handCard.uid === card.uid);
+    if (playedCardIndex !== -1) {
+      player.hand.splice(playedCardIndex, 1);
+    }
+
+    const returnedCards = [card, ...player.hand];
+    state.discard.push(card);
+
+    // Baraja la mano restante y todo el descarte, incluido Shake Up, dentro del mazo.
+    state.deck.push(...player.hand, ...state.discard);
     player.hand = [];
     state.discard = [];
 
     shuffle(state.deck);
-    enqueueShuffleAnimation(state.roomCode, player.id);
+    enqueueShuffleAnimation(state.roomCode, player.id, returnedCards);
 
     // Roba 5 cartas
     for (let i = 0; i < 5; i++) {

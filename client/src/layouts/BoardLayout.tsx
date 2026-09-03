@@ -71,6 +71,10 @@ interface Props {
   onPlay(cardId: string, cardIds?: string[]): void;
   hidePendingPlay?: boolean;
   sortHandMode?: 'alphabetical' | 'type' | null;
+  hiddenHandCardIds?: Set<string>;
+  localHandOverride?: GameState['players'][number]['hand'];
+  animatedHandPlayerId?: string;
+  animatedHandCount?: number;
   spectator?: boolean;
   onLeaveLobby?(): void;
 }
@@ -83,6 +87,10 @@ export default function BoardLayout({
   onPlay,
   hidePendingPlay = false,
   sortHandMode = null,
+  hiddenHandCardIds,
+  localHandOverride,
+  animatedHandPlayerId,
+  animatedHandCount,
   spectator = false,
   onLeaveLobby,
 }: Props) {
@@ -298,6 +306,7 @@ export default function BoardLayout({
         }
         isHost={isHost}
         roomCode={gameState.roomCode}
+        handCount={opp.id === animatedHandPlayerId ? animatedHandCount : undefined}
       />
       {showPlayerBoards && (
         <PlayerBoard
@@ -497,6 +506,7 @@ export default function BoardLayout({
                 }
                 isHost={isHost}
                 roomCode={gameState.roomCode}
+                handCount={layoutLocalPlayer.id === animatedHandPlayerId ? animatedHandCount : undefined}
               />
 
               {showPlayerBoards && (
@@ -815,7 +825,14 @@ export default function BoardLayout({
       {!spectator && (
         <div className="bottom-hand" data-hand>
           <PlayerHand
-            player={localPlayer!}
+            player={localHandOverride
+              ? { ...localPlayer!, hand: localHandOverride }
+              : hiddenHandCardIds?.size
+              ? {
+                  ...localPlayer!,
+                  hand: localPlayer!.hand.filter((card) => !hiddenHandCardIds.has(card.uid)),
+                }
+              : localPlayer!}
             isLocalPlayer
             isMyTurn={isMyTurn}
             gamePhase={showPhases ? gameState.phase : 'ACTION'}

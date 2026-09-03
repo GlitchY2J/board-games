@@ -212,8 +212,21 @@ interface QueuedShuffleAnimation extends ShuffleAnimation {
 
 const shuffleBuffer: QueuedShuffleAnimation[] = [];
 
-export function enqueueShuffleAnimation(roomCode: string, playerId: string): void {
-  shuffleBuffer.push({ roomCode, playerId, animId: `shuffle-${Math.random().toString(36).slice(2, 8)}` });
+export function enqueueShuffleAnimation(
+  roomCode: string,
+  playerId: string,
+  returnedCards?: Card[],
+): void {
+  shuffleBuffer.push({
+    roomCode,
+    playerId,
+    animId: `shuffle-${Math.random().toString(36).slice(2, 8)}`,
+    returnedCards: returnedCards?.map((card) => ({
+      uid: card.uid,
+      name: card.name,
+      image: card.image,
+    })),
+  });
 }
 
 export function drainShuffleAnimations(roomCode: string): ShuffleAnimation[] {
