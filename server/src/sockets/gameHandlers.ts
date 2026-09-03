@@ -21,7 +21,7 @@ import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, e
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
-import { advanceTurnAfterDraw, beginExplodingKittenResolution, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack, startTargetedAttack } from '../game/exploding-kittens/turn.ts';
+import { advanceTurnAfterDraw, beginExplodingKittenResolution, beginImplodingKittenResolution, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack, startTargetedAttack } from '../game/exploding-kittens/turn.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -309,13 +309,34 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
           (player) => player.id === original.playerId,
         );
         if (drawn && drawingPlayer) {
-          enqueueDrawAnimation(game.roomCode, drawingPlayer.id, drawn);
-          drawingPlayer.hand.push(drawn);
+          enqueueDrawAnimation(
+            game.roomCode,
+            drawingPlayer.id,
+            drawn,
+            drawn.id === 'imploding_kitten',
+          );
+          if (drawn.id !== 'imploding_kitten') {
+            drawingPlayer.hand.push(drawn);
+          }
         }
 
         clearPendingTimer(room.code);
         game.pendingPlay = undefined;
         game.pendingAction = undefined;
+        if (drawn && drawingPlayer) {
+          const implodingStage = beginImplodingKittenResolution(game, drawingPlayer, drawn);
+          if (implodingStage) {
+            addLog(
+              game,
+              implodingStage === 'revealed'
+                ? `${drawingPlayer.name} reveló un Imploding Kitten`
+                : `${drawingPlayer.name} robó un Imploding Kitten boca arriba`,
+              { playerId: drawingPlayer.id },
+            );
+            emitGameState(io, room, 'game-updated');
+            return;
+          }
+        }
         if (drawn && drawingPlayer && beginExplodingKittenResolution(game, drawingPlayer, drawn)) {
           addLog(game, `${original.playerName} robó un Exploding Kitten del fondo del mazo`, {
             playerId: original.playerId,
@@ -1077,51 +1098,15 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
       if (card.id !== 'imploding_kitten') {
         gamePlayer.hand.push(card);
       }
-      if (card.id === 'imploding_kitten') {
-        if (card.faceUp) {
-          const playerIndex = game.players.findIndex((candidate) => candidate.id === player.id);
-          game.discard.push(...gamePlayer.hand);
-          game.discard.push(card);
-          game.eliminatedPlayers ??= [];
-          game.eliminatedPlayers.push({
-            id: player.id,
-            name: player.name,
-            avatar: player.avatar,
-            placement: game.players.length,
-          });
-          game.players.splice(playerIndex, 1);
-          game.pendingAction = undefined;
-          enqueueExplosionAnimation(room.code, player.id, player.name, 'imploding', 'eliminated');
-          if (game.players.length === 1) {
-            game.winnerId = game.players[0].id;
-            game.phase = TurnPhase.END;
-          } else {
-            game.currentPlayer = playerIndex % game.players.length;
-            game.turn += 1;
-            game.phase = TurnPhase.DRAW;
-            game.turnsRemaining = 1;
-            game.actionUsed = false;
-            game.actionPlaysRemaining = undefined;
-          }
-          addLog(game, `${player.name} fue eliminado por un Imploding Kitten`, {
-            playerId: player.id,
-          });
-          emitGameState(io, room, 'game-updated');
-          return;
-        }
-
-        card.faceUp = true;
-        enqueueExplosionAnimation(room.code, player.id, player.name, 'imploding', 'revealed');
-        game.pendingAction = {
-          type: 'select_deck_card',
-          reason: 'imploding_kitten_place',
-          playerId: player.id,
-          candidates: [],
-          card,
-        };
-        addLog(game, `${player.name} reveló un Imploding Kitten y debe colocarlo boca arriba`, {
-          playerId: player.id,
-        });
+      const implodingStage = beginImplodingKittenResolution(game, gamePlayer, card);
+      if (implodingStage) {
+        addLog(
+          game,
+          implodingStage === 'revealed'
+            ? `${player.name} reveló un Imploding Kitten`
+            : `${player.name} robó un Imploding Kitten boca arriba`,
+          { playerId: player.id },
+        );
         emitGameState(io, room, 'game-updated');
         return;
       }

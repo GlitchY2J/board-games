@@ -18,7 +18,7 @@ import {
   enqueueShuffleAnimation,
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
-import { advanceTurnAfterDraw, beginExplodingKittenResolution } from '../game/exploding-kittens/turn.ts';
+import { advanceTurnAfterDraw, beginExplodingKittenResolution, beginImplodingKittenResolution } from '../game/exploding-kittens/turn.ts';
 import { nextUnicornOfWarChoice } from '../game/cards/effects/unicornOfWar.ts';
 import { startPendingTimer } from './gameHandlers.ts';
 import {
@@ -41,6 +41,7 @@ export function registerActionHandlers(
   registerSelectStableCard(io, socket);
   registerSelectHandCard(io, socket);
   registerResolveExplodingKitten(io, socket);
+  registerResolveImplodingKitten(io, socket);
   registerResolveSeeTheFuture(io, socket);
   registerCancelAction(io, socket);
   registerSelectChoice(io, socket);
@@ -669,6 +670,79 @@ export function registerActionHandlers(
         game.actionPlaysRemaining = undefined;
       }
 
+      emitGameState(io, room, 'game-updated');
+    });
+  }
+
+  function registerResolveImplodingKitten(io: GameServer, socket: GameSocket): void {
+    socket.on('resolve-imploding-kitten', ({ roomCode }) => {
+      const context = getSocketGameContext(socket, roomCode);
+      if (!context) return;
+
+      const { game, player, room } = context;
+      const pending = game.pendingAction;
+      if (
+        !pending ||
+        pending.type !== 'imploding_kitten' ||
+        pending.playerId !== player.id
+      ) {
+        emitGameError(
+          socket,
+          'NO_PENDING_ACTION',
+          'No hay un Imploding Kitten pendiente.',
+          'select-choice',
+        );
+        return;
+      }
+
+      if (pending.stage === 'revealed') {
+        game.pendingAction = {
+          type: 'select_deck_card',
+          reason: 'imploding_kitten_place',
+          playerId: player.id,
+          candidates: [],
+          card: pending.card,
+        };
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      const playerIndex = game.players.findIndex(
+        (candidate) => candidate.id === player.id,
+      );
+      if (playerIndex < 0) return;
+
+      game.discard.push(...player.hand, pending.card);
+      game.eliminatedPlayers ??= [];
+      game.eliminatedPlayers.push({
+        id: player.id,
+        name: player.name,
+        avatar: player.avatar,
+        placement: game.players.length,
+      });
+      game.players.splice(playerIndex, 1);
+      game.pendingAction = undefined;
+      enqueueExplosionAnimation(
+        room.code,
+        player.id,
+        player.name,
+        'imploding',
+        'eliminated',
+      );
+      if (game.players.length === 1) {
+        game.winnerId = game.players[0].id;
+        game.phase = TurnPhase.END;
+      } else if (game.players.length > 1) {
+        game.currentPlayer = playerIndex % game.players.length;
+        game.turn += 1;
+        game.phase = TurnPhase.DRAW;
+        game.turnsRemaining = 1;
+        game.actionUsed = false;
+        game.actionPlaysRemaining = undefined;
+      }
+      addLog(game, `${player.name} fue eliminado por un Imploding Kitten`, {
+        playerId: player.id,
+      });
       emitGameState(io, room, 'game-updated');
     });
   }
@@ -2254,7 +2328,15 @@ export function registerActionHandlers(
       if (cardIdx === -1) return;
 
       const [upgrade] = room.gameState.deck.splice(cardIdx, 1);
-      player.hand.push(upgrade);
+      const isExplodingKittens =
+        (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+      const isDebugImplodingKitten =
+        isExplodingKittens &&
+        pending.reason === 'debug_draw' &&
+        upgrade.id === 'imploding_kitten';
+      if (!isDebugImplodingKitten) {
+        player.hand.push(upgrade);
+      }
 
       if (pending.reason !== 'debug_draw') {
         for (let i = room.gameState.deck.length - 1; i > 0; i--) {
@@ -2268,7 +2350,25 @@ export function registerActionHandlers(
       }
 
       if (pending.reason === 'debug_draw') {
-        enqueueDrawAnimation(room.gameState.roomCode, player.id, upgrade);
+        enqueueDrawAnimation(
+          room.gameState.roomCode,
+          player.id,
+          upgrade,
+          isDebugImplodingKitten,
+        );
+      }
+
+      if (isDebugImplodingKitten) {
+        const stage = beginImplodingKittenResolution(room.gameState, player, upgrade);
+        addLog(
+          room.gameState,
+          stage === 'revealed'
+            ? `${player.name} reveló un Imploding Kitten`
+            : `${player.name} robó un Imploding Kitten boca arriba`,
+          { playerId: player.id },
+        );
+        emitGameState(io, room, 'game-updated');
+        return;
       }
 
       if (
@@ -2284,9 +2384,6 @@ export function registerActionHandlers(
       }
 
       room.gameState.pendingAction = undefined;
-
-      const isExplodingKittens =
-        (room.settings?.gameId ?? room.game) === 'exploding-kittens';
 
       if (isExplodingKittens && pending.reason === 'debug_draw') {
         advanceTurnAfterDraw(room.gameState);

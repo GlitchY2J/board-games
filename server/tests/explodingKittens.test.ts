@@ -7,6 +7,7 @@ import { TurnPhase } from '../src/game/turn/TurnPhase.ts';
 import {
   advanceTurnAfterDraw,
   beginExplodingKittenResolution,
+  beginImplodingKittenResolution,
   calculateAttackTurns,
 } from '../src/game/exploding-kittens/turn.ts';
 
@@ -114,4 +115,33 @@ test('una carta normal robada no inicia una resolución de explosión', () => {
 
   assert.equal(activated, false);
   assert.equal(state.pendingAction, undefined);
+});
+
+test('el primer encuentro con Imploding Kitten espera confirmación para reinsertarlo', () => {
+  const state = game();
+  const drawn = card('imploding_kitten');
+
+  const stage = beginImplodingKittenResolution(state, state.players[0], drawn);
+
+  assert.equal(stage, 'revealed');
+  assert.equal(drawn.faceUp, true);
+  assert.equal(state.pendingAction?.type, 'imploding_kitten');
+  if (state.pendingAction?.type === 'imploding_kitten') {
+    assert.equal(state.pendingAction.stage, 'revealed');
+  }
+  assert.equal(state.players.length, 3);
+});
+
+test('el segundo encuentro con Imploding Kitten espera confirmación antes de eliminar', () => {
+  const state = game();
+  const drawn = { ...card('imploding_kitten'), faceUp: true };
+
+  const stage = beginImplodingKittenResolution(state, state.players[0], drawn);
+
+  assert.equal(stage, 'eliminated');
+  assert.equal(state.pendingAction?.type, 'imploding_kitten');
+  if (state.pendingAction?.type === 'imploding_kitten') {
+    assert.equal(state.pendingAction.stage, 'eliminated');
+  }
+  assert.equal(state.players.length, 3);
 });

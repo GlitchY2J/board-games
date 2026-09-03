@@ -19,6 +19,24 @@ export function beginExplodingKittenResolution(
   return true;
 }
 
+export function beginImplodingKittenResolution(
+  game: GameState,
+  player: Player,
+  card: Card,
+): 'revealed' | 'eliminated' | null {
+  if (card.id !== 'imploding_kitten') return null;
+
+  const stage = card.faceUp ? 'eliminated' : 'revealed';
+  if (stage === 'revealed') card.faceUp = true;
+  game.pendingAction = {
+    type: 'imploding_kitten',
+    playerId: player.id,
+    card,
+    stage,
+  };
+  return stage;
+}
+
 export function calculateAttackTurns(
   stackedAttacks: number,
   turnPendings: number,

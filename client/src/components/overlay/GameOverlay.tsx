@@ -38,6 +38,7 @@ export default function GameOverlay({
     if ('targetPlayerId' in action)
       parts.push(`target:${action.targetPlayerId}`);
     if ('phase' in action) parts.push(`phase:${action.phase}`);
+    if ('stage' in action) parts.push(`stage:${action.stage}`);
     if ('remainingToDestroy' in action)
       parts.push(`rem:${action.remainingToDestroy}`);
     if ('remainingPlayerIds' in action && action.remainingPlayerIds)
@@ -2459,6 +2460,63 @@ export default function GameOverlay({
               });
             }}
           />
+        );
+      }
+
+      case 'imploding_kitten': {
+        const affectedPlayer = gameState.players.find(
+          (player) => player.id === action.playerId,
+        );
+        const isAffectedPlayer = action.playerId === localPlayerId;
+        const isRevealed = action.stage === 'revealed';
+
+        return (
+          <div className="overlay-backdrop">
+            <div className="card-selection-window choice-window exploding-kitten-window">
+              <h2>
+                {isAffectedPlayer
+                  ? isRevealed
+                    ? 'Has revelado un Imploding Kitten'
+                    : 'Has robado el Imploding Kitten boca arriba'
+                  : isRevealed
+                    ? `${affectedPlayer?.name ?? 'Un jugador'} ha revelado un Imploding Kitten`
+                    : `${affectedPlayer?.name ?? 'Un jugador'} ha robado el Imploding Kitten boca arriba`}
+              </h2>
+              <div className="exploding-kitten-card">
+                <PlayingCard
+                  name={action.card.name}
+                  image={action.card.image}
+                  size="large"
+                  disabled
+                  preview={false}
+                />
+              </div>
+              <p>
+                {isAffectedPlayer
+                  ? isRevealed
+                    ? 'Debes volver a colocarlo boca arriba en el mazo.'
+                    : 'El Imploding Kitten ha implosionado. Acepta para continuar.'
+                  : isRevealed
+                    ? `${affectedPlayer?.name ?? 'El jugador'} debe volver a colocarlo boca arriba en el mazo.`
+                    : `${affectedPlayer?.name ?? 'El jugador'} debe aceptar su eliminación.`}
+              </p>
+              {isAffectedPlayer && (
+                <div className="choice-actions">
+                  <button
+                    className="confirm-button choice-button"
+                    onClick={() => {
+                      dismiss();
+                      socket.emit('resolve-imploding-kitten', {
+                        roomCode: gameState.roomCode,
+                      });
+                    }}
+                  >
+                    {isRevealed ? 'Volver a colocar en el mazo' : 'Aceptar'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         );
       }
 

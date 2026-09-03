@@ -176,6 +176,10 @@ export interface ResolveExplodingKittenPayload {
   useDefuse: boolean;
 }
 
+export interface ResolveImplodingKittenPayload {
+  roomCode: string;
+}
+
 export interface ResolveSeeTheFuturePayload {
   roomCode: string;
   orderedCardIds?: string[];
@@ -303,6 +307,7 @@ export interface ClientToServerEvents {
   // Select Hand Card
   'select-hand-card': (payload: SelectHandCardPayload) => void;
   'resolve-exploding-kitten': (payload: ResolveExplodingKittenPayload) => void;
+  'resolve-imploding-kitten': (payload: ResolveImplodingKittenPayload) => void;
   'resolve-see-the-future': (payload: ResolveSeeTheFuturePayload) => void;
 
   // Next Phase

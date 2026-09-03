@@ -11,6 +11,7 @@ export type PendingAction =
       type: "imploding_kitten";
       playerId: string;
       card: Card;
+      stage: "revealed" | "eliminated";
     }
   | {
       type: "select_discard_count";
