@@ -2359,6 +2359,7 @@ export class ActionResolver {
       [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
     }
 
+    enqueueShuffleAnimation(state.roomCode, state.players[state.currentPlayer]?.id ?? '');
     state.pendingAction = undefined;
   }
 

@@ -1,5 +1,5 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
-import { enqueueDrawAnimation } from '../../cardAnimations.ts';
+import { enqueueDrawAnimation, enqueueShuffleAnimation } from '../../cardAnimations.ts';
 
 function shuffle<T>(arr: T[]): void {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -16,6 +16,7 @@ export const shakeUp: CardEffect = {
     state.discard = [];
 
     shuffle(state.deck);
+    enqueueShuffleAnimation(state.roomCode, player.id);
 
     // Roba 5 cartas
     for (let i = 0; i < 5; i++) {

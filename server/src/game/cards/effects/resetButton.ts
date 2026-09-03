@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { addLog } from '../../../sockets/gameLog.ts';
+import { enqueueShuffleAnimation } from '../../cardAnimations.ts';
 
 export const resetButton: CardEffect = {
   onPlay(state, player, card) {
@@ -20,6 +21,7 @@ export const resetButton: CardEffect = {
       const j = Math.floor(Math.random() * (i + 1));
       [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
     }
+    enqueueShuffleAnimation(state.roomCode, player.id);
 
     addLog(
       state,

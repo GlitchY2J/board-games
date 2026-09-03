@@ -2245,6 +2245,7 @@ export function registerActionHandlers(
             room.gameState.deck[i],
           ];
         }
+        enqueueShuffleAnimation(room.gameState.roomCode, player.id);
       }
 
       if (pending.reason === 'debug_draw') {
