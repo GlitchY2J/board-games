@@ -236,6 +236,7 @@ export type PendingAction =
        targetPlayerId?: string;
        cardIds?: string[];
       remainingPlayerIds?: string[];
+      resolvedPlayerIds?: string[];
       /** Carta que está "en el aire" mientras se decide (p. ej. Unicorn Phoenix) */
       heldCard?: Card;
       /** Uid del efecto de inicio de turno que se está resolviendo. Permite distinguir

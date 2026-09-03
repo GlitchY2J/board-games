@@ -71,7 +71,9 @@ export default function Game() {
   const [shakeUpVisibleDraws, setShakeUpVisibleDraws] = useState<Set<string>>(new Set());
 
   const pendingGameStateRef = useRef<GameState | null>(null);
+  const pendingNeighThankYouStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
+  const neighAnimationCountRef = useRef(0);
   const leavingToLobbyRef = useRef(false);
 
   const prevTurnRef = useRef<{ turn: number; currentPlayer: number } | null>(
@@ -176,9 +178,18 @@ export default function Game() {
     const onGameUpdated = (state: GameState) => {
       const eliminatedPlayerWonState =
         !!state.winnerId && isSpectatorState(state);
+      const isNeighThankYouChoice =
+        state.pendingAction?.type === 'select_choice' &&
+        state.pendingAction.reason === 'neigh_thank_you';
 
-      if (activeAnimationsCountRef.current > 0 && !eliminatedPlayerWonState) {
+      if (
+        activeAnimationsCountRef.current > 0 &&
+        !eliminatedPlayerWonState
+      ) {
         pendingGameStateRef.current = state;
+        if (isNeighThankYouChoice) {
+          pendingNeighThankYouStateRef.current = state;
+        }
       } else {
         applyGameState(state);
       }
@@ -188,6 +199,7 @@ export default function Game() {
       // Reinicio: forzar que el anuncio de turno se muestre de nuevo.
       prevTurnRef.current = null;
       pendingGameStateRef.current = null;
+      pendingNeighThankYouStateRef.current = null;
       activeAnimationsCountRef.current = 0;
       applyGameState(state);
     };
@@ -222,13 +234,12 @@ export default function Game() {
 
       // De una cadena de Neighs solo importa el último (el que gana).
       const last = animations[animations.length - 1];
-      setNeighAnims((prev) => {
-        activeAnimationsCountRef.current = Math.max(
-          0,
-          activeAnimationsCountRef.current - prev.length + 1,
-        );
-        return [last];
-      });
+      activeAnimationsCountRef.current = Math.max(
+        0,
+        activeAnimationsCountRef.current - neighAnimationCountRef.current + 1,
+      );
+      neighAnimationCountRef.current = 1;
+      setNeighAnims([last]);
     };
 
     const onDrawAnimations = (animations: DrawAnimation[]) => {
@@ -523,33 +534,39 @@ export default function Game() {
   }
 
   function removeRemovalAnim(animId: string) {
-    setRemovalAnims((prev) => {
-      const next = prev.filter((a) => a.animation.animId !== animId);
-      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+    if (!removalAnims.some((item) => item.animation.animId === animId)) return;
+    setRemovalAnims((prev) => prev.filter((item) => item.animation.animId !== animId));
+    activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
 
-      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
-        const pendingState = pendingGameStateRef.current;
-        pendingGameStateRef.current = null;
-        applyGameState(pendingState);
-      }
-
-      return next;
-    });
+    if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
+      const pendingState = pendingGameStateRef.current;
+      pendingGameStateRef.current = null;
+      pendingNeighThankYouStateRef.current = null;
+      applyGameState(pendingState);
+    }
   }
 
   function removeNeighAnim(animId: string) {
-    setNeighAnims((prev) => {
-      const next = prev.filter((a) => a.animId !== animId);
-      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+    if (!neighAnims.some((animation) => animation.animId === animId)) return;
+    setNeighAnims((prev) => prev.filter((animation) => animation.animId !== animId));
+    neighAnimationCountRef.current = 0;
+    activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
 
-      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
-        const pendingState = pendingGameStateRef.current;
+    if (pendingNeighThankYouStateRef.current) {
+      const pendingState = pendingNeighThankYouStateRef.current;
+      pendingNeighThankYouStateRef.current = null;
+      if (pendingGameStateRef.current === pendingState) {
         pendingGameStateRef.current = null;
-        applyGameState(pendingState);
       }
+      applyGameState(pendingState);
+      return;
+    }
 
-      return next;
-    });
+    if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
+      const pendingState = pendingGameStateRef.current;
+      pendingGameStateRef.current = null;
+      applyGameState(pendingState);
+    }
   }
 
   function removeDrawAnim(animId: string) {
@@ -589,18 +606,15 @@ export default function Game() {
   }
 
   function removeDiscardAnim(animId: string) {
-    setDiscardAnims((prev) => {
-      const next = prev.filter((a) => a.animId !== animId);
-      activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+    if (!discardAnims.some((animation) => animation.animId === animId)) return;
+    setDiscardAnims((prev) => prev.filter((animation) => animation.animId !== animId));
+    activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
 
-      if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
-        const pendingState = pendingGameStateRef.current;
-        pendingGameStateRef.current = null;
-        applyGameState(pendingState);
-      }
-
-      return next;
-    });
+    if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {
+      const pendingState = pendingGameStateRef.current;
+      pendingGameStateRef.current = null;
+      applyGameState(pendingState);
+    }
   }
 
   function removePlayAnim(animId: string) {

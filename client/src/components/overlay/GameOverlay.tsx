@@ -43,7 +43,7 @@ export default function GameOverlay({
     if ('remainingPlayerIds' in action && action.remainingPlayerIds)
       parts.push(`first:${action.remainingPlayerIds[0]}`);
     if ('resolvedPlayerIds' in action)
-      parts.push(`resolved:${action.resolvedPlayerIds.join(',')}`);
+      parts.push(`resolved:${action.resolvedPlayerIds?.join(',') ?? ''}`);
     if ('effectCardId' in action) parts.push(`uid:${action.effectCardId}`);
     return parts.join(':');
   })();
@@ -2205,7 +2205,26 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
-        if (action.playerId !== localPlayerId) return null;
+        const isNeighThankYou = action.reason === 'neigh_thank_you';
+        const needsNeighThankYouChoice =
+          isNeighThankYou && action.remainingPlayerIds?.includes(localPlayerId);
+        const resolvedNeighThankYou =
+          isNeighThankYou && action.resolvedPlayerIds?.includes(localPlayerId);
+
+        if (resolvedNeighThankYou) {
+          return (
+            <div className="overlay-backdrop">
+              <div className="card-selection-window choice-window">
+                <h2>🙏 Neigh, Thank You</h2>
+                <p>Esperando al otro jugador...</p>
+              </div>
+            </div>
+          );
+        }
+
+        if (isNeighThankYou ? !needsNeighThankYouChoice : action.playerId !== localPlayerId) {
+          return null;
+        }
         const threeOfAKindIcons: Record<string, string> = {
           beard_cat: '/icons/beard-cat.png',
           cattermelon: '/icons/cattermelon.png',

@@ -778,7 +778,9 @@ export function registerActionHandlers(
       if (
         !pending ||
         pending.type !== 'select_choice' ||
-        pending.playerId !== player.id
+        (pending.reason === 'neigh_thank_you'
+          ? !pending.remainingPlayerIds?.includes(player.id)
+          : pending.playerId !== player.id)
       ) {
         return;
       }
@@ -910,10 +912,17 @@ export function registerActionHandlers(
           }
         }
 
-        if (player.id === pending.sourcePlayerId && pending.targetPlayerId) {
+        const remainingPlayerIds = (pending.remainingPlayerIds ?? []).filter(
+          (playerId) => playerId !== player.id,
+        );
+        const resolvedPlayerIds = [...(pending.resolvedPlayerIds ?? []), player.id];
+
+        if (remainingPlayerIds.length > 0) {
           room.gameState.pendingAction = {
             ...pending,
-            playerId: pending.targetPlayerId,
+            playerId: remainingPlayerIds[0],
+            remainingPlayerIds,
+            resolvedPlayerIds,
           };
         } else {
           room.gameState.pendingAction = undefined;

@@ -180,9 +180,13 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
   const original = chain[0];
   const activePlayer = game.players.find((p) => p.id === original.playerId);
-  const thankYouLink = chain.find(
-    (link) => link.card.effect === 'neigh_thank_you',
+  const thankYouIndex = chain.findIndex(
+    (link, index) =>
+      link.card.effect === 'neigh_thank_you' && !linkCanceled[index],
   );
+  const thankYouLink = thankYouIndex >= 0
+    ? chain[thankYouIndex]
+    : undefined;
 
   if (linkCanceled[0]) {
     if (activePlayer && !explodingKittens) {
@@ -414,12 +418,18 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   game.pendingPlay = undefined;
 
   if (linkCanceled[0] && thankYouLink) {
+    const affectedPlayerIds = [...new Set([
+      thankYouLink.playerId,
+      original.playerId,
+    ])];
     game.pendingAction = {
       type: 'select_choice',
       reason: 'neigh_thank_you',
-      playerId: thankYouLink.playerId,
+      playerId: affectedPlayerIds[0],
       sourcePlayerId: thankYouLink.playerId,
       targetPlayerId: original.playerId,
+      remainingPlayerIds: affectedPlayerIds,
+      resolvedPlayerIds: [],
       title: '🙏 Neigh, Thank You',
       description: '¿Deseas robar una carta? También se ofrecerá al jugador cuya carta fue cancelada.',
       options: [

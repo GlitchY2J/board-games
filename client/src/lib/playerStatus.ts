@@ -11,6 +11,10 @@ export function getPlayerStatus(
     const isActor =
       ('playerId' in pending && pending.playerId === playerId) ||
       ('sourcePlayerId' in pending && pending.sourcePlayerId === playerId) ||
+      (pending.type === 'select_choice' &&
+        pending.reason === 'neigh_thank_you' &&
+        (pending.remainingPlayerIds?.includes(playerId) ||
+          pending.resolvedPlayerIds?.includes(playerId))) ||
       (pending.type === 'mystical_vortex' &&
         (pending.remainingPlayerIds.includes(playerId) ||
           pending.resolvedPlayerIds.includes(playerId))) ||
@@ -30,6 +34,11 @@ export function getPlayerStatus(
         case 'select_stable_card':
           return 'Seleccionando carta...';
         case 'select_choice':
+          if (pending.reason === 'neigh_thank_you') {
+            return pending.resolvedPlayerIds?.includes(playerId)
+              ? 'Esperando al otro jugador...'
+              : 'Eligiendo opción...';
+          }
           return 'Eligiendo opción...';
         case 'select_discard_card':
           return 'Seleccionando carta del descarte...';
