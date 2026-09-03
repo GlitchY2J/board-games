@@ -149,7 +149,9 @@ export type PendingAction =
     }
   | {
       type: "mystical_vortex";
-      remainingPlayerIds: string[]; // cola de jugadores que deben descartar
+      sourcePlayerId: string;
+      remainingPlayerIds: string[];
+      resolvedPlayerIds: string[];
     }
   | {
       type: "llamacorn";

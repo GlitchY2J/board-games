@@ -2335,18 +2335,20 @@ export class ActionResolver {
     return true;
   }
 
-  static advanceMysticalVortex(state: GameState, remaining: string[]) {
-    while (remaining.length > 0) {
-      const nextPlayerId = remaining[0];
-      const player = state.players.find((p) => p.id === nextPlayerId);
-      if (player && player.hand.length > 0) {
-        state.pendingAction = {
-          type: 'mystical_vortex',
-          remainingPlayerIds: remaining,
-        };
-        return;
-      }
-      remaining.shift();
+  static advanceMysticalVortex(
+    state: GameState,
+    remaining: string[],
+    resolved: string[] = [],
+    sourcePlayerId = state.players[state.currentPlayer]?.id ?? '',
+  ) {
+    if (remaining.length > 0) {
+      state.pendingAction = {
+        type: 'mystical_vortex',
+        sourcePlayerId,
+        remainingPlayerIds: remaining,
+        resolvedPlayerIds: resolved,
+      };
+      return;
     }
 
     // Si nadie queda en la cola, revuelve el descarte con el deck
@@ -2359,7 +2361,7 @@ export class ActionResolver {
       [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
     }
 
-    enqueueShuffleAnimation(state.roomCode, state.players[state.currentPlayer]?.id ?? '');
+    enqueueShuffleAnimation(state.roomCode, sourcePlayerId);
     state.pendingAction = undefined;
   }
 
@@ -2372,7 +2374,7 @@ export class ActionResolver {
     if (
       !pending ||
       pending.type !== 'mystical_vortex' ||
-      pending.remainingPlayerIds[0] !== playerId
+      !pending.remainingPlayerIds.includes(playerId)
     ) {
       return false;
     }
@@ -2392,8 +2394,13 @@ export class ActionResolver {
     enqueueDiscardAnimation(state.roomCode, player.id, discarded);
     state.discard.push(discarded);
 
-    const [_, ...rest] = pending.remainingPlayerIds;
-    this.advanceMysticalVortex(state, rest);
+    const remaining = pending.remainingPlayerIds.filter((id) => id !== playerId);
+    this.advanceMysticalVortex(
+      state,
+      remaining,
+      [...pending.resolvedPlayerIds, playerId],
+      pending.sourcePlayerId,
+    );
     return true;
   }
 

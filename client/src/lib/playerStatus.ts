@@ -11,6 +11,9 @@ export function getPlayerStatus(
     const isActor =
       ('playerId' in pending && pending.playerId === playerId) ||
       ('sourcePlayerId' in pending && pending.sourcePlayerId === playerId) ||
+      (pending.type === 'mystical_vortex' &&
+        (pending.remainingPlayerIds.includes(playerId) ||
+          pending.resolvedPlayerIds.includes(playerId))) ||
       ('remainingPlayerIds' in pending &&
         pending.remainingPlayerIds?.[0] === playerId);
 
@@ -49,7 +52,9 @@ export function getPlayerStatus(
         case 'extremely_destructive_unicorn':
           return 'Eligiendo cartas...';
         case 'mystical_vortex':
-          return 'Descartando carta...';
+          return pending.resolvedPlayerIds.includes(playerId)
+            ? 'Esperando al resto...'
+            : 'Descartando carta...';
       }
     }
   }

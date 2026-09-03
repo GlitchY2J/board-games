@@ -540,7 +540,7 @@ export default function BoardLayout({
         <GameOverlay
           gameState={gameState}
           localPlayerId={spectator ? '' : localPlayerId}
-          hide={hidePendingPlay}
+          hide={hidePendingPlay && gameState.pendingAction?.type !== 'mystical_vortex'}
         />
       )}
 

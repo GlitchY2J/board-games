@@ -2,18 +2,25 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 import { ActionResolver } from '../../unstable-unicorns/engine/ActionResolver.ts';
 
 export const mysticalVortex: CardEffect = {
-  onPlay(state, player) {
-    // Todos los jugadores deben descartar una carta. Empezamos en orden de turno
-    // partiendo del jugador actual.
+  onPlay(state, player, card) {
     const currentPlayerIdx = state.currentPlayer;
     const orderedPlayers = [
       ...state.players.slice(currentPlayerIdx),
       ...state.players.slice(0, currentPlayerIdx)
     ];
 
-    const remainingPlayerIds = orderedPlayers.map((p) => p.id);
+    const remainingPlayerIds = orderedPlayers
+      .filter((candidate) => candidate.hand.some((handCard) =>
+        candidate.id !== player.id || handCard.uid !== card.uid,
+      ))
+      .map((candidate) => candidate.id);
 
-    // Avanza la acción para saltar jugadores sin cartas y barajar al final si nadie tiene cartas
-    ActionResolver.advanceMysticalVortex(state, remainingPlayerIds);
+    if (remainingPlayerIds.length === 0) {
+      state.discard.push(card);
+      ActionResolver.advanceMysticalVortex(state, [], [], player.id);
+      return true;
+    }
+
+    ActionResolver.advanceMysticalVortex(state, remainingPlayerIds, [], player.id);
   },
 };

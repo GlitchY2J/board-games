@@ -1799,11 +1799,23 @@ export default function GameOverlay({
       }
 
       // ───────────────────────────────────
-      // MYSTICAL VORTEX — cada jugador debe descartar una carta de forma secuencial
+      // MYSTICAL VORTEX — todos los jugadores descartan simultáneamente
       // ───────────────────────────────────
       case 'mystical_vortex': {
-        const currentTargetId = action.remainingPlayerIds[0];
-        if (currentTargetId !== localPlayerId) return null;
+        const needsToDiscard = action.remainingPlayerIds.includes(localPlayerId);
+        const alreadyDiscarded = action.resolvedPlayerIds.includes(localPlayerId);
+        if (!needsToDiscard && !alreadyDiscarded) return null;
+
+        if (alreadyDiscarded) {
+          return (
+            <div className="overlay-backdrop">
+              <div className="card-selection-window choice-window">
+                <h2>🌪️ Mystical Vortex</h2>
+                <p>Esperando al resto de jugadores...</p>
+              </div>
+            </div>
+          );
+        }
 
         const player = gameState.players.find((p) => p.id === localPlayerId);
         if (!player) return null;
