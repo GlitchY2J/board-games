@@ -191,6 +191,12 @@ export function registerActionHandlers(
         const targetPlayer = room.gameState.players.find((candidate) => candidate.id === playerId);
         if (!targetPlayer || !pendingAction.card) return;
 
+        const cardIndex = sourcePlayer.hand.findIndex(
+          (card) => card.uid === pendingAction.card?.uid,
+        );
+        if (cardIndex < 0) return;
+        sourcePlayer.hand.splice(cardIndex, 1);
+
         room.gameState.pendingAction = undefined;
         const previousPendingPlay = pendingAction.pendingPlay;
         room.gameState.pendingPlay = {
@@ -205,7 +211,14 @@ export function registerActionHandlers(
           attackCount: (previousPendingPlay?.attackCount ?? 0) + 1,
           chain: [
             ...(previousPendingPlay?.chain ?? []),
-            { playerId: sourcePlayer.id, playerName: sourcePlayer.name, card: pendingAction.card, group: 0 },
+            {
+              playerId: sourcePlayer.id,
+              playerName: sourcePlayer.name,
+              card: pendingAction.card,
+              group: previousPendingPlay
+                ? (previousPendingPlay.chain[previousPendingPlay.chain.length - 1]?.group ?? 0) + 1
+                : 0,
+            },
           ],
         };
         addLog(room.gameState, `${sourcePlayer.name} dirigió Targeted Attack contra ${targetPlayer.name}`, {

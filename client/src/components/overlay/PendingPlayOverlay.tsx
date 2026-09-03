@@ -94,13 +94,21 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const hasNeighThankYou =
     localPlayer?.hand.some((c) => c.effect === 'neigh_thank_you') ?? false;
   const hasNope = localPlayer?.hand.some((c) => c.effect === 'nope') ?? false;
-  const hasAttack =
+  const hasRegularAttack =
     localPlayer?.hand.some(
       (card) =>
         card.uid &&
         card.cardType === 'action' &&
-        (card.id === 'attack' || card.id === 'targeted_attack') &&
-        (card.effect === 'attack' || card.effect === 'targeted_attack'),
+        card.id === 'attack' &&
+        card.effect === 'attack',
+    ) ?? false;
+  const hasTargetedAttack =
+    localPlayer?.hand.some(
+      (card) =>
+        card.uid &&
+        card.cardType === 'action' &&
+        card.id === 'targeted_attack' &&
+        card.effect === 'targeted_attack',
     ) ?? false;
   const hasBlindingLight =
     localPlayer?.downgrades.some((c) => c.id === 'blinding_light') ?? false;
@@ -137,8 +145,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
       pending.chain[pending.chain.length - 1]?.card.effect === 'attack' ||
       pending.chain[pending.chain.length - 1]?.card.id === 'targeted_attack' ||
       pending.chain[pending.chain.length - 1]?.card.effect === 'targeted_attack') &&
-    (pending.targetPlayerId ?? fallbackAttackTargetId) === localPlayerId &&
-    hasAttack;
+    (pending.targetPlayerId ?? fallbackAttackTargetId) === localPlayerId;
 
   function accept() {
     socket.emit('neigh-accept', { roomCode: gameState.roomCode });
@@ -188,13 +195,13 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     });
   }
 
-  function playAttack() {
+  function playAttack(attackType: 'attack' | 'targeted_attack') {
     const attackCard = localPlayer?.hand.find(
       (card) =>
         card.uid &&
         card.cardType === 'action' &&
-        card.id === 'attack' &&
-        card.effect === 'attack',
+        card.id === attackType &&
+        card.effect === attackType,
     );
     if (!attackCard) return;
     socket.emit('play-card', {
@@ -381,9 +388,20 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
                   Nope
                 </button>
               )}
-              {canStackAttack && (
-                <button className="pending-neigh-btn pending-attack-btn" onClick={playAttack}>
+              {canStackAttack && hasRegularAttack && (
+                <button
+                  className="pending-neigh-btn pending-attack-btn"
+                  onClick={() => playAttack('attack')}
+                >
                   Attack
+                </button>
+              )}
+              {canStackAttack && hasTargetedAttack && (
+                <button
+                  className="pending-neigh-btn pending-attack-btn"
+                  onClick={() => playAttack('targeted_attack')}
+                >
+                  Targeted Attack
                 </button>
               )}
               {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasRegularNeigh && (
