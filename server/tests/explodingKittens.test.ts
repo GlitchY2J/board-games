@@ -2,9 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { GameState } from '../src/game/models/GameState.ts';
 import type { Player } from '../src/game/models/Player.ts';
+import type { Card } from '../src/game/models/Card.ts';
 import { TurnPhase } from '../src/game/turn/TurnPhase.ts';
 import {
   advanceTurnAfterDraw,
+  beginExplodingKittenResolution,
   calculateAttackTurns,
 } from '../src/game/exploding-kittens/turn.ts';
 
@@ -20,6 +22,19 @@ function player(id: string): Player {
     stable: [],
     upgrades: [],
     downgrades: [],
+  };
+}
+
+function card(id: string, cardType: Card['cardType'] = 'action'): Card {
+  return {
+    uid: `${id}__1`,
+    id,
+    name: id,
+    cardType,
+    image: '',
+    description: '',
+    effect: '',
+    copies: 1,
   };
 }
 
@@ -73,4 +88,30 @@ test('advanceTurnAfterDraw cambia al siguiente jugador cuando no quedan turnos',
   assert.equal(state.turnsRemaining, 1);
   assert.equal(state.turn, 2);
   assert.equal(state.phase, TurnPhase.DRAW);
+});
+
+test('un Exploding Kitten robado inicia su resolución y no avanza el turno', () => {
+  const state = game();
+  const drawn = card('exploding_kitten', 'exploding_kitten');
+  state.players[0].hand.push(drawn);
+
+  const activated = beginExplodingKittenResolution(state, state.players[0], drawn);
+
+  assert.equal(activated, true);
+  assert.equal(state.currentPlayer, 0);
+  assert.equal(state.pendingAction?.type, 'exploding_kitten');
+  assert.equal(state.pendingAction?.playerId, 'P1');
+});
+
+test('una carta normal robada no inicia una resolución de explosión', () => {
+  const state = game();
+
+  const activated = beginExplodingKittenResolution(
+    state,
+    state.players[0],
+    card('skip'),
+  );
+
+  assert.equal(activated, false);
+  assert.equal(state.pendingAction, undefined);
 });

@@ -21,7 +21,7 @@ import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, e
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
-import { advanceTurnAfterDraw, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack, startTargetedAttack } from '../game/exploding-kittens/turn.ts';
+import { advanceTurnAfterDraw, beginExplodingKittenResolution, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack, startTargetedAttack } from '../game/exploding-kittens/turn.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -316,6 +316,13 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         clearPendingTimer(room.code);
         game.pendingPlay = undefined;
         game.pendingAction = undefined;
+        if (drawn && drawingPlayer && beginExplodingKittenResolution(game, drawingPlayer, drawn)) {
+          addLog(game, `${original.playerName} robó un Exploding Kitten del fondo del mazo`, {
+            playerId: original.playerId,
+          });
+          emitGameState(io, room, 'game-updated');
+          return;
+        }
         advanceTurnAfterDraw(game);
         addLog(
           game,
@@ -1133,12 +1140,7 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
         emitGameState(io, context.room, 'game-updated');
         return;
       }
-      if (card.id === 'exploding_kitten') {
-        game.pendingAction = {
-          type: 'exploding_kitten',
-          playerId: gamePlayer.id,
-          card,
-        };
+      if (beginExplodingKittenResolution(game, gamePlayer, card)) {
         addLog(game, `${player.name} robó un Exploding Kitten`, {
           playerId: player.id,
         });

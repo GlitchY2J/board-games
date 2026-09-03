@@ -18,7 +18,7 @@ import {
   enqueueShuffleAnimation,
 } from '../game/cardAnimations.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
-import { advanceTurnAfterDraw } from '../game/exploding-kittens/turn.ts';
+import { advanceTurnAfterDraw, beginExplodingKittenResolution } from '../game/exploding-kittens/turn.ts';
 import { nextUnicornOfWarChoice } from '../game/cards/effects/unicornOfWar.ts';
 import { startPendingTimer } from './gameHandlers.ts';
 import {
@@ -2274,13 +2274,8 @@ export function registerActionHandlers(
       if (
         pending.reason === 'debug_draw' &&
         (room.settings?.gameId ?? room.game) === 'exploding-kittens' &&
-        upgrade.id === 'exploding_kitten'
+        beginExplodingKittenResolution(room.gameState, player, upgrade)
       ) {
-        room.gameState.pendingAction = {
-          type: 'exploding_kitten',
-          playerId: player.id,
-          card: upgrade,
-        };
         addLog(room.gameState, `${player.name} robó un Exploding Kitten`, {
           playerId: player.id,
         });

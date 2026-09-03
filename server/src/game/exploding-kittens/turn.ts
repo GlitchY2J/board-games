@@ -1,4 +1,23 @@
 import type { GameState } from '../models/GameState.ts';
+import type { Card } from '../models/Card.ts';
+import type { Player } from '../models/Player.ts';
+
+export function beginExplodingKittenResolution(
+  game: GameState,
+  player: Player,
+  card: Card,
+): boolean {
+  if (card.id !== 'exploding_kitten' && card.cardType !== 'exploding_kitten') {
+    return false;
+  }
+
+  game.pendingAction = {
+    type: 'exploding_kitten',
+    playerId: player.id,
+    card,
+  };
+  return true;
+}
 
 export function calculateAttackTurns(
   stackedAttacks: number,
