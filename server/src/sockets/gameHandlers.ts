@@ -1111,20 +1111,6 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
         return;
       }
 
-      if (card.id === 'targeted_attack' || card.effect === 'targeted_attack') {
-        context.game.pendingAction = {
-          type: 'select_player',
-          reason: 'targeted_attack',
-          sourcePlayerId: context.player.id,
-          targetPlayerId: '',
-          card,
-        };
-        addLog(context.game, `${context.player.name} debe elegir el objetivo de Targeted Attack`, {
-          playerId: context.player.id,
-        });
-        emitGameState(io, context.room, 'game-updated');
-        return;
-      }
       if (beginExplodingKittenResolution(game, gamePlayer, card)) {
         addLog(game, `${player.name} robó un Exploding Kitten`, {
           playerId: player.id,
