@@ -79,6 +79,16 @@ function shouldTerminateDummyOnlyGame(room: Room): boolean {
   });
 }
 
+function terminateIfOnePlayerRemains(io: GameServer, room: Room): boolean {
+  const game = room.gameState;
+  if (!game?.started || game.winnerId || game.players.length !== 1) return false;
+
+  game.started = false;
+  room.gameState = undefined;
+  io.to(room.code).emit('game-terminated');
+  return true;
+}
+
 export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
   socket.on('toggle-spectator', (roomCode) => {
     const room = roomManager.getRoom(roomCode);
@@ -217,7 +227,8 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    if (room.hostId === leavingId && shouldTerminateDummyOnlyGame(updatedRoom)) {
+    const terminated = terminateIfOnePlayerRemains(io, updatedRoom);
+    if (!terminated && room.hostId === leavingId && shouldTerminateDummyOnlyGame(updatedRoom)) {
       updatedRoom.gameState = undefined;
       io.to(roomCode).emit('game-terminated');
     }
@@ -225,7 +236,7 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     socket.leave(roomCode);
     io.to(roomCode).emit('room-updated', createPublicRoom(updatedRoom));
 
-    if (game) {
+    if (game && updatedRoom.gameState) {
       emitGameState(io, updatedRoom, 'game-updated');
     }
   });
@@ -251,7 +262,8 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
       removePlayerFromGame(room, player.id);
     }
 
-    if (player.id === room.hostId && shouldTerminateDummyOnlyGame(room)) {
+    const terminated = terminateIfOnePlayerRemains(io, room);
+    if (!terminated && player.id === room.hostId && shouldTerminateDummyOnlyGame(room)) {
       room.gameState = undefined;
       io.to(room.code).emit('game-terminated');
     }
@@ -288,6 +300,7 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
 
     const updatedRoom = roomManager.getRoom(roomCode);
     if (!updatedRoom) return;
+    terminateIfOnePlayerRemains(io, updatedRoom);
     io.to(room.code).emit('room-updated', createPublicRoom(updatedRoom));
     if (game && updatedRoom.gameState) {
       emitGameState(io, updatedRoom, 'game-updated');
