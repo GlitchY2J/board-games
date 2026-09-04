@@ -658,7 +658,10 @@ export default function BoardLayout({
         <button
           className="ctrl-button ctrl-leave"
           title="Salir de la partida"
-          onClick={() => setLeaveOpen(true)}
+          onClick={() => {
+            setMenuOpen(false);
+            setLeaveOpen(true);
+          }}
         >
           <LogOut size={16} />
           <span>Salir de la partida</span>
