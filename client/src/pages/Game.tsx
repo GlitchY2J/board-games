@@ -14,7 +14,8 @@ import CardStealEffect from '../components/effects/CardStealEffect';
 import ShuffleDeckEffect from '../components/effects/ShuffleDeckEffect';
 import NeighAnnouncement from '../components/game/NeighAnnouncement';
 import ExplosionAnnouncement from '../components/game/ExplosionAnnouncement';
-import type { CardAnimation, NeighAnimation, ExplosionAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
+import ThreeOfAKindEmptyAnnouncement from '../components/game/ThreeOfAKindEmptyAnnouncement';
+import type { CardAnimation, NeighAnimation, ExplosionAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation, ThreeOfAKindEmptyAnnouncement as ThreeOfAKindEmptyAnnouncementData } from '../../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface TurnAnnounce {
@@ -36,6 +37,7 @@ export default function Game() {
   const skippedInitialContextStateRef = useRef(Boolean(locationGameState));
 
   const [turnAnnounce, setTurnAnnounce] = useState<TurnAnnounce | null>(null);
+  const [threeOfAKindEmpty, setThreeOfAKindEmpty] = useState<ThreeOfAKindEmptyAnnouncementData | null>(null);
   const [sortHandMode, setSortHandMode] = useState<
     'alphabetical' | 'type' | null
   >(null);
@@ -296,6 +298,10 @@ export default function Game() {
     socket.on('play-animations', onPlayAnimations);
     socket.on('shuffle-animations', onShuffleAnimations);
     socket.on('explosion-animations', onExplosionAnimations);
+    const onThreeOfAKindEmpty = (announcement: ThreeOfAKindEmptyAnnouncementData) => {
+      setThreeOfAKindEmpty(announcement);
+    };
+    socket.on('three-of-a-kind-empty', onThreeOfAKindEmpty);
 
     return () => {
       socket.off('game-updated', onGameUpdated);
@@ -311,6 +317,7 @@ export default function Game() {
       socket.off('play-animations');
       socket.off('shuffle-animations', onShuffleAnimations);
       socket.off('explosion-animations', onExplosionAnimations);
+      socket.off('three-of-a-kind-empty', onThreeOfAKindEmpty);
     };
   }, [applyGameState, deactivate, isSpectatorState, navigate]);
 
@@ -356,6 +363,12 @@ export default function Game() {
   const effectViewerId = localPlayer?.id ?? contextPlayerId ?? '';
   const renderTransientEffects = () => (
     <>
+      {threeOfAKindEmpty && (
+        <ThreeOfAKindEmptyAnnouncement
+          announcement={threeOfAKindEmpty}
+          onDone={() => setThreeOfAKindEmpty(null)}
+        />
+      )}
       {turnAnnounce && (
         <TurnAnnouncement
           key={`${turnAnnounce.turn}-${turnAnnounce.currentPlayer}`}

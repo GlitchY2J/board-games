@@ -78,12 +78,17 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     rainbow_ralphing_cat: 'Rainbow-Ralphing Cat',
     tacocat: 'Tacocat',
     attack: 'Attack 2x',
+    targeted_attack: 'Targeted Attack 2x',
     defuse: 'Defuse',
     favor: 'Favor',
     nope: 'Nope',
     see_the_future: 'See the Future 3x',
     shuffle: 'Shuffle',
     skip: 'Skip',
+    reverse: 'Reverse',
+    feral_cat: 'Feral Cat',
+    draw_from_the_bottom: 'Draw from the Bottom',
+    alter_the_future: 'Alter the Future 3x',
   };
 
   const localPlayer = gameState.players.find((p) => p.id === localPlayerId);
@@ -130,13 +135,13 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   const attackTarget = resolvedAttackTargetId
     ? gameState.players.find((player) => player.id === resolvedAttackTargetId)
     : undefined;
-  const twoOfAKindTarget = pending.targetPlayerId
+  const interactionTarget = pending.targetPlayerId
     ? gameState.players.find((player) => player.id === pending.targetPlayerId)
     : undefined;
-  const twoOfAKindSource = gameState.players.find(
+  const interactionSource = gameState.players.find(
     (player) => player.id === pending.playerId,
   );
-  const isTwoOfAKindTarget = twoOfAKindTarget?.id === localPlayerId;
+  const isInteractionTarget = interactionTarget?.id === localPlayerId;
   const isTargetedAttack =
     isAttackPlay && !!attackTarget;
   const canStackAttack =
@@ -218,15 +223,17 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
           {isFavorSelection
             ? `${pending.targetPlayerName ?? 'El jugador objetivo'} está escogiendo una carta`
             : isFavorPlay
-            ? `${pending.playerName} le pide una carta a ${pending.targetPlayerName ?? 'otro jugador'}`
+            ? isInteractionTarget
+              ? `${pending.playerName} te está pidiendo una carta de tu mano`
+              : `${pending.playerName} le está pidiendo una carta a ${pending.targetPlayerName ?? 'otro jugador'}`
             : isThreeOfAKind
-            ? isTwoOfAKindTarget
+              ? isInteractionTarget
               ? `${pending.playerName} te está robando una carta (${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionada'})`
-              : `${pending.playerName} le está robando una carta (${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionada'}) a ${twoOfAKindTarget?.name ?? 'otro jugador'}`
+              : `${pending.playerName} le está robando una carta (${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionada'}) a ${interactionTarget?.name ?? 'otro jugador'}`
             : isTwoOfAKind
-            ? isTwoOfAKindTarget
+            ? isInteractionTarget
               ? `${pending.playerName} te está robando una carta al azar`
-              : `${pending.playerName} le está robando una carta al azar a ${twoOfAKindTarget?.name ?? 'otro jugador'}`
+              : `${pending.playerName} le está robando una carta al azar a ${interactionTarget?.name ?? 'otro jugador'}`
             : isAttackPlay
             ? isMyPlay
               ? 'Has jugado un Attack'
@@ -245,7 +252,9 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
             {isFavorSelection
               ? `Está eligiendo una carta para entregársela a ${pending.playerName}`
               : isFavorPlay
-              ? `${pending.targetPlayerName ?? 'El jugador objetivo'} debe elegir una carta de su mano`
+              ? isInteractionTarget
+                ? `Si nadie juega un Nope, deberás elegir una carta de tu mano. Se resuelve en ${seconds}s`
+                : `${pending.targetPlayerName ?? 'El jugador objetivo'} deberá elegir una carta de su mano. Se resuelve en ${seconds}s`
               : isThreeOfAKind || isTwoOfAKind
               ? `Se resolverá en ${seconds}s. ¿Tienes un Nope para negarla?`
               : isAttackPlay
@@ -289,11 +298,11 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
           </div>
         )}
 
-        {(isTwoOfAKind || isThreeOfAKind) && twoOfAKindTarget && (
+        {(isFavorPlay || isTwoOfAKind || isThreeOfAKind) && interactionTarget && (
           <div className="pending-play-target pending-play-two-kind-target">
             <div className="pending-play-target-player">
-              {twoOfAKindSource?.avatar ? (
-                <img src={`/avatars/${twoOfAKindSource.avatar}.png`} alt={twoOfAKindSource.name} />
+              {interactionSource?.avatar ? (
+                <img src={`/avatars/${interactionSource.avatar}.png`} alt={interactionSource.name} />
               ) : (
                 <span>{pending.playerName.substring(0, 2)}</span>
               )}
@@ -301,15 +310,19 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
             </div>
             <span className="pending-play-target-arrow">→</span>
             <div className="pending-play-target-player">
-              {twoOfAKindTarget.avatar ? (
-                <img src={`/avatars/${twoOfAKindTarget.avatar}.png`} alt={twoOfAKindTarget.name} />
+              {interactionTarget.avatar ? (
+                <img src={`/avatars/${interactionTarget.avatar}.png`} alt={interactionTarget.name} />
               ) : (
-                <span>{twoOfAKindTarget.name.substring(0, 2)}</span>
+                <span>{interactionTarget.name.substring(0, 2)}</span>
               )}
-              <strong>{isTwoOfAKindTarget ? 'Tú' : twoOfAKindTarget.name}</strong>
+              <strong>{isInteractionTarget ? 'Tú' : interactionTarget.name}</strong>
             </div>
             <p>
-              {isTwoOfAKindTarget
+              {isFavorPlay
+                ? isInteractionTarget
+                  ? `${pending.playerName} te está pidiendo una carta de tu mano`
+                  : `${pending.playerName} le está pidiendo una carta a ${interactionTarget.name}`
+                : isInteractionTarget
                 ? `${pending.playerName} te está robando una carta${isThreeOfAKind ? ` de tipo ${requestedCardTypeName[pending.requestedCardType ?? ''] ?? pending.requestedCardType ?? 'seleccionado'}` : ''} al azar`
                 : `${pending.playerName} está robando una carta al azar`}
             </p>

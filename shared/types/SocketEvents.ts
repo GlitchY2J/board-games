@@ -158,6 +158,12 @@ export interface ExplosionAnimation {
   stage?: 'revealed' | 'eliminated';
 }
 
+export interface ThreeOfAKindEmptyAnnouncement {
+  sourcePlayerName: string;
+  targetPlayerName: string;
+  requestedCardType: string;
+}
+
 
 export interface DrawAnimation {
   animId: string;
@@ -252,6 +258,7 @@ export interface ServerToClientEvents {
   'play-animations': (animations: PlayAnimation[]) => void;
   'shuffle-animations': (animations: ShuffleAnimation[]) => void;
   'explosion-animations': (animations: ExplosionAnimation[]) => void;
+  'three-of-a-kind-empty': (announcement: ThreeOfAKindEmptyAnnouncement) => void;
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
   'chat-message': (payload: ChatMessageEvent) => void;
   'kicked-from-room': (payload: { message: string }) => void;

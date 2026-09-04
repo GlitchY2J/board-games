@@ -407,6 +407,13 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
               `${targetPlayer?.name ?? 'El objetivo'} no tenía la carta elegida para Three of a Kind`,
               { playerId: original.playerId },
             );
+            if (targetPlayer && pending.requestedCardType) {
+              io.to(room.code).emit('three-of-a-kind-empty', {
+                sourcePlayerName: original.playerName,
+                targetPlayerName: targetPlayer.name,
+                requestedCardType: pending.requestedCardType,
+              });
+            }
           }
 
           game.currentPlayer = game.players.findIndex(

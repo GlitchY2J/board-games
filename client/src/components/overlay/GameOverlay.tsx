@@ -2232,13 +2232,18 @@ export default function GameOverlay({
           hairy_potato_cat: '/icons/hairy-potato-cat.png',
           rainbow_ralphing_cat: '/icons/rainbow-ralphing-cat.png',
           tacocat: '/icons/tacocat.png',
-          attack: '/icons/attack-2x.png',
-          defuse: '/icons/defuse.png',
+           attack: '/icons/attack-2x.png',
+           targeted_attack: '/icons/targeted-attack-2x.png',
+           defuse: '/icons/defuse.png',
           favor: '/icons/favor.png',
           nope: '/icons/nope.png',
           see_the_future: '/icons/see-the-future-3x.png',
           shuffle: '/icons/shuffle.png',
-          skip: '/icons/skip.png',
+           skip: '/icons/skip.png',
+           reverse: '/icons/reverse.png',
+           feral_cat: '/icons/feral-cat.png',
+           draw_from_the_bottom: '/icons/draw-from-the-bottom.png',
+           alter_the_future: '/icons/alter-the-future-3x.png',
         };
         const isThreeOfAKind = action.reason === 'three_of_a_kind';
 
