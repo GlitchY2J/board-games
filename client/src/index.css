@@ -124,27 +124,31 @@ html[data-platform-theme] .glass-panel {
 html[data-platform-theme] .platform-shell,
 html[data-platform-theme] .game-menu-panel,
 html[data-platform-theme] .platform-options-panel,
-html[data-platform-theme] .platform-theme-menu {
+html[data-platform-theme] .platform-theme-menu,
+html[data-platform-theme] .controls-overlay {
   border-color: var(--platform-border);
 }
 
 html[data-platform-theme] .game-menu-panel,
 html[data-platform-theme] .platform-options-panel,
-html[data-platform-theme] .platform-theme-menu {
+html[data-platform-theme] .platform-theme-menu,
+html[data-platform-theme] .controls-overlay {
   background: var(--platform-surface-solid);
 }
 
 html[data-platform-theme] .game-menu-toggle,
 html[data-platform-theme] .mobile-chat-toggle,
 html[data-platform-theme] .ctrl-button,
-html[data-platform-theme] .room-code-display {
+html[data-platform-theme] .room-code-display,
+html[data-platform-theme] .controls-overlay-close {
   border-color: var(--platform-border);
   box-shadow: 0 8px 22px var(--platform-glow);
 }
 
 html[data-platform-theme] .game-menu-toggle:hover,
 html[data-platform-theme] .platform-theme-trigger:hover,
-html[data-platform-theme] .platform-theme-trigger[aria-expanded='true'] {
+html[data-platform-theme] .platform-theme-trigger[aria-expanded='true'],
+html[data-platform-theme] .controls-overlay-close:hover {
   border-color: var(--platform-accent);
   color: var(--platform-accent-strong);
 }
@@ -164,8 +168,24 @@ html[data-platform-theme] .phase-panel-toggle:hover {
 }
 
 html[data-platform-theme] .room-code-label,
-html[data-platform-theme] .phase-panel-toggle {
+html[data-platform-theme] .phase-panel-toggle,
+html[data-platform-theme] .controls-overlay-kicker {
   color: var(--platform-accent) !important;
+}
+
+html[data-platform-theme] .controls-overlay h2 {
+  color: var(--platform-accent-strong);
+}
+
+html[data-platform-theme] .control-row {
+  border-color: color-mix(in srgb, var(--platform-accent) 18%, transparent);
+  background: color-mix(in srgb, var(--platform-accent) 7%, var(--platform-surface-solid));
+}
+
+html[data-platform-theme] .control-row kbd {
+  border-color: var(--platform-border);
+  background: color-mix(in srgb, var(--platform-accent) 14%, var(--platform-surface-solid));
+  color: var(--platform-accent-strong);
 }
 
 html[data-platform-theme] .chat-panel,

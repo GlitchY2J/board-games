@@ -24,9 +24,11 @@ import {
   Menu,
   X,
   Settings as SettingsIcon,
+  Keyboard,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
+import ControlsOverlay from '../components/overlay/ControlsOverlay';
 import { useState, useEffect, useRef } from 'react';
 
 type PlatformTheme = 'classic' | 'midnight' | 'ember' | 'nebula';
@@ -104,6 +106,7 @@ export default function BoardLayout({
   const menuRef = useRef<HTMLElement>(null);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [platformTheme, setPlatformTheme] = useState<PlatformTheme>(
     () =>
       (localStorage.getItem('platform-theme') as PlatformTheme | null) ??
@@ -666,6 +669,19 @@ export default function BoardLayout({
         <button
           type="button"
           className="ctrl-button ctrl-neutral"
+          title="Controles"
+          onClick={() => {
+            setMenuOpen(false);
+            setControlsOpen(true);
+          }}
+        >
+          <Keyboard size={16} />
+          <span>Controles</span>
+        </button>
+
+        <button
+          type="button"
+          className="ctrl-button ctrl-neutral"
           title="Opciones"
           onClick={() => {
             setMenuOpen(false);
@@ -816,6 +832,8 @@ export default function BoardLayout({
           </section>
         </div>
       )}
+
+      {controlsOpen && <ControlsOverlay onClose={() => setControlsOpen(false)} />}
 
       {leaveOpen && (
         <LeaveConfirm
