@@ -78,6 +78,11 @@
   z-index: 999;
 }
 
+.fan-card.keyboard-hover {
+  transform: translateY(-35px) scale(1.12) !important;
+  z-index: 999;
+}
+
 .play-panel {
   margin-top: 24px;
   display: flex;

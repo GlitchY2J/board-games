@@ -201,6 +201,24 @@ export default function BoardLayout({
   }, []);
 
   useEffect(() => {
+    const onMenuShortcut = (event: KeyboardEvent) => {
+      if (event.isComposing || event.key.toLowerCase() !== 'm') return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target.tagName)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      setMenuOpen((open) => !open);
+    };
+
+    window.addEventListener('keydown', onMenuShortcut);
+    return () => window.removeEventListener('keydown', onMenuShortcut);
+  }, []);
+
+  useEffect(() => {
     const onMobileChatShortcut = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() !== 'c' && event.code !== 'KeyC') return;
       if (window.innerWidth > 1024 || mobileChatOpen) return;

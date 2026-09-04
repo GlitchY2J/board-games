@@ -60,6 +60,7 @@ export default function CardFan({
   sortHandMode = null,
 }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [keyboardCardIndex, setKeyboardCardIndex] = useState<number | null>(null);
   const fanRef = useRef<HTMLDivElement>(null);
   const [fanWidth, setFanWidth] = useState(0);
   const { hidePreview } = useCardPreview();
@@ -198,6 +199,38 @@ export default function CardFan({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
+      if (event.isComposing || selectedCardId || pendingPlay) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      if (document.querySelector('.overlay-backdrop, .pending-play-backdrop')) return;
+
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        if (displayCards.length === 0) return;
+        const direction = event.key === 'ArrowRight' ? 1 : -1;
+        const nextIndex = keyboardCardIndex === null
+          ? direction > 0 ? 0 : displayCards.length - 1
+          : (keyboardCardIndex + direction + displayCards.length) % displayCards.length;
+        event.preventDefault();
+        event.stopPropagation();
+        setKeyboardCardIndex(nextIndex);
+        return;
+      }
+
+      if (event.key !== 'Enter' || keyboardCardIndex === null) return;
+      const card = document.querySelector<HTMLElement>(
+        `[data-card-hotkey="${keyboardCardIndex}"] .playing-card`,
+      );
+      if (!card) return;
+      event.preventDefault();
+      event.stopPropagation();
+      card.click();
+    }
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [displayCards.length, keyboardCardIndex, pendingPlay, selectedCardId]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
       if (event.isComposing) return;
 
       if (event.target instanceof HTMLElement) {
@@ -306,9 +339,10 @@ export default function CardFan({
           return (
             <div
               key={card.uid}
-              className={`fan-card${isNew ? ' arrived-glow' : ''}`}
+              className={`fan-card${isNew ? ' arrived-glow' : ''}${keyboardCardIndex === index ? ' keyboard-hover' : ''}`}
               data-card-uid={card.uid}
               data-card-hotkey={index}
+              onMouseEnter={() => setKeyboardCardIndex(index)}
               style={{ transform: `rotate(${rotation}deg)`, zIndex: index }}
             >
               {hotkey !== null && !isNew && (
