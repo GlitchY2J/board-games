@@ -7,13 +7,15 @@ import './AlterTheFutureOverlay.css';
 interface Props {
   candidates: Card[];
   onConfirm(orderedIds: string[]): void;
+  mode?: 'alter' | 'oracle';
 }
 
-export default function AlterTheFutureOverlay({ candidates, onConfirm }: Props) {
+export default function AlterTheFutureOverlay({ candidates, onConfirm, mode = 'alter' }: Props) {
   const { hidePreview } = useCardPreview();
   const [orderedCards, setOrderedCards] = useState(candidates);
   const [draggedUid, setDraggedUid] = useState<string | null>(null);
   const [dropTargetUid, setDropTargetUid] = useState<string | null>(null);
+
 
   function moveCard(fromUid: string, toUid: string) {
     if (fromUid === toUid) return;
@@ -31,8 +33,12 @@ export default function AlterTheFutureOverlay({ candidates, onConfirm }: Props) 
   return (
     <div className="overlay-backdrop">
       <div className="card-selection-window choice-window alter-the-future-window">
-        <h2>🔮 Alter the Future</h2>
-        <p>Arrastra las cartas para elegir el orden en que regresan al mazo.</p>
+        <h2>{mode === 'oracle' ? '🔮 Unicorn Oracle' : '🔮 Alter the Future'}</h2>
+        <p>
+          {mode === 'oracle'
+            ? 'Arrastra las cartas para elegir cuál va a tu mano y el orden de las otras dos en el mazo.'
+            : 'Arrastra las cartas para elegir el orden en que regresan al mazo.'}
+        </p>
         <div className="alter-the-future-cards">
           {orderedCards.map((card, index) => (
             <div
@@ -59,7 +65,7 @@ export default function AlterTheFutureOverlay({ candidates, onConfirm }: Props) 
                 setDropTargetUid(null);
               }}
             >
-              <span>{index + 1}</span>
+              <span>{mode === 'oracle' ? (index === 0 ? 'MANO' : index === 1 ? 'CIMA' : 'DEBAJO') : index + 1}</span>
               <PlayingCard name={card.name} image={card.image} size="medium" disabled />
             </div>
           ))}
@@ -68,7 +74,7 @@ export default function AlterTheFutureOverlay({ candidates, onConfirm }: Props) 
           className="confirm-button choice-button"
           onClick={() => onConfirm(orderedCards.map((card) => card.uid))}
         >
-          Confirmar orden
+          {mode === 'oracle' ? 'Confirmar selección' : 'Confirmar orden'}
         </button>
       </div>
     </div>

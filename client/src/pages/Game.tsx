@@ -49,6 +49,7 @@ export default function Game() {
       if (gameId !== 'unstable-unicorns' && gameId !== 'exploding-kittens') return;
       if (event.code !== 'KeyS' && event.key.toLowerCase() !== 's') return;
       if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      if (document.querySelector('.overlay-backdrop, .pending-play-backdrop, .card-select-backdrop')) return;
       event.preventDefault();
       setSortHandMode((mode) => (mode === 'alphabetical' ? 'type' : 'alphabetical'));
     };

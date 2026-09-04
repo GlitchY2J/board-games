@@ -115,6 +115,23 @@ export default function BoardLayout({
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
 
   useEffect(() => {
+    const onOverlayConfirm = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' || event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      if (document.querySelector('.leave-confirm-backdrop')) return;
+      const button = document.querySelector<HTMLButtonElement>(
+        '.pending-accept-btn:not(:disabled), .overlay-backdrop .confirm-button:not(:disabled)',
+      );
+      if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
+      button.click();
+    };
+    window.addEventListener('keydown', onOverlayConfirm, true);
+    return () => window.removeEventListener('keydown', onOverlayConfirm, true);
+  }, []);
+
+  useEffect(() => {
     if (!menuOpen) return;
 
     const closeMenuOnEscape = (event: KeyboardEvent) => {

@@ -53,6 +53,21 @@ export default function GameOverlay({
   const [minimized, setMinimized] = useState(false);
 
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' || event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      if (document.querySelector('.leave-confirm-backdrop')) return;
+      const button = document.querySelector<HTMLButtonElement>('.overlay-backdrop .confirm-button:not(:disabled)');
+      if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
+      button.click();
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, []);
+
+  useEffect(() => {
     const resetTimer = setTimeout(() => {
       setDismissedKey((prev) => (prev && prev !== actionKey ? null : prev));
       setMinimized(false);
@@ -462,6 +477,7 @@ export default function GameOverlay({
             subtitle={getSubtitle()}
             items={items}
             maxSelection={1}
+            keyboardNavigation
             confirmText="Seleccionar"
             onConfirm={([playerId]) => {
               dismiss();
@@ -2662,10 +2678,17 @@ export default function GameOverlay({
         if (action.playerId !== localPlayerId) return null;
 
         return (
-          <UnicornOracleOverlay
-            roomCode={gameState.roomCode}
+          <AlterTheFutureOverlay
             candidates={action.candidates}
-            onDone={dismiss}
+            mode="oracle"
+            onConfirm={(orderedIds) => {
+              dismiss();
+              socket.emit('select-oracle-cards', {
+                roomCode: gameState.roomCode,
+                handCardId: orderedIds[0],
+                orderCardIds: orderedIds.slice(1),
+              });
+            }}
           />
         );
       }
@@ -2691,80 +2714,5 @@ export default function GameOverlay({
       </button>
       {!minimized && overlay}
     </>
-  );
-}
-
-function UnicornOracleOverlay({
-  roomCode,
-  candidates,
-  onDone,
-}: {
-  roomCode: string;
-  candidates: { uid: string; id: string; name: string; image: string }[];
-  onDone: () => void;
-}) {
-  const [order, setOrder] = useState(candidates);
-  const [draggedUid, setDraggedUid] = useState<string | null>(null);
-
-  function confirm() {
-    if (order.length !== 3) return;
-    socket.emit('select-oracle-cards', {
-      roomCode,
-      handCardId: order[0].uid,
-      orderCardIds: [order[1].uid, order[2].uid],
-    });
-    onDone();
-  }
-
-  function moveOrderCard(targetUid: string) {
-    if (!draggedUid || draggedUid === targetUid) return;
-    setOrder((prev) => {
-      const fromIndex = prev.findIndex((card) => card.uid === draggedUid);
-      const toIndex = prev.findIndex((card) => card.uid === targetUid);
-      if (fromIndex === -1 || toIndex === -1) return prev;
-      const next = [...prev];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved);
-      return next;
-    });
-    setDraggedUid(null);
-  }
-
-  return (
-    <div className="overlay-backdrop">
-      <div className="card-selection-window choice-window oracle-overlay-window">
-        <h2>🔮 Unicorn Oracle</h2>
-        <p>
-          Arrastra las 3 cartas para ordenarlas. Izquierda: tu mano. Centro:
-          cima del mazo. Derecha: debajo de la segunda carta.
-        </p>
-
-        <div className="oracle-order-row oracle-single-row">
-          {order.map((card, i) => (
-            <button
-              key={card.uid}
-              className={`oracle-order-card choice-button ${draggedUid === card.uid ? 'oracle-dragging' : ''}`}
-              draggable
-              onDragStart={(event) => {
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', card.uid);
-                setDraggedUid(card.uid);
-              }}
-              onDragEnd={() => setDraggedUid(null)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={() => moveOrderCard(card.uid)}
-            >
-              <span className="oracle-position">{i === 0 ? 'MANO' : i === 1 ? 'CIMA' : 'DEBAJO'}</span>
-              <img src={card.image} alt={card.name} />
-              <span className="text-xs">{card.name}</span>
-            </button>
-          ))}
-        </div>
-
-        <button className="confirm-button choice-button" onClick={confirm}>
-          Confirmar
-        </button>
-      </div>
-    </div>
   );
 }

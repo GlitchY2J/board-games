@@ -1,5 +1,5 @@
 import './CardSelectionOverlay.css';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PlayingCard from '../card/PlayingCard';
 
 export interface SelectionItem {
@@ -25,6 +25,7 @@ interface Props {
   onSecondary?(): void;
   searchable?: boolean;
   searchPlaceholder?: string;
+  keyboardNavigation?: boolean;
 }
 
 export default function CardSelectionOverlay({
@@ -41,13 +42,50 @@ export default function CardSelectionOverlay({
   onSecondary,
   searchable = false,
   searchPlaceholder = 'Buscar carta...',
+  keyboardNavigation = maxSelection === 1,
 }: Props) {
   const [search, setSearch] = useState('');
-  if (hide) return null;
-
   const [selected, setSelected] = useState<string[]>(() =>
     maxSelection === 1 && items.length === 1 ? [items[0].id] : [],
   );
+
+  useEffect(() => {
+    if (!keyboardNavigation || maxSelection !== 1) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+
+      const currentIndex = selected.length > 0
+        ? items.findIndex((item) => item.id === selected[0])
+        : -1;
+      let nextIndex = -1;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        if (items.length === 0) return;
+        const direction = event.key === 'ArrowRight' ? 1 : -1;
+        nextIndex = (currentIndex + direction + items.length) % items.length;
+      } else {
+        const number = event.key === '0' ? 10 : Number.parseInt(event.key, 10);
+        if (Number.isInteger(number) && number >= 1 && number <= 10) {
+          nextIndex = number - 1;
+          if (!items[nextIndex]) return;
+        }
+      }
+
+      if (nextIndex >= 0) {
+        event.preventDefault();
+        event.stopPropagation();
+        setSelected([items[nextIndex].id]);
+        return;
+      }
+
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [items, keyboardNavigation, maxSelection, onConfirm, selected]);
+
+  if (hide) return null;
 
   function toggle(itemId: string) {
     if (selected.includes(itemId)) {
@@ -116,6 +154,13 @@ export default function CardSelectionOverlay({
                 onClick={() => toggle(item.id)}
               >
                 {active && <div className="selection-badge">✓</div>}
+                {item.image && keyboardNavigation && items.length <= 10 && (
+                  <kbd className="selection-hotkey selection-card-hotkey">
+                    {items.findIndex((candidate) => candidate.id === item.id) === 9
+                      ? '0'
+                      : items.findIndex((candidate) => candidate.id === item.id) + 1}
+                  </kbd>
+                )}
                 {item.image ? (
                   <div className="selection-card-content">
                     <PlayingCard
@@ -131,7 +176,14 @@ export default function CardSelectionOverlay({
                     )}
                   </div>
                 ) : (
-                  <div className="selection-list-item">
+                   <div className="selection-list-item">
+                     {keyboardNavigation && items.length <= 10 && (
+                       <kbd className="selection-hotkey">
+                         {items.findIndex((candidate) => candidate.id === item.id) === 9
+                           ? '0'
+                           : items.findIndex((candidate) => candidate.id === item.id) + 1}
+                       </kbd>
+                     )}
                     <div className="selection-list-avatar">
                       {item.avatar ? (
                         <img

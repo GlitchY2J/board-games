@@ -206,6 +206,7 @@ export default function CardFan({
       }
 
       if (selectedCardId) return;
+      if (pendingPlay || document.querySelector('.overlay-backdrop, .pending-play-backdrop')) return;
 
       const keyIndex =
         event.key === '0' ? 9 : Number.parseInt(event.key, 10) - 1;
@@ -229,7 +230,7 @@ export default function CardFan({
 
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [displayCards.length, selectedCardId]);
+  }, [displayCards.length, pendingPlay, selectedCardId]);
 
   const selectedCard = cards.find((card) => card.uid === selectedCardId);
   const isCat = selectedCard?.cardType === 'cat';

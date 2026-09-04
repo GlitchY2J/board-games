@@ -535,7 +535,7 @@ export default function Lobby() {
             {isHost && <div className="mt-6">{hostStartControl}</div>}
           </section>
 
-          <LobbyChat room={room} />
+          <LobbyChat room={room} playerId={playerId} />
         </div>
 
         {/* Configuración de juego */}

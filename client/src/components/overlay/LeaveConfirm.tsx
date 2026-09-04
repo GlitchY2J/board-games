@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 import { LogOut } from 'lucide-react';
 import './LeaveConfirm.css';
 
@@ -15,6 +16,18 @@ export default function LeaveConfirm({
   onConfirm,
   onCancel,
 }: Props) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' || event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      onConfirm();
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [onConfirm]);
+
   return createPortal(
     <div className="leave-confirm-backdrop" onClick={onCancel}>
       <div

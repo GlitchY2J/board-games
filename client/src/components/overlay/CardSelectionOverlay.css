@@ -189,6 +189,28 @@
   transition: all 0.2s ease;
 }
 
+.selection-hotkey {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.selection-card-hotkey {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}
+
 .selection-list-avatar {
   width: 56px;
   height: 56px;
