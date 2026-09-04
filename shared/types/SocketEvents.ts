@@ -177,6 +177,10 @@ export interface DrawAnimation {
   revealToOthers?: boolean;
 }
 
+export interface InitialDealAnimation extends DrawAnimation {
+  simultaneous?: boolean;
+}
+
 export interface ResolveExplodingKittenPayload {
   roomCode: string;
   useDefuse: boolean;
@@ -253,6 +257,7 @@ export interface ServerToClientEvents {
   'card-animations': (animations: CardAnimation[]) => void;
   'neigh-animations': (animations: NeighAnimation[]) => void;
   'draw-animations': (animations: DrawAnimation[]) => void;
+  'initial-deal-animations': (animations: InitialDealAnimation[]) => void;
   'steal-animations': (animations: StealAnimation[]) => void;
   'discard-animations': (animations: DiscardAnimation[]) => void;
   'play-animations': (animations: PlayAnimation[]) => void;

@@ -10,6 +10,7 @@ import {
   beginImplodingKittenResolution,
   calculateAttackTurns,
 } from '../src/game/exploding-kittens/turn.ts';
+import { createInitialDealAnimations } from '../src/game/cardAnimations.ts';
 
 function player(id: string): Player {
   return {
@@ -144,4 +145,21 @@ test('el segundo encuentro con Imploding Kitten espera confirmación antes de el
     assert.equal(state.pendingAction.stage, 'eliminated');
   }
   assert.equal(state.players.length, 3);
+});
+
+test('el reparto inicial alterna jugadores y separa los Defuse simultáneos', () => {
+  const players = [
+    { id: 'P1', hand: [card('defuse'), card('skip'), card('attack')] },
+    { id: 'P2', hand: [card('defuse'), card('favor'), card('shuffle')] },
+    { id: 'P3', hand: [card('defuse'), card('nope'), card('skip')] },
+  ];
+
+  const animations = createInitialDealAnimations(players, true);
+
+  assert.deepEqual(
+    animations.map((animation) => animation.playerId),
+    ['P1', 'P2', 'P3', 'P1', 'P2', 'P3', 'P1', 'P2', 'P3'],
+  );
+  assert.equal(animations.slice(0, 3).every((animation) => animation.simultaneous), true);
+  assert.equal(animations.slice(3).some((animation) => animation.simultaneous), false);
 });

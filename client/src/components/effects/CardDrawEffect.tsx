@@ -5,10 +5,12 @@ import './CardDrawEffect.css';
 interface Props {
   animation: DrawAnimation;
   localPlayerId: string;
+  gameId?: string;
+  duration?: number;
   onDone(): void;
 }
 
-export default function CardDrawEffect({ animation, localPlayerId, onDone }: Props) {
+export default function CardDrawEffect({ animation, localPlayerId, gameId, duration = 600, onDone }: Props) {
   const cardRef = useRef<HTMLImageElement>(null);
   const onDoneRef = useRef(onDone);
   const animationRef = useRef<Animation | null>(null);
@@ -64,7 +66,7 @@ export default function CardDrawEffect({ animation, localPlayerId, onDone }: Pro
         }
       }
 
-      const DURATION = 600;
+       const DURATION = duration;
       const ARRIVE_AT = 0.82; // fraction at which card reaches destination
 
       animationRef.current = el.animate(
@@ -108,12 +110,14 @@ export default function CardDrawEffect({ animation, localPlayerId, onDone }: Pro
       animationRef.current = null;
       if (releaseTimer) clearTimeout(releaseTimer);
     };
-  }, [animation, localPlayerId]);
+  }, [animation, duration, localPlayerId]);
 
   const isMe = animation.playerId === localPlayerId;
   const cardSrc = isMe || animation.revealToOthers
     ? animation.card.image
-    : '/cards/unstable-unicorns/base/card_back.png';
+    : gameId === 'exploding-kittens'
+      ? '/cards/exploding-kittens/base/back-card.png'
+      : '/cards/unstable-unicorns/base/card_back.png';
 
   return (
     <img

@@ -16,6 +16,7 @@ import NeighAnnouncement from '../components/game/NeighAnnouncement';
 import ExplosionAnnouncement from '../components/game/ExplosionAnnouncement';
 import ThreeOfAKindEmptyAnnouncement from '../components/game/ThreeOfAKindEmptyAnnouncement';
 import type { CardAnimation, NeighAnimation, ExplosionAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation, ThreeOfAKindEmptyAnnouncement as ThreeOfAKindEmptyAnnouncementData } from '../../../shared/types/SocketEvents.ts';
+import type { InitialDealAnimation } from '../../../shared/types/SocketEvents.ts';
 import { Loader2 } from 'lucide-react';
 
 interface TurnAnnounce {
@@ -63,6 +64,9 @@ export default function Game() {
   >([]);
   const [neighAnims, setNeighAnims] = useState<NeighAnimation[]>([]);
   const [drawAnims, setDrawAnims] = useState<DrawAnimation[]>([]);
+  const [initialDealAnims, setInitialDealAnims] = useState<InitialDealAnimation[]>([]);
+  const [initialDealSimultaneous, setInitialDealSimultaneous] = useState<InitialDealAnimation[]>([]);
+  const [initialDealHiddenCards, setInitialDealHiddenCards] = useState<Set<string>>(new Set());
   const [stealAnims, setStealAnims] = useState<StealAnimation[]>([]);
   const [discardAnims, setDiscardAnims] = useState<DiscardAnimation[]>([]);
   const [playAnims, setPlayAnims] = useState<PlayAnimation[]>([]);
@@ -203,6 +207,9 @@ export default function Game() {
       pendingGameStateRef.current = null;
       pendingNeighThankYouStateRef.current = null;
       activeAnimationsCountRef.current = 0;
+      setInitialDealAnims([]);
+      setInitialDealSimultaneous([]);
+      setInitialDealHiddenCards(new Set());
       applyGameState(state);
     };
 
@@ -298,6 +305,19 @@ export default function Game() {
     socket.on('play-animations', onPlayAnimations);
     socket.on('shuffle-animations', onShuffleAnimations);
     socket.on('explosion-animations', onExplosionAnimations);
+    const onInitialDealAnimations = (animations: InitialDealAnimation[]) => {
+      setInitialDealSimultaneous(animations.filter((animation) => animation.simultaneous));
+      setInitialDealAnims(animations.filter((animation) => !animation.simultaneous));
+      setInitialDealHiddenCards(
+        new Set(
+          animations
+            .filter((animation) => animation.playerId === contextPlayerId)
+            .map((animation) => animation.card.uid),
+        ),
+      );
+      activeAnimationsCountRef.current += animations.length;
+    };
+    socket.on('initial-deal-animations', onInitialDealAnimations);
     const onThreeOfAKindEmpty = (announcement: ThreeOfAKindEmptyAnnouncementData) => {
       setThreeOfAKindEmpty(announcement);
     };
@@ -317,9 +337,10 @@ export default function Game() {
       socket.off('play-animations');
       socket.off('shuffle-animations', onShuffleAnimations);
       socket.off('explosion-animations', onExplosionAnimations);
+      socket.off('initial-deal-animations', onInitialDealAnimations);
       socket.off('three-of-a-kind-empty', onThreeOfAKindEmpty);
     };
-  }, [applyGameState, deactivate, isSpectatorState, navigate]);
+  }, [applyGameState, contextPlayerId, deactivate, isSpectatorState, navigate]);
 
   const activePlayer = gameState?.players[gameState.currentPlayer];
   const localPlayer = gameState?.players.find(
@@ -404,7 +425,28 @@ export default function Game() {
           key={animation.animId}
           animation={animation}
           localPlayerId={effectViewerId}
+          gameId={gameId}
           onDone={() => removeDrawAnim(animation.animId)}
+        />
+      ))}
+      {initialDealSimultaneous.map((animation) => (
+        <CardDrawEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={effectViewerId}
+          gameId={gameId}
+          duration={320}
+          onDone={() => removeInitialDealAnim(animation.animId)}
+        />
+      ))}
+      {initialDealSimultaneous.length === 0 && initialDealAnims.slice(0, 1).map((animation) => (
+        <CardDrawEffect
+          key={animation.animId}
+          animation={animation}
+          localPlayerId={effectViewerId}
+          gameId={gameId}
+          duration={320}
+          onDone={() => removeInitialDealAnim(animation.animId)}
         />
       ))}
       {stealAnims.map((animation) => (
@@ -603,6 +645,24 @@ export default function Game() {
     }
   }
 
+  function removeInitialDealAnim(animId: string) {
+    const simultaneous = initialDealSimultaneous.some((animation) => animation.animId === animId);
+    const queued = initialDealAnims.some((animation) => animation.animId === animId);
+    if (!simultaneous && !queued) return;
+    setInitialDealSimultaneous((prev) => prev.filter((animation) => animation.animId !== animId));
+    setInitialDealAnims((prev) => prev.filter((animation) => animation.animId !== animId));
+    const completed = initialDealSimultaneous.find((animation) => animation.animId === animId)
+      ?? initialDealAnims.find((animation) => animation.animId === animId);
+    if (completed && completed.playerId === contextPlayerId) {
+      setInitialDealHiddenCards((prev) => {
+        const next = new Set(prev);
+        next.delete(completed.card.uid);
+        return next;
+      });
+    }
+    activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
+  }
+
   function removeStealAnim(animId: string) {
     setStealAnims((prev) => {
       const next = prev.filter((animation) => animation.animId !== animId);
@@ -654,7 +714,9 @@ export default function Game() {
     neighAnims.length > 0 ||
     explosionAnims.length > 0 ||
     drawAnims.length > 0 ||
-    discardAnims.length > 0;
+    discardAnims.length > 0 ||
+    initialDealAnims.length > 0 ||
+    initialDealSimultaneous.length > 0;
   const pendingShakeUpPlayer = shakeUpPlayerId
     ? pendingGameStateRef.current?.players.find((player) => player.id === shakeUpPlayerId)
     : undefined;
@@ -662,6 +724,9 @@ export default function Game() {
   const shakeUpHandOverride = isLocalShakeUpPlayer && pendingShakeUpPlayer
     ? pendingShakeUpPlayer.hand.filter((card) => shakeUpVisibleDraws.has(card.uid))
     : undefined;
+  const localHiddenHandCardIds = isLocalShakeUpPlayer
+    ? shakeUpHiddenCards
+    : initialDealHiddenCards;
 
   return (
     <>
@@ -672,10 +737,11 @@ export default function Game() {
         isHost={isHost}
         onPlay={play}
         sortHandMode={sortHandMode}
-        hiddenHandCardIds={isLocalShakeUpPlayer ? shakeUpHiddenCards : undefined}
+        hiddenHandCardIds={localHiddenHandCardIds}
         localHandOverride={shakeUpHandOverride}
         animatedHandPlayerId={shakeUpPlayerId ?? undefined}
         animatedHandCount={shakeUpVisibleDraws.size}
+        interactionsDisabled={initialDealAnims.length > 0 || initialDealSimultaneous.length > 0}
         hidePendingPlay={hasActiveAnims}
         onLeaveLobby={leaveToLobby}
       />

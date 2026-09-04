@@ -1,5 +1,5 @@
 import type { Card } from './models/Card.ts';
-import type { NeighAnimation, ExplosionAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation } from '../../../shared/types/SocketEvents.ts';
+import type { NeighAnimation, ExplosionAnimation, DrawAnimation, DiscardAnimation, PlayAnimation, StealAnimation, ShuffleAnimation, InitialDealAnimation } from '../../../shared/types/SocketEvents.ts';
 
 export type CardAnimType = 'sacrifice' | 'destroy';
 
@@ -21,6 +21,49 @@ interface QueuedAnimation extends CardAnimation {
 
 const buffer: QueuedAnimation[] = [];
 let seq = 0;
+
+export function createInitialDealAnimations(
+  players: Array<{ id: string; hand: Card[] }>,
+  explodingKittens: boolean,
+): InitialDealAnimation[] {
+  const animations: InitialDealAnimation[] = [];
+  const hands = players.map((player) => ({
+    playerId: player.id,
+    cards: explodingKittens
+      ? player.hand.filter((card) => card.id !== 'defuse')
+      : player.hand,
+  }));
+
+  if (explodingKittens) {
+    for (const player of players) {
+      const defuse = player.hand.find((card) => card.id === 'defuse');
+      if (defuse) animations.push(toInitialDealAnimation(player.id, defuse, true));
+    }
+  }
+
+  const maxCards = Math.max(0, ...hands.map((hand) => hand.cards.length));
+  for (let cardIndex = 0; cardIndex < maxCards; cardIndex += 1) {
+    for (const hand of hands) {
+      const card = hand.cards[cardIndex];
+      if (card) animations.push(toInitialDealAnimation(hand.playerId, card));
+    }
+  }
+
+  return animations;
+}
+
+function toInitialDealAnimation(
+  playerId: string,
+  card: Card,
+  simultaneous = false,
+): InitialDealAnimation {
+  return {
+    animId: `initial-deal-${++seq}`,
+    playerId,
+    card: { uid: card.uid, id: card.id, name: card.name, image: card.image },
+    simultaneous,
+  };
+}
 
 export function enqueueCardAnimation(
   roomCode: string,

@@ -17,7 +17,7 @@ import { createPublicRoom } from './publicRoom.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { PendingPlayLink } from '../../../shared/types/Game.ts';
 import { VictoryManager } from '../game/VictoryManager.ts';
-import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueueExplosionAnimation, enqueuePlayAnimation, enqueueStealAnimation, enqueueShuffleAnimation } from '../game/cardAnimations.ts';
+import { createInitialDealAnimations, enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, enqueueExplosionAnimation, enqueuePlayAnimation, enqueueStealAnimation, enqueueShuffleAnimation } from '../game/cardAnimations.ts';
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
@@ -515,6 +515,42 @@ function shuffleArray<T>(arr: T[]): T[] {
   return copy;
 }
 
+function emitInitialDealAnimations(io: GameServer, room: Room): void {
+  if (!room.gameState) return;
+  const animations = createInitialDealAnimations(
+    room.gameState.players,
+    isExplodingKittensRoom(room),
+  );
+  if (animations.length === 0) return;
+
+  // Emit after the initial state so Game has mounted its animation listeners.
+  setTimeout(() => {
+    if (!room.gameState) return;
+    const hiddenImage = isExplodingKittensRoom(room)
+      ? '/cards/exploding-kittens/base/back-card.png'
+      : '/cards/unstable-unicorns/base/card_back.png';
+    for (const roomPlayer of room.players) {
+      if (!roomPlayer.socketId) continue;
+      io.to(roomPlayer.socketId).emit(
+        'initial-deal-animations',
+        animations.map((animation) =>
+          animation.playerId === roomPlayer.id
+            ? animation
+            : {
+                ...animation,
+                card: {
+                  uid: 'hidden',
+                  id: 'hidden',
+                  name: 'Carta oculta',
+                  image: hiddenImage,
+                },
+              },
+        ),
+      );
+    }
+  }, 50);
+}
+
 function registerStartGame(io: GameServer, socket: GameSocket): void {
   socket.on('start-game', (roomCode: string) => {
     const context = getSocketPlayerContext(socket, roomCode);
@@ -632,6 +668,7 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
     TurnManager.skipBeginningIfNoTriggers(room.gameState);
 
     emitGameState(io, room, 'game-started');
+    emitInitialDealAnimations(io, room);
 
     console.log(`Partida iniciada: ${room.code}`);
   });
@@ -1491,6 +1528,7 @@ function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
 
     TurnManager.skipBeginningIfNoTriggers(room.gameState);
     emitGameState(io, room, 'game-restarted');
+    emitInitialDealAnimations(io, room);
     console.log(`Partida reiniciada: ${roomCode}`);
   });
 }

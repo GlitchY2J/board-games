@@ -75,6 +75,7 @@ interface Props {
   localHandOverride?: GameState['players'][number]['hand'];
   animatedHandPlayerId?: string;
   animatedHandCount?: number;
+  interactionsDisabled?: boolean;
   spectator?: boolean;
   onLeaveLobby?(): void;
 }
@@ -91,6 +92,7 @@ export default function BoardLayout({
   localHandOverride,
   animatedHandPlayerId,
   animatedHandCount,
+  interactionsDisabled = false,
   spectator = false,
   onLeaveLobby,
 }: Props) {
@@ -359,6 +361,7 @@ export default function BoardLayout({
       }
 
       if (e.isComposing) return;
+      if (interactionsDisabled) return;
       if (e.code !== 'Space') return;
 
       const canDraw =
@@ -381,7 +384,7 @@ export default function BoardLayout({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isMyTurn, gameState, localPlayerId]);
+  }, [isMyTurn, gameState, interactionsDisabled, localPlayerId]);
 
   if (!localPlayer && !spectator) return null;
   const winner = gameState.winnerId
@@ -393,6 +396,13 @@ export default function BoardLayout({
     <div
       className={`board-layout players-${Math.min(totalPlayers, 8)} ${gameId === 'exploding-kittens' ? 'game-exploding-kittens' : ''}`}
     >
+      {interactionsDisabled && (
+        <div
+          className="fixed inset-0 z-[70] cursor-wait"
+          aria-label="Repartiendo cartas"
+          role="status"
+        />
+      )}
       <div className="game-area">
         <div className="player-top">
           {opponents
