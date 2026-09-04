@@ -28,6 +28,23 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
   const logEntries = useMemo(() => gameState.log ?? [], [gameState.log]);
   const logRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const onHistoryShortcut = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== 'i') return;
+      if (
+        event.target instanceof HTMLElement &&
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      setOpen((isOpen) => !isOpen);
+    };
+
+    window.addEventListener('keydown', onHistoryShortcut);
+    return () => window.removeEventListener('keydown', onHistoryShortcut);
+  }, []);
+
   const playerColors = useMemo(() => {
     const map = new Map<string, (typeof PLAYER_COLORS)[number]>();
 
