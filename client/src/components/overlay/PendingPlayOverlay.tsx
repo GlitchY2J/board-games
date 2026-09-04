@@ -30,6 +30,30 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     return () => clearInterval(interval);
   }, [pending]);
 
+  useEffect(() => {
+    if (!pending) return;
+
+    const onOptionKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+
+      const optionNumber = Number.parseInt(event.key, 10);
+      if (!Number.isInteger(optionNumber) || optionNumber < 1 || optionNumber > 7) return;
+
+      const option = document.querySelector<HTMLElement>(
+        `[data-pending-option="${optionNumber}"]`,
+      );
+      if (!option) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      option.click();
+    };
+
+    window.addEventListener('keydown', onOptionKeyDown, true);
+    return () => window.removeEventListener('keydown', onOptionKeyDown, true);
+  }, [pending]);
+
   if (!pending || hide) return null;
 
   const isMyPlay = !spectator && pending.playerId === localPlayerId;
@@ -151,6 +175,16 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
       pending.chain[pending.chain.length - 1]?.card.id === 'targeted_attack' ||
       pending.chain[pending.chain.length - 1]?.card.effect === 'targeted_attack') &&
     (pending.targetPlayerId ?? fallbackAttackTargetId) === localPlayerId;
+  const pendingOptionNumbers = [
+    canRespond ? 'accept' : null,
+    canRespond && isExplodingKittens && hasNope ? 'nope' : null,
+    canRespond && canStackAttack && hasRegularAttack ? 'attack' : null,
+    canRespond && canStackAttack && hasTargetedAttack ? 'targeted_attack' : null,
+    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasRegularNeigh ? 'neigh' : null,
+    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasSuperNeigh ? 'super_neigh' : null,
+    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasNeighThankYou ? 'neigh_thank_you' : null,
+  ].filter((option): option is string => option !== null);
+  const pendingOptionNumber = (option: string) => pendingOptionNumbers.indexOf(option) + 1;
 
   function accept() {
     socket.emit('neigh-accept', { roomCode: gameState.roomCode });
@@ -390,55 +424,61 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
           {canRespond && (
             <div className="pending-play-actions">
             <button
+              data-pending-option={pendingOptionNumber('accept')}
               className="pending-accept-btn"
               disabled={hasAccepted}
               onClick={accept}
             >
-              {hasAccepted ? 'Aceptado ✓' : 'Aceptar'}
+              <kbd>{pendingOptionNumber('accept')}</kbd> {hasAccepted ? 'Aceptado ✓' : 'Aceptar'}
             </button>
               {isExplodingKittens && hasNope && (
-                <button className="pending-neigh-btn" onClick={playNope}>
-                  Nope
+                <button data-pending-option={pendingOptionNumber('nope')} className="pending-neigh-btn" onClick={playNope}>
+                  <kbd>{pendingOptionNumber('nope')}</kbd> Nope
                 </button>
               )}
               {canStackAttack && hasRegularAttack && (
                 <button
                   className="pending-neigh-btn pending-attack-btn"
+                  data-pending-option={pendingOptionNumber('attack')}
                   onClick={() => playAttack('attack')}
                 >
-                  Attack
+                  <kbd>{pendingOptionNumber('attack')}</kbd> Attack
                 </button>
               )}
               {canStackAttack && hasTargetedAttack && (
                 <button
                   className="pending-neigh-btn pending-attack-btn"
+                  data-pending-option={pendingOptionNumber('targeted_attack')}
                   onClick={() => playAttack('targeted_attack')}
                 >
-                  Targeted Attack
+                  <kbd>{pendingOptionNumber('targeted_attack')}</kbd> Targeted Attack
                 </button>
               )}
               {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasRegularNeigh && (
-              <button
-                className="pending-neigh-btn"
+               <button
+                 data-pending-option={pendingOptionNumber('neigh')}
+                 className="pending-neigh-btn"
                 onClick={playNeigh}
               >
-                Neigh
+                 <kbd>{pendingOptionNumber('neigh')}</kbd> Neigh
               </button>
             )}
             {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasSuperNeigh && (
               <button
+                data-pending-option={pendingOptionNumber('super_neigh')}
                 className="pending-super-neigh-btn"
                 onClick={playSuperNeigh}
               >
-                Super Neigh
+                <kbd>{pendingOptionNumber('super_neigh')}</kbd> Super Neigh
               </button>
             )}
             {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasNeighThankYou && (
               <button
+                data-pending-option={pendingOptionNumber('neigh_thank_you')}
                 className="pending-neigh-btn"
                 onClick={playNeighThankYou}
               >
-                Neigh, Thank You
+                <kbd>{pendingOptionNumber('neigh_thank_you')}</kbd> Neigh, Thank You
               </button>
             )}
           </div>

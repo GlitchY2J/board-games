@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { GameState } from '../../types/GameState';
 import { socket } from '../../services/socket';
 import { ArrowRight } from 'lucide-react';
@@ -27,19 +28,38 @@ export default function PhaseActionButton({ gameState, autoEnabled = false }: Pr
     }
   }
 
-  if (!isActivePlayer) return null;
-
   // Double Dutch: tras jugar 1 carta (actionPlaysRemaining === 1) el jugador
   // debe poder terminar el turno manualmente, incluso con el modo automático.
   const doubleDutchCanEnd =
     gameState.phase === 'ACTION' && gameState.actionPlaysRemaining === 1;
 
-  if (autoEnabled && !doubleDutchCanEnd) return null;
-
   const showButton =
     (gameState.phase === 'ACTION' &&
       (gameState.actionUsed || gameState.actionPlaysRemaining === 1)) ||
     gameState.phase === 'END';
+
+  useEffect(() => {
+    if (!isActivePlayer || !showButton) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== 't') return;
+      if (
+        event.target instanceof HTMLElement &&
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      socket.emit('next-phase', gameState.roomCode);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [gameState, isActivePlayer, showButton]);
+
+  if (!isActivePlayer) return null;
+
+  if (autoEnabled && !doubleDutchCanEnd) return null;
 
   if (!showButton) return null;
 

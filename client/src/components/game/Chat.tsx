@@ -3,6 +3,7 @@ import type { GameState } from '../../types/GameState';
 import { socket } from '../../services/socket';
 import { Send } from 'lucide-react';
 import { cn } from '../../lib/cn';
+import type { ChatTypingEvent } from '../../../../shared/types/SocketEvents';
 import './Chat.css';
 
 interface Props {
@@ -27,9 +28,12 @@ const CHAT_IDLE_TIMEOUT = 10000;
 export default function Chat({ gameState, initialOpen = false, onClose }: Props) {
   const [draft, setDraft] = useState('');
   const [isOpen, setIsOpen] = useState(initialOpen);
+  const [idleProgress, setIdleProgress] = useState(0);
+  const [typingPlayers, setTypingPlayers] = useState<Record<string, string>>({});
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActivityRef = useRef(0);
   const focusOnOpenRef = useRef(initialOpen);
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
@@ -47,9 +51,31 @@ export default function Chat({ gameState, initialOpen = false, onClose }: Props)
     if (idleTimerRef.current) clearInterval(idleTimerRef.current);
     idleTimerRef.current = null;
     inputRef.current?.blur();
+    setDraft('');
+    socket.emit('chat-typing', { roomCode: gameState.roomCode, isTyping: false });
+    setIdleProgress(0);
     setIsOpen(false);
     onClose?.();
   }, [onClose]);
+
+  useEffect(() => {
+    const onChatTyping = (event: ChatTypingEvent) => {
+      if (event.playerId === localPlayer?.id) return;
+      setTypingPlayers((current) => {
+        if (!event.isTyping) {
+          const next = { ...current };
+          delete next[event.playerId];
+          return next;
+        }
+        return { ...current, [event.playerId]: event.playerName };
+      });
+    };
+
+    socket.on('chat-typing', onChatTyping);
+    return () => {
+      socket.off('chat-typing', onChatTyping);
+    };
+  }, [localPlayer?.id]);
 
   // Auto-scroll al final: los mensajes más recientes se posicionan abajo.
   useEffect(() => {
@@ -82,7 +108,7 @@ export default function Chat({ gameState, initialOpen = false, onClose }: Props)
         return;
       }
 
-      if (event.key === 'Enter' && !isTextField && !isOpen && !event.isComposing) {
+      if (event.key.toLowerCase() === 'c' && !isTextField && !isOpen && !event.isComposing) {
         event.preventDefault();
         focusOnOpenRef.current = true;
         setIsOpen(true);
@@ -102,7 +128,12 @@ export default function Chat({ gameState, initialOpen = false, onClose }: Props)
     }
     lastActivityRef.current = Date.now();
     idleTimerRef.current = setInterval(() => {
-      if (Date.now() - lastActivityRef.current >= CHAT_IDLE_TIMEOUT) {
+      const progress = Math.min(
+        1,
+        (Date.now() - lastActivityRef.current) / CHAT_IDLE_TIMEOUT,
+      );
+      setIdleProgress(progress);
+      if (progress >= 1) {
         hideChat();
       }
     }, 250);
@@ -116,20 +147,43 @@ export default function Chat({ gameState, initialOpen = false, onClose }: Props)
   function resetIdleTimer() {
     if (!isOpen) return;
     lastActivityRef.current = Date.now();
+    setIdleProgress(0);
   }
 
   function send() {
     const text = draft.trim();
     if (!text) return;
     socket.emit('send-chat', { roomCode: gameState.roomCode, text });
+    socket.emit('chat-typing', { roomCode: gameState.roomCode, isTyping: false });
     setDraft('');
+    resetIdleTimer();
+  }
+
+  function updateDraft(value: string) {
+    setDraft(value);
+    socket.emit('chat-typing', {
+      roomCode: gameState.roomCode,
+      isTyping: value.trim().length > 0,
+    });
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    if (value.trim()) {
+      typingTimerRef.current = setTimeout(() => {
+        socket.emit('chat-typing', { roomCode: gameState.roomCode, isTyping: false });
+      }, 2500);
+    }
     resetIdleTimer();
   }
 
   if (!isOpen) return null;
 
   return (
-    <div className="chat-panel" onMouseMove={resetIdleTimer} onFocus={resetIdleTimer}>
+    <div
+      className="chat-panel"
+      style={{ opacity: 1 - idleProgress * 0.85 }}
+      onMouseEnter={resetIdleTimer}
+      onMouseMove={resetIdleTimer}
+      onFocus={resetIdleTimer}
+    >
       <div className="chat-header">Chat</div>
       <div ref={listRef} className="chat-list">
         {messages.map((m, i) => {
@@ -159,15 +213,18 @@ export default function Chat({ gameState, initialOpen = false, onClose }: Props)
           <div className="chat-empty">Sin mensajes todavía</div>
         )}
       </div>
+      {Object.values(typingPlayers).length > 0 && (
+        <div className="chat-typing" aria-live="polite">
+          <span>{Object.values(typingPlayers).join(', ')} está escribiendo</span>
+          <span className="chat-typing-dots" aria-hidden="true"><i /> <i /> <i /></span>
+        </div>
+      )}
       <div className="chat-input-row">
         <input
           ref={inputRef}
           className="chat-input"
           value={draft}
-          onChange={(e) => {
-            setDraft(e.target.value);
-            resetIdleTimer();
-          }}
+          onChange={(e) => updateDraft(e.target.value)}
           onInput={resetIdleTimer}
           onKeyDown={(e) => {
             resetIdleTimer();

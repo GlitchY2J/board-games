@@ -504,6 +504,7 @@ export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerNeighAccept(io, socket);
   registerPlayNeigh(io, socket);
   registerSendChat(io, socket);
+  registerChatTyping(io, socket);
 }
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -1776,5 +1777,18 @@ function registerSendChat(io: GameServer, socket: GameSocket): void {
     io.to(room.code).emit('chat-message', { roomCode, message });
     io.to(room.code).emit('room-updated', createPublicRoom(room));
     if (room.gameState) emitGameState(io, room, 'game-updated');
+  });
+}
+
+function registerChatTyping(io: GameServer, socket: GameSocket): void {
+  socket.on('chat-typing', ({ roomCode, isTyping }) => {
+    const context = getSocketPlayerContext(socket, roomCode);
+    if (!context) return;
+
+    io.to(roomCode).emit('chat-typing', {
+      playerId: context.player.id,
+      playerName: context.player.name,
+      isTyping: Boolean(isTyping),
+    });
   });
 }

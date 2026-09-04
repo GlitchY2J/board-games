@@ -173,6 +173,30 @@ export default function CardFan({
   }, [selectedCardId]);
 
   useEffect(() => {
+    if (!selectedCardId) return;
+
+    function onOptionKeyDown(event: KeyboardEvent) {
+      if (event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+
+      const optionNumber = Number.parseInt(event.key, 10);
+      if (!Number.isInteger(optionNumber) || optionNumber < 1 || optionNumber > 4) return;
+
+      const option = document.querySelector<HTMLElement>(
+        `[data-card-option="${optionNumber}"]`,
+      );
+      if (!option) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      option.click();
+    }
+
+    window.addEventListener('keydown', onOptionKeyDown, true);
+    return () => window.removeEventListener('keydown', onOptionKeyDown, true);
+  }, [selectedCardId]);
+
+  useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.isComposing) return;
 
@@ -370,12 +394,14 @@ export default function CardFan({
               />
 
                <div className="card-select-actions flex items-center justify-center gap-4 px-6 py-4 rounded-3xl glass-panel bg-slate-950/90 shadow-2xl">
-                <button
+                 <button
+                   data-card-option="1"
                    className="card-select-cancel flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all text-xs font-bold cursor-pointer active:scale-95"
                   onClick={() => setSelectedCardId(null)}
                 >
-                  <X size={14} />
-                  Cancelar
+                   <X size={14} />
+                   <kbd>1</kbd>
+                   Cancelar
                 </button>
 
                 {isBlocked(selectedCardId) ? (
@@ -389,29 +415,32 @@ export default function CardFan({
                   </p>
                 ) : gameId === 'exploding-kittens' && isCat ? (
                   <div className="cat-combo-actions">
-                    <button
-                      className="cat-combo-button cat-combo-single"
+                     <button
+                       data-card-option="2"
+                       className="cat-combo-button cat-combo-single"
                       onClick={() => {
                         onPlay(selectedCardId);
                         setSelectedCardId(null);
                       }}
                     >
-                      Jugar Carta
+                       <kbd>2</kbd> Jugar Carta
                     </button>
                     {canPlayPair && (
                       <button
-                        className="cat-combo-button cat-combo-pair"
+                       data-card-option="3"
+                       className="cat-combo-button cat-combo-pair"
                         onClick={() => {
                            onPlayCards?.([selectedCardId, comboCats[0].uid]);
                           setSelectedCardId(null);
                         }}
                       >
-                        Two of a kind
+                         <kbd>3</kbd> Two of a kind
                       </button>
                     )}
                     {canPlayTrio && (
                       <button
-                        className="cat-combo-button cat-combo-trio"
+                       data-card-option="4"
+                       className="cat-combo-button cat-combo-trio"
                         onClick={() => {
                           onPlayCards?.([
                             selectedCardId,
@@ -421,12 +450,13 @@ export default function CardFan({
                           setSelectedCardId(null);
                         }}
                       >
-                        Three of a kind
+                         <kbd>4</kbd> Three of a kind
                       </button>
                     )}
                   </div>
                 ) : (
                   <button
+                    data-card-option="2"
                     data-card-confirm
                     className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10"
                     onClick={() => {
@@ -449,7 +479,7 @@ export default function CardFan({
                     }}
                   >
                     <Play size={14} fill="currentColor" />
-                    Jugar Carta
+                    <kbd>2</kbd> Jugar Carta
                   </button>
                 )}
               </div>

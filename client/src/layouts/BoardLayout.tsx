@@ -185,7 +185,7 @@ export default function BoardLayout({
 
   useEffect(() => {
     const onMobileChatShortcut = (event: KeyboardEvent) => {
-      if (event.key !== 'Enter' && event.code !== 'Enter') return;
+      if (event.key.toLowerCase() !== 'c' && event.code !== 'KeyC') return;
       if (window.innerWidth > 1024 || mobileChatOpen) return;
 
       const target = event.target;

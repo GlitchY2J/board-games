@@ -123,6 +123,17 @@ export interface SendChatPayload {
   text: string;
 }
 
+export interface ChatTypingPayload {
+  roomCode: string;
+  isTyping: boolean;
+}
+
+export interface ChatTypingEvent {
+  playerId: string;
+  playerName: string;
+  isTyping: boolean;
+}
+
 export interface ChatMessageEvent {
   roomCode: string;
   message: ChatMessage;
@@ -266,6 +277,7 @@ export interface ServerToClientEvents {
   'three-of-a-kind-empty': (announcement: ThreeOfAKindEmptyAnnouncement) => void;
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
   'chat-message': (payload: ChatMessageEvent) => void;
+  'chat-typing': (payload: ChatTypingEvent) => void;
   'kicked-from-room': (payload: { message: string }) => void;
 }
 
@@ -370,4 +382,5 @@ export interface ClientToServerEvents {
 
   // Chat
   'send-chat': (payload: SendChatPayload) => void;
+  'chat-typing': (payload: ChatTypingPayload) => void;
 }

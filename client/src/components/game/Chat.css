@@ -153,3 +153,28 @@
   opacity: 0.4;
   cursor: default;
 }
+
+.chat-typing {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem 0.55rem;
+  color: #94a3b8;
+  font-size: 0.68rem;
+}
+
+.chat-typing-dots { display: inline-flex; gap: 0.16rem; }
+.chat-typing-dots i {
+  width: 0.24rem;
+  height: 0.24rem;
+  background: #67e8f9;
+  border-radius: 50%;
+  animation: chat-typing-bounce 900ms infinite ease-in-out;
+}
+.chat-typing-dots i:nth-child(2) { animation-delay: 120ms; }
+.chat-typing-dots i:nth-child(3) { animation-delay: 240ms; }
+
+@keyframes chat-typing-bounce {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-0.18rem); }
+}
