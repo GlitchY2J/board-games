@@ -134,6 +134,11 @@ export interface ChatTypingEvent {
   isTyping: boolean;
 }
 
+export interface ReactionEvent {
+  playerId: string;
+  reactionId: string;
+}
+
 export interface ChatMessageEvent {
   roomCode: string;
   message: ChatMessage;
@@ -278,6 +283,7 @@ export interface ServerToClientEvents {
   'turn-order-assigned': (players: { id: string; name: string }[]) => void;
   'chat-message': (payload: ChatMessageEvent) => void;
   'chat-typing': (payload: ChatTypingEvent) => void;
+  reaction: (payload: ReactionEvent) => void;
   'kicked-from-room': (payload: { message: string }) => void;
 }
 
@@ -373,6 +379,7 @@ export interface ClientToServerEvents {
 
   // Play Neigh
   'play-neigh': (payload: PlayNeighPayload) => void;
+  reaction: (payload: { roomCode: string; reactionId: string }) => void;
 
   // Resume Session
   'resume-session': (

@@ -1,14 +1,32 @@
 import type { GameState } from '../../types/GameState';
 import { cn } from '../../lib/cn';
 import { Sparkles, Layers, Eye, RotateCcw, UserX } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import PlayingCard from '../card/PlayingCard';
 import { getStablePower } from '../../lib/stablePower';
 import { socket } from '../../services/socket';
+import type { ReactionEvent } from '../../../../shared/types/SocketEvents';
 import './PlayerInfo.css';
 
 type Player = GameState['players'][number];
+
+const REACTIONS = [
+  { id: 'goingcrazy', label: 'Desesperación', file: '951062-goingcrazy.gif' },
+  { id: 'crying', label: 'Llorando', file: '846910-crying.png' },
+  { id: 'boohoo', label: 'Buu hoo', file: '8176-boohoo.png' },
+  { id: 'panic', label: 'Pánico', file: '781025-panic.gif' },
+  { id: 'shhhhh', label: 'Silencio', file: '774627-shhhhh.png' },
+  { id: 'mischievous', label: 'Travieso', file: '7195-mischievous.png' },
+  { id: 'shrug', label: 'No sé', file: '6461-shrug.png' },
+  { id: 'uhwhat', label: '¿Qué?', file: '624922-uhwhat.png' },
+  { id: 'devious', label: 'Malicia', file: '4930-devious.png' },
+  { id: 'omggg', label: 'Sorpresa', file: '4172-omggg.gif' },
+  { id: 'rememberemoji', label: 'Recuerdo', file: '317100-rememberemoji.png' },
+  { id: 'sideey', label: 'Mirada', file: '286281-sideey.png' },
+  { id: 'mad', label: 'Enojo', file: '2845-mad.png' },
+  { id: 'thumbs-up-meme', label: 'Aprobación', file: '10926-thumbs-up-meme.png' },
+];
 
 interface Props {
   player: Player;
@@ -34,6 +52,9 @@ export default function PlayerInfo({
   handCount,
 }: Props) {
   const [showHand, setShowHand] = useState(false);
+  const [reaction, setReaction] = useState<string | null>(null);
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const displayedHandCount = handCount ?? player.hand.length;
 
   const hasNannyCam =
@@ -50,6 +71,21 @@ export default function PlayerInfo({
       : 'Tu Turno'
     : 'Esperando');
   const shouldMarquee = statusText.length > 14;
+  const canReact = localPlayerId === player.id && !!roomCode;
+
+  useEffect(() => {
+    const onReaction = (event: ReactionEvent) => {
+      if (event.playerId !== player.id) return;
+      setReaction(event.reactionId);
+      if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+      reactionTimerRef.current = setTimeout(() => setReaction(null), 3000);
+    };
+    socket.on('reaction', onReaction);
+    return () => {
+      socket.off('reaction', onReaction);
+      if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+    };
+  }, [player.id]);
 
   return (
     <div
@@ -57,7 +93,7 @@ export default function PlayerInfo({
       className={cn(
         'player-info-card flex flex-col gap-2 px-3 py-2.5 rounded-2xl transition-all duration-300',
         isActive && 'is-active',
-        'glass-panel border w-full',
+        'glass-panel border w-full player-info-reaction-anchor',
       )}
         style={{
           backgroundColor: isActive
@@ -69,6 +105,44 @@ export default function PlayerInfo({
           boxShadow: 'none',
       }}
     >
+      {reaction && (
+        <img
+          className="player-reaction-animation"
+          src={`/reactions/${REACTIONS.find((item) => item.id === reaction)?.file ?? ''}`}
+          alt=""
+        />
+      )}
+      {canReact && (
+        <div className="player-reaction-picker-wrap">
+          <button
+            type="button"
+            className="player-reaction-trigger"
+            title="Enviar reacción"
+            aria-label="Enviar reacción"
+            onClick={() => setReactionPickerOpen((open) => !open)}
+          >
+            <Sparkles size={12} />
+          </button>
+          {reactionPickerOpen && (
+            <div className="player-reaction-picker" role="menu">
+              {REACTIONS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  title={item.label}
+                  aria-label={item.label}
+                  onClick={() => {
+                    socket.emit('reaction', { roomCode: roomCode!, reactionId: item.id });
+                    setReactionPickerOpen(false);
+                  }}
+                >
+                  <img src={`/reactions/${item.file}`} alt="" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div className="player-info-header flex w-full items-center justify-between gap-3 min-w-0">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
         {player.avatar ? (

@@ -29,6 +29,11 @@ const NEIGH_GRACE_MS = 800;
 
 const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh', 'neigh_thank_you']);
 const NO_NEIGH_CARDS = new Set(['ginormous_unicorn']);
+const REACTION_IDS = new Set([
+  'goingcrazy', 'crying', 'boohoo', 'panic', 'shhhhh', 'mischievous',
+  'shrug', 'uhwhat', 'devious', 'omggg', 'rememberemoji', 'sideey', 'mad',
+  'thumbs-up-meme',
+]);
 
 const pendingTimers = new Map<string, NodeJS.Timeout>();
 
@@ -505,6 +510,7 @@ export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
   registerPlayNeigh(io, socket);
   registerSendChat(io, socket);
   registerChatTyping(io, socket);
+  registerReaction(io, socket);
 }
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -1789,6 +1795,18 @@ function registerChatTyping(io: GameServer, socket: GameSocket): void {
       playerId: context.player.id,
       playerName: context.player.name,
       isTyping: Boolean(isTyping),
+    });
+  });
+}
+
+function registerReaction(io: GameServer, socket: GameSocket): void {
+  socket.on('reaction', ({ roomCode, reactionId }) => {
+    const context = getSocketPlayerContext(socket, roomCode);
+    if (!context || !REACTION_IDS.has(reactionId)) return;
+
+    io.to(roomCode).emit('reaction', {
+      playerId: context.player.id,
+      reactionId,
     });
   });
 }
