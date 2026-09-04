@@ -53,6 +53,24 @@ export default function GameOverlay({
   const [minimized, setMinimized] = useState(false);
 
   useEffect(() => {
+    const onChoiceKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      const number = event.key === '0' ? 10 : Number.parseInt(event.key, 10);
+      if (!Number.isInteger(number) || number < 1 || number > 10) return;
+      const option = document.querySelector<HTMLButtonElement>(
+        `[data-choice-option="${number}"]:not(:disabled)`,
+      );
+      if (!option) return;
+      event.preventDefault();
+      event.stopPropagation();
+      option.click();
+    };
+    window.addEventListener('keydown', onChoiceKeyDown, true);
+    return () => window.removeEventListener('keydown', onChoiceKeyDown, true);
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Enter' || event.isComposing) return;
       if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
@@ -288,6 +306,7 @@ export default function GameOverlay({
               image: card.image,
             }))}
             maxSelection={action.cardsToDiscard}
+            keyboardNavigation
             confirmText="Descartar"
             onConfirm={(cardIds) => {
               dismiss();
@@ -487,7 +506,7 @@ export default function GameOverlay({
               });
             }}
             onCancel={
-              isUnicornPoison || isAnnoyingFlying || isMermaid
+              isAnnoyingFlying || isMermaid
                 ? () => {
                     dismiss();
                     socket.emit('cancel-action', {
@@ -2269,10 +2288,11 @@ export default function GameOverlay({
               <h2>{action.title}</h2>
               <p>{action.description}</p>
               <div className="choice-options-grid">
-                {action.options.map((option) => (
+                {action.options.map((option, index) => (
                   <button
                     key={option.value}
                     className="confirm-button choice-button"
+                    data-choice-option={index < 9 ? index + 1 : index === 9 ? 10 : undefined}
                     onClick={() => {
                       dismiss();
                       socket.emit('select-choice', {
@@ -2281,6 +2301,7 @@ export default function GameOverlay({
                       });
                     }}
                   >
+                    {index < 10 && <kbd className="choice-hotkey">{index === 9 ? '0' : index + 1}</kbd>}
                     {isThreeOfAKind && threeOfAKindIcons[option.value] && (
                       <img
                         src={threeOfAKindIcons[option.value]}

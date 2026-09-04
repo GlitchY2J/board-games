@@ -50,16 +50,17 @@ export default function CardSelectionOverlay({
   );
 
   useEffect(() => {
-    if (!keyboardNavigation || maxSelection !== 1) return;
+    if (!keyboardNavigation) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.isComposing) return;
       if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
 
       const currentIndex = selected.length > 0
-        ? items.findIndex((item) => item.id === selected[0])
+        ? items.findIndex((item) => item.id === selected[selected.length - 1])
         : -1;
       let nextIndex = -1;
+      const isNumeric = /^[0-9]$/.test(event.key);
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         if (items.length === 0) return;
         const direction = event.key === 'ArrowRight' ? 1 : -1;
@@ -75,7 +76,14 @@ export default function CardSelectionOverlay({
       if (nextIndex >= 0) {
         event.preventDefault();
         event.stopPropagation();
-        setSelected([items[nextIndex].id]);
+        setSelected((current) => {
+          if (maxSelection === 1) return [items[nextIndex].id];
+          if (isNumeric && current.includes(items[nextIndex].id)) {
+            return current.filter((id) => id !== items[nextIndex].id);
+          }
+          if (current.includes(items[nextIndex].id) || current.length >= maxSelection) return current;
+          return [...current, items[nextIndex].id];
+        });
         return;
       }
 
