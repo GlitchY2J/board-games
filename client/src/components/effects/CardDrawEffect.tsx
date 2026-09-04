@@ -7,13 +7,21 @@ interface Props {
   localPlayerId: string;
   gameId?: string;
   duration?: number;
+  playSound?: boolean;
   onDone(): void;
 }
 
-export default function CardDrawEffect({ animation, localPlayerId, gameId, duration = 600, onDone }: Props) {
+export default function CardDrawEffect({ animation, localPlayerId, gameId, duration = 600, playSound = false, onDone }: Props) {
   const cardRef = useRef<HTMLImageElement>(null);
   const onDoneRef = useRef(onDone);
   const animationRef = useRef<Animation | null>(null);
+
+  useEffect(() => {
+    if (!playSound) return;
+    const sound = new Audio('/sounds/draw-card.ogg');
+    sound.volume = 0.7;
+    sound.play().catch(() => {});
+  }, [playSound]);
 
   useEffect(() => {
     onDoneRef.current = onDone;

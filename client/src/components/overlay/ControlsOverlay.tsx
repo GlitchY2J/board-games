@@ -12,6 +12,7 @@ const controls = [
   ['I', 'Mostrar u ocultar el historial'],
   ['T', 'Terminar el turno'],
   ['D', 'Abrir la pila de descarte'],
+  ['R', 'Abrir o cerrar reacciones'],
   ['Flechas', 'Navegar entre cartas u opciones'],
   ['0 - 9', 'Seleccionar una opción numerada'],
   ['Enter', 'Confirmar o abrir la selección'],

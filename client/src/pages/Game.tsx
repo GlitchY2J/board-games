@@ -80,6 +80,7 @@ export default function Game() {
   const pendingGameStateRef = useRef<GameState | null>(null);
   const pendingNeighThankYouStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
+  const playCardSoundPendingRef = useRef(false);
   const neighAnimationCountRef = useRef(0);
   const leavingToLobbyRef = useRef(false);
 
@@ -121,6 +122,14 @@ export default function Game() {
     }
     prevTurnRef.current = { turn: state.turn, currentPlayer: state.currentPlayer };
   }, []);
+
+  useEffect(() => {
+    if (gameState?.pendingPlay || !playCardSoundPendingRef.current) return;
+    playCardSoundPendingRef.current = false;
+    const sound = new Audio('/sounds/play-card.ogg');
+    sound.volume = 0.7;
+    sound.play().catch(() => {});
+  }, [gameState?.pendingPlay]);
 
   const isSpectatorState = useCallback((state: GameState) => {
     return (
@@ -254,6 +263,11 @@ export default function Game() {
 
     const onDrawAnimations = (animations: DrawAnimation[]) => {
       if (animations.length > 0) {
+        const sound = new Audio('/sounds/draw-card.ogg');
+        sound.volume = 0.7;
+        sound.play().catch(() => {
+          // El navegador puede bloquear audio hasta que exista interacción.
+        });
         activeAnimationsCountRef.current += animations.length;
         setDrawAnims((prev) => [...prev, ...animations]);
       }
@@ -261,6 +275,9 @@ export default function Game() {
 
     const onStealAnimations = (animations: StealAnimation[]) => {
       if (animations.length > 0) {
+        const sound = new Audio('/sounds/move-card.ogg');
+        sound.volume = 0.7;
+        sound.play().catch(() => {});
         activeAnimationsCountRef.current += animations.length;
         setStealAnims((prev) => [...prev, ...animations]);
       }
@@ -268,6 +285,9 @@ export default function Game() {
 
     const onDiscardAnimations = (animations: DiscardAnimation[]) => {
       if (animations.length > 0) {
+        const sound = new Audio('/sounds/discard-card.ogg');
+        sound.volume = 0.7;
+        sound.play().catch(() => {});
         activeAnimationsCountRef.current += animations.length;
         setDiscardAnims((prev) => [...prev, ...animations]);
       }
@@ -275,6 +295,7 @@ export default function Game() {
 
     const onPlayAnimations = (animations: PlayAnimation[]) => {
       if (animations.length > 0) {
+        playCardSoundPendingRef.current = true;
         setPlayAnims((prev) => [...prev, ...animations]);
       }
     };
@@ -437,6 +458,7 @@ export default function Game() {
           localPlayerId={effectViewerId}
           gameId={gameId}
           duration={320}
+          playSound
           onDone={() => removeInitialDealAnim(animation.animId)}
         />
       ))}
@@ -447,6 +469,7 @@ export default function Game() {
           localPlayerId={effectViewerId}
           gameId={gameId}
           duration={320}
+          playSound
           onDone={() => removeInitialDealAnim(animation.animId)}
         />
       ))}

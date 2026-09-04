@@ -54,6 +54,8 @@ export default function PlayerInfo({
   const [showHand, setShowHand] = useState(false);
   const [reaction, setReaction] = useState<string | null>(null);
   const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const [reactionPickerPosition, setReactionPickerPosition] = useState({ top: 0, left: 0 });
+  const reactionTriggerRef = useRef<HTMLButtonElement>(null);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const displayedHandCount = handCount ?? player.hand.length;
 
@@ -73,6 +75,14 @@ export default function PlayerInfo({
   const shouldMarquee = statusText.length > 14;
   const canReact = localPlayerId === player.id && !!roomCode;
 
+  function toggleReactionPicker() {
+    if (!reactionPickerOpen && reactionTriggerRef.current) {
+      const rect = reactionTriggerRef.current.getBoundingClientRect();
+      setReactionPickerPosition({ top: rect.bottom + 6, left: rect.right - 164 });
+    }
+    setReactionPickerOpen((open) => !open);
+  }
+
   useEffect(() => {
     const onReaction = (event: ReactionEvent) => {
       if (event.playerId !== player.id) return;
@@ -86,6 +96,35 @@ export default function PlayerInfo({
       if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
     };
   }, [player.id]);
+
+  useEffect(() => {
+    if (!canReact) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(event.target.tagName)) return;
+      if (event.key === 'Escape' && reactionPickerOpen) {
+        event.preventDefault();
+        setReactionPickerOpen(false);
+        return;
+      }
+      if (event.key.toLowerCase() !== 'r') return;
+      event.preventDefault();
+      toggleReactionPicker();
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [canReact, reactionPickerOpen]);
+
+  useEffect(() => {
+    if (!canReact || !reactionPickerOpen) return;
+    const onCardClick = (event: MouseEvent) => {
+      if (event.target instanceof Element && event.target.closest('[data-card-uid], .playing-card')) {
+        setReactionPickerOpen(false);
+      }
+    };
+    document.addEventListener('click', onCardClick, true);
+    return () => document.removeEventListener('click', onCardClick, true);
+  }, [canReact, reactionPickerOpen]);
 
   return (
     <div
@@ -119,12 +158,17 @@ export default function PlayerInfo({
             className="player-reaction-trigger"
             title="Enviar reacción"
             aria-label="Enviar reacción"
-            onClick={() => setReactionPickerOpen((open) => !open)}
+            ref={reactionTriggerRef}
+            onClick={toggleReactionPicker}
           >
             <Sparkles size={12} />
           </button>
-          {reactionPickerOpen && (
-            <div className="player-reaction-picker" role="menu">
+          {reactionPickerOpen && createPortal(
+            <div
+              className="player-reaction-picker"
+              role="menu"
+              style={{ top: reactionPickerPosition.top, left: reactionPickerPosition.left }}
+            >
               {REACTIONS.map((item) => (
                 <button
                   key={item.id}
@@ -139,7 +183,8 @@ export default function PlayerInfo({
                   <img src={`/reactions/${item.file}`} alt="" />
                 </button>
               ))}
-            </div>
+            </div>,
+            document.body,
           )}
         </div>
       )}
