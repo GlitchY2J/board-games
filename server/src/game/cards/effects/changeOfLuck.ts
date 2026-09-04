@@ -1,6 +1,7 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
+import { addLog } from '../../../sockets/gameLog.ts';
 
 export const changeOfLuck: CardEffect = {
   onPlay(state, player) {
@@ -11,6 +12,10 @@ export const changeOfLuck: CardEffect = {
         player.hand.push(drawn);
       }
     }
+
+    addLog(state, `${player.name} robó 2 cartas del mazo`, {
+      playerId: player.id,
+    });
 
     // Siempre otorgar el turno extra al resolver la carta
     state.extraTurn = true;

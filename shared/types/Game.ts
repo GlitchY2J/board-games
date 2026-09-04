@@ -43,6 +43,12 @@ export interface GameLogEntry {
   text: string;
   playerId?: string;
   playerName?: string;
+  cardImage?: string;
+  reactionCardImage?: string;
+  reactionCardImages?: string[];
+  relatedCardImage?: string;
+  cardStatus?: 'sacrificed' | 'destroyed';
+  relatedCardStatus?: 'sacrificed' | 'destroyed';
   turn: number;
   timestamp: number;
 }

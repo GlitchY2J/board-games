@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
+import { addLog } from '../../../sockets/gameLog.ts';
 
 export const unicornOnTheCob: CardEffect = {
   onEnterStable(state, player) {
@@ -11,6 +12,10 @@ export const unicornOnTheCob: CardEffect = {
         player.hand.push(drawn);
       }
     }
+
+    addLog(state, `${player.name} robó 2 cartas del mazo`, {
+      playerId: player.id,
+    });
 
     // Descartar 1 carta (obligatorio, solo si tiene cartas)
     if (player.hand.length > 0) {

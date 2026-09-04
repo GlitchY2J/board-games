@@ -4,6 +4,7 @@ import type { GameLogEntry } from '../../types/GameState';
 import { socket } from '../../services/socket';
 import { Info, X } from 'lucide-react';
 import { cn } from '../../lib/cn';
+import { useCardPreview } from '../../context/useCardPreview';
 import './PhasePanel.css';
 
 interface Props {
@@ -24,6 +25,7 @@ const PLAYER_COLORS = [
 
 export default function PhasePanel({ gameState, showRoundPhase = true }: Props) {
   const [open, setOpen] = useState(false);
+  const { showPreview, hidePreview } = useCardPreview();
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
   const logEntries = useMemo(() => gameState.log ?? [], [gameState.log]);
   const logRef = useRef<HTMLDivElement>(null);
@@ -56,6 +58,79 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
   }, [gameState.players]);
 
   function renderEntry(entry: GameLogEntry) {
+    const reactionImages = entry.reactionCardImages ?? (entry.reactionCardImage ? [entry.reactionCardImage] : []);
+    const previewImage = (src: string, alt: string) => (
+      <img
+        className="history-card-thumbnail"
+        src={src}
+        alt={alt}
+        onMouseEnter={(event) => showPreview(src, event.clientX, event.clientY)}
+        onMouseMove={(event) => showPreview(src, event.clientX, event.clientY)}
+        onMouseLeave={hidePreview}
+      />
+    );
+    const renderBlockedCards = () => (
+      <span className="history-blocked-cards">
+        {reactionImages.map((image, index) => (
+          <span key={`${image}-${index}`} className="history-blocked-card">
+            {previewImage(image, 'Neigh')}
+          </span>
+        ))}
+        <span className="history-blocked-arrow">→</span>
+        {entry.cardImage && (
+          <span className="history-blocked-card">
+            {previewImage(entry.cardImage, 'Carta bloqueada')}
+            <span className="history-blocked-symbol" aria-hidden="true">⛔</span>
+          </span>
+        )}
+      </span>
+    );
+
+    const renderStatusCard = (image: string, status: GameLogEntry['cardStatus'], alt: string) => (
+      <span className="history-status-card">
+        {previewImage(image, alt)}
+        {status && <span className={`history-status-icon ${status}`} aria-hidden="true">{status === 'sacrificed' ? '🩸' : '💥'}</span>}
+      </span>
+    );
+
+    if (entry.relatedCardImage && entry.cardImage) {
+      return (
+        <span className="history-blocked-cards">
+          {renderStatusCard(entry.cardImage, entry.cardStatus, 'Carta origen')}
+          <span className="history-blocked-arrow">→</span>
+          {renderStatusCard(entry.relatedCardImage, entry.relatedCardStatus, 'Carta destruida')}
+        </span>
+      );
+    }
+
+    if (reactionImages.length > 0 && entry.cardImage) {
+      return (
+        <>
+          {renderBlockedCards()}
+        </>
+      );
+    }
+
+    const renderText = (text: string) => {
+      if (!entry.cardImage) return text;
+      const match = text.match(/^(.*?)("[^"]+")(.*)$/);
+      if (!match) return text;
+      return (
+        <>
+          <span>{match[1]}</span>
+          <img
+            className="history-card-thumbnail"
+            src={entry.cardImage}
+            alt={match[2].slice(1, -1)}
+            onMouseEnter={(event) => showPreview(entry.cardImage!, event.clientX, event.clientY)}
+            onMouseMove={(event) => showPreview(entry.cardImage!, event.clientX, event.clientY)}
+            onMouseLeave={hidePreview}
+          />
+          <span>{match[3]}</span>
+        </>
+      );
+    };
+
     if (entry.playerName && entry.text.startsWith(entry.playerName)) {
       const color = entry.playerId
         ? playerColors.get(entry.playerId) ?? PLAYER_COLORS[0]
@@ -73,12 +148,12 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
           >
             {entry.playerName}
           </span>
-          <span>{entry.text.slice(entry.playerName.length)}</span>
+           <span>{renderText(entry.text.slice(entry.playerName.length))}</span>
         </>
       );
     }
 
-    return entry.text;
+    return renderText(entry.text);
   }
 
   const rounds = useMemo(() => {
@@ -188,8 +263,10 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
                         className={cn(
                           "text-[10px] leading-snug",
                           entry.playerId === localPlayer?.id
-                            ? "text-emerald-300/90"
-                            : "text-slate-400/90",
+                             ? "text-emerald-300/90"
+                             : "text-slate-400/90",
+                          (entry.reactionCardImage || entry.reactionCardImages?.length || entry.relatedCardImage)
+                            && "history-blocked-entry",
                         )}
                       >
                         {renderEntry(entry)}

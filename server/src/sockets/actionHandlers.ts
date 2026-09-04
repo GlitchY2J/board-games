@@ -88,6 +88,12 @@ export function registerActionHandlers(
       }
 
       let resolved = false;
+      const discardReason = game.pendingAction.type === 'discard'
+        ? game.pendingAction.reason
+        : undefined;
+      const selectedDiscardedCard = discardReason === 'unicorn_on_the_cob'
+        ? player.hand.find((card) => card.uid === cardIds[0])
+        : undefined;
 
       if (game.pendingAction.type === 'select_discard_count') {
         resolved = ActionResolver.handlePestilenceDiscardCount(
@@ -135,11 +141,21 @@ export function registerActionHandlers(
 
       continueBeginningPhaseIfReady(game);
 
-      addLog(
-        game,
-        `${player.name} descartó ${cardIds.length} carta${cardIds.length > 1 ? 's' : ''}`,
-        { playerId: player.id },
+      const discardedCard = selectedDiscardedCard ?? game.discard.find(
+        (card) => card.uid === cardIds[0],
       );
+      if (discardReason === 'unicorn_on_the_cob' && discardedCard) {
+        addLog(game, `${player.name} descartó "${discardedCard.name}"`, {
+          playerId: player.id,
+          cardImage: discardedCard.image,
+        });
+      } else {
+        addLog(
+          game,
+          `${player.name} descartó ${cardIds.length} carta${cardIds.length > 1 ? 's' : ''}`,
+          { playerId: player.id },
+        );
+      }
 
       emitGameState(io, room, 'game-updated');
     });
@@ -385,6 +401,9 @@ export function registerActionHandlers(
       if (!sourcePlayer) return;
 
       const pendingType = room.gameState.pendingAction?.type;
+      const pendingReason = room.gameState.pendingAction && 'reason' in room.gameState.pendingAction
+        ? room.gameState.pendingAction.reason
+        : undefined;
 
       const resolved = ActionResolver.handleSelectStableCard(
         room.gameState,
@@ -401,7 +420,7 @@ export function registerActionHandlers(
         }
 
         // Alluring Narwhal ya registra su propio log específico (qué carta robó).
-        if (pendingType !== 'alluring_narwhal') {
+        if (pendingType !== 'alluring_narwhal' && pendingReason !== 'shark_with_a_horn') {
           addLog(
             room.gameState,
             `${sourcePlayer.name} eligió una carta de su establo`,
@@ -1912,13 +1931,11 @@ export function registerActionHandlers(
           }
         }
 
-        addLog(
-          room.gameState,
-          choice === 'yes'
-            ? `${player.name} sacrificó a Shark With A Horn para destruir un unicornio`
-            : `${player.name} omitió el efecto de Shark With A Horn`,
-          { playerId: player.id },
-        );
+        if (choice === 'no') {
+          addLog(room.gameState, `${player.name} omitió el efecto de Shark With A Horn`, {
+            playerId: player.id,
+          });
+        }
 
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'unicorn_phoenix') {
@@ -2015,7 +2032,9 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           `${player.name} trajo ${removed.name} de la Nursery por Special Delivery y saltó su fase de acción`,
-          { playerId: player.id },
+          {
+            playerId: player.id,
+          },
         );
         // Special Delivery skips only ACTION: the normal DRAW phase still
         // happens before the turn moves to END.
@@ -2486,7 +2505,7 @@ export function registerActionHandlers(
 
         addLog(
           room.gameState,
-          `${player.name} usó a Unicorn Oracle: añadió una carta a su mano y reordenó el mazo`,
+          `${player.name} añadió una carta a su mano`,
           { playerId: player.id },
         );
 

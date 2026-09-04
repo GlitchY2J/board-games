@@ -5,7 +5,7 @@ let logSeq = 0;
 export function addLog(
   game: GameState,
   text: string,
-  opts: { playerId?: string } = {},
+  opts: { playerId?: string; cardImage?: string; reactionCardImage?: string; reactionCardImages?: string[]; relatedCardImage?: string; cardStatus?: 'sacrificed' | 'destroyed'; relatedCardStatus?: 'sacrificed' | 'destroyed' } = {},
 ): void {
   const player = opts.playerId
     ? game.players.find((p) => p.id === opts.playerId)
@@ -16,6 +16,12 @@ export function addLog(
     text,
     playerId: opts.playerId,
     playerName: player?.name,
+    cardImage: opts.cardImage,
+    reactionCardImage: opts.reactionCardImage,
+    reactionCardImages: opts.reactionCardImages,
+    relatedCardImage: opts.relatedCardImage,
+    cardStatus: opts.cardStatus,
+    relatedCardStatus: opts.relatedCardStatus,
     turn: game.turn,
     timestamp: Date.now(),
   });

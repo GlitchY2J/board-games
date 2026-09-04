@@ -2056,6 +2056,15 @@ export class ActionResolver {
 
         const [destroyed] = targetPlayer.stable.splice(idx, 1);
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
+        const sourcePlayer = state.players.find((p) => p.id === pending.sourcePlayerId);
+        const sacrificed = [...state.discard].reverse().find((card) => card.id === 'shark_with_a_horn');
+        addLog(state, `${sourcePlayer?.name ?? 'Jugador'} destruyó un unicornio`, {
+          playerId: pending.sourcePlayerId,
+          cardImage: sacrificed?.image,
+          cardStatus: 'sacrificed',
+          relatedCardImage: destroyed.image,
+          relatedCardStatus: 'destroyed',
+        });
 
         // Resolución LIFO centralizada: si la carta destruida disparó su propio
         // efecto (p. ej. Stabby The Unicorn), se mantiene activo.

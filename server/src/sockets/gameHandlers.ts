@@ -226,8 +226,14 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
     addLog(
       game,
-      `La carta "${original.card.name}" de ${original.playerName} fue bloqueada`,
-      { playerId: original.playerId },
+      `${original.playerName} recibió un Neigh sobre su carta "${original.card.name}"`,
+      {
+        playerId: original.playerId,
+        cardImage: original.card.image,
+        reactionCardImages: chain.slice(1)
+          .filter((link) => isReactionEffect(link.card.effect, explodingKittens))
+          .map((link) => link.card.image),
+      },
     );
   } else if (activePlayer) {
     if (explodingKittens) {
@@ -452,19 +458,8 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
         return;
       }
 
-      addLog(
-        game,
-        `${original.playerName} jugó carta "${original.card.name}"`,
-        { playerId: original.playerId },
-      );
     } else {
     RulesEngine.resolvePlay(game, activePlayer.id, original.card);
-
-    addLog(
-      game,
-      `${original.playerName} jugó carta "${original.card.name}"`,
-      { playerId: original.playerId },
-    );
     }
   }
 
@@ -1009,9 +1004,11 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         gamePlayer.hand.splice(cardIndex, 1);
       }
 
-      addLog(context.game, `${context.player.name} intenta jugar carta "${card.name}"`, {
+      addLog(context.game, `${context.player.name} jugó carta "${card.name}"`, {
         playerId: context.player.id,
+        cardImage: card.image,
       });
+
       emitGameState(io, context.room, 'game-updated');
       startPendingTimer(io, context.room, startedAt);
       return;
@@ -1049,7 +1046,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       addLog(
         context.game,
         `${context.player.name} jugó carta "${card.name}" (protegida por Yay)`,
-        { playerId: context.player.id },
+        { playerId: context.player.id, cardImage: card.image },
       );
 
       emitGameState(io, context.room, 'game-updated');
@@ -1073,11 +1070,10 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       ],
     };
 
-    addLog(
-      context.game,
-      `${context.player.name} intentó jugar carta "${card.name}"`,
-      { playerId: context.player.id },
-    );
+    addLog(context.game, `${context.player.name} jugó carta "${card.name}"`, {
+      playerId: context.player.id,
+      cardImage: card.image,
+    });
 
     emitGameState(io, context.room, 'game-updated');
 
@@ -1601,10 +1597,6 @@ function registerNeighAccept(io: GameServer, socket: GameSocket): void {
       pending.acceptedIds.push(player.id);
     }
 
-    addLog(game, `${player.name} aceptó la carta "${pending.card.name}"`, {
-      playerId: player.id,
-    });
-
     const othersCount = game.players.length - 1;
 
     if (pending.acceptedIds.length >= othersCount) {
@@ -1719,7 +1711,7 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
         : neighCard.effect === 'super_neigh'
           ? `${player.name} jugó un Super Neigh`
           : `${player.name} jugó un Neigh`,
-      { playerId: player.id },
+      { playerId: player.id, cardImage: neighCard.image },
     );
 
     // Super Neigh no puede ser Neigh'd: la cadena termina aquí.
