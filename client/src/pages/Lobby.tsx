@@ -278,7 +278,11 @@ export default function Lobby() {
     .every((player) => player.id === room.hostId || player.isDummy || player.isReady);
   const roomSettings = getRoomSettings();
   const selectedGame = games.find((game) => game.id === roomSettings.gameId);
-  const lobbyMaxPlayers = selectedGame?.maxPlayers ?? Number.POSITIVE_INFINITY;
+  const lobbyMaxPlayers =
+    selectedGame?.id === 'exploding-kittens' &&
+    roomSettings.expansionIds.includes('imploding_kittens')
+      ? selectedGame.maxPlayers + 1
+      : selectedGame?.maxPlayers ?? Number.POSITIVE_INFINITY;
   const lobbyRoomIsFull = connectedPlayers.filter((player) => !player.isSpectator).length >= lobbyMaxPlayers;
   const selectedVersion = selectedGame?.versions.find(
     (version) => version.id === roomSettings.versionId,
@@ -299,7 +303,7 @@ export default function Lobby() {
       selectedVersion?.available &&
       playersInGame.length === 0 &&
       availablePlayers.length >= selectedGame.minPlayers &&
-      availablePlayers.length <= selectedGame.maxPlayers,
+      availablePlayers.length <= lobbyMaxPlayers,
   );
   const hostStartControl = !selectedGame ? (
     <Button fullWidth disabled>Selecciona un juego para continuar</Button>
@@ -312,7 +316,7 @@ export default function Lobby() {
       <Loader2 className="animate-spin mr-2 inline" size={14} />
       Esperando jugadores ({availablePlayers.length}/{selectedGame.minPlayers})...
     </Button>
-  ) : availablePlayers.length > selectedGame.maxPlayers ? (
+  ) : availablePlayers.length > lobbyMaxPlayers ? (
     <Button fullWidth disabled>Demasiados jugadores para este juego</Button>
   ) : (
     <Button onClick={handleStartGame} fullWidth disabled={!canStart || !allPlayersReady}>
@@ -397,19 +401,19 @@ export default function Lobby() {
               </div>
               <div className="flex items-center justify-between gap-3 sm:justify-end">
                 <span className="rounded-full border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs font-bold text-slate-400">
-                  {availablePlayers.length} / {selectedGame?.maxPlayers ?? '—'}
+                  {availablePlayers.length} / {selectedGame ? lobbyMaxPlayers : '—'}
                 </span>
                 {canEditSettings && (
                   <button
                     type="button"
                     onClick={handleAddDummy}
-                    disabled={!selectedGame || playersInGame.length > 0 || availablePlayers.length >= selectedGame.maxPlayers}
+                    disabled={!selectedGame || playersInGame.length > 0 || availablePlayers.length >= lobbyMaxPlayers}
                     className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-200 shadow-sm transition hover:border-slate-400 hover:bg-slate-700 hover:text-white disabled:cursor-not-allowed disabled:border-slate-800 disabled:bg-slate-900 disabled:text-slate-600"
                     title={!selectedGame ? 'Selecciona un juego primero' : playersInGame.length > 0 ? 'La partida ya comenzó' : 'Agregar jugador dummy'}
                   >
                     <Plus size={13} />
                     <Bot size={13} />
-                    {selectedGame && availablePlayers.length >= selectedGame.maxPlayers && (
+                    {selectedGame && availablePlayers.length >= lobbyMaxPlayers && (
                       <span className="sr-only">Sala llena</span>
                     )}
                   </button>
@@ -601,7 +605,11 @@ export default function Lobby() {
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-slate-950/20" />
                               <span className="absolute left-4 bottom-3 text-[10px] font-bold text-white">
-                                {game.minPlayers}-{game.maxPlayers} jugadores
+                                 {game.minPlayers}-{game.id === 'exploding-kittens' &&
+                                 game.id === selectedGame?.id &&
+                                 roomSettings.expansionIds.includes('imploding_kittens')
+                                   ? game.maxPlayers + 1
+                                   : game.maxPlayers} jugadores
                               </span>
                             </>
                           ) : (

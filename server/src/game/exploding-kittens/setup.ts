@@ -245,7 +245,9 @@ function resetPlayer(player: Player): Player {
 }
 
 export function createExplodingKittensState(room: Room): GameState {
-  const allCards = createCards(room.expansions?.includes('imploding_kittens'));
+  const expansions = room.settings?.expansionIds ?? room.expansions ?? [];
+  const hasImplodingKittens = expansions.includes('imploding_kittens');
+  const allCards = createCards(hasImplodingKittens);
   const kittens = allCards.filter((card) => card.id === 'exploding_kitten');
   const implodingKittens = allCards.filter((card) => card.id === 'imploding_kitten');
   const defuses = allCards.filter((card) => card.id === 'defuse');
@@ -273,8 +275,13 @@ export function createExplodingKittensState(room: Room): GameState {
 
    deck.drawPile.push(
       ...defuseDeck.drawPile,
-      ...kittens.slice(0, Math.max(0, players.length - 1)),
-      ...implodingKittens,
+       ...kittens.slice(
+         0,
+         hasImplodingKittens
+           ? Math.max(1, players.length - 2)
+           : Math.max(0, players.length - 1),
+       ),
+       ...(hasImplodingKittens ? implodingKittens : []),
    );
   deck.shuffle();
 

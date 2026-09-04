@@ -21,6 +21,7 @@ import { enqueueNeighAnimation, enqueueDrawAnimation, enqueueDiscardAnimation, e
 import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
+import { getRoomMaxPlayers } from '../roomCapacity.ts';
 import { advanceTurnAfterDraw, beginExplodingKittenResolution, beginImplodingKittenResolution, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack, startTargetedAttack } from '../game/exploding-kittens/turn.ts';
 
 const NEIGH_WINDOW_MS = 5000;
@@ -701,11 +702,12 @@ function validateRoomConfiguration(
     return false;
   }
 
-  if (connectedPlayers > game.maxPlayers) {
+   const maxPlayers = getRoomMaxPlayers(room) ?? game.maxPlayers;
+   if (connectedPlayers > maxPlayers) {
     emitGameError(
       socket,
       'TOO_MANY_PLAYERS',
-      `Este juego permite como máximo ${game.maxPlayers} jugadores.`,
+       `Este juego permite como máximo ${maxPlayers} jugadores.`,
       action,
     );
     return false;
