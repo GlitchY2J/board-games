@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import PlayingCard from '../card/PlayingCard';
 import type { GameState } from '../../types/GameState';
@@ -15,6 +15,17 @@ export default function DiscardViewer({ gameState, onClose, gameId }: Props) {
   const [activeFilter, setActiveFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const isExplodingKittens = gameId === 'exploding-kittens';
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [onClose]);
 
   const cards = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();

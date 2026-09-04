@@ -1,6 +1,6 @@
 import PlayingCard from '../card/PlayingCard';
 import type { GameState } from '../../types/GameState';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Deck from './Deck';
 import DiscardViewer from './DiscardViewer';
 
@@ -19,6 +19,19 @@ export default function CenterArea({
 }: Props) {
   const discardTop = gameState.discard[gameState.discard.length - 1];
   const [showDiscard, setShowDiscard] = useState(false);
+
+  useEffect(() => {
+    const onDiscardShortcut = (event: KeyboardEvent) => {
+      if (event.isComposing || event.key.toLowerCase() !== 'd') return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(event.target.tagName)) return;
+      if (!discardTop) return;
+      if (document.querySelector('.overlay-backdrop, .pending-play-backdrop, .controls-overlay-backdrop, .platform-options-backdrop, .leave-confirm-backdrop')) return;
+      event.preventDefault();
+      setShowDiscard(true);
+    };
+    window.addEventListener('keydown', onDiscardShortcut);
+    return () => window.removeEventListener('keydown', onDiscardShortcut);
+  }, [discardTop]);
 
   return (
     <>
