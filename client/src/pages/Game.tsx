@@ -127,7 +127,7 @@ export default function Game() {
     if (gameState?.pendingPlay || !playCardSoundPendingRef.current) return;
     playCardSoundPendingRef.current = false;
     const sound = new Audio('/sounds/play-card.ogg');
-    sound.volume = 0.7;
+    sound.volume = 0.3;
     sound.play().catch(() => {});
   }, [gameState?.pendingPlay]);
 
@@ -264,7 +264,7 @@ export default function Game() {
     const onDrawAnimations = (animations: DrawAnimation[]) => {
       if (animations.length > 0) {
         const sound = new Audio('/sounds/draw-card.ogg');
-        sound.volume = 0.7;
+        sound.volume = 0.3;
         sound.play().catch(() => {
           // El navegador puede bloquear audio hasta que exista interacción.
         });
@@ -276,7 +276,7 @@ export default function Game() {
     const onStealAnimations = (animations: StealAnimation[]) => {
       if (animations.length > 0) {
         const sound = new Audio('/sounds/move-card.ogg');
-        sound.volume = 0.7;
+        sound.volume = 0.3;
         sound.play().catch(() => {});
         activeAnimationsCountRef.current += animations.length;
         setStealAnims((prev) => [...prev, ...animations]);
@@ -286,7 +286,7 @@ export default function Game() {
     const onDiscardAnimations = (animations: DiscardAnimation[]) => {
       if (animations.length > 0) {
         const sound = new Audio('/sounds/discard-card.ogg');
-        sound.volume = 0.7;
+        sound.volume = 0.3;
         sound.play().catch(() => {});
         activeAnimationsCountRef.current += animations.length;
         setDiscardAnims((prev) => [...prev, ...animations]);

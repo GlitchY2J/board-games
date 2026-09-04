@@ -1,4 +1,6 @@
 import { useCardPreview } from '../../context/useCardPreview';
+import { playCardHoverSound } from '../../lib/cardHoverSound';
+import { playCardClickSound } from '../../lib/cardClickSound';
 import './PlayingCard.css';
 
 interface Props {
@@ -32,6 +34,7 @@ export default function PlayingCard({
   const shouldShowPreview = preview && !isCardBack && !!image;
 
   function handleMouseEnter(e: React.MouseEvent<HTMLDivElement>) {
+    playCardHoverSound();
     if (!shouldShowPreview) return;
     showPreview(image, e.clientX, e.clientY);
   }
@@ -41,13 +44,18 @@ export default function PlayingCard({
     showPreview(image, e.clientX, e.clientY);
   }
 
+  function handleClick() {
+    playCardClickSound();
+    onClick?.();
+  }
+
   return (
     <div
       className={`playing-card ${size} ${isCardBack ? 'card-back' : ''} ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''} ${plain ? 'plain' : ''}`}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={hidePreview}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled ? undefined : handleClick}
     >
       <img
          src={isCardBack ? backImage : image}

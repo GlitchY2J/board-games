@@ -19,7 +19,7 @@ export default function CardDrawEffect({ animation, localPlayerId, gameId, durat
   useEffect(() => {
     if (!playSound) return;
     const sound = new Audio('/sounds/draw-card.ogg');
-    sound.volume = 0.7;
+    sound.volume = 0.3;
     sound.play().catch(() => {});
   }, [playSound]);
 

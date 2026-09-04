@@ -13,6 +13,9 @@ import { useGame } from './context/useGame';
 import CardPreview from './components/card/CardPreview';
 import GameErrorToast from './components/game/GameErrorToast';
 import { Loader2 } from 'lucide-react';
+import { playButtonSound } from './lib/buttonSounds';
+import { playChatMessageSound } from './lib/chatMessageSound';
+import { socket } from './services/socket';
 
 export default function App() {
   const { status, room, gameState } = useGame();
@@ -22,6 +25,13 @@ export default function App() {
   useEffect(() => {
     const theme = localStorage.getItem('platform-theme') ?? 'classic';
     document.documentElement.dataset.platformTheme = theme;
+  }, []);
+
+  useEffect(() => {
+    socket.on('chat-message', playChatMessageSound);
+    return () => {
+      socket.off('chat-message', playChatMessageSound);
+    };
   }, []);
 
   useEffect(() => {
@@ -48,6 +58,39 @@ export default function App() {
       navigate('/', { replace: true });
     }
   }, [status, gameState, room, location.pathname, navigate]);
+
+  useEffect(() => {
+    const onButtonClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const button = target.closest('button');
+      const clickedBackdrop = target.matches(
+        '.overlay-backdrop, .platform-options-backdrop, .controls-overlay-backdrop, .leave-confirm-backdrop',
+      );
+      if (clickedBackdrop) {
+        playButtonSound('cancel');
+        return;
+      }
+      if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+      const isCancel = button.matches(
+        '.cancel-button, .card-select-cancel, .leave-confirm-cancel, .platform-options-cancel',
+      ) || button.matches(
+        '.game-menu-toggle[aria-expanded="true"], [aria-label^="Cerrar"], [title^="Cerrar"], .discard-close, .platform-options-close, .controls-overlay-close',
+      );
+      playButtonSound(isCancel ? 'cancel' : 'confirm');
+    };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.isComposing) return;
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      playButtonSound('cancel');
+    };
+    document.addEventListener('click', onButtonClick, true);
+    document.addEventListener('keydown', onEscape, true);
+    return () => {
+      document.removeEventListener('click', onButtonClick, true);
+      document.removeEventListener('keydown', onEscape, true);
+    };
+  }, []);
 
   if (status === 'loading') {
     return (

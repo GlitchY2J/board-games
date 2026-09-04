@@ -4,6 +4,7 @@ import PlayingCard from '../card/PlayingCard';
 import type { GameState } from '../../types/GameState';
 import { socket } from '../../services/socket';
 import './PendingPlayOverlay.css';
+import { playPendingPlaySound } from '../../lib/pendingPlaySound';
 
 interface Props {
   gameState: GameState;
@@ -23,6 +24,10 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     pending?.card.effect === 'attack' ||
     pending?.card.effect === 'nope';
   const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (pending) playPendingPlaySound();
+  }, [pending?.startedAt]);
 
   useEffect(() => {
     if (!pending) return;

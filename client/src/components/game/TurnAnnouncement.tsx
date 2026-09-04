@@ -1,5 +1,7 @@
 import './TurnAnnouncement.css';
 import { cn } from '../../lib/cn';
+import { useEffect } from 'react';
+import { playTurnStartSound } from '../../lib/turnStartSound';
 
 interface Props {
   playerName: string;
@@ -7,6 +9,10 @@ interface Props {
 }
 
 export default function TurnAnnouncement({ playerName, isActivePlayer }: Props) {
+  useEffect(() => {
+    playTurnStartSound();
+  }, []);
+
   return (
     <>
       <div className="turn-announcement-backdrop" />

@@ -315,6 +315,7 @@ export default function CardFan({
 
   function selectCard(cardId: string) {
     hidePreview();
+    setKeyboardCardIndex(null);
     setSelectedCardId((prev) => (prev === cardId ? null : cardId));
   }
 
@@ -323,6 +324,7 @@ export default function CardFan({
       <div className="card-fan-wrap">
         <div
           ref={fanRef}
+          onMouseLeave={() => setKeyboardCardIndex(null)}
           className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}${cards.length > 10 ? ' card-fan-many' : ''}`}
           style={{
             '--hand-card-width': `${cardWidth}px`,
