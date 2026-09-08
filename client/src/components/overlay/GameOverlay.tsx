@@ -366,7 +366,8 @@ export default function GameOverlay({
          const isFavor = action.reason === 'favor';
         const isUnicornPoison = action.reason === 'unicorn_poison';
         const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
-        const isPlayDowngrade = action.reason === 'play_downgrade';
+         const isPlayDowngrade = action.reason === 'play_downgrade';
+         const isPlayfulPuppet = action.reason === 'playful_puppet_unicorn';
         const isMermaid = action.reason === 'mermaid_unicorn';
         const isUnfairBargain = action.reason === 'unfair_bargain';
          const isUnicornSwap = action.reason === 'unicorn_swap';
@@ -385,7 +386,8 @@ export default function GameOverlay({
           isUnfairBargain;
 
         const eligiblePlayers = gameState.players.filter((p) => {
-          if (isPlayDowngrade) return true;
+           if (isPlayDowngrade) return true;
+           if (isPlayfulPuppet) return p.id !== localPlayerId;
           if (isReTargetDestination) {
             // No puede moverse al propio establo ni al jugador de origen
             return p.id !== localPlayerId && p.id !== action.fromPlayerId;
@@ -440,7 +442,8 @@ export default function GameOverlay({
             if (isTargetedAttack) return '🎯 Targeted Attack';
           if (isUnicornPoison) return '🧪 Unicorn Poison';
           if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
-          if (isPlayDowngrade) return '⏬ Jugar Downgrade';
+           if (isPlayDowngrade) return '⏬ Jugar Downgrade';
+           if (isPlayfulPuppet) return '🪆 Playful Puppet Unicorn';
           if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
           if (isUnfairBargain) return '🤝 Unfair Bargain';
            if (isUnicornSwap) return '🦄 Unicorn Swap';
@@ -470,8 +473,10 @@ export default function GameOverlay({
             return 'Elige a un jugador para destruir uno de sus unicornios';
           if (isAnnoyingFlying)
             return 'Elige a un jugador para forzarlo a descartar una carta';
-          if (isPlayDowngrade)
-            return 'Elige en qué establo deseas colocar esta carta de Downgrade';
+           if (isPlayDowngrade)
+             return 'Elige en qué establo deseas colocar esta carta de Downgrade';
+           if (isPlayfulPuppet)
+             return 'Elige otro jugador para recibir un Downgrade de tu establo';
           if (isMermaid)
             return 'Elige a un jugador para devolver una carta de su establo a su mano';
           if (isUnfairBargain)
@@ -915,6 +920,40 @@ export default function GameOverlay({
               items={items}
               maxSelection={1}
               confirmText="Retirar de la partida"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'playful_puppet_unicorn_move') {
+          const source = gameState.players.find((p) => p.id === localPlayerId);
+          if (!source) return null;
+
+          const items = source.downgrades.map((card, index) => ({
+            id: `${card.id}_downgrade_${index}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: 'Downgrade de tu establo',
+            image: card.image,
+          }));
+          const target = gameState.players.find(
+            (p) => p.id === action.targetPlayerId,
+          );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🪆 Playful Puppet Unicorn"
+              subtitle={`Elige un Downgrade para moverlo al establo de ${target?.name ?? 'otro jugador'}.`}
+              items={items}
+              maxSelection={1}
+              confirmText="Mover Downgrade"
               onConfirm={([cardId]) => {
                 dismiss();
                 socket.emit('select-stable-card', {

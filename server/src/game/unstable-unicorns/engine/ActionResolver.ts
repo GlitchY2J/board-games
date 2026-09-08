@@ -437,6 +437,20 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'playful_puppet_unicorn') {
+      if (targetPlayerId === sourcePlayerId) return false;
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!sourcePlayer || sourcePlayer.downgrades.length === 0) return false;
+
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 'playful_puppet_unicorn_move',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
     if (pending.reason === 'unfair_bargain') {
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
       if (!sourcePlayer) return false;
@@ -1799,6 +1813,25 @@ export class ActionResolver {
             remainingPlayerIds: nextTargets,
           }
         : undefined;
+      return true;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'playful_puppet_unicorn_move'
+    ) {
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      const targetPlayer = state.players.find((p) => p.id === pending.targetPlayerId);
+      if (!sourcePlayer || !targetPlayer || sourcePlayerId === targetPlayer.id) {
+        return false;
+      }
+
+      const index = sourcePlayer.downgrades.findIndex((card) => card.uid === cardId);
+      if (index === -1) return false;
+
+      const [downgrade] = sourcePlayer.downgrades.splice(index, 1);
+      targetPlayer.downgrades.push(downgrade);
+      state.pendingAction = undefined;
       return true;
     }
 

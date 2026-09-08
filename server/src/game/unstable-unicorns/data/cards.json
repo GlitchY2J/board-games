@@ -1431,8 +1431,8 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/unstable-unicorns/nightmares/playful_puppet_unicorn.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "When this card enters your Stable, you may move a Downgrade card from your Stable to another player's Stable.",
+    "effect": "playful_puppet_unicorn",
     "copies": 1,
     "expansion": "nightmares"
   },

@@ -1058,6 +1058,24 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'playful_puppet_unicorn') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_player',
+            reason: 'playful_puppet_unicorn',
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'
