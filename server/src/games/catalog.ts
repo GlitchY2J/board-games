@@ -28,6 +28,15 @@ export const unstableUnicorns: GameDefinition = {
       versionIds: ['unstable-unicorns-base'],
       available: true,
     },
+    {
+      id: 'nightmares',
+      gameId: 'unstable-unicorns',
+      name: 'Nightmares',
+      description: 'Expansión de Unstable Unicorns actualmente en desarrollo.',
+      versionIds: ['unstable-unicorns-base'],
+      available: true,
+      inProgress: true,
+    },
   ],
 };
 

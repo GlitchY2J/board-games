@@ -751,29 +751,36 @@ export default function Lobby() {
                           <button
                             key={expansion.id}
                             type="button"
-                            disabled={!canEditSettings}
+                             disabled={!canEditSettings}
                             onClick={() => handleToggleExpansion(expansion.id)}
                             className={`w-full flex items-center justify-between gap-4 rounded-2xl border text-left transition-all ${
                               active ? 'lobby-expansion-card-selected' : ''
                             } ${
-                               (expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens') ? 'relative h-40 w-full max-w-[100px] overflow-hidden p-0' : 'p-4'
+                               (expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' || expansion.id === 'nightmares') ? 'relative h-40 w-full max-w-[100px] overflow-hidden p-0' : 'p-4'
                             } ${
                               active
                                 ? 'bg-amber-500/10 border-amber-500/40'
                                 : 'bg-slate-900/30 border-slate-800/40'
-                            } ${canEditSettings ? 'cursor-pointer hover:border-amber-400/40' : 'cursor-default'}`}
+                             } ${canEditSettings ? 'cursor-pointer hover:border-amber-400/40' : 'cursor-default'}`}
                           >
-                            {expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' ? (
+                             {expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' || expansion.id === 'nightmares' ? (
                               <>
                                  <img
-                                   src={expansion.id === 'rainbow_apocalypse'
-                                     ? '/covers/unstable-unicorns/expansions/rainbow-apocalypse.jpeg'
-                                     : '/covers/exploding-kittens/expansions/imploding-kittens.jpeg'}
+                                    src={expansion.id === 'rainbow_apocalypse'
+                                      ? '/covers/unstable-unicorns/expansions/rainbow-apocalypse.jpeg'
+                                      : expansion.id === 'nightmares'
+                                        ? '/covers/unstable-unicorns/expansions/nightmares.jpeg'
+                                        : '/covers/exploding-kittens/expansions/imploding-kittens.jpeg'}
                                    alt={`Portada de ${expansion.name}`}
                                    className="lobby-expansion-cover absolute inset-0 h-full w-full object-cover"
                                  />
-                                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-transparent to-slate-950/35" />
-                               </>
+                                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-transparent to-slate-950/35" />
+                                  {expansion.inProgress && (
+                                    <span className="absolute left-2 top-2 rounded-full bg-amber-500/90 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-slate-950 shadow-lg">
+                                      En progreso
+                                    </span>
+                                  )}
+                                </>
                             ) : (
                               <>
                                 <span>

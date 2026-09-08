@@ -17,6 +17,7 @@ export interface ExpansionDefinition {
   description: string;
   versionIds?: VersionId[];
   available: boolean;
+  inProgress?: boolean;
 }
 
 export interface GameDefinition {
