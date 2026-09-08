@@ -12,7 +12,10 @@ import {
 } from '../../cards/effects/barbedWire.ts';
 import { isEffectBlockedByBlindingLight } from '../../cards/effects/blindingLight.ts';
 import { hasBlindingLight } from '../../cards/effects/blindingLight.ts';
-import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
+import {
+  isImmuneToDestruction,
+  isImmuneToSacrifice,
+} from '../../cards/effects/theTiniestUnicorn.ts';
 
 export function hasUpgrade(player: Player, id: string): boolean {
   return player.upgrades.some((c) => c.id === id);
@@ -150,9 +153,8 @@ export class CardMovement {
     pandamoniumApplies = true,
   ): boolean {
     if (
-      animType !== 'sacrifice' &&
-      card.id !== 'the_tiniest_unicorn' &&
-      isImmuneToDestruction(card.id)
+      (animType === 'sacrifice' && isImmuneToSacrifice(card.id)) ||
+      (animType !== 'sacrifice' && isImmuneToDestruction(card.id))
     ) {
       if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
         player.stable.push(card);

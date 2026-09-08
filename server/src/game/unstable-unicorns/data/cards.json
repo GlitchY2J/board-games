@@ -1420,8 +1420,8 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/unstable-unicorns/nightmares/phantom_unicorn.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "This card cannot be sacrificed or destroyed.",
+    "effect": "phantom_unicorn",
     "copies": 1,
     "expansion": "nightmares"
   },
