@@ -1058,6 +1058,67 @@ export function registerActionHandlers(
         return;
       }
 
+      if (
+        pending.reason === 'jack_the_reapercorn' ||
+        pending.reason === 'jack_the_reapercorn_second'
+      ) {
+        if (choice === 'yes') {
+          if (pending.reason === 'jack_the_reapercorn_second') {
+            const revealed = player.hand.find(
+              (card) => card.uid === pending.targetCardId,
+            );
+            if (revealed) {
+              addLog(
+                room.gameState,
+                `${player.name} reveló ${revealed.name}, una carta Neigh, por Jack the Reapercorn`,
+                { playerId: player.id, cardImage: revealed.image },
+              );
+            }
+          }
+          const drawn = room.gameState.deck.shift();
+          if (drawn) {
+            enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
+            player.hand.push(drawn);
+
+            const isNeigh =
+              drawn.effect === 'neigh' ||
+              drawn.effect === 'super_neigh' ||
+              drawn.effect === 'neigh_thank_you';
+
+            if (
+              pending.reason === 'jack_the_reapercorn' &&
+              isNeigh &&
+              room.gameState.deck.length > 0
+            ) {
+              room.gameState.pendingAction = {
+                type: 'select_choice',
+                reason: 'jack_the_reapercorn_second',
+                playerId: player.id,
+                targetCardId: drawn.uid,
+                title: '💀 Jack the Reapercorn',
+                description: 'La carta robada es un Neigh. ¿Deseas REVELARLA y ROBAR una segunda carta?',
+                options: [
+                  { value: 'yes', text: 'Sí, robar otra carta' },
+                  { value: 'no', text: 'No, terminar efecto' },
+                ],
+              };
+            }
+          }
+        }
+
+        if (
+          !room.gameState.pendingAction ||
+          room.gameState.pendingAction === pending
+        ) {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (pending.reason === 'clairvoyant_unicorn') {
         if (choice === 'yes') {
           const drawn = room.gameState.deck.shift();

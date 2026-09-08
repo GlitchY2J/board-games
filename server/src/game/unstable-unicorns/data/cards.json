@@ -1409,8 +1409,8 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/unstable-unicorns/nightmares/jack_the_reapercorn.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "When this card enters your Stable, you may DRAW a card. If that card is a Neigh card, you may reveal it and draw a second card.",
+    "effect": "jack_the_reapercorn",
     "copies": 1,
     "expansion": "nightmares"
   },

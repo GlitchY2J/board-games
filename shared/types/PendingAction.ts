@@ -202,6 +202,8 @@ export type PendingAction =
          | "clairvoyant_unicorn"
          | "dancing_clownicorn"
          | "demonicorn"
+         | "jack_the_reapercorn"
+         | "jack_the_reapercorn_second"
         | "classy_narwhal"
         | "the_great_narwhal"
         | "dark_angel_unicorn"
