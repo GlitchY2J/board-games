@@ -7,6 +7,7 @@ import { TurnPhase } from '../game/turn/TurnPhase.ts';
 import { emitGameError, getSocketGameContext } from './socketContext.ts';
 import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
+import { isPandamoniumProtected } from '../game/cards/effects/pandamonium.ts';
 import { roomManager } from '../roomManagerInstance.ts';
 import type { Room } from '../game/models/Room.ts';
 import { GameState } from '../game/models/GameState.ts';
@@ -1016,6 +1017,23 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'clairvoyant_unicorn') {
+        if (choice === 'yes') {
+          const drawn = room.gameState.deck.shift();
+          if (drawn) {
+            enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
+            player.hand.push(drawn);
+          }
+        }
+
+        room.gameState.pendingAction = undefined;
+        if (room.gameState.phase === TurnPhase.BEGINNING) {
+          TurnManager.processBeginningQueue(room.gameState);
+        }
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (pending.reason === 'neigh_thank_you') {
         if (choice === 'yes') {
           const drawn = room.gameState.deck.shift();
@@ -1561,6 +1579,39 @@ export function registerActionHandlers(
             : `${player.name} omitió el efecto de Rainbow Unicorn`,
           { playerId: player.id },
         );
+
+        emitGameState(io, room, 'game-updated');
+      } else if (pending.reason === 'chainsaw_massicorn') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = undefined;
+          const drawCount = player.stable.filter(
+            (card) =>
+              card.cardType === 'unicorn' &&
+              card.unicornClass === 'basic' &&
+              !isPandamoniumProtected(player, card),
+          ).length;
+          let drawnCount = 0;
+          for (let i = 0; i < drawCount; i += 1) {
+            const drawn = room.gameState.deck.shift();
+            if (!drawn) break;
+            enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
+            player.hand.push(drawn);
+            drawnCount += 1;
+          }
+          if (drawnCount > 0) {
+            addLog(room.gameState, `${player.name} robó ${drawnCount} carta${drawnCount === 1 ? '' : 's'} por Chainsaw Massicorn`, {
+              playerId: player.id,
+            });
+          }
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
 
         emitGameState(io, room, 'game-updated');
       } else if (pending.reason === 'rhinocorn') {

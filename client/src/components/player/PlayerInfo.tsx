@@ -59,10 +59,11 @@ export default function PlayerInfo({
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const displayedHandCount = handCount ?? player.hand.length;
 
-  const hasNannyCam =
-    player.downgrades.some((c) => c.id === 'nanny_cam') ?? false;
+  const revealsHand =
+    player.downgrades.some((c) => c.id === 'nanny_cam') ||
+    player.stable.some((c) => c.id === 'clairvoyant_unicorn');
   const canView =
-    hasNannyCam && localPlayerId !== undefined && localPlayerId !== player.id;
+    revealsHand && localPlayerId !== undefined && localPlayerId !== player.id;
   const showStablePower = gameId !== 'exploding-kittens';
   const showTurns = gameId === 'exploding-kittens';
   const displayedTurns = showTurns && isActive ? Math.max(1, turnsRemaining) : 0;

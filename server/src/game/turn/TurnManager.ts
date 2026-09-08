@@ -112,6 +112,12 @@ export class TurnManager {
       uids.push(...sprinkles.map((c) => c.uid));
     }
 
+    // Clairvoyant Unicorn: efecto opcional de robar una carta al comenzar el turno.
+    const clairvoyant = allCards.filter((c) => c.id === 'clairvoyant_unicorn');
+    if (clairvoyant.length > 0) {
+      uids.push(...clairvoyant.map((c) => c.uid));
+    }
+
     const specialDelivery = allCards.filter((c) => c.id === 'special_delivery');
     if (
       specialDelivery.length > 0 &&
@@ -225,6 +231,20 @@ export class TurnManager {
             '¿Deseas SACRIFICAR una carta para luego ROBAR 2 cartas?',
           options: [
             { value: 'yes', text: 'Sí, sacrificar y robar 2' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'clairvoyant_unicorn':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'clairvoyant_unicorn',
+          playerId: activePlayer.id,
+          title: '🔮 Clairvoyant Unicorn',
+          description: 'Tu mano es visible para todos. ¿Deseas ROBAR una carta?',
+          options: [
+            { value: 'yes', text: 'Sí, robar una carta' },
             { value: 'no', text: 'No, omitir el efecto' },
           ],
           effectCardId: uid,

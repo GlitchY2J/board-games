@@ -41,7 +41,8 @@ function canViewerSeeTargetHand(
     game.players.some(
       (p) =>
         p.id === targetPlayerId &&
-        p.downgrades.some((c) => c.id === 'nanny_cam'),
+        (p.downgrades.some((c) => c.id === 'nanny_cam') ||
+          p.stable.some((c) => c.id === 'clairvoyant_unicorn')),
     )
   ) {
     return true;
