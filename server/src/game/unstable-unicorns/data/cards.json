@@ -1442,8 +1442,8 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/unstable-unicorns/nightmares/sweet_old_ladycorn.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "This card counts for 2 Unicorns. If this card is sacrificed or destroyed, sacrifice a card.",
+    "effect": "sweet_old_ladycorn",
     "copies": 1,
     "expansion": "nightmares"
   },

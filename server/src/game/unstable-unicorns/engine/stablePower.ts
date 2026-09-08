@@ -6,6 +6,10 @@ export function getStablePower(player: Player): number {
   // en el establo cuenta como un unicornio básico (1), no como 2.
   const ginormousCountsDouble = !hasBlindingLight(player);
   return player.stable.reduce((total, card) => {
-    return total + (card.id === 'ginormous_unicorn' && ginormousCountsDouble ? 2 : 1);
+    return total +
+      ((card.id === 'ginormous_unicorn' && ginormousCountsDouble) ||
+      card.id === 'sweet_old_ladycorn'
+        ? 2
+        : 1);
   }, 0);
 }

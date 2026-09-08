@@ -931,6 +931,43 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'sweet_old_ladycorn_sacrifice') {
+          const source = gameState.players.find((p) => p.id === localPlayerId);
+          if (!source) return null;
+
+          const items = [
+            ...source.stable,
+            ...source.upgrades,
+            ...source.downgrades,
+          ]
+            .filter((card) => card.id !== 'phantom_unicorn')
+            .map((card, index) => ({
+              id: `${card.id}_sacrifice_${index}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Carta de tu establo',
+              image: card.image,
+            }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="👵 Sweet Old Ladycorn"
+              subtitle="Debes SACRIFICAR una carta."
+              items={items}
+              maxSelection={1}
+              confirmText="Sacrificar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'playful_puppet_unicorn_move') {
           const source = gameState.players.find((p) => p.id === localPlayerId);
           if (!source) return null;

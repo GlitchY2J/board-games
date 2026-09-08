@@ -1818,6 +1818,31 @@ export class ActionResolver {
 
     if (
       pending.type === 'select_stable_card' &&
+      pending.reason === 'sweet_old_ladycorn_sacrifice'
+    ) {
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const zones = ['stable', 'upgrades', 'downgrades'] as const;
+      for (const zone of zones) {
+        const index = player[zone].findIndex((card) => card.uid === cardId);
+        if (index === -1) continue;
+
+        const [sacrificed] = player[zone].splice(index, 1);
+        const previousPending = state.pendingAction;
+        CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+        if (state.pendingAction === previousPending) {
+          state.pendingAction = undefined;
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
       pending.reason === 'playful_puppet_unicorn_move'
     ) {
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
