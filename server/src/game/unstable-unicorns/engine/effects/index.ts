@@ -9,6 +9,8 @@ import { unicornPoison } from '../../../cards/effects/unicornPoison.ts';
 import { annoyingFlyingUnicorn } from '../../../cards/effects/annoyingFlyingUnicorn.ts';
 import { chainsawUnicorn } from '../../../cards/effects/chainsawUnicorn.ts';
 import { chainsawMassicorn } from '../../../cards/effects/chainsawMassicorn.ts';
+import { dancingClownicorn } from '../../../cards/effects/dancingClownicorn.ts';
+import { demonicorn } from '../../../cards/effects/demonicorn.ts';
 import { classyNarwhal } from '../../../cards/effects/classyNarwhal.ts';
 import { greedyFlyingUnicorn } from '../../../cards/effects/greedyFlyingUnicorn.ts';
 import { llamacorn } from '../../../cards/effects/llamacorn.ts';
@@ -105,6 +107,8 @@ export const effects: Record<string, CardEffect> = {
   annoying_flying_unicorn: annoyingFlyingUnicorn,
   chainsaw_unicorn: chainsawUnicorn,
   chainsaw_massicorn: chainsawMassicorn,
+  dancing_clownicorn: dancingClownicorn,
+  demonicorn,
   classy_narwhal: classyNarwhal,
   greedy_flying_unicorn: greedyFlyingUnicorn,
   llamacorn: llamacorn,

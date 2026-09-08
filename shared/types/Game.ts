@@ -80,6 +80,8 @@ export interface GameState {
   deck: Card[];
   nursery: Card[];
   discard: Card[];
+  /** Cartas retiradas definitivamente de la partida por efectos de Nightmares. */
+  removedCards?: Card[];
   phase: TurnPhase;
   pendingAction?: PendingAction;
   pendingPlay?: PendingPlay;

@@ -255,6 +255,22 @@ export class ActionResolver {
       return true;
     }
 
+    if (reason === 'dancing_clownicorn') {
+      const remainingPlayerIds = state.players
+        .filter((candidate) => candidate.id !== playerId && candidate.stable.length > 0)
+        .map((candidate) => candidate.id);
+
+      if (remainingPlayerIds.length > 0) {
+        state.pendingAction = {
+          type: 'select_stable_card',
+          reason: 'dancing_clownicorn',
+          sourcePlayerId: playerId,
+          remainingPlayerIds,
+        };
+      }
+      return true;
+    }
+
     if (reason === 'extremely_fertile_unicorn') {
       if (
         state.nursery.some(
@@ -1756,6 +1772,61 @@ export class ActionResolver {
         { playerId: sourcePlayer.id },
       );
       return true;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'dancing_clownicorn'
+    ) {
+      const [targetPlayerId, ...rest] = pending.remainingPlayerIds ?? [];
+      const targetPlayer = state.players.find((p) => p.id === targetPlayerId);
+      if (!targetPlayer) return false;
+
+      const index = targetPlayer.stable.findIndex((card) => card.uid === cardId);
+      if (index === -1) return false;
+
+      const [returned] = targetPlayer.stable.splice(index, 1);
+      CardMovement.returnToHand(state, targetPlayer, returned);
+
+      const nextTargets = rest.filter((id) =>
+        state.players.some((candidate) => candidate.id === id && candidate.stable.length > 0),
+      );
+      state.pendingAction = nextTargets.length > 0
+        ? {
+            type: 'select_stable_card',
+            reason: 'dancing_clownicorn',
+            sourcePlayerId,
+            remainingPlayerIds: nextTargets,
+          }
+        : undefined;
+      return true;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'demonicorn_remove'
+    ) {
+      const targetIds = pending.remainingPlayerIds ?? [];
+      if (!targetIds.includes(sourcePlayerId)) return false;
+
+      for (const targetPlayer of state.players) {
+        const index = targetPlayer.stable.findIndex((card) => card.uid === cardId);
+        if (index === -1) continue;
+
+        const [removed] = targetPlayer.stable.splice(index, 1);
+        maybeTriggerBarbedWireLeave(state, targetPlayer);
+        state.removedCards ??= [];
+        state.removedCards.push(removed);
+        state.pendingAction = undefined;
+        addLog(
+          state,
+          `${state.players.find((p) => p.id === sourcePlayerId)?.name ?? 'Un jugador'} retiró ${removed.name} de la partida por Demonicorn`,
+          { playerId: sourcePlayerId },
+        );
+        return true;
+      }
+
+      return false;
     }
 
     // ──────────────────────────────────────────

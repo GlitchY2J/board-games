@@ -1017,6 +1017,47 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'dancing_clownicorn') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'discard',
+            reason: 'dancing_clownicorn',
+            playerId: player.id,
+            cardsToDiscard: 2,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'demonicorn') {
+        if (choice === 'yes') {
+          const remainingPlayerIds = room.gameState.players
+            .filter((candidate) => candidate.stable.length > 0)
+            .map((candidate) => candidate.id);
+
+          room.gameState.pendingAction = remainingPlayerIds.length > 0
+            ? {
+                type: 'select_stable_card',
+                reason: 'demonicorn_remove',
+                sourcePlayerId: player.id,
+                remainingPlayerIds,
+              }
+            : undefined;
+        } else {
+          room.gameState.pendingAction = undefined;
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (pending.reason === 'clairvoyant_unicorn') {
         if (choice === 'yes') {
           const drawn = room.gameState.deck.shift();

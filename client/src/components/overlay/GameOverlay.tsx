@@ -862,6 +862,70 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'dancing_clownicorn') {
+          const targetId = action.remainingPlayerIds?.[0];
+          const target = gameState.players.find((p) => p.id === targetId);
+          if (!target) return null;
+
+          const items = target.stable.map((card, index) => ({
+            id: `${card.id}_${target.id}_${index}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: `Establo de ${target.name}`,
+            image: card.image,
+          }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🤡 Dancing Clownicorn"
+              subtitle={`Elige una carta del establo de ${target.name} para devolverla a su mano.`}
+              items={items}
+              maxSelection={1}
+              confirmText="Devolver a la mano"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'demonicorn_remove') {
+          const items = gameState.players
+            .filter((p) => action.remainingPlayerIds?.includes(p.id))
+            .flatMap((p) =>
+              p.stable.map((card, index) => ({
+                id: `${card.id}_${p.id}_${index}`,
+                value: card.uid,
+                title: card.name,
+                subtitle: `Establo de ${p.name}`,
+                image: card.image,
+              })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="😈 Demonicorn"
+              subtitle="Elige una carta de cualquier establo para retirarla de la partida."
+              items={items}
+              maxSelection={1}
+              confirmText="Retirar de la partida"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'chainsaw_unicorn') {
           const items: {
             id: string;
