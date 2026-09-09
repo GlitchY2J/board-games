@@ -101,6 +101,8 @@ import { plagueOfDeath } from '../../../cards/effects/plagueOfDeath.ts';
 import { unicornNap } from '../../../cards/effects/unicornNap.ts';
 import { unicornsOfTheApocalypse } from '../../../cards/effects/unicornsOfTheApocalypse.ts';
 import type { CardEffect } from './CardEffect.ts';
+import { nightmaresEffects } from './expansions/nightmares.ts';
+import { rainbowApocalypseEffects } from './expansions/rainbowApocalypse.ts';
 
 export const effects: Record<string, CardEffect> = {
   adorable_flying_unicorn: adorableFlyingUnicorn,
@@ -206,4 +208,6 @@ export const effects: Record<string, CardEffect> = {
   barbed_wire: barbedWire,
   blinding_light: blindingLight,
   sadistic_ritual: sadisticRitual,
+  ...rainbowApocalypseEffects,
+  ...nightmaresEffects,
 };

@@ -8,17 +8,21 @@ export class CardRepository {
 
   static load(expansions: string[] = []): Card[] {
     if (!this.definitions) {
-      const file = path.join(
+      const dataDir = path.join(
         process.cwd(),
         'src',
         'game',
         'unstable-unicorns',
         'data',
-        'cards.json',
       );
-
-      const json = fs.readFileSync(file, 'utf8');
-      this.definitions = JSON.parse(json) as Card[];
+      const files = [
+        path.join(dataDir, 'cards.json'),
+        path.join(dataDir, 'expansions', 'rainbow_apocalypse', 'cards.json'),
+        path.join(dataDir, 'expansions', 'nightmares', 'cards.json'),
+      ];
+      this.definitions = files.flatMap((file) =>
+        JSON.parse(fs.readFileSync(file, 'utf8')) as Card[],
+      );
     }
 
     const activeExpansions = new Set(['base']);

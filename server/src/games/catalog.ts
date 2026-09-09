@@ -2,6 +2,7 @@ import type { GameDefinition } from '../../../shared/types/GameDefinition.ts';
 import { GameRegistry } from './GameRegistry.ts';
 import { unstableUnicornsEngine } from './engines/unstableUnicornsEngine.ts';
 import { explodingKittensEngine } from './engines/explodingKittensEngine.ts';
+import { unstableUnicornsExpansions } from './catalog/unstableUnicornsExpansions.ts';
 
 export const unstableUnicorns: GameDefinition = {
   id: 'unstable-unicorns',
@@ -19,25 +20,7 @@ export const unstableUnicorns: GameDefinition = {
       available: true,
     },
   ],
-  expansions: [
-    {
-      id: 'rainbow_apocalypse',
-      gameId: 'unstable-unicorns',
-      name: 'Rainbow Apocalypse',
-      description: 'Añade las cartas de la expansión Rainbow Apocalypse al mazo.',
-      versionIds: ['unstable-unicorns-base'],
-      available: true,
-    },
-    {
-      id: 'nightmares',
-      gameId: 'unstable-unicorns',
-      name: 'Nightmares',
-      description: 'Expansión de Unstable Unicorns actualmente en desarrollo.',
-      versionIds: ['unstable-unicorns-base'],
-      available: true,
-      inProgress: true,
-    },
-  ],
+  expansions: unstableUnicornsExpansions,
 };
 
 export const explodingKittens: GameDefinition = {

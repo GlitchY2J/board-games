@@ -1,0 +1,361 @@
+[
+  {
+    "id": "basic_unicorn_raincoat",
+    "name": "Basic Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "basic",
+    "image": "/cards/unstable-unicorns/nightmares/basic_unicorn_raincoat.png",
+    "description": "A Basic Unicorn.",
+    "effect": null,
+    "copies": 3,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "basic_unicorn_scared",
+    "name": "Basic Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "basic",
+    "image": "/cards/unstable-unicorns/nightmares/basic_unicorn_scared.png",
+    "description": "A Basic Unicorn.",
+    "effect": null,
+    "copies": 3,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "basic_unicorn_schoolgirl",
+    "name": "Basic Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "basic",
+    "image": "/cards/unstable-unicorns/nightmares/basic_unicorn_schoolgirl.png",
+    "description": "A Basic Unicorn.",
+    "effect": null,
+    "copies": 3,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "basic_unicorn_security_guard",
+    "name": "Basic Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "basic",
+    "image": "/cards/unstable-unicorns/nightmares/basic_unicorn_security_guard.png",
+    "description": "A Basic Unicorn.",
+    "effect": null,
+    "copies": 3,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "baby_unicorn_ghost",
+    "name": "Baby Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "baby",
+    "image": "/cards/unstable-unicorns/nightmares/baby_unicorn_ghost.png",
+    "description": "If this card would be sacrificed, destroyed or returned to your hand, return it to the Nursery instead.",
+    "effect": null,
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "baby_unicorn_horror",
+    "name": "Baby Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "baby",
+    "image": "/cards/unstable-unicorns/nightmares/baby_unicorn_horror.png",
+    "description": "If this card would be sacrificed, destroyed or returned to your hand, return it to the Nursery instead.",
+    "effect": null,
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "baby_unicorn_look_back",
+    "name": "Baby Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "baby",
+    "image": "/cards/unstable-unicorns/nightmares/baby_unicorn_look_back.png",
+    "description": "If this card would be sacrificed, destroyed or returned to your hand, return it to the Nursery instead.",
+    "effect": null,
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "chainsaw_massicorn",
+    "name": "Chainsaw Massicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/chainsaw_massicorn.png",
+    "description": "Nightmares expansion card.",
+    "effect": "chainsaw_massicorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "clairvoyant_unicorn",
+    "name": "Clairvoyant Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/clairvoyant_unicorn.png",
+    "description": "Your hand must be visible to all players. If this card is in your Stable at the beginning of your turn, you may DRAW a card.",
+    "effect": null,
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "dancing_clownicorn",
+    "name": "Dancing Clownicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/dancing_clownicorn.png",
+    "description": "When this card enters your Stable, you may DISCARD 2 cards, then return a card in each other player's Stable to their hand.",
+    "effect": "dancing_clownicorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "demonicorn",
+    "name": "Demonicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/demonicorn.png",
+    "description": "If this card is destroyed, you may remove a card in any player's Stable from the game.",
+    "effect": "demonicorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "jack_the_reapercorn",
+    "name": "Jack the Reapercorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/jack_the_reapercorn.png",
+    "description": "When this card enters your Stable, you may DRAW a card. If that card is a Neigh card, you may reveal it and draw a second card.",
+    "effect": "jack_the_reapercorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "phantom_unicorn",
+    "name": "Phantom Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/phantom_unicorn.png",
+    "description": "This card cannot be sacrificed or destroyed.",
+    "effect": "phantom_unicorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "playful_puppet_unicorn",
+    "name": "Playful Puppet Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/playful_puppet_unicorn.png",
+    "description": "When this card enters your Stable, you may move a Downgrade card from your Stable to another player's Stable.",
+    "effect": "playful_puppet_unicorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "sweet_old_ladycorn",
+    "name": "Sweet Old Ladycorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/sweet_old_ladycorn.png",
+    "description": "This card counts for 2 Unicorns. If this card is sacrificed or destroyed, sacrifice a card.",
+    "effect": "sweet_old_ladycorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "unicorn_slasher",
+    "name": "Unicorn Slasher",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/unicorn_slasher.png",
+    "description": "When this card enters your Stable, you may discard a card, then remove a card in any player's Stable from the game.",
+    "effect": "unicorn_slasher",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "vengeful_unicorn",
+    "name": "Vengeful Unicorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/vengeful_unicorn.png",
+    "description": "When this card enters your Stable, you may sacrifice a Basic Unicorn card, then draw 3 cards.",
+    "effect": "vengeful_unicorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "winged_horrorcorn",
+    "name": "Winged Horrorcorn",
+    "cardType": "unicorn",
+    "unicornClass": "magical",
+    "image": "/cards/unstable-unicorns/nightmares/winged_horrorcorn.png",
+    "description": "If this card is sacrificed or destroyed, you may look at another player's hand. Choose a card and add it to your hand.",
+    "effect": "winged_horrorcorn",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "heeeeeres_stabby",
+    "name": "Heeeeere's Stabby",
+    "cardType": "magic",
+    "image": "/cards/unstable-unicorns/nightmares/heeeeeres_stabby.png",
+    "description": "Remove a card in any player's Stable from the game.",
+    "effect": "heeeeeres_stabby",
+    "copies": 3,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "possession",
+    "name": "Possession",
+    "cardType": "magic",
+    "image": "/cards/unstable-unicorns/nightmares/possession.png",
+    "description": "Discard a card, then steal a card.",
+    "effect": "possession",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "reanimation",
+    "name": "Reanimation",
+    "cardType": "magic",
+    "image": "/cards/unstable-unicorns/nightmares/reanimation.png",
+    "description": "Bring a Basic Unicorn card from the discard pile into your Stable, then DRAW a card.",
+    "effect": "reanimation",
+    "copies": 2,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "supernatural_selection",
+    "name": "Supernatural Selection",
+    "cardType": "magic",
+    "image": "/cards/unstable-unicorns/nightmares/supernatural selection.png",
+    "description": "Choose any player. Destroy all Basic Unicorn cards in that player's Stable.",
+    "effect": "supernatural_selection",
+    "copies": 2,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "the_cornjuring",
+    "name": "The Cornjuring",
+    "cardType": "magic",
+    "image": "/cards/unstable-unicorns/nightmares/the cornjuring.png",
+    "description": "Search the deck for a Nightmare Downgrade card and bring it into any player's Stable, then shuffle the deck.",
+    "effect": "the_cornjuring",
+    "copies": 2,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "nightmare_buried_alive",
+    "name": "Nightmare Buried Alive",
+    "cardType": "downgrade",
+    "image": "/cards/unstable-unicorns/nightmares/nightmare_buried_alive.png",
+    "description": "If this card is in your Stable at the beginning of your turn, sacrifice a Unicorn card. If you have no Unicorn cards in your Stable, return this card to your hand.",
+    "effect": "nightmare_buried_alive",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "nightmare_currently_indisposed",
+    "name": "Nightmare Currently Indisposed",
+    "cardType": "downgrade",
+    "image": "/cards/unstable-unicorns/nightmares/nightmare_currently_indisposed.png",
+    "description": "When this card enters your Stable, sacrifice a Unicorn card. You cannot win the game if this card is in your Stable.",
+    "effect": "nightmare_currently_indisposed",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "nightmare_existential_dread",
+    "name": "Nightmare Existential Dread",
+    "cardType": "downgrade",
+    "image": "/cards/unstable-unicorns/nightmares/nightmare_existential_dread.png",
+    "description": "If this card is in your Stable at the beginning of your turn, steal a Downgrade card.",
+    "effect": "nightmare_existential_dread",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "nightmare_exorcise_regimen",
+    "name": "Nightmare Exorcise Regimen",
+    "cardType": "downgrade",
+    "image": "/cards/unstable-unicorns/nightmares/nightmare_exorcise_regimen.png",
+    "description": "When this card enters your Stable, discard your hand, then draw a card. Your hand limit is reduced by 3 cards.",
+    "effect": "nightmare_exorcise_regimen",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "ghost_guide",
+    "name": "Ghost Guide",
+    "cardType": "upgrade",
+    "image": "/cards/unstable-unicorns/nightmares/ghost_guide.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DRAW a card and reveal it. If it is an Upgrade or Downgrade card, bring it into your Stable.",
+    "effect": "ghost_guide",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "magic_elexir",
+    "name": "Magic Elexir",
+    "cardType": "upgrade",
+    "image": "/cards/unstable-unicorns/nightmares/magic_elexir.png",
+    "description": "If a card in your Stable would be sacrificed or destroyed, you may discard a card instead.",
+    "effect": null,
+    "copies": 2,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "paranormal_affection",
+    "name": "Paranormal Affection",
+    "cardType": "upgrade",
+    "image": "/cards/unstable-unicorns/nightmares/paranormal_affection.png",
+    "description": "When this card enters your Stable, you may DRAW 2 cards. Upgrade cards in your Stable cannot be destroyed.",
+    "effect": "paranormal_affection",
+    "copies": 2,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "poltergeist_swipe",
+    "name": "Poltergeist Swipe",
+    "cardType": "upgrade",
+    "image": "/cards/unstable-unicorns/nightmares/poltergeist_swipe.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may skip your draw phase. If you do, pull a card at random from another player's hand.",
+    "effect": "poltergeist_swipe",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "saved_by_the_sigil",
+    "name": "Saved by the Sigil",
+    "cardType": "upgrade",
+    "image": "/cards/unstable-unicorns/nightmares/saved_by_the_sigil.png",
+    "description": "Downgrade cards cannot enter your Stable. This card cannot be sacrificed or destroyed.",
+    "effect": "saved_by_the_sigil",
+    "copies": 2,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "strange_craft_project",
+    "name": "Strange Craft Project",
+    "cardType": "upgrade",
+    "image": "/cards/unstable-unicorns/nightmares/strange_craft_project.png",
+    "description": "If this card is in your Stable at the beginning of your turn, you may discard 3 cards, then remove a card in any player's Stable from the game.",
+    "effect": "strange_craft_project",
+    "copies": 1,
+    "expansion": "nightmares"
+  },
+  {
+    "id": "hex_neigh",
+    "name": "Hex Neigh",
+    "cardType": "instant",
+    "image": "/cards/unstable-unicorns/nightmares/hex_neigh.png",
+    "description": "Play this card when any other player tries to play a card. Stop their card from being played and remove it from the game.",
+    "effect": "hex_neigh",
+    "copies": 4,
+    "expansion": "nightmares"
+  }
+
+]
