@@ -172,6 +172,19 @@ export class TurnManager {
       uids.push(...ghostGuide.map((c) => c.uid));
     }
 
+    const poltergeistSwipe = allCards.filter(
+      (c) => c.id === 'poltergeist_swipe',
+    );
+    if (
+      poltergeistSwipe.length > 0 &&
+      game.players.some(
+        (candidate) =>
+          candidate.id !== activePlayer.id && candidate.hand.length > 0,
+      )
+    ) {
+      uids.push(...poltergeistSwipe.map((c) => c.uid));
+    }
+
     const zombie = allCards.filter((c) => c.id === 'zombie_unicorn');
     if (
       zombie.length > 0 &&
@@ -437,6 +450,20 @@ export class TurnManager {
           options: [
             { value: 'yes', text: 'Sí, robar y revelar' },
             { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'poltergeist_swipe':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'poltergeist_swipe',
+          playerId: activePlayer.id,
+          title: '👻 Poltergeist Swipe',
+          description: '¿Deseas saltarte tu fase de robo para robar una carta aleatoria de otro jugador?',
+          options: [
+            { value: 'yes', text: 'Sí, saltar robo y robar carta' },
+            { value: 'no', text: 'No, robar normalmente' },
           ],
           effectCardId: uid,
         };

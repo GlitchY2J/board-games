@@ -1605,8 +1605,8 @@
     "name": "Poltergeist Swipe",
     "cardType": "upgrade",
     "image": "/cards/unstable-unicorns/nightmares/poltergeist_swipe.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "If this card is in your Stable at the beginning of your turn, you may skip your draw phase. If you do, pull a card at random from another player's hand.",
+    "effect": "poltergeist_swipe",
     "copies": 1,
     "expansion": "nightmares"
   },

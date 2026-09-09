@@ -1221,6 +1221,42 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'poltergeist_swipe') {
+        if (choice === 'yes') {
+          const targets = room.gameState.players.filter(
+            (candidate) =>
+              candidate.id !== player.id && candidate.hand.length > 0,
+          );
+          const target = targets[Math.floor(Math.random() * targets.length)];
+          if (target) {
+            const index = Math.floor(Math.random() * target.hand.length);
+            const [stolen] = target.hand.splice(index, 1);
+            player.hand.push(stolen);
+            enqueueStealAnimation(
+              room.gameState.roomCode,
+              target.id,
+              player.id,
+              stolen,
+            );
+            addLog(
+              room.gameState,
+              `${player.name} robó una carta aleatoria de ${target.name} por Poltergeist Swipe`,
+              { playerId: player.id },
+            );
+          }
+        }
+
+        room.gameState.pendingAction = undefined;
+        if (room.gameState.phase === TurnPhase.BEGINNING) {
+          TurnManager.processBeginningQueue(room.gameState);
+          if (choice === 'yes' && !room.gameState.pendingAction) {
+            room.gameState.phase = TurnPhase.ACTION;
+          }
+        }
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'
