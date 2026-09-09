@@ -35,7 +35,14 @@ function canViewerSeeTargetHand(
     pending.sourcePlayerId === viewerId &&
     pending.targetPlayerId === targetPlayerId;
 
+  const isWingedHorrorcornViewer =
+    pending?.type === 'select_hand_card' &&
+    pending.reason === 'winged_horrorcorn' &&
+    pending.sourcePlayerId === viewerId &&
+    pending.targetPlayerId === targetPlayerId;
+
   if (isTwoOfAKindViewer) return false;
+  if (isWingedHorrorcornViewer) return true;
 
   if (
     game.players.some(

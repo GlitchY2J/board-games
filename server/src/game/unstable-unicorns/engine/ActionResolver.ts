@@ -467,6 +467,20 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'winged_horrorcorn') {
+      if (targetPlayerId === sourcePlayerId) return false;
+      const target = state.players.find((p) => p.id === targetPlayerId);
+      if (!target || target.hand.length === 0) return false;
+
+      state.pendingAction = {
+        type: 'select_hand_card',
+        reason: 'winged_horrorcorn',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
     if (pending.reason === 'unfair_bargain') {
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
       if (!sourcePlayer) return false;

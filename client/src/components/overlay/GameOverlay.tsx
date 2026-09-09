@@ -368,6 +368,7 @@ export default function GameOverlay({
         const isAnnoyingFlying = action.reason === 'annoying_flying_unicorn';
          const isPlayDowngrade = action.reason === 'play_downgrade';
          const isPlayfulPuppet = action.reason === 'playful_puppet_unicorn';
+         const isWingedHorrorcorn = action.reason === 'winged_horrorcorn';
         const isMermaid = action.reason === 'mermaid_unicorn';
         const isUnfairBargain = action.reason === 'unfair_bargain';
          const isUnicornSwap = action.reason === 'unicorn_swap';
@@ -383,7 +384,8 @@ export default function GameOverlay({
              isFavor ||
             isThreeOfAKind ||
            isAnnoyingFlying ||
-          isUnfairBargain;
+           isUnfairBargain;
+         const handInspection = needsHand || isWingedHorrorcorn;
 
         const eligiblePlayers = gameState.players.filter((p) => {
            if (isPlayDowngrade) return true;
@@ -403,7 +405,7 @@ export default function GameOverlay({
           }
           if (p.id === localPlayerId) return false;
           if (isTargetedAttack) return true;
-          if (needsHand) return p.hand.length > 0;
+           if (handInspection) return p.hand.length > 0;
           if (isUnicornSwap)
             return p.stable.some((c) => c.cardType === 'unicorn');
            if (isUnicornPoison) return p.stable.length > 0;
@@ -444,6 +446,7 @@ export default function GameOverlay({
           if (isAnnoyingFlying) return '🦄 Annoying Flying Unicorn';
            if (isPlayDowngrade) return '⏬ Jugar Downgrade';
            if (isPlayfulPuppet) return '🪆 Playful Puppet Unicorn';
+           if (isWingedHorrorcorn) return '🪽 Winged Horrorcorn';
           if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
           if (isUnfairBargain) return '🤝 Unfair Bargain';
            if (isUnicornSwap) return '🦄 Unicorn Swap';
@@ -477,6 +480,8 @@ export default function GameOverlay({
              return 'Elige en qué establo deseas colocar esta carta de Downgrade';
            if (isPlayfulPuppet)
              return 'Elige otro jugador para recibir un Downgrade de tu establo';
+           if (isWingedHorrorcorn)
+             return 'Elige a un jugador para mirar su mano y robar una carta';
           if (isMermaid)
             return 'Elige a un jugador para devolver una carta de su establo a su mano';
           if (isUnfairBargain)
@@ -597,13 +602,14 @@ export default function GameOverlay({
         const isAmericorn = action.reason === 'americorn';
         const isTwoOfAKind = action.reason === 'two_of_a_kind';
         const isThreeOfAKind = action.reason === 'three_of_a_kind';
+        const isWingedHorrorcorn = action.reason === 'winged_horrorcorn';
         const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
         const revealAmericorn = isAmericorn && hasNannyCam;
 
         return (
           <CardSelectionOverlay
             hide={hide}
-            title={isFavor ? '🃏 Favor' : isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
+            title={isWingedHorrorcorn ? '🪽 Winged Horrorcorn' : isFavor ? '🃏 Favor' : isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
             subtitle={
               isFavor
                 ? `Elige cualquier carta de tu mano para entregársela a ${gameState.players.find((p) => p.id === action.sourcePlayerId)?.name ?? 'ese jugador'}`
@@ -615,17 +621,19 @@ export default function GameOverlay({
                 ? revealAmericorn
                   ? `Nanny Cam: se ven las cartas de ${target.name}. Elige una`
                   : `Elige una carta boca abajo de la mano de ${target.name}`
-                : `Elige una carta de la mano de ${target.name} para robarla`
+                : isWingedHorrorcorn
+                  ? `Elige una carta de la mano de ${target.name}`
+                  : `Elige una carta de la mano de ${target.name} para robarla`
             }
             items={target.hand.map((card, idx) => ({
               id: `${card.id}_${idx}`,
               value: card.uid,
-                title: isFavor ? card.name : revealAmericorn
+                title: isWingedHorrorcorn || isFavor ? card.name : revealAmericorn
                 ? card.name
                 : isAmericorn || isTwoOfAKind || isThreeOfAKind
                   ? `Carta ${idx + 1}`
                   : card.name,
-                image: isFavor
+                image: isWingedHorrorcorn || isFavor
                   ? card.image
                   : revealAmericorn
                 ? card.image
@@ -634,7 +642,7 @@ export default function GameOverlay({
                   : card.image,
             }))}
             maxSelection={1}
-            confirmText={isFavor ? 'Dar' : 'Robar'}
+             confirmText={isFavor ? 'Dar' : 'Añadir a mi mano'}
             onConfirm={([cardId]) => {
               dismiss();
               socket.emit('select-hand-card', {

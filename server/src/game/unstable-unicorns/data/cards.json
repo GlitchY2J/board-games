@@ -1475,8 +1475,8 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/unstable-unicorns/nightmares/winged_horrorcorn.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "If this card is sacrificed or destroyed, you may look at another player's hand. Choose a card and add it to your hand.",
+    "effect": "winged_horrorcorn",
     "copies": 1,
     "expansion": "nightmares"
   },

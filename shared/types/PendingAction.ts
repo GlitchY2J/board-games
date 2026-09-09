@@ -68,7 +68,8 @@ export type PendingAction =
         | "annoying_flying_unicorn"
          | "play_downgrade"
          | "playful_puppet_unicorn"
-        | "mermaid_unicorn"
+         | "winged_horrorcorn"
+         | "mermaid_unicorn"
         | "unfair_bargain"
         | "unicorn_swap"
          | "re_target_source"
@@ -142,7 +143,7 @@ export type PendingAction =
     }
   | {
       type: "select_hand_card";
-         reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor" | "zombie_unicorn";
+         reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor" | "zombie_unicorn" | "winged_horrorcorn";
         sourcePlayerId: string;
         targetPlayerId: string;
         requestedCardType?: string;
@@ -212,7 +213,8 @@ export type PendingAction =
          | "jack_the_reapercorn_second"
          | "playful_puppet_unicorn"
          | "vengeful_unicorn"
-           | "unicorn_slasher"
+         | "unicorn_slasher"
+         | "winged_horrorcorn"
         | "classy_narwhal"
         | "the_great_narwhal"
         | "dark_angel_unicorn"

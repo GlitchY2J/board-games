@@ -1113,6 +1113,36 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'winged_horrorcorn') {
+        if (choice === 'yes') {
+          const targets = room.gameState.players.filter(
+            (candidate) =>
+              candidate.id !== player.id && candidate.hand.length > 0,
+          );
+          if (targets.length === 1) {
+            room.gameState.pendingAction = {
+              type: 'select_hand_card',
+              reason: 'winged_horrorcorn',
+              sourcePlayerId: player.id,
+              targetPlayerId: targets[0].id,
+            };
+          } else if (targets.length > 1) {
+            room.gameState.pendingAction = {
+              type: 'select_player',
+              reason: 'winged_horrorcorn',
+              sourcePlayerId: player.id,
+            };
+          } else {
+            room.gameState.pendingAction = undefined;
+          }
+        } else {
+          room.gameState.pendingAction = undefined;
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'
