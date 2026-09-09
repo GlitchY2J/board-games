@@ -1,9 +1,8 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const sweetOldLadycorn: CardEffect = {
-  onEnterStable() {
-    // Passive: counted as two Unicorns by getStablePower().
-  },
+  passive: passiveModifier,
 
   onDestroyed(state, _card, player) {
     const hasCardToSacrifice =

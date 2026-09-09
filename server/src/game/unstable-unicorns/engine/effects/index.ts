@@ -84,6 +84,7 @@ import { neighThankYou } from '../../../cards/effects/neighThankYou.ts';
 import { sprayBottleOfYouth } from '../../../cards/effects/sprayBottleOfYouth.ts';
 import { doubleDutch } from '../../../cards/effects/doubleDutch.ts';
 import { barbedWire } from '../../../cards/effects/barbedWire.ts';
+import { blindingLight } from '../../../cards/effects/blindingLight.ts';
 import { sadisticRitual } from '../../../cards/effects/sadisticRitual.ts';
 import { adorableFlyingUnicorn } from '../../../cards/effects/adorableFlyingUnicorn.ts';
 import { angelUnicorn } from '../../../cards/effects/angelUnicorn.ts';
@@ -203,5 +204,6 @@ export const effects: Record<string, CardEffect> = {
   spray_bottle_of_youth: sprayBottleOfYouth,
   double_dutch: doubleDutch,
   barbed_wire: barbedWire,
+  blinding_light: blindingLight,
   sadistic_ritual: sadisticRitual,
 };

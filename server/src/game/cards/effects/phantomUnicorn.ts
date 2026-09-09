@@ -1,7 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const phantomUnicorn: CardEffect = {
-  onEnterStable() {
-    // Passive: this card cannot be sacrificed or destroyed.
-  },
+  passive: passiveModifier,
 };

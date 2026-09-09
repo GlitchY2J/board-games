@@ -1,8 +1,12 @@
 import type { GameState } from '../../../models/GameState.ts';
 import type { Player } from '../../../models/Player.ts';
 import type { Card } from '../../../models/Card.ts';
+import type { CardPassive } from './CardPassive.ts';
 
 export interface CardEffect {
+  /** Regla continua que modifica el estado mientras la carta está activa. */
+  passive?: CardPassive;
+
   /** Se dispara al jugar la carta. Devuelve `true` si la carta fue consumida
    *  (no se manda al descarte automáticamente). */
   onPlay?(state: GameState, player: Player, card: Card): boolean | void;

@@ -1,6 +1,7 @@
 import type { GameState } from '../../models/GameState.ts';
 import type { Card } from '../../models/Card.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 import { hasBlindingLight } from './blindingLight.ts';
 
 export const QUEEN_BEE_ID = 'queen_bee_unicorn';
@@ -30,7 +31,5 @@ export function isBasicUnicornEntryBlocked(
 }
 
 export const queenBeeUnicorn: CardEffect = {
-  onEnterStable() {
-    // Passive: Basic Unicorn cards cannot enter any player's Stable except yours.
-  },
+  passive: passiveModifier,
 };

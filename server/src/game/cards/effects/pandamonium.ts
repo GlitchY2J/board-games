@@ -1,6 +1,7 @@
 import type { Player } from '../../models/Player.ts';
 import type { Card } from '../../models/Card.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const PANDAMONIUM_ID = 'pandamonium';
 
@@ -38,8 +39,5 @@ export function hasAvailableCardToSacrifice(player: Player): boolean {
 }
 
 export const pandamonium: CardEffect = {
-  onEnterStable() {
-    // Passive: los unicornios de este establo no pueden ser afectados por
-    // ninguna carta y su dueño no puede ganar la partida mientras esté activo.
-  },
+  passive: passiveModifier,
 };

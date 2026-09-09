@@ -1,5 +1,6 @@
 import type { Player } from '../../models/Player.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const DOUBLE_DUTCH_ID = 'double_dutch';
 
@@ -8,8 +9,5 @@ export function hasDoubleDutch(player: Player): boolean {
 }
 
 export const doubleDutch: CardEffect = {
-  onEnterStable() {
-    // Passive: el jugador activo puede jugar 2 cartas en su fase de acción.
-    // La decisión (jugar 2 o robar 1) se presenta al inicio de la fase de acción.
-  },
+  passive: passiveModifier,
 };

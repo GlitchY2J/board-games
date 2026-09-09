@@ -1,4 +1,5 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export function isImmuneToUnicornOrUpgradeDestruction(cardId: string): boolean {
   return (
@@ -22,7 +23,5 @@ export function isImmuneToSacrifice(cardId: string): boolean {
 }
 
 export const theTiniestUnicorn: CardEffect = {
-  onEnterStable() {
-    // Passive: this card cannot be destroyed by Unicorn or Upgrade cards.
-  },
+  passive: passiveModifier,
 };

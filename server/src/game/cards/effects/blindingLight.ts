@@ -1,5 +1,7 @@
 import type { Player } from '../../models/Player.ts';
 import type { Card } from '../../models/Card.ts';
+import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const BLINDING_LIGHT_ID = 'blinding_light';
 
@@ -21,3 +23,5 @@ export function isEffectBlockedByBlindingLight(
     hasBlindingLight(player)
   );
 }
+
+export const blindingLight: CardEffect = { passive: passiveModifier };

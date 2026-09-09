@@ -1,6 +1,7 @@
 import type { Player } from '../../models/Player.ts';
 import type { GameState } from '../../models/GameState.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 import { getStablePower } from '../../unstable-unicorns/engine/stablePower.ts';
 import { EffectStack } from '../../unstable-unicorns/engine/EffectStack.ts';
 import { hasPandamonium } from './pandamonium.ts';
@@ -60,7 +61,5 @@ export function checkTinyStable(game: GameState): boolean {
 }
 
 export const tinyStable: CardEffect = {
-  onEnterStable() {
-    // Passive: el límite de unicornios se aplica mediante checkTinyStable().
-  },
+  passive: passiveModifier,
 };
