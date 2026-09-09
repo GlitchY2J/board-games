@@ -324,7 +324,7 @@ Criterios:
 - Una única implementación de las reglas de validación.
 - Errores estructurados y reutilizables por cliente y servidor.
 
-## Fase 4: Completar Handlers Socket.IO
+## Fase 4: Completar Handlers Socket.IO [COMPLETADA]
 
 Reducir `server/src/sockets/actionHandlers.ts` a un compositor de módulos.
 

@@ -157,6 +157,11 @@ test('createGameState: inicializa directamente en fase DRAW cuando los jugadores
   const room: Room = {
     code: 'ROOM1',
     hostId: 'p1',
+    settings: {
+      gameId: 'unstable-unicorns',
+      versionId: 'unstable-unicorns-base',
+      expansionIds: [],
+    },
     players: [makePlayer('p1'), makePlayer('p2')],
     gameState: null,
   };
