@@ -38,7 +38,7 @@ const REACTION_IDS = new Set([
 const pendingTimers = new Map<string, NodeJS.Timeout>();
 
 function isExplodingKittensRoom(room: Room): boolean {
-  return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+  return room.settings.gameId === 'exploding-kittens';
 }
 
 function playablePlayers(room: Room) {
@@ -655,7 +655,9 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
 
     if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
 
-    const engine = gameRegistry.getEngine(room.settings?.gameId ?? room.game);
+    const gameId = room.settings.gameId;
+    if (!gameId) return;
+    const engine = gameRegistry.getEngine(gameId);
     if (!engine) {
       emitGameError(
         socket,
@@ -693,7 +695,11 @@ function validateRoomConfiguration(
   room: Room,
   action: 'start-game' | 'confirm-start-game',
 ): boolean {
-  const gameId = room.settings?.gameId ?? room.game;
+  const gameId = room.settings.gameId;
+  if (!gameId) {
+    emitGameError(socket, 'GAME_NOT_AVAILABLE', 'Debes seleccionar un juego.', action);
+    return false;
+  }
   const game = gameRegistry.getById(gameId);
 
   if (!game || !game.available) {
@@ -706,7 +712,7 @@ function validateRoomConfiguration(
     return false;
   }
 
-  const versionId = room.settings?.versionId ?? null;
+  const versionId = room.settings.versionId;
   const version = versionId
     ? game.versions.find((candidate) => candidate.id === versionId)
     : undefined;
@@ -721,7 +727,7 @@ function validateRoomConfiguration(
     return false;
   }
 
-  const expansionIds = room.settings?.expansionIds ?? room.expansions ?? [];
+  const expansionIds = room.settings.expansionIds;
   const hasInvalidExpansion = expansionIds.some((expansionId) => {
     const expansion = game.expansions.find((candidate) => candidate.id === expansionId);
     return (
@@ -1506,7 +1512,9 @@ function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
 
     if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
 
-    const engine = gameRegistry.getEngine(room.settings?.gameId ?? room.game);
+    const gameId = room.settings.gameId;
+    if (!gameId) return;
+    const engine = gameRegistry.getEngine(gameId);
     if (!engine) {
       emitGameError(
         socket,

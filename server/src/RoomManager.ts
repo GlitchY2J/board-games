@@ -66,12 +66,9 @@ export class RoomManager {
 
     const room: Room = {
       code: generateRoomCode(),
-      // Keep the legacy fields while the lobby migrates to settings.
-      game: game ?? '',
       hostId: host.id,
       players: [host],
       chat: [],
-      expansions: [],
       settings: {
         gameId: game,
         versionId: null,
@@ -137,21 +134,12 @@ export class RoomManager {
     const room = this.rooms.get(code);
     if (!room) return null;
 
-    if (!room.expansions) {
-      room.expansions = [];
-    }
-
-    if (room.expansions.includes(expansionId)) {
-      room.expansions = room.expansions.filter((id) => id !== expansionId);
+    const expansionIds = room.settings.expansionIds;
+    if (expansionIds.includes(expansionId)) {
+      room.settings.expansionIds = expansionIds.filter((id) => id !== expansionId);
     } else {
-      room.expansions.push(expansionId);
+      room.settings.expansionIds = [...expansionIds, expansionId];
     }
-
-    room.settings = {
-      gameId: room.settings?.gameId ?? (room.game || null),
-      versionId: room.settings?.versionId ?? null,
-      expansionIds: [...room.expansions],
-    };
 
     return room;
   }
@@ -165,9 +153,6 @@ export class RoomManager {
       versionId: settings.versionId,
       expansionIds: [...settings.expansionIds],
     };
-    room.game = settings.gameId ?? '';
-    room.expansions = [...settings.expansionIds];
-
     return room;
   }
 

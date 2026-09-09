@@ -4,16 +4,12 @@ import type { Room } from '../game/models/Room.ts';
 export function createPublicRoom(room: Room): PublicRoom {
   return {
     code: room.code,
-    game: room.game,
     hostId: room.hostId,
-    expansions: [...(room.expansions ?? [])],
-    settings: room.settings
-      ? {
-          gameId: room.settings.gameId,
-          versionId: room.settings.versionId,
-          expansionIds: [...room.settings.expansionIds],
-        }
-      : undefined,
+    settings: {
+      gameId: room.settings.gameId,
+      versionId: room.settings.versionId,
+      expansionIds: [...room.settings.expansionIds],
+    },
     players: room.players.map(({ id, connected, name, avatar, isDummy, isSpectator, isReady }) => ({
       id,
       connected,

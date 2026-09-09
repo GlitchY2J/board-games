@@ -4,11 +4,12 @@ import type { RoomSettings } from './GameDefinition.ts';
 
 export interface Room {
   code: string;
-  game: string;
   hostId: string;
   players: Player[];
+  settings: RoomSettings;
+  /** @deprecated Read from settings instead. Kept for persisted-room migration. */
+  game?: string;
+  /** @deprecated Read from settings instead. Kept for persisted-room migration. */
   expansions?: string[];
-  /** New lobby configuration; populated during the room/lobby migration. */
-  settings?: RoomSettings;
   gameState?: GameState;
 }

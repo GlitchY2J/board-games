@@ -2,10 +2,12 @@ import type { Room } from './game/models/Room.ts';
 import { gameRegistry } from './games/catalog.ts';
 
 export function getRoomMaxPlayers(room: Room): number | undefined {
-  const game = gameRegistry.getById(room.settings?.gameId ?? room.game);
+  const game = room.settings.gameId
+    ? gameRegistry.getById(room.settings.gameId)
+    : undefined;
   if (!game) return undefined;
 
-  const expansions = room.settings?.expansionIds ?? room.expansions ?? [];
+  const expansions = room.settings.expansionIds;
   if (
     game.id === 'exploding-kittens' &&
     expansions.includes('imploding_kittens')

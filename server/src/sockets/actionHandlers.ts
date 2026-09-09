@@ -34,7 +34,7 @@ import { registerDeckSelectionHandlers } from './deckSelectionHandlers.ts';
 import { registerChoiceHandlers } from './choiceHandlers.ts';
 
 function isExplodingKittensRoom(room: Room): boolean {
-  return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+  return room.settings.gameId === 'exploding-kittens';
 }
 
 export function registerActionHandlers(
@@ -2666,7 +2666,7 @@ export function registerActionHandlers(
 
       const [upgrade] = room.gameState.deck.splice(cardIdx, 1);
       const isExplodingKittens =
-        (room.settings?.gameId ?? room.game) === 'exploding-kittens';
+        room.settings.gameId === 'exploding-kittens';
       const isDebugImplodingKitten =
         isExplodingKittens &&
         pending.reason === 'debug_draw' &&
@@ -2710,7 +2710,7 @@ export function registerActionHandlers(
 
       if (
         pending.reason === 'debug_draw' &&
-        (room.settings?.gameId ?? room.game) === 'exploding-kittens' &&
+        room.settings.gameId === 'exploding-kittens' &&
         beginExplodingKittenResolution(room.gameState, player, upgrade)
       ) {
         addLog(room.gameState, `${player.name} robó un Exploding Kitten`, {

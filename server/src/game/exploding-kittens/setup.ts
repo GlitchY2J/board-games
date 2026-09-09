@@ -245,7 +245,7 @@ function resetPlayer(player: Player): Player {
 }
 
 export function createExplodingKittensState(room: Room): GameState {
-  const expansions = room.settings?.expansionIds ?? room.expansions ?? [];
+  const expansions = room.settings.expansionIds;
   const hasImplodingKittens = expansions.includes('imploding_kittens');
   const allCards = createCards(hasImplodingKittens);
   const kittens = allCards.filter((card) => card.id === 'exploding_kitten');

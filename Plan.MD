@@ -285,7 +285,7 @@ Criterios:
 - Todos los tests pasan.
 - `Zombie Unicorn` usa un único flujo de inicio de turno.
 
-## Fase 2: Configuración Única De Sala
+## Fase 2: Configuración Única De Sala [COMPLETADA]
 
 Hacer `RoomSettings` la única fuente de verdad y retirar gradualmente `room.game`
 y `room.expansions`.

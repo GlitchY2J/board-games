@@ -70,7 +70,7 @@ router.get('/:code', (req, res) => {
 
   res.json({
     code: room.code,
-    game: room.game,
+    settings: room.settings,
     playerCount: room.players.length,
     takenAvatars,
   });

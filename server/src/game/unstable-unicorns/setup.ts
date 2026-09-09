@@ -8,7 +8,7 @@ import { TurnPhase } from '../turn/TurnPhase.ts';
 import { TurnManager } from '../turn/TurnManager.ts';
 
 export function createGameState(room: Room): GameState {
-  let deck = CardRepository.load(room.expansions);
+  let deck = CardRepository.load(room.settings.expansionIds);
   const isTwoPlayerGame = room.players.length === 2;
   const guaranteedNeighs: Card[] = [];
 

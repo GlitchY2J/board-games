@@ -51,7 +51,7 @@ export default function Lobby() {
   useEffect(() => {
     let active = true;
 
-    const gameId = room?.settings?.gameId ?? room?.game ?? null;
+    const gameId = room?.settings?.gameId ?? null;
     const catalogRequest = canEditSettings
       ? getGames()
       : gameId
@@ -72,7 +72,7 @@ export default function Lobby() {
     return () => {
       active = false;
     };
-  }, [canEditSettings, room?.game, room?.settings?.gameId]);
+  }, [canEditSettings, room?.settings?.gameId]);
 
   useEffect(() => {
     if (!room) return;
@@ -133,7 +133,7 @@ export default function Lobby() {
   };
 
   const getRoomSettings = (): RoomSettings => {
-    const gameId = room?.settings?.gameId ?? room?.game ?? null;
+    const gameId = room?.settings?.gameId ?? null;
     const game = games.find((candidate) => candidate.id === gameId);
     const versionId =
       room?.settings?.versionId ??
@@ -143,7 +143,7 @@ export default function Lobby() {
     return {
       gameId: gameId || null,
       versionId,
-      expansionIds: room?.settings?.expansionIds ?? room?.expansions ?? [],
+      expansionIds: room?.settings?.expansionIds ?? [],
     };
   };
 

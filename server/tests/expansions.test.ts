@@ -22,22 +22,26 @@ test('RoomManager.toggleExpansion: alterna correctamente las expansiones en la s
   const roomManager = new RoomManager();
   const room = roomManager.createRoom('HostTest', 'unstable-unicorns', 'socket_1');
 
-  assert.deepEqual(room.expansions, []);
+  assert.deepEqual(room.settings.expansionIds, []);
 
   // Activar Rainbow Apocalypse
   const updated1 = roomManager.toggleExpansion(room.code, 'rainbow_apocalypse');
-  assert.deepEqual(updated1?.expansions, ['rainbow_apocalypse']);
+  assert.deepEqual(updated1?.settings.expansionIds, ['rainbow_apocalypse']);
 
   // Desactivar Rainbow Apocalypse
   const updated2 = roomManager.toggleExpansion(room.code, 'rainbow_apocalypse');
-  assert.deepEqual(updated2?.expansions, []);
+  assert.deepEqual(updated2?.settings.expansionIds, []);
 });
 
 test('createGameState: inicializa el mazo de juego con las expansiones de la sala', () => {
   const room: Room = {
     code: 'ROOM_EXP',
-    game: 'unstable-unicorns',
     hostId: 'p1',
+    settings: {
+      gameId: 'unstable-unicorns',
+      versionId: 'unstable-unicorns-base',
+      expansionIds: ['rainbow_apocalypse'],
+    },
     players: [
       {
         id: 'p1',
@@ -64,7 +68,6 @@ test('createGameState: inicializa el mazo de juego con las expansiones de la sal
         downgrades: [],
       },
     ],
-    expansions: ['rainbow_apocalypse'],
   };
 
   const state = createGameState(room);
@@ -74,8 +77,12 @@ test('createGameState: inicializa el mazo de juego con las expansiones de la sal
 test('createGameState: usa la configuración especial de 2 jugadores', () => {
   const room: Room = {
     code: 'ROOM_TWO',
-    game: 'unstable-unicorns',
     hostId: 'p1',
+    settings: {
+      gameId: 'unstable-unicorns',
+      versionId: 'unstable-unicorns-base',
+      expansionIds: ['rainbow_apocalypse'],
+    },
     players: [
       {
         id: 'p1', sessionToken: 'p1', socketId: 's1', connected: true,
@@ -86,7 +93,6 @@ test('createGameState: usa la configuración especial de 2 jugadores', () => {
         name: 'P2', avatar: 'fox', hand: [], stable: [], upgrades: [], downgrades: [],
       },
     ],
-    expansions: ['rainbow_apocalypse'],
   };
 
   const state = createGameState(room);

@@ -42,7 +42,7 @@ export default function Game() {
   const [sortHandMode, setSortHandMode] = useState<
     'alphabetical' | 'type' | null
   >(null);
-  const gameId = roomFromContext?.settings?.gameId ?? roomFromContext?.game;
+  const gameId = roomFromContext?.settings?.gameId;
 
   useEffect(() => {
     const onSortHand = (event: KeyboardEvent) => {
@@ -447,7 +447,7 @@ export default function Game() {
           key={animation.animId}
           animation={animation}
           localPlayerId={effectViewerId}
-          gameId={gameId}
+          gameId={gameId ?? undefined}
           onDone={() => removeDrawAnim(animation.animId)}
         />
       ))}
@@ -456,7 +456,7 @@ export default function Game() {
           key={animation.animId}
           animation={animation}
           localPlayerId={effectViewerId}
-          gameId={gameId}
+          gameId={gameId ?? undefined}
           duration={320}
           playSound
           onDone={() => removeInitialDealAnim(animation.animId)}
@@ -467,7 +467,7 @@ export default function Game() {
           key={animation.animId}
           animation={animation}
           localPlayerId={effectViewerId}
-          gameId={gameId}
+          gameId={gameId ?? undefined}
           duration={320}
           playSound
           onDone={() => removeInitialDealAnim(animation.animId)}
@@ -501,7 +501,7 @@ export default function Game() {
         <ShuffleDeckEffect
           key={animation.animId}
           animation={animation}
-          gameId={gameId}
+          gameId={gameId ?? undefined}
           localPlayerId={effectViewerId}
           onDone={() => setShuffleAnims((prev) => prev.filter((item) => item.animId !== animation.animId))}
         />
@@ -533,7 +533,7 @@ export default function Game() {
         <>
           <BoardLayout
             gameState={gameState}
-            gameId={gameId}
+            gameId={gameId ?? undefined}
             isMyTurn={false}
             isHost={false}
             onPlay={() => undefined}
@@ -564,7 +564,7 @@ export default function Game() {
         <div className="relative min-h-screen">
           <BoardLayout
             gameState={gameState}
-            gameId={gameId}
+            gameId={gameId ?? undefined}
             isMyTurn={false}
             isHost={false}
             onPlay={() => undefined}
@@ -756,7 +756,7 @@ export default function Game() {
     <>
       <BoardLayout
         gameState={gameState}
-        gameId={gameId}
+        gameId={gameId ?? undefined}
         isMyTurn={isMyTurn}
         isHost={isHost}
         onPlay={play}
