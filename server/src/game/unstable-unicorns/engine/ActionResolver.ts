@@ -22,8 +22,43 @@ import {
 } from '../../cards/effects/unicornRainbowPrincess.ts';
 import { nextSprayBottleChoice } from '../../cards/effects/sprayBottleOfYouth.ts';
 import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
+import type {
+  CardSelectionAction,
+  DiscardAction,
+  PlayerSelectionAction,
+} from '../../../../../shared/types/PendingActionCategories.ts';
 
 export class ActionResolver {
+  private static isPlayerSelectionAction(
+    action: GameState['pendingAction'],
+  ): action is PlayerSelectionAction {
+    return action?.type === 'select_player' || action?.type === 'select_players';
+  }
+
+  private static isCardSelectionAction(
+    action: GameState['pendingAction'],
+  ): action is CardSelectionAction {
+    return (
+      action?.type === 'select_stable_card' ||
+      action?.type === 'select_hand_card' ||
+      action?.type === 'select_discard_card' ||
+      action?.type === 'select_own_hand_card'
+    );
+  }
+
+  private static isDiscardAction(
+    action: GameState['pendingAction'],
+  ): action is DiscardAction {
+    return (
+      action?.type === 'discard' ||
+      action?.type === 'select_discard_count' ||
+      action?.type === 'pestilence_discard' ||
+      action?.type === 'mystical_vortex' ||
+      action?.type === 'llamacorn' ||
+      action?.type === 'frenchiecorn'
+    );
+  }
+
   static handleSelectPlayers(
     state: GameState,
     sourcePlayerId: string,
@@ -31,7 +66,7 @@ export class ActionResolver {
   ): boolean {
     const pending = state.pendingAction;
     if (
-      !pending ||
+      !ActionResolver.isPlayerSelectionAction(pending) ||
       pending.type !== 'select_players' ||
       pending.sourcePlayerId !== sourcePlayerId ||
       new Set(playerIds).size !== playerIds.length ||
@@ -176,7 +211,7 @@ export class ActionResolver {
   ): boolean {
     const pending = state.pendingAction;
     if (
-      !pending ||
+      !ActionResolver.isDiscardAction(pending) ||
       pending.type !== 'discard' ||
       pending.playerId !== playerId
     ) {
@@ -386,7 +421,7 @@ export class ActionResolver {
   ): boolean {
     const pending = state.pendingAction;
     if (
-      !pending ||
+      !ActionResolver.isPlayerSelectionAction(pending) ||
       pending.type !== 'select_player' ||
       pending.sourcePlayerId !== sourcePlayerId
     ) {
@@ -2687,7 +2722,7 @@ export class ActionResolver {
   ): boolean {
     const pending = state.pendingAction;
     if (
-      !pending ||
+      !ActionResolver.isCardSelectionAction(pending) ||
       pending.type !== 'select_hand_card' ||
       pending.sourcePlayerId !== sourcePlayerId
     ) {
