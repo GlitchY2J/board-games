@@ -98,6 +98,7 @@ export type PendingAction =
          | "playful_puppet_unicorn_move"
            | "sweet_old_ladycorn_sacrifice"
            | "unicorn_slasher_remove"
+           | "heeeeeres_stabby_remove"
            | "vengeful_unicorn_sacrifice"
         | "dark_angel_unicorn"
         | "mermaid_unicorn"

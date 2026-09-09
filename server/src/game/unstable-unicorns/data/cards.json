@@ -1485,8 +1485,8 @@
     "name": "Heeeeere's Stabby",
     "cardType": "magic",
     "image": "/cards/unstable-unicorns/nightmares/heeeeeres_stabby.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "Remove a card in any player's Stable from the game.",
+    "effect": "heeeeeres_stabby",
     "copies": 3,
     "expansion": "nightmares"
   },

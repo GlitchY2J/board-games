@@ -1973,6 +1973,33 @@ export class ActionResolver {
       return false;
     }
 
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'heeeeeres_stabby_remove'
+    ) {
+      const targetIds = pending.remainingPlayerIds ?? [];
+      if (!targetIds.includes(sourcePlayerId)) return false;
+
+      for (const targetPlayer of state.players) {
+        const index = targetPlayer.stable.findIndex((card) => card.uid === cardId);
+        if (index === -1) continue;
+
+        const [removed] = targetPlayer.stable.splice(index, 1);
+        maybeTriggerBarbedWireLeave(state, targetPlayer);
+        state.removedCards ??= [];
+        state.removedCards.push(removed);
+        state.pendingAction = undefined;
+        addLog(
+          state,
+          `${state.players.find((p) => p.id === sourcePlayerId)?.name ?? 'Un jugador'} retiró ${removed.name} de la partida por Heeeeere's Stabby`,
+          { playerId: sourcePlayerId },
+        );
+        return true;
+      }
+
+      return false;
+    }
+
     // ──────────────────────────────────────────
     // Glitter Tornado: el jugador activo elige una carta por cada establo en la cola
     // ──────────────────────────────────────────
