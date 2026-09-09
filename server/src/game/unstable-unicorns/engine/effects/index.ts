@@ -21,6 +21,7 @@ import { wingedHorrorcorn } from '../../../cards/effects/wingedHorrorcorn.ts';
 import { heeeeeresStabby } from '../../../cards/effects/heeeeeresStabby.ts';
 import { possession } from '../../../cards/effects/possession.ts';
 import { reanimation } from '../../../cards/effects/reanimation.ts';
+import { supernaturalSelection } from '../../../cards/effects/supernaturalSelection.ts';
 import { classyNarwhal } from '../../../cards/effects/classyNarwhal.ts';
 import { greedyFlyingUnicorn } from '../../../cards/effects/greedyFlyingUnicorn.ts';
 import { llamacorn } from '../../../cards/effects/llamacorn.ts';
@@ -129,6 +130,7 @@ export const effects: Record<string, CardEffect> = {
   heeeeeres_stabby: heeeeeresStabby,
   possession,
   reanimation,
+  supernatural_selection: supernaturalSelection,
   classy_narwhal: classyNarwhal,
   greedy_flying_unicorn: greedyFlyingUnicorn,
   llamacorn: llamacorn,

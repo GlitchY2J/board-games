@@ -370,6 +370,7 @@ export default function GameOverlay({
          const isPlayfulPuppet = action.reason === 'playful_puppet_unicorn';
          const isWingedHorrorcorn = action.reason === 'winged_horrorcorn';
          const isPossession = action.reason === 'possession';
+         const isSupernaturalSelection = action.reason === 'supernatural_selection';
         const isMermaid = action.reason === 'mermaid_unicorn';
         const isUnfairBargain = action.reason === 'unfair_bargain';
          const isUnicornSwap = action.reason === 'unicorn_swap';
@@ -409,6 +410,13 @@ export default function GameOverlay({
            if (handInspection) return p.hand.length > 0;
            if (isPossession)
              return p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0;
+           if (isSupernaturalSelection)
+             return p.stable.some(
+               (card) =>
+                 card.cardType === 'unicorn' &&
+                 card.unicornClass === 'basic' &&
+                 !isPandamoniumProtected(p, card),
+             );
           if (isUnicornSwap)
             return p.stable.some((c) => c.cardType === 'unicorn');
            if (isUnicornPoison) return p.stable.length > 0;
@@ -451,6 +459,7 @@ export default function GameOverlay({
            if (isPlayfulPuppet) return '🪆 Playful Puppet Unicorn';
            if (isWingedHorrorcorn) return '🪽 Winged Horrorcorn';
            if (isPossession) return '🖐️ Possession';
+           if (isSupernaturalSelection) return '🔮 Supernatural Selection';
           if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
           if (isUnfairBargain) return '🤝 Unfair Bargain';
            if (isUnicornSwap) return '🦄 Unicorn Swap';
@@ -488,6 +497,8 @@ export default function GameOverlay({
              return 'Elige a un jugador para mirar su mano y robar una carta';
            if (isPossession)
              return 'Elige a un jugador para robarle una carta de su mano';
+           if (isSupernaturalSelection)
+             return 'Elige un jugador para destruir todos sus Basic Unicorns';
           if (isMermaid)
             return 'Elige a un jugador para devolver una carta de su establo a su mano';
           if (isUnfairBargain)

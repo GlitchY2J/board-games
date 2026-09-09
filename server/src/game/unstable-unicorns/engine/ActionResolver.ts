@@ -526,6 +526,29 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'supernatural_selection') {
+      if (targetPlayerId === sourcePlayerId) return false;
+      const target = state.players.find((p) => p.id === targetPlayerId);
+      if (!target) return false;
+
+      for (const card of [...target.stable]) {
+        if (
+          card.cardType === 'unicorn' &&
+          card.unicornClass === 'basic' &&
+          !isPandamoniumProtected(target, card)
+        ) {
+          const index = target.stable.findIndex((candidate) => candidate.uid === card.uid);
+          if (index !== -1) {
+            const [destroyed] = target.stable.splice(index, 1);
+            CardMovement.destroyOrSacrifice(state, target, destroyed, 'destroy');
+          }
+        }
+      }
+
+      state.pendingAction = undefined;
+      return true;
+    }
+
     if (pending.reason === 'unfair_bargain') {
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
       if (!sourcePlayer) return false;

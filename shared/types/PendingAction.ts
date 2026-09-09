@@ -71,6 +71,7 @@ export type PendingAction =
          | "playful_puppet_unicorn"
          | "winged_horrorcorn"
          | "possession"
+         | "supernatural_selection"
          | "mermaid_unicorn"
         | "unfair_bargain"
         | "unicorn_swap"
