@@ -12,6 +12,15 @@ import { isEffectBlockedByBlindingLight } from '../cards/effects/blindingLight.t
 import { hasUnicornOfDeathTarget } from '../cards/effects/unicornOfDeath.ts';
 import { getHandLimit } from '../cards/effects/unicornOfFamine.ts';
 import { CardMovement } from '../unstable-unicorns/engine/CardMovement.ts';
+import { effects } from '../unstable-unicorns/engine/effects/index.ts';
+
+const BEGINNING_HOOK_IDS = new Set([
+  'nightmare_buried_alive',
+  'nightmare_existential_dread',
+  'ghost_guide',
+  'poltergeist_swipe',
+  'strange_craft_project',
+]);
 
 const END_OF_TURN_EFFECTS = new Set<string>([
   // Add here any card whose effect triggers at the end of your turn
@@ -55,10 +64,18 @@ export class TurnManager {
       ...activePlayer.upgrades,
       ...activePlayer.downgrades,
     ];
+    const legacyCards = allCards.filter((card) => !BEGINNING_HOOK_IDS.has(card.id));
+
+    for (const card of allCards) {
+      const effect = card.effect ? effects[card.effect] : undefined;
+      if (effect?.canBeginTurn?.(game, activePlayer, card)) {
+        uids.push(card.uid);
+      }
+    }
 
     // Se recogen TODAS las copias (por uid): cada copia de un upgrade puede
     // activarse por separado (p. ej. dos Glitter Bomb → dos efectos).
-    const rhinocorn = allCards.filter((c) => c.id === 'rhinocorn');
+    const rhinocorn = legacyCards.filter((c) => c.id === 'rhinocorn');
     if (
       rhinocorn.length > 0 &&
       game.players.some((p) => p.id !== activePlayer.id && hasAvailableUnicorn(p)) &&
@@ -67,7 +84,7 @@ export class TurnManager {
       uids.push(...rhinocorn.map((c) => c.uid));
     }
 
-    const caffeine = allCards.filter((c) => c.id === 'caffeine_overload');
+    const caffeine = legacyCards.filter((c) => c.id === 'caffeine_overload');
     if (caffeine.length > 0 && hasAvailableCardToSacrifice(activePlayer)) {
       uids.push(...caffeine.map((c) => c.uid));
     }
@@ -75,17 +92,17 @@ export class TurnManager {
     // Claw Machine es un efecto opcional ("you may"). Se ofrece siempre que el
     // upgrade esté en el establo; si al aceptar la mano no tiene carta para
     // descartar, se resuelve sin efecto en lugar de suprimir la oferta.
-    const claw = allCards.filter((c) => c.id === 'claw_machine');
+    const claw = legacyCards.filter((c) => c.id === 'claw_machine');
     if (claw.length > 0) {
       uids.push(...claw.map((c) => c.uid));
     }
 
-    const glitter = allCards.filter((c) => c.id === 'glitter_bomb');
+    const glitter = legacyCards.filter((c) => c.id === 'glitter_bomb');
     if (glitter.length > 0 && hasAvailableCardToSacrifice(activePlayer)) {
       uids.push(...glitter.map((c) => c.uid));
     }
 
-    const unicornOfDeath = allCards.filter((c) => c.id === 'unicorn_of_death');
+    const unicornOfDeath = legacyCards.filter((c) => c.id === 'unicorn_of_death');
     if (
       unicornOfDeath.length > 0 &&
       hasAvailableUnicorn(activePlayer) &&
@@ -98,7 +115,7 @@ export class TurnManager {
     // opcional; se ofrece siempre que el upgrade esté en el establo y haya un
     // unicornio ajeno disponible. Si la mano no llega a 3 cartas al aceptar,
     // se resuelve sin efecto.
-    const lasso = allCards.filter((c) => c.id === 'rainbow_lasso');
+    const lasso = legacyCards.filter((c) => c.id === 'rainbow_lasso');
     if (
       lasso.length > 0 &&
       game.players.some(
@@ -108,18 +125,18 @@ export class TurnManager {
       uids.push(...lasso.map((c) => c.uid));
     }
 
-    const sprinkles = allCards.filter((c) => c.id === 'rainbow_sprinkles');
+    const sprinkles = legacyCards.filter((c) => c.id === 'rainbow_sprinkles');
     if (sprinkles.length > 0) {
       uids.push(...sprinkles.map((c) => c.uid));
     }
 
     // Clairvoyant Unicorn: efecto opcional de robar una carta al comenzar el turno.
-    const clairvoyant = allCards.filter((c) => c.id === 'clairvoyant_unicorn');
+    const clairvoyant = legacyCards.filter((c) => c.id === 'clairvoyant_unicorn');
     if (clairvoyant.length > 0) {
       uids.push(...clairvoyant.map((c) => c.uid));
     }
 
-    const specialDelivery = allCards.filter((c) => c.id === 'special_delivery');
+    const specialDelivery = legacyCards.filter((c) => c.id === 'special_delivery');
     if (
       specialDelivery.length > 0 &&
       game.nursery.some(
@@ -131,7 +148,7 @@ export class TurnManager {
 
     // Stable Artillery: descartar 2 cartas y luego destruir un unicornio de
     // OTRO jugador (no del propio establo). Igual que Lasso: opcional.
-    const artillery = allCards.filter((c) => c.id === 'stable_artillery');
+    const artillery = legacyCards.filter((c) => c.id === 'stable_artillery');
     if (
       artillery.length > 0 &&
       game.players.some(
@@ -144,17 +161,17 @@ export class TurnManager {
     // Sadistic Ritual: sacrificar un unicornio propio y luego robar una carta.
     // Solo se encola si hay un unicornio disponible para sacrificar; si no hay
     // unicornio, no se puede cumplir la exigencia y no se roba carta.
-    const sadistic = allCards.filter((c) => c.id === 'sadistic_ritual');
+    const sadistic = legacyCards.filter((c) => c.id === 'sadistic_ritual');
     if (sadistic.length > 0 && hasAvailableUnicorn(activePlayer)) {
       uids.push(...sadistic.map((c) => c.uid));
     }
 
-    const buriedAlive = allCards.filter((c) => c.id === 'nightmare_buried_alive');
+    const buriedAlive = legacyCards.filter((c) => c.id === 'nightmare_buried_alive');
     if (buriedAlive.length > 0) {
       uids.push(...buriedAlive.map((c) => c.uid));
     }
 
-    const existentialDread = allCards.filter(
+    const existentialDread = legacyCards.filter(
       (c) => c.id === 'nightmare_existential_dread',
     );
     if (
@@ -167,12 +184,12 @@ export class TurnManager {
       uids.push(...existentialDread.map((c) => c.uid));
     }
 
-    const ghostGuide = allCards.filter((c) => c.id === 'ghost_guide');
+    const ghostGuide = legacyCards.filter((c) => c.id === 'ghost_guide');
     if (ghostGuide.length > 0 && game.deck.length > 0) {
       uids.push(...ghostGuide.map((c) => c.uid));
     }
 
-    const poltergeistSwipe = allCards.filter(
+    const poltergeistSwipe = legacyCards.filter(
       (c) => c.id === 'poltergeist_swipe',
     );
     if (
@@ -185,7 +202,7 @@ export class TurnManager {
       uids.push(...poltergeistSwipe.map((c) => c.uid));
     }
 
-    const strangeCraft = allCards.filter((c) => c.id === 'strange_craft_project');
+    const strangeCraft = legacyCards.filter((c) => c.id === 'strange_craft_project');
     if (
       strangeCraft.length > 0 &&
       activePlayer.hand.length >= 3 &&
@@ -194,7 +211,7 @@ export class TurnManager {
       uids.push(...strangeCraft.map((c) => c.uid));
     }
 
-    const zombie = allCards.filter((c) => c.id === 'zombie_unicorn');
+    const zombie = legacyCards.filter((c) => c.id === 'zombie_unicorn');
     if (
       zombie.length > 0 &&
       hasAvailableUnicorn(activePlayer) &&
@@ -203,7 +220,7 @@ export class TurnManager {
       uids.push(...zombie.map((c) => c.uid));
     }
 
-    const angel = allCards.filter((c) => c.id === 'angel_unicorn');
+    const angel = legacyCards.filter((c) => c.id === 'angel_unicorn');
     if (
       angel.length > 0 &&
       game.discard.some((c) => c.cardType === 'unicorn') &&
@@ -214,7 +231,7 @@ export class TurnManager {
 
     // Extremely Fertile Unicorn: descartar una carta para traer un Baby
     // Unicorn de la Nursery. Solo se ofrece si ambos pasos son posibles.
-    const fertile = allCards.filter((c) => c.id === 'extremely_fertile_unicorn');
+    const fertile = legacyCards.filter((c) => c.id === 'extremely_fertile_unicorn');
     if (
       fertile.length > 0 &&
       activePlayer.hand.length > 0 &&
@@ -250,6 +267,11 @@ export class TurnManager {
     game.beginningEffectsQueue = (game.beginningEffectsQueue ?? []).filter(
       (effectUid) => effectUid !== uid,
     );
+
+    const registeredEffect = card.effect ? effects[card.effect] : undefined;
+    if (registeredEffect?.onBeginningTurn) {
+      return registeredEffect.onBeginningTurn(game, activePlayer, card) !== false;
+    }
 
     switch (card.id) {
       case 'rhinocorn':

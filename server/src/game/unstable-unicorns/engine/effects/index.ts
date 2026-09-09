@@ -30,6 +30,9 @@ import { paranormalAffection } from '../../../cards/effects/paranormalAffection.
 import { poltergeistSwipe } from '../../../cards/effects/poltergeistSwipe.ts';
 import { savedByTheSigil } from '../../../cards/effects/savedByTheSigil.ts';
 import { strangeCraftProject } from '../../../cards/effects/strangeCraftProject.ts';
+import { nightmareBuriedAlive } from '../../../cards/effects/nightmareBuriedAlive.ts';
+import { nightmareExistentialDread } from '../../../cards/effects/nightmareExistentialDread.ts';
+import { ghostGuide } from '../../../cards/effects/ghostGuide.ts';
 import { classyNarwhal } from '../../../cards/effects/classyNarwhal.ts';
 import { greedyFlyingUnicorn } from '../../../cards/effects/greedyFlyingUnicorn.ts';
 import { llamacorn } from '../../../cards/effects/llamacorn.ts';
@@ -147,6 +150,9 @@ export const effects: Record<string, CardEffect> = {
   poltergeist_swipe: poltergeistSwipe,
   saved_by_the_sigil: savedByTheSigil,
   strange_craft_project: strangeCraftProject,
+  nightmare_buried_alive: nightmareBuriedAlive,
+  nightmare_existential_dread: nightmareExistentialDread,
+  ghost_guide: ghostGuide,
   classy_narwhal: classyNarwhal,
   greedy_flying_unicorn: greedyFlyingUnicorn,
   llamacorn: llamacorn,

@@ -1536,7 +1536,7 @@
     "cardType": "downgrade",
     "image": "/cards/unstable-unicorns/nightmares/nightmare_buried_alive.png",
     "description": "If this card is in your Stable at the beginning of your turn, sacrifice a Unicorn card. If you have no Unicorn cards in your Stable, return this card to your hand.",
-    "effect": null,
+    "effect": "nightmare_buried_alive",
     "copies": 1,
     "expansion": "nightmares"
   },
@@ -1556,7 +1556,7 @@
     "cardType": "downgrade",
     "image": "/cards/unstable-unicorns/nightmares/nightmare_existential_dread.png",
     "description": "If this card is in your Stable at the beginning of your turn, steal a Downgrade card.",
-    "effect": null,
+    "effect": "nightmare_existential_dread",
     "copies": 1,
     "expansion": "nightmares"
   },
@@ -1576,7 +1576,7 @@
     "cardType": "upgrade",
     "image": "/cards/unstable-unicorns/nightmares/ghost_guide.png",
     "description": "If this card is in your Stable at the beginning of your turn, you may DRAW a card and reveal it. If it is an Upgrade or Downgrade card, bring it into your Stable.",
-    "effect": null,
+    "effect": "ghost_guide",
     "copies": 1,
     "expansion": "nightmares"
   },

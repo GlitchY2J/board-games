@@ -9,6 +9,12 @@ export interface CardEffect {
 
   onEnterStable?(state: GameState, player: Player, card: Card): void;
 
+  /** Comprueba si la carta tiene un efecto disponible al inicio del turno. */
+  canBeginTurn?(state: GameState, player: Player, card: Card): boolean;
+
+  /** Inicia el efecto de comienzo de turno. False permite continuar la cola. */
+  onBeginningTurn?(state: GameState, player: Player, card: Card): boolean | void;
+
   resolve?(state: GameState, player: Player, payload: unknown): void;
 
   /** Se dispara cuando esta carta es sacrificada o destruida.
