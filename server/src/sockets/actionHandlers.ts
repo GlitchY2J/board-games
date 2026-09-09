@@ -2346,6 +2346,7 @@ export function registerActionHandlers(
          pending.reason !== 'zombie_unicorn' &&
          pending.reason !== 'extremely_fertile_unicorn' &&
          pending.reason !== 'frenchiecorn'
+         && pending.reason !== 'reanimation'
       )
         return;
 
@@ -2456,6 +2457,40 @@ export function registerActionHandlers(
         );
         room.gameState.phase = TurnPhase.END;
         TurnManager.skipEndIfNoTriggers(room.gameState);
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (
+        pending.reason === 'reanimation' &&
+        (selectedCard.cardType !== 'unicorn' ||
+          selectedCard.unicornClass !== 'basic')
+      ) {
+        emitGameError(
+          socket,
+          'INVALID_SELECTION',
+          'Reanimation solo puede traer un Basic Unicorn.',
+          'select-discard-card',
+        );
+        return;
+      }
+
+      if (pending.reason === 'reanimation') {
+        if (broughtFromDiscard.unicornClass !== 'basic') {
+          room.gameState.discard.push(broughtFromDiscard);
+          return;
+        }
+
+        const drawn = room.gameState.deck.shift();
+        if (drawn) {
+          enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
+          player.hand.push(drawn);
+        }
+        addLog(
+          room.gameState,
+          `${player.name} trajo ${broughtFromDiscard.name} del descarte y robó una carta por Reanimation`,
+          { playerId: player.id },
+        );
         emitGameState(io, room, 'game-updated');
         return;
       }

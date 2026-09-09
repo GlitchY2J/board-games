@@ -1505,8 +1505,8 @@
     "name": "Reanimation",
     "cardType": "magic",
     "image": "/cards/unstable-unicorns/nightmares/reanimation.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "Bring a Basic Unicorn card from the discard pile into your Stable, then DRAW a card.",
+    "effect": "reanimation",
     "copies": 2,
     "expansion": "nightmares"
   },

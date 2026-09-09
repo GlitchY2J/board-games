@@ -2579,11 +2579,14 @@ export default function GameOverlay({
         const isKissOfLife = action.reason === 'kiss_of_life';
         const isAngelUnicorn = action.reason === 'angel_unicorn';
         const isFrenchiecorn = action.reason === 'frenchiecorn';
+        const isReanimation = action.reason === 'reanimation';
 
         const eligibleCards = [...gameState.discard].reverse().filter(
           (card) =>
             (!action.cardType || card.cardType === action.cardType) &&
             (!isFrenchiecorn || action.discardedCardIds?.includes(card.uid)) &&
+            (!isReanimation ||
+              (card.cardType === 'unicorn' && card.unicornClass === 'basic')) &&
             (action.reason !== 'dark_angel_unicorn' ||
               card.id !== 'dark_angel_unicorn') &&
             (!isSwiftFlyingUnicorn ||
@@ -2610,6 +2613,8 @@ export default function GameOverlay({
                           ? '💋 Kiss Of Life'
                           : isFrenchiecorn
                             ? '🐶 Frenchiecorn'
+                          : isReanimation
+                            ? '🧟 Reanimation'
                           : '😈 Dark Angel Unicorn'
             }
             subtitle={
@@ -2619,9 +2624,11 @@ export default function GameOverlay({
                   ? 'Elige un unicornio del descarte para añadirlo a tu mano'
                 : isSwiftFlyingUnicorn
                     ? 'Elige un Neigh del descarte para añadirlo a tu mano'
-                    : isFrenchiecorn
-                      ? 'Elige una de las cartas descartadas por los demás jugadores para añadirla a tu mano'
-                    : 'Elige un unicornio del descarte para traerlo a tu establo'
+                     : isFrenchiecorn
+                       ? 'Elige una de las cartas descartadas por los demás jugadores para añadirla a tu mano'
+                     : isReanimation
+                       ? 'Elige un Basic Unicorn del descarte para traerlo a tu establo y luego robar una carta'
+                     : 'Elige un unicornio del descarte para traerlo a tu establo'
             }
             items={eligibleCards.map((card, idx) => ({
               id: `${card.id}_${idx}`,
