@@ -25,43 +25,13 @@ import {
 import { nextSprayBottleChoice } from '../../cards/effects/sprayBottleOfYouth.ts';
 import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
 import { removeStableCardFromGame } from './StableCardRemoval.ts';
-import type {
-  CardSelectionAction,
-  DiscardAction,
-  PlayerSelectionAction,
+import {
+  isCardSelectionAction,
+  isDiscardAction,
+  isPlayerSelectionAction,
 } from '../../../../../shared/types/PendingActionCategories.ts';
 
 export class ActionResolver {
-  private static isPlayerSelectionAction(
-    action: GameState['pendingAction'],
-  ): action is PlayerSelectionAction {
-    return action?.type === 'select_player' || action?.type === 'select_players';
-  }
-
-  private static isCardSelectionAction(
-    action: GameState['pendingAction'],
-  ): action is CardSelectionAction {
-    return (
-      action?.type === 'select_stable_card' ||
-      action?.type === 'select_hand_card' ||
-      action?.type === 'select_discard_card' ||
-      action?.type === 'select_own_hand_card'
-    );
-  }
-
-  private static isDiscardAction(
-    action: GameState['pendingAction'],
-  ): action is DiscardAction {
-    return (
-      action?.type === 'discard' ||
-      action?.type === 'select_discard_count' ||
-      action?.type === 'pestilence_discard' ||
-      action?.type === 'mystical_vortex' ||
-      action?.type === 'llamacorn' ||
-      action?.type === 'frenchiecorn'
-    );
-  }
-
   static handleSelectPlayers(
     state: GameState,
     sourcePlayerId: string,
@@ -69,7 +39,7 @@ export class ActionResolver {
   ): boolean {
     const pending = state.pendingAction;
     if (
-      !ActionResolver.isPlayerSelectionAction(pending) ||
+      !isPlayerSelectionAction(pending) ||
       pending.type !== 'select_players' ||
       pending.sourcePlayerId !== sourcePlayerId ||
       new Set(playerIds).size !== playerIds.length ||
@@ -208,7 +178,7 @@ export class ActionResolver {
   ): boolean {
     const pending = state.pendingAction;
     if (
-      !ActionResolver.isDiscardAction(pending) ||
+      !isDiscardAction(pending) ||
       pending.type !== 'discard' ||
       pending.playerId !== playerId
     ) {
@@ -417,7 +387,7 @@ export class ActionResolver {
   ): boolean {
     const pending = state.pendingAction;
     if (
-      !ActionResolver.isPlayerSelectionAction(pending) ||
+      !isPlayerSelectionAction(pending) ||
       pending.type !== 'select_player' ||
       pending.sourcePlayerId !== sourcePlayerId
     ) {
@@ -517,7 +487,7 @@ export class ActionResolver {
     }
 
     if (pending.reason === 'play_downgrade') {
-      const card = (pending as any).card;
+      const card = pending.card;
       if (hasSavedByTheSigil(targetPlayer)) return false;
       if (card) {
         CardMovement.enterStableCard(targetPlayer, card);
@@ -2750,7 +2720,7 @@ export class ActionResolver {
   ): boolean {
     const pending = state.pendingAction;
     if (
-      !ActionResolver.isCardSelectionAction(pending) ||
+      !isCardSelectionAction(pending) ||
       pending.type !== 'select_hand_card' ||
       pending.sourcePlayerId !== sourcePlayerId
     ) {

@@ -421,7 +421,7 @@ Criterios:
 - Las reglas pasivas no dependen de búsquedas dispersas por `card.id`.
 - Cada modificador declara la consulta que modifica.
 
-## Fase 9: Pending Actions
+## Fase 9: Pending Actions [COMPLETADA]
 
 Reemplazar la unión monolítica por categorías y handlers exhaustivos.
 
@@ -439,6 +439,16 @@ Criterios:
 - Sin casts `any` para resolver acciones.
 - Ownership y razones validados por handler especializado.
 - Tests de cada categoría y de acciones obsoletas.
+
+Progreso actual:
+
+- `PendingActionCategories` clasifica selecciones de jugador, cartas, descartes,
+  elecciones y mazo, incluyendo selección de nursery.
+- `ActionResolver` usa el estrechamiento por categorías para sus entradas
+  principales.
+- La limpieza de acciones pendientes al salir un jugador ya no usa `any`.
+- Los handlers Socket.IO quedan separados por dominio y las entradas de
+  descarte usan un `switch` exhaustivo sobre su categoría.
 
 ## Fase 10: Servicios De Sala Y Motores
 

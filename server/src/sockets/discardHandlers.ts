@@ -6,6 +6,7 @@ import { emitGameError, getSocketGameContext } from './socketContext.ts';
 import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import type { GameState } from '../game/models/GameState.ts';
+import { isDiscardAction } from '../../../shared/types/PendingActionCategories.ts';
 
 function continueBeginningPhaseIfReady(game: GameState): void {
   if (!game.pendingAction && game.phase === TurnPhase.BEGINNING) {
@@ -28,6 +29,11 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
       return;
     }
 
+    if (!isDiscardAction(game.pendingAction)) {
+      emitGameError(socket, 'INVALID_SELECTION', 'La selección de descarte no es válida.', 'discard-card');
+      return;
+    }
+
     let resolved = false;
     const discardReason = game.pendingAction.type === 'discard'
       ? game.pendingAction.reason
@@ -36,18 +42,25 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
       ? player.hand.find((card) => card.uid === cardIds[0])
       : undefined;
 
-    if (game.pendingAction.type === 'select_discard_count') {
-      resolved = ActionResolver.handlePestilenceDiscardCount(game, player.id, cardIds);
-    } else if (game.pendingAction.type === 'pestilence_discard') {
-      resolved = ActionResolver.handlePestilenceDiscard(game, player.id, cardIds);
-    } else if (game.pendingAction.type === 'mystical_vortex') {
-      resolved = ActionResolver.handleMysticalVortexDiscard(game, player.id, cardIds);
-    } else if (game.pendingAction.type === 'llamacorn') {
-      resolved = ActionResolver.handleLlamacornDiscard(game, player.id, cardIds);
-    } else if (game.pendingAction.type === 'frenchiecorn') {
-      resolved = ActionResolver.handleFrenchiecornDiscard(game, player.id, cardIds);
-    } else {
-      resolved = ActionResolver.handleDiscard(game, player.id, cardIds);
+    switch (game.pendingAction.type) {
+      case 'select_discard_count':
+        resolved = ActionResolver.handlePestilenceDiscardCount(game, player.id, cardIds);
+        break;
+      case 'pestilence_discard':
+        resolved = ActionResolver.handlePestilenceDiscard(game, player.id, cardIds);
+        break;
+      case 'mystical_vortex':
+        resolved = ActionResolver.handleMysticalVortexDiscard(game, player.id, cardIds);
+        break;
+      case 'llamacorn':
+        resolved = ActionResolver.handleLlamacornDiscard(game, player.id, cardIds);
+        break;
+      case 'frenchiecorn':
+        resolved = ActionResolver.handleFrenchiecornDiscard(game, player.id, cardIds);
+        break;
+      case 'discard':
+        resolved = ActionResolver.handleDiscard(game, player.id, cardIds);
+        break;
     }
 
     if (!resolved) {

@@ -49,11 +49,11 @@ function removePlayerFromGame(room: Room, playerId: string): boolean {
   }
 
   if (game.pendingAction) {
-    const pending = game.pendingAction as any;
-    if (
-      pending.playerId === gamePlayer.id ||
-      pending.sourcePlayerId === gamePlayer.id
-    ) {
+    const pending = game.pendingAction;
+    const belongsToPlayer =
+      ('playerId' in pending && pending.playerId === gamePlayer.id) ||
+      ('sourcePlayerId' in pending && pending.sourcePlayerId === gamePlayer.id);
+    if (belongsToPlayer) {
       game.pendingAction = undefined;
     }
   }
