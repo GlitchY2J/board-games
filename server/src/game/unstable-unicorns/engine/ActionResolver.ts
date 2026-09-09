@@ -489,7 +489,7 @@ export class ActionResolver {
       const card = (pending as any).card;
       if (hasSavedByTheSigil(targetPlayer)) return false;
       if (card) {
-        targetPlayer.downgrades.push(card);
+        CardMovement.enterStableCard(targetPlayer, card);
       }
       state.pendingAction = undefined;
       return true;
@@ -646,9 +646,9 @@ export class ActionResolver {
       }
 
       if (card.cardType === 'upgrade') {
-        destPlayer.upgrades.push(card);
+        CardMovement.enterStableCard(destPlayer, card);
       } else if (card.cardType === 'downgrade') {
-        destPlayer.downgrades.push(card);
+        CardMovement.enterStableCard(destPlayer, card);
       } else {
         return false;
       }
@@ -1906,7 +1906,7 @@ export class ActionResolver {
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
       if (!sourcePlayer) return false;
 
-      sourcePlayer.upgrades.push(stolenCard);
+      CardMovement.enterStableCard(sourcePlayer, stolenCard);
       if (state.pendingAction === pending || !state.pendingAction) {
         state.pendingAction = undefined;
       }
@@ -2060,7 +2060,7 @@ export class ActionResolver {
         if (index === -1) continue;
 
         const [downgrade] = targetPlayer.downgrades.splice(index, 1);
-        sourcePlayer.downgrades.push(downgrade);
+        CardMovement.enterStableCard(sourcePlayer, downgrade);
         state.pendingAction = undefined;
         return true;
       }
@@ -2082,7 +2082,7 @@ export class ActionResolver {
       if (index === -1) return false;
 
       const [downgrade] = sourcePlayer.downgrades.splice(index, 1);
-      targetPlayer.downgrades.push(downgrade);
+        CardMovement.enterStableCard(targetPlayer, downgrade);
       state.pendingAction = undefined;
       return true;
     }
@@ -2099,9 +2099,7 @@ export class ActionResolver {
         if (index === -1) continue;
 
         const [removed] = targetPlayer.stable.splice(index, 1);
-        maybeTriggerBarbedWireLeave(state, targetPlayer);
-        state.removedCards ??= [];
-        state.removedCards.push(removed);
+        CardMovement.removeFromGame(state, targetPlayer, removed);
         state.pendingAction = undefined;
         addLog(
           state,
@@ -2141,9 +2139,9 @@ export class ActionResolver {
           return false;
         }
       } else if (stolen.cardType === 'upgrade') {
-        sourcePlayer.upgrades.push(stolen);
+        CardMovement.enterStableCard(sourcePlayer, stolen);
       } else {
-        sourcePlayer.downgrades.push(stolen);
+        CardMovement.enterStableCard(sourcePlayer, stolen);
       }
       state.pendingAction = undefined;
       return true;
@@ -2161,9 +2159,7 @@ export class ActionResolver {
         if (index === -1) continue;
 
         const [removed] = targetPlayer.stable.splice(index, 1);
-        maybeTriggerBarbedWireLeave(state, targetPlayer);
-        state.removedCards ??= [];
-        state.removedCards.push(removed);
+        CardMovement.removeFromGame(state, targetPlayer, removed);
         state.pendingAction = undefined;
         addLog(
           state,
@@ -2189,9 +2185,7 @@ export class ActionResolver {
         if (index === -1) continue;
 
         const [removed] = targetPlayer.stable.splice(index, 1);
-        maybeTriggerBarbedWireLeave(state, targetPlayer);
-        state.removedCards ??= [];
-        state.removedCards.push(removed);
+        CardMovement.removeFromGame(state, targetPlayer, removed);
         state.pendingAction = undefined;
         addLog(
           state,
@@ -2716,7 +2710,7 @@ export class ActionResolver {
       }
 
       const [upgrade] = sourcePlayer.hand.splice(cardIdx, 1);
-      sourcePlayer.upgrades.push(upgrade);
+      CardMovement.enterStableCard(sourcePlayer, upgrade);
       state.pendingAction = undefined;
       return true;
     }

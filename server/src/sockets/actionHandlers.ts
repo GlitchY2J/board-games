@@ -1155,9 +1155,9 @@ export function registerActionHandlers(
             );
 
             if (drawn.cardType === 'upgrade') {
-              player.upgrades.push(drawn);
+              CardMovement.enterStableCard(player, drawn);
             } else if (drawn.cardType === 'downgrade') {
-              player.downgrades.push(drawn);
+              CardMovement.enterStableCard(player, drawn);
             } else {
               player.hand.push(drawn);
             }
@@ -2732,7 +2732,7 @@ export function registerActionHandlers(
           return;
 
         const [downgrade] = room.gameState.deck.splice(index, 1);
-        target.downgrades.push(downgrade);
+        CardMovement.enterStableCard(target, downgrade);
         for (let i = room.gameState.deck.length - 1; i > 0; i -= 1) {
           const j = Math.floor(Math.random() * (i + 1));
           [room.gameState.deck[i], room.gameState.deck[j]] = [

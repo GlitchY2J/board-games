@@ -28,10 +28,41 @@ export function hasDowngrade(player: Player, id: string): boolean {
 }
 import {
   enqueueCardAnimation,
+  enqueueDiscardAnimation,
   type CardAnimType,
 } from '../../cardAnimations.ts';
+import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
 
 export class CardMovement {
+  /** Coloca una carta ya retirada de su zona en el descarte. */
+  static discard(state: GameState, card: Card, playerId: string): void {
+    enqueueDiscardAnimation(state.roomCode, playerId, card);
+    state.discard.push(card);
+  }
+
+  /** Retira una carta de la partida; no se añade al descarte. */
+  static removeFromGame(state: GameState, player: Player, card: Card): void {
+    if (card.cardType === 'unicorn') {
+      maybeTriggerBarbedWireLeave(state, player);
+    }
+    state.removedCards ??= [];
+    state.removedCards.push(card);
+  }
+
+  /** Coloca un Upgrade o Downgrade en la zona correspondiente del jugador. */
+  static enterStableCard(player: Player, card: Card): boolean {
+    if (card.cardType === 'upgrade') {
+      player.upgrades.push(card);
+      return true;
+    }
+    if (card.cardType === 'downgrade') {
+      if (hasSavedByTheSigil(player)) return false;
+      player.downgrades.push(card);
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Coloca una carta de Unicornio en el establo de un jugador y dispara sus efectos de entrada.
    * Retorna `false` si no puede entrar (p. ej. bloqueado por Queen Bee Unicorn).
