@@ -8,6 +8,7 @@ import { UnicornHandler } from './handlers/UnicornHandler.ts';
 import { UpgradeHandler } from './handlers/UpgradeHandler.ts';
 import { VictoryManager } from '../../VictoryManager.ts';
 import { CardZoneMovement } from './CardZoneMovement.ts';
+import { getCardPassive } from './effects/CardPassive.ts';
 import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.ts';
 import {
   actionFailure,
@@ -105,7 +106,7 @@ export class RulesEngine {
 
     if (
       playedCard.cardType === 'upgrade' &&
-      player.downgrades.some((c) => c.id === 'broken_stable')
+      player.downgrades.some((c) => getCardPassive(c).blocksUpgradePlay)
     ) {
       return actionFailure(
         'ACTION_NOT_ALLOWED',
@@ -119,7 +120,9 @@ export class RulesEngine {
     // hay al menos otra carta en la mano. Si no, no se puede jugar el unicornio.
     if (
       playedCard.cardType === 'unicorn' &&
-      player.downgrades.some((c) => c.id === 'barbed_wire') &&
+      player.downgrades.some(
+        (c) => getCardPassive(c).requiresDiscardToPlayUnicorn,
+      ) &&
       player.hand.length <= 1
     ) {
       return actionFailure(

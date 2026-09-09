@@ -3,11 +3,14 @@ import type { Player } from '../../models/Player.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import type { PendingAction } from '../../models/PendingAction.ts';
 import { hasPandamonium } from './pandamonium.ts';
+import { getCardPassive } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const BARBED_WIRE_ID = 'barbed_wire';
 
 export function hasBarbedWire(player: Player): boolean {
-  return player.downgrades.some((card) => card.id === BARBED_WIRE_ID);
+  return player.downgrades.some(
+    (card) => getCardPassive(card).requiresDiscardToPlayUnicorn,
+  );
 }
 
 /**

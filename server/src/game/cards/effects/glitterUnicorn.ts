@@ -1,9 +1,10 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
+import { getCardPassive } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const glitterUnicorn: CardEffect = {
   onEnterStable(state, player) {
     const blockedByBrokenStable = player.downgrades.some(
-      (card) => card.id === 'broken_stable',
+      (card) => getCardPassive(card).blocksUpgradePlay,
     );
     const hasPlayableUpgrade =
       !blockedByBrokenStable &&

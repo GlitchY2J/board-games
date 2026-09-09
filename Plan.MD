@@ -403,7 +403,7 @@ Criterios:
 - No hay razones de cartas hardcodeadas en `TurnManager`.
 - Cada carta de inicio tiene tests de disponibilidad y resolución.
 
-## Fase 8: Pasivos Reales
+## Fase 8: Pasivos Reales [COMPLETADA]
 
 Convertir `CardPassive` de marcador a mecanismo de reglas.
 

@@ -30,4 +30,6 @@ export function getHandLimit(state: GameState, playerId?: string): number {
   );
 }
 
-export const unicornOfFamine: CardEffect = {};
+export const unicornOfFamine: CardEffect = {
+  passive: { kind: 'modifier', handLimitDelta: -5 },
+};

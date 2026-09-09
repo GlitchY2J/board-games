@@ -1,3 +1,5 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 
-export const tinyHooves: CardEffect = {};
+export const tinyHooves: CardEffect = {
+  passive: { kind: 'modifier', handLimitDelta: -4 },
+};

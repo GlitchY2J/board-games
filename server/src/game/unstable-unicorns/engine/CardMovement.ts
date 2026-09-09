@@ -8,6 +8,7 @@ import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.
 import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import {
   maybeTriggerBarbedWireLeave,
+  hasBarbedWire,
   triggerBarbedWireDiscard,
 } from '../../cards/effects/barbedWire.ts';
 import { isEffectBlockedByBlindingLight } from '../../cards/effects/blindingLight.ts';
@@ -107,7 +108,7 @@ export class CardMovement {
     // Barbed Wire: se captura ANTES de resolver los efectos on-enter porque la
     // entrada de este unicornio podría provocar que Barbed Wire abandone el
     // establo; aun así la carta debe descartarse (el efecto es simultáneo).
-    const hadBarbedWire = hasDowngrade(player, 'barbed_wire');
+    const hadBarbedWire = hasBarbedWire(player);
 
     const prevPending = state.pendingAction;
 

@@ -1,12 +1,15 @@
 import type { Player } from '../../models/Player.ts';
 import type { Card } from '../../models/Card.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
-import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
+import {
+  getCardPassive,
+  passiveForBlindingLight,
+} from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const BLINDING_LIGHT_ID = 'blinding_light';
 
 export function hasBlindingLight(player: Player): boolean {
-  return player.downgrades.some((card) => card.id === BLINDING_LIGHT_ID);
+  return player.downgrades.some((card) => getCardPassive(card).blocksUnicornEffects);
 }
 
 /** True si el efecto de un unicornio debe bloquearse por Blinding Light.
@@ -24,4 +27,6 @@ export function isEffectBlockedByBlindingLight(
   );
 }
 
-export const blindingLight: CardEffect = { passive: passiveModifier };
+export const blindingLight: CardEffect = {
+  passive: passiveForBlindingLight,
+};

@@ -3,6 +3,7 @@ import { TurnManager } from '../../turn/TurnManager.ts';
 import { TurnPhase } from '../../turn/TurnPhase.ts';
 import { CardMovement } from './CardMovement.ts';
 import { CardZoneMovement } from './CardZoneMovement.ts';
+import { getCardPassive } from './effects/CardPassive.ts';
 import { EffectStack } from './EffectStack.ts';
 import type { Card } from '../../models/Card.ts';
 import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
@@ -735,10 +736,11 @@ export class ActionResolver {
 
       const selected = ids.map((uid) => player.stable.find((card) => card.uid === uid));
       if (selected.some((card) => !card || card.cardType !== 'unicorn')) return false;
-      const sacrificeValue = selected.reduce(
-        (total, card) => total + (card?.id === 'ginormous_unicorn' ? 2 : 1),
-        0,
-      );
+       const sacrificeValue = selected.reduce(
+         (total, card) =>
+           total + 1 + (getCardPassive(card!).stablePowerDelta ?? 0),
+         0,
+       );
       if (sacrificeValue !== 4) return false;
 
       for (const uid of ids) {

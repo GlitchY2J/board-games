@@ -5,6 +5,7 @@ import {
 import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 
 export const nightmareExorciseRegimen: CardEffect = {
+  passive: { kind: 'modifier', handLimitDelta: -3 },
   onEnterStable(state, player) {
     for (const card of player.hand.splice(0)) {
       CardZoneMovement.discard(state, card, player.id);

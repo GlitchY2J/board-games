@@ -10,6 +10,7 @@ import { paranormalAffection } from '../src/game/cards/effects/paranormalAffecti
 import { nightmareCurrentlyIndisposed } from '../src/game/cards/effects/nightmareCurrentlyIndisposed.ts';
 import { CardMovement } from '../src/game/unstable-unicorns/engine/CardMovement.ts';
 import { CardZoneMovement } from '../src/game/unstable-unicorns/engine/CardZoneMovement.ts';
+import { getCardPassive } from '../src/game/unstable-unicorns/engine/effects/CardPassive.ts';
 import { removeStableCardFromGame } from '../src/game/unstable-unicorns/engine/StableCardRemoval.ts';
 import { isReactionEffect } from '../src/sockets/gameHandlers.ts';
 
@@ -135,4 +136,26 @@ test('CardZoneMovement mantiene cada transición en una sola zona', () => {
   assert.deepEqual(target.hand.map((item) => item.uid), [handCard.uid]);
   assert.equal(target.stable.length, 0);
   assert.deepEqual(game.discard.map((item) => item.uid), [stableCard.uid]);
+});
+
+test('CardPassive expone consultas declarativas de protección e inmunidad', () => {
+  assert.equal(getCardPassive({ id: 'pandamonium' }).protectsUnicorns, true);
+  assert.equal(
+    getCardPassive({ id: 'queen_bee_unicorn' }).blocksBasicUnicornEntry,
+    true,
+  );
+  assert.equal(
+    getCardPassive({ id: 'phantom_unicorn' }).immuneToSacrifice,
+    true,
+  );
+  assert.equal(
+    getCardPassive({ id: 'magical_kittencorn' }).immuneToMagicDestruction,
+    true,
+  );
+  assert.equal(getCardPassive({ id: 'broken_stable' }).blocksUpgradePlay, true);
+  assert.equal(
+    getCardPassive({ id: 'barbed_wire' }).requiresDiscardToPlayUnicorn,
+    true,
+  );
+  assert.equal(getCardPassive({ id: 'ginormous_unicorn' }).stablePowerDelta, 1);
 });

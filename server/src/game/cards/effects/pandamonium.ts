@@ -1,12 +1,15 @@
 import type { Player } from '../../models/Player.ts';
 import type { Card } from '../../models/Card.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
-import { passiveModifier } from '../../unstable-unicorns/engine/effects/CardPassive.ts';
+import {
+  getCardPassive,
+  passiveForPandamonium,
+} from '../../unstable-unicorns/engine/effects/CardPassive.ts';
 
 export const PANDAMONIUM_ID = 'pandamonium';
 
 export function hasPandamonium(player: Player): boolean {
-  return player.downgrades.some((card) => card.id === PANDAMONIUM_ID);
+  return player.downgrades.some((card) => getCardPassive(card).protectsUnicorns);
 }
 
 /** True si la carta es un unicornio que pertenece al establo de un jugador
@@ -39,5 +42,5 @@ export function hasAvailableCardToSacrifice(player: Player): boolean {
 }
 
 export const pandamonium: CardEffect = {
-  passive: passiveModifier,
+  passive: passiveForPandamonium,
 };
