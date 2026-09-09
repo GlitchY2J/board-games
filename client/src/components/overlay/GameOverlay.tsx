@@ -975,6 +975,44 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'vengeful_unicorn_sacrifice') {
+          const source = gameState.players.find((p) => p.id === localPlayerId);
+          if (!source) return null;
+
+          const items = source.stable
+            .filter(
+              (card) =>
+                card.cardType === 'unicorn' &&
+                card.unicornClass === 'basic' &&
+                !isPandamoniumProtected(source, card),
+            )
+            .map((card, index) => ({
+              id: `${card.id}_basic_${index}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Basic Unicorn de tu establo',
+              image: card.image,
+            }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="⚔️ Vengeful Unicorn"
+              subtitle="Elige un Basic Unicorn para SACRIFICAR y luego ROBAR 3 cartas."
+              items={items}
+              maxSelection={1}
+              confirmText="Sacrificar y robar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'playful_puppet_unicorn_move') {
           const source = gameState.players.find((p) => p.id === localPlayerId);
           if (!source) return null;

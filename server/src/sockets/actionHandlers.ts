@@ -1095,6 +1095,24 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'vengeful_unicorn') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'vengeful_unicorn_sacrifice',
+            sourcePlayerId: player.id,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'

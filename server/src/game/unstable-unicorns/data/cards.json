@@ -1464,8 +1464,8 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/unstable-unicorns/nightmares/vengeful_unicorn.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "When this card enters your Stable, you may sacrifice a Basic Unicorn card, then draw 3 cards.",
+    "effect": "vengeful_unicorn",
     "copies": 1,
     "expansion": "nightmares"
   },

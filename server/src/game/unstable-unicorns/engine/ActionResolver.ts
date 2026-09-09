@@ -1859,6 +1859,35 @@ export class ActionResolver {
 
     if (
       pending.type === 'select_stable_card' &&
+      pending.reason === 'vengeful_unicorn_sacrifice'
+    ) {
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const index = player.stable.findIndex(
+        (card) =>
+          card.uid === cardId &&
+          card.cardType === 'unicorn' &&
+          card.unicornClass === 'basic' &&
+          !isPandamoniumProtected(player, card),
+      );
+      if (index === -1) return false;
+
+      const [sacrificed] = player.stable.splice(index, 1);
+      CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
+      for (let count = 0; count < 3; count += 1) {
+        const drawn = state.deck.shift();
+        if (!drawn) break;
+        enqueueDrawAnimation(state.roomCode, player.id, drawn);
+        player.hand.push(drawn);
+      }
+      state.pendingAction = undefined;
+      return true;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
       pending.reason === 'playful_puppet_unicorn_move'
     ) {
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
