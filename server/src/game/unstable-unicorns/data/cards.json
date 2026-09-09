@@ -1555,7 +1555,7 @@
     "name": "Nightmare Existential Dread",
     "cardType": "downgrade",
     "image": "/cards/unstable-unicorns/nightmares/nightmare_existential_dread.png",
-    "description": "Nightmares expansion card.",
+    "description": "If this card is in your Stable at the beginning of your turn, steal a Downgrade card.",
     "effect": null,
     "copies": 1,
     "expansion": "nightmares"

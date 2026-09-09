@@ -1121,6 +1121,41 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'nightmare_existential_dread_steal') {
+          const source = gameState.players.find((p) => p.id === localPlayerId);
+          if (!source) return null;
+
+          const items = gameState.players
+            .filter((p) => p.id !== localPlayerId)
+            .flatMap((target, playerIndex) =>
+              target.downgrades.map((card, cardIndex) => ({
+                id: `${card.id}_existential_${playerIndex}_${cardIndex}`,
+                value: card.uid,
+                title: card.name,
+                subtitle: `Downgrade de ${target.name}`,
+                image: card.image,
+              })),
+            );
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🕳️ Nightmare Existential Dread"
+              subtitle="Debes ROBAR un Downgrade de otro jugador."
+              items={items}
+              maxSelection={1}
+              confirmText="Robar Downgrade"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'possession_steal') {
           const target = gameState.players.find(
             (p) => p.id === action.targetPlayerId,

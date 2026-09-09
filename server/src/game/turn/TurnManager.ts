@@ -154,6 +154,19 @@ export class TurnManager {
       uids.push(...buriedAlive.map((c) => c.uid));
     }
 
+    const existentialDread = allCards.filter(
+      (c) => c.id === 'nightmare_existential_dread',
+    );
+    if (
+      existentialDread.length > 0 &&
+      game.players.some(
+        (candidate) =>
+          candidate.id !== activePlayer.id && candidate.downgrades.length > 0,
+      )
+    ) {
+      uids.push(...existentialDread.map((c) => c.uid));
+    }
+
     const zombie = allCards.filter((c) => c.id === 'zombie_unicorn');
     if (
       zombie.length > 0 &&
@@ -399,6 +412,13 @@ export class TurnManager {
         game.pendingAction = {
           type: 'select_stable_card',
           reason: 'nightmare_buried_alive_sacrifice',
+          sourcePlayerId: activePlayer.id,
+        };
+        return true;
+      case 'nightmare_existential_dread':
+        game.pendingAction = {
+          type: 'select_stable_card',
+          reason: 'nightmare_existential_dread_steal',
           sourcePlayerId: activePlayer.id,
         };
         return true;

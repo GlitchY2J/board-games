@@ -2030,6 +2030,29 @@ export class ActionResolver {
 
     if (
       pending.type === 'select_stable_card' &&
+      pending.reason === 'nightmare_existential_dread_steal'
+    ) {
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      if (!sourcePlayer) return false;
+
+      for (const targetPlayer of state.players) {
+        if (targetPlayer.id === sourcePlayerId) continue;
+        const index = targetPlayer.downgrades.findIndex(
+          (card) => card.uid === cardId,
+        );
+        if (index === -1) continue;
+
+        const [downgrade] = targetPlayer.downgrades.splice(index, 1);
+        sourcePlayer.downgrades.push(downgrade);
+        state.pendingAction = undefined;
+        return true;
+      }
+
+      return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
       pending.reason === 'playful_puppet_unicorn_move'
     ) {
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);

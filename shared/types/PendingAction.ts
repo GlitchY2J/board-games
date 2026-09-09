@@ -107,6 +107,7 @@ export type PendingAction =
            | "vengeful_unicorn_sacrifice"
            | "nightmare_buried_alive_sacrifice"
            | "nightmare_currently_indisposed_sacrifice"
+           | "nightmare_existential_dread_steal"
         | "dark_angel_unicorn"
         | "mermaid_unicorn"
         | "rhinocorn"
