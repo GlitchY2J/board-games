@@ -7,7 +7,11 @@ import { hasTinyStable } from './cards/effects/tinyStable.ts';
 function canWin(player: Player): boolean {
   // Pandamonium / Tiny Stable: un jugador no puede ganar mientras tenga
   // alguna de estas cartas en su establo.
-  return !hasPandamonium(player) && !hasTinyStable(player);
+  return (
+    !hasPandamonium(player) &&
+    !hasTinyStable(player) &&
+    !player.stable.some((card) => card.id === 'nightmare_currently_indisposed')
+  );
 }
 
 function getUnicornCount(player: Player): number {

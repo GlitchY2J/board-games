@@ -1545,8 +1545,8 @@
     "name": "Nightmare Currently Indisposed",
     "cardType": "downgrade",
     "image": "/cards/unstable-unicorns/nightmares/nightmare_currently_indisposed.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "When this card enters your Stable, sacrifice a Unicorn card. You cannot win the game if this card is in your Stable.",
+    "effect": "nightmare_currently_indisposed",
     "copies": 1,
     "expansion": "nightmares"
   },

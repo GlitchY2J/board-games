@@ -106,6 +106,7 @@ export type PendingAction =
            | "heeeeeres_stabby_remove"
            | "vengeful_unicorn_sacrifice"
            | "nightmare_buried_alive_sacrifice"
+           | "nightmare_currently_indisposed_sacrifice"
         | "dark_angel_unicorn"
         | "mermaid_unicorn"
         | "rhinocorn"

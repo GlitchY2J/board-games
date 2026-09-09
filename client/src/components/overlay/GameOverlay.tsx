@@ -1084,6 +1084,43 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'nightmare_currently_indisposed_sacrifice') {
+          const source = gameState.players.find((p) => p.id === localPlayerId);
+          if (!source) return null;
+
+          const items = source.stable
+            .filter(
+              (card) =>
+                card.cardType === 'unicorn' &&
+                !isPandamoniumProtected(source, card),
+            )
+            .map((card, index) => ({
+              id: `${card.id}_indisposed_${index}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Unicorn de tu establo',
+              image: card.image,
+            }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="😵 Nightmare Currently Indisposed"
+              subtitle="Debes SACRIFICAR un Unicorn de tu establo."
+              items={items}
+              maxSelection={1}
+              confirmText="Sacrificar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'possession_steal') {
           const target = gameState.players.find(
             (p) => p.id === action.targetPlayerId,
