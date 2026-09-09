@@ -22,6 +22,7 @@ import {
 } from '../../cards/effects/unicornRainbowPrincess.ts';
 import { nextSprayBottleChoice } from '../../cards/effects/sprayBottleOfYouth.ts';
 import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
+import { removeStableCardFromGame } from './StableCardRemoval.ts';
 import type {
   CardSelectionAction,
   DiscardAction,
@@ -2129,12 +2130,13 @@ export class ActionResolver {
       const targetIds = pending.remainingPlayerIds ?? [];
       if (!targetIds.includes(sourcePlayerId)) return false;
 
-      for (const targetPlayer of state.players) {
-        const index = targetPlayer.stable.findIndex((card) => card.uid === cardId);
-        if (index === -1) continue;
-
-        const [removed] = targetPlayer.stable.splice(index, 1);
-        CardMovement.removeFromGame(state, targetPlayer, removed);
+      const removedCard = removeStableCardFromGame(
+        state,
+        cardId,
+        targetIds,
+      );
+      if (removedCard) {
+        const { card: removed } = removedCard;
         state.pendingAction = undefined;
         addLog(
           state,
@@ -2189,12 +2191,13 @@ export class ActionResolver {
       const targetIds = pending.remainingPlayerIds ?? [];
       if (!targetIds.includes(sourcePlayerId)) return false;
 
-      for (const targetPlayer of state.players) {
-        const index = targetPlayer.stable.findIndex((card) => card.uid === cardId);
-        if (index === -1) continue;
-
-        const [removed] = targetPlayer.stable.splice(index, 1);
-        CardMovement.removeFromGame(state, targetPlayer, removed);
+      const removedCard = removeStableCardFromGame(
+        state,
+        cardId,
+        targetIds,
+      );
+      if (removedCard) {
+        const { card: removed } = removedCard;
         state.pendingAction = undefined;
         addLog(
           state,
@@ -2215,12 +2218,13 @@ export class ActionResolver {
       const targetIds = pending.remainingPlayerIds ?? [];
       if (!targetIds.includes(sourcePlayerId)) return false;
 
-      for (const targetPlayer of state.players) {
-        const index = targetPlayer.stable.findIndex((card) => card.uid === cardId);
-        if (index === -1) continue;
-
-        const [removed] = targetPlayer.stable.splice(index, 1);
-        CardMovement.removeFromGame(state, targetPlayer, removed);
+      const removedCard = removeStableCardFromGame(
+        state,
+        cardId,
+        targetIds,
+      );
+      if (removedCard) {
+        const { card: removed } = removedCard;
         state.pendingAction = undefined;
         addLog(
           state,
