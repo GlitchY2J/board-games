@@ -1453,8 +1453,8 @@
     "cardType": "unicorn",
     "unicornClass": "magical",
     "image": "/cards/unstable-unicorns/nightmares/unicorn_slasher.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "When this card enters your Stable, you may discard a card, then remove a card in any player's Stable from the game.",
+    "effect": "unicorn_slasher",
     "copies": 1,
     "expansion": "nightmares"
   },

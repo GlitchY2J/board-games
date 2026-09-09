@@ -44,6 +44,7 @@ export type PendingAction =
          | "rainbow_lasso"
          | "stable_artillery"
          | "dancing_clownicorn"
+         | "unicorn_slasher"
         | "barbed_wire";
       playerId: string;
       cardsToDiscard: number;
@@ -94,7 +95,8 @@ export type PendingAction =
           | "dancing_clownicorn"
            | "demonicorn_remove"
          | "playful_puppet_unicorn_move"
-         | "sweet_old_ladycorn_sacrifice"
+           | "sweet_old_ladycorn_sacrifice"
+           | "unicorn_slasher_remove"
         | "dark_angel_unicorn"
         | "mermaid_unicorn"
         | "rhinocorn"
@@ -207,7 +209,8 @@ export type PendingAction =
          | "demonicorn"
          | "jack_the_reapercorn"
           | "jack_the_reapercorn_second"
-          | "playful_puppet_unicorn"
+           | "playful_puppet_unicorn"
+           | "unicorn_slasher"
         | "classy_narwhal"
         | "the_great_narwhal"
         | "dark_angel_unicorn"

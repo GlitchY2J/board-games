@@ -1076,6 +1076,25 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'unicorn_slasher') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'discard',
+            reason: 'unicorn_slasher',
+            playerId: player.id,
+            cardsToDiscard: 1,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'

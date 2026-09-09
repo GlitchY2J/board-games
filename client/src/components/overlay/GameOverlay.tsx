@@ -899,7 +899,10 @@ export default function GameOverlay({
           );
         }
 
-        if (action.reason === 'demonicorn_remove') {
+        if (
+          action.reason === 'demonicorn_remove' ||
+          action.reason === 'unicorn_slasher_remove'
+        ) {
           const items = gameState.players
             .filter((p) => action.remainingPlayerIds?.includes(p.id))
             .flatMap((p) =>
@@ -915,7 +918,11 @@ export default function GameOverlay({
           return (
             <CardSelectionOverlay
               hide={hide}
-              title="😈 Demonicorn"
+              title={
+                action.reason === 'demonicorn_remove'
+                  ? '😈 Demonicorn'
+                  : '🔪 Unicorn Slasher'
+              }
               subtitle="Elige una carta de cualquier establo para retirarla de la partida."
               items={items}
               maxSelection={1}
