@@ -1203,6 +1203,24 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'paranormal_affection') {
+        if (choice === 'yes') {
+          for (let count = 0; count < 2; count += 1) {
+            const drawn = room.gameState.deck.shift();
+            if (!drawn) break;
+            enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
+            player.hand.push(drawn);
+          }
+        }
+
+        room.gameState.pendingAction = undefined;
+        if (room.gameState.phase === TurnPhase.BEGINNING) {
+          TurnManager.processBeginningQueue(room.gameState);
+        }
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'

@@ -226,6 +226,7 @@ export type PendingAction =
          | "unicorn_slasher"
          | "winged_horrorcorn"
          | "ghost_guide"
+         | "paranormal_affection"
          | "magic_elexir"
         | "classy_narwhal"
         | "the_great_narwhal"

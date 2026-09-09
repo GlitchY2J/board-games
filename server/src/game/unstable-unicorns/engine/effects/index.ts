@@ -26,6 +26,7 @@ import { theCornjuring } from '../../../cards/effects/theCornjuring.ts';
 import { nightmareCurrentlyIndisposed } from '../../../cards/effects/nightmareCurrentlyIndisposed.ts';
 import { nightmareExorciseRegimen } from '../../../cards/effects/nightmareExorciseRegimen.ts';
 import { magicElexir } from '../../../cards/effects/magicElexir.ts';
+import { paranormalAffection } from '../../../cards/effects/paranormalAffection.ts';
 import { classyNarwhal } from '../../../cards/effects/classyNarwhal.ts';
 import { greedyFlyingUnicorn } from '../../../cards/effects/greedyFlyingUnicorn.ts';
 import { llamacorn } from '../../../cards/effects/llamacorn.ts';
@@ -139,6 +140,7 @@ export const effects: Record<string, CardEffect> = {
   nightmare_currently_indisposed: nightmareCurrentlyIndisposed,
   nightmare_exorcise_regimen: nightmareExorciseRegimen,
   magic_elexir: magicElexir,
+  paranormal_affection: paranormalAffection,
   classy_narwhal: classyNarwhal,
   greedy_flying_unicorn: greedyFlyingUnicorn,
   llamacorn: llamacorn,

@@ -1595,8 +1595,8 @@
     "name": "Paranormal Affection",
     "cardType": "upgrade",
     "image": "/cards/unstable-unicorns/nightmares/paranormal_affection.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "When this card enters your Stable, you may DRAW 2 cards. Upgrade cards in your Stable cannot be destroyed.",
+    "effect": "paranormal_affection",
     "copies": 2,
     "expansion": "nightmares"
   },
