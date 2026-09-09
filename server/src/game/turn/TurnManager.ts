@@ -167,6 +167,11 @@ export class TurnManager {
       uids.push(...existentialDread.map((c) => c.uid));
     }
 
+    const ghostGuide = allCards.filter((c) => c.id === 'ghost_guide');
+    if (ghostGuide.length > 0 && game.deck.length > 0) {
+      uids.push(...ghostGuide.map((c) => c.uid));
+    }
+
     const zombie = allCards.filter((c) => c.id === 'zombie_unicorn');
     if (
       zombie.length > 0 &&
@@ -420,6 +425,20 @@ export class TurnManager {
           type: 'select_stable_card',
           reason: 'nightmare_existential_dread_steal',
           sourcePlayerId: activePlayer.id,
+        };
+        return true;
+      case 'ghost_guide':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'ghost_guide',
+          playerId: activePlayer.id,
+          title: '👻 Ghost Guide',
+          description: '¿Deseas ROBAR y REVELAR una carta?',
+          options: [
+            { value: 'yes', text: 'Sí, robar y revelar' },
+            { value: 'no', text: 'No, omitir el efecto' },
+          ],
+          effectCardId: uid,
         };
         return true;
       case 'zombie_unicorn':

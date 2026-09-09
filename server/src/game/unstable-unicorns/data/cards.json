@@ -1575,7 +1575,7 @@
     "name": "Ghost Guide",
     "cardType": "upgrade",
     "image": "/cards/unstable-unicorns/nightmares/ghost_guide.png",
-    "description": "Nightmares expansion card.",
+    "description": "If this card is in your Stable at the beginning of your turn, you may DRAW a card and reveal it. If it is an Upgrade or Downgrade card, bring it into your Stable.",
     "effect": null,
     "copies": 1,
     "expansion": "nightmares"

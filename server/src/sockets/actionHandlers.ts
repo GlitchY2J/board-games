@@ -1143,6 +1143,35 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'ghost_guide') {
+        if (choice === 'yes') {
+          const drawn = room.gameState.deck.shift();
+          if (drawn) {
+            enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
+            addLog(
+              room.gameState,
+              `${player.name} reveló ${drawn.name} por Ghost Guide`,
+              { playerId: player.id, cardImage: drawn.image },
+            );
+
+            if (drawn.cardType === 'upgrade') {
+              player.upgrades.push(drawn);
+            } else if (drawn.cardType === 'downgrade') {
+              player.downgrades.push(drawn);
+            } else {
+              player.hand.push(drawn);
+            }
+          }
+        }
+
+        room.gameState.pendingAction = undefined;
+        if (room.gameState.phase === TurnPhase.BEGINNING) {
+          TurnManager.processBeginningQueue(room.gameState);
+        }
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'
