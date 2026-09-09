@@ -17,10 +17,16 @@ export function getHandLimit(state: GameState, playerId?: string): number {
   const tinyHoovesCount = player?.downgrades?.filter(
     (card) => card.id === 'tiny_hooves',
   ).length ?? 0;
+  const exorciseRegimenCount = player?.downgrades?.filter(
+    (card) => card.id === 'nightmare_exorcise_regimen',
+  ).length ?? 0;
 
   return Math.max(
     0,
-    DEFAULT_HAND_LIMIT - famineCount * HAND_LIMIT_REDUCTION - tinyHoovesCount * 4,
+    DEFAULT_HAND_LIMIT -
+      famineCount * HAND_LIMIT_REDUCTION -
+      tinyHoovesCount * 4 -
+      exorciseRegimenCount * 3,
   );
 }
 

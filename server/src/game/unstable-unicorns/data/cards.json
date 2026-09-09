@@ -1565,8 +1565,8 @@
     "name": "Nightmare Exorcise Regimen",
     "cardType": "downgrade",
     "image": "/cards/unstable-unicorns/nightmares/nightmare_exorcise_regimen.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "When this card enters your Stable, discard your hand, then draw a card. Your hand limit is reduced by 3 cards.",
+    "effect": "nightmare_exorcise_regimen",
     "copies": 1,
     "expansion": "nightmares"
   },
