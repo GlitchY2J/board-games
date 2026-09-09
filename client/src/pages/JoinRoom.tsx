@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { socket } from '../services/socket';
 import { joinRoom, getRoomInfo } from '../services/api';
 import { saveSession } from '../services/session';
 import { useGame } from '../context/useGame';
@@ -60,16 +59,9 @@ export default function JoinRoom() {
 
     setLoading(true);
     try {
-      if (!socket.id) {
-        alert('Conectando con el servidor, intenta de nuevo en un momento.');
-        setLoading(false);
-        return;
-      }
-
       const response = await joinRoom({
         roomCode: roomCode.trim().toUpperCase(),
         playerName: playerName.trim(),
-        socketId: socket.id,
         avatar,
       });
 

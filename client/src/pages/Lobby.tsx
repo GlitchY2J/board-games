@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { socket } from '../services/socket';
+import { getSession } from '../services/session';
 import { useGame } from '../context/useGame';
 import { getGame, getGames } from '../services/api';
 import type { PublicRoom as Room } from '../../../shared/types/PublicRoom.ts';
@@ -20,7 +21,6 @@ export default function Lobby() {
   const {
     room: contextRoom,
     playerId: contextPlayerId,
-    playerName: contextPlayerName,
     isHost: contextIsHost,
     deactivate,
   } = useGame();
@@ -29,7 +29,6 @@ export default function Lobby() {
     location.state?.room ?? null,
   );
   const room = contextRoom ?? localRoom;
-  const playerName: string = contextPlayerName || (location.state?.playerName ?? '');
   const playerId: string = contextPlayerId || (location.state?.playerId ?? '');
   const isHost: boolean = contextIsHost || (location.state?.isHost ?? false);
   const canEditSettings = isHost;
@@ -77,20 +76,21 @@ export default function Lobby() {
   useEffect(() => {
     if (!room) return;
 
-    const emitJoinRoom = () => {
-      if (roomRef.current) {
-        socket.emit('join-room', {
-          roomCode: roomRef.current.code,
-          playerName,
-        });
+    const resumeRoomSession = () => {
+      const session = getSession();
+      if (session) {
+        socket.emit('resume-session', {
+          roomCode: session.roomCode,
+          sessionToken: session.sessionToken,
+        }, () => {});
       }
     };
 
     if (socket.connected) {
-      emitJoinRoom();
+      resumeRoomSession();
     }
 
-    socket.on('connect', emitJoinRoom);
+    socket.on('connect', resumeRoomSession);
 
     const onRoomUpdated = (updatedRoom: Room) => {
       setLocalRoom(updatedRoom);
@@ -118,7 +118,7 @@ export default function Lobby() {
     socket.on('kicked-from-room', onKickedFromRoom);
 
     return () => {
-      socket.off('connect', emitJoinRoom);
+      socket.off('connect', resumeRoomSession);
       socket.off('room-updated', onRoomUpdated);
       socket.off('turn-order-assigned', onTurnOrderAssigned);
     socket.off('game-started', onSpectatorGameStarted);

@@ -24,6 +24,7 @@ import { gameRegistry } from '../games/catalog.ts';
 import { getRoomMaxPlayers } from '../roomCapacity.ts';
 import { CardZoneMovement } from '../game/unstable-unicorns/engine/CardZoneMovement.ts';
 import { advanceTurnAfterDraw, beginExplodingKittenResolution, beginImplodingKittenResolution, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack, startTargetedAttack } from '../game/exploding-kittens/turn.ts';
+import { roomService, RoomServiceError } from '../services/RoomService.ts';
 
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
@@ -659,33 +660,35 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
 
     if (!validateRoomConfiguration(socket, room, 'confirm-start-game')) return;
 
-    const gameId = room.settings.gameId;
-    if (!gameId) return;
-    const engine = gameRegistry.getEngine(gameId);
-    if (!engine) {
+    try {
+      roomService.startGame(room.code, player.id);
+    } catch (error) {
       emitGameError(
         socket,
-        'GAME_NOT_AVAILABLE',
-        'El motor de este juego todavía no está disponible.',
+        error instanceof RoomServiceError ? error.code : 'GAME_NOT_AVAILABLE',
+        error instanceof RoomServiceError
+          ? error.message
+          : 'El motor de este juego todavía no está disponible.',
         'confirm-start-game',
       );
       return;
     }
 
-    room.gameState = engine.createState({ ...room, players: playablePlayers(room) });
+    const game = room.gameState;
+    if (!game) return;
 
-    addLog(room.gameState, 'Partida iniciada');
+    addLog(game, 'Partida iniciada');
 
-    const firstPlayer = room.gameState.players[room.gameState.currentPlayer];
+    const firstPlayer = game.players[game.currentPlayer];
     if (firstPlayer) {
       addLog(
-        room.gameState,
-        `Comienza el turno de ${firstPlayer.name} (turno ${room.gameState.turn})`,
+        game,
+        `Comienza el turno de ${firstPlayer.name} (turno ${game.turn})`,
         { playerId: firstPlayer.id },
       );
     }
 
-    TurnManager.skipBeginningIfNoTriggers(room.gameState);
+    TurnManager.skipBeginningIfNoTriggers(game);
 
     emitGameState(io, room, 'game-started');
     emitInitialDealAnimations(io, room);

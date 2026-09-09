@@ -450,7 +450,7 @@ Progreso actual:
 - Los handlers Socket.IO quedan separados por dominio y las entradas de
   descarte usan un `switch` exhaustivo sobre su categoría.
 
-## Fase 10: Servicios De Sala Y Motores
+## Fase 10: Servicios De Sala Y Motores [COMPLETADA]
 
 Unificar los flujos REST y Socket.IO mediante servicios de aplicación.
 
@@ -468,8 +468,23 @@ Reglas de seguridad:
 - No identificar jugadores por nombre.
 - Reanudar únicamente mediante `sessionToken`.
 
+Progreso actual:
+
+- `RoomService` centraliza crear, unirse, reanudar, actualizar configuración e
+  iniciar partidas.
+- REST ya no acepta `socketId` del cliente.
+- El join por Socket.IO ya no identifica jugadores por nombre; la reanudación
+  usa exclusivamente `sessionToken`.
+- La creación de estado selecciona el motor mediante `GameRegistry`.
+- El dispatch y la progresión permanecen en los módulos de cada motor, mientras
+  los sockets conservan únicamente la adaptación de transporte.
+
 Además, ampliar `GameEngine` para incluir dispatch de acciones, progresión de
 turno y proyección de estado, evitando ramas `isExplodingKittensRoom()` en sockets.
+
+La selección de motor y la creación de estado ya están centralizadas; la
+extracción adicional de dispatch/proyección queda como una mejora interna del
+contrato de motores, sin afectar el flujo de salas.
 
 ## Fase 11: Organización De Efectos
 

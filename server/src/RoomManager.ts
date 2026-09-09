@@ -12,7 +12,7 @@ export class RoomManager {
   resumePlayerSession(
     roomCode: string,
     sessionToken: string,
-    socketId: string,
+    socketId: string | null,
   ): Player | null {
     const room = this.getRoom(roomCode);
 
@@ -48,14 +48,14 @@ export class RoomManager {
   createRoom(
     hostName: string,
     game: string | null,
-    socketId: string,
+    socketId: string | null,
     avatar?: string,
   ): Room {
     const host: Player = {
       id: crypto.randomUUID(),
       sessionToken: crypto.randomUUID(),
       socketId,
-      connected: true,
+      connected: socketId !== null,
       name: hostName,
       avatar: avatar ?? '',
       hand: [],
@@ -84,14 +84,16 @@ export class RoomManager {
   joinRoom(
     roomCode: string,
     playerName: string,
-    socketId: string,
+    socketId: string | null,
     avatar?: string,
   ): Room | null {
     const room = this.rooms.get(roomCode);
 
     if (!room) return null;
 
-    const existingPlayer = room.players.find((p) => p.socketId === socketId);
+    const existingPlayer = socketId
+      ? room.players.find((p) => p.socketId === socketId)
+      : undefined;
 
     if (existingPlayer) {
       return room;
@@ -101,7 +103,7 @@ export class RoomManager {
       id: crypto.randomUUID(),
       sessionToken: crypto.randomUUID(),
       socketId,
-      connected: true,
+      connected: socketId !== null,
       name: playerName,
       avatar: avatar ?? '',
       hand: [],

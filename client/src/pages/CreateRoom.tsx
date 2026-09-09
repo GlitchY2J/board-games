@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { socket } from '../services/socket';
 import { createRoom } from '../services/api';
 import { saveSession } from '../services/session';
 import { useGame } from '../context/useGame';
@@ -26,15 +25,8 @@ export default function CreateRoom() {
     setError('');
     setLoading(true);
     try {
-      if (!socket.id) {
-        setError('Conectando con el servidor, intenta de nuevo en un momento.');
-        setLoading(false);
-        return;
-      }
-
       const response = await createRoom({
         hostName: hostName.trim(),
-        socketId: socket.id,
         avatar,
       });
       const { room, playerId, sessionToken } = response;

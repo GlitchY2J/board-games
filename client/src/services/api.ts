@@ -6,8 +6,7 @@ const API = SERVER_URL;
 // Crear sala
 export async function createRoom(data: {
   hostName: string;
-  socketId: string;
-  avatar: string;
+  avatar?: string;
 }) {
   const response = await fetch(`${API}/rooms/create`, {
     method: 'POST',
@@ -29,8 +28,7 @@ export async function createRoom(data: {
 export async function joinRoom(data: {
   roomCode: string;
   playerName: string;
-  socketId: string;
-  avatar: string;
+  avatar?: string;
 }) {
   const response = await fetch(`${API}/rooms/join`, {
     method: 'POST',

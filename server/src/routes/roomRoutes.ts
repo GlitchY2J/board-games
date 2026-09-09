@@ -1,22 +1,20 @@
 import { Router } from 'express';
+import { roomService, RoomServiceError } from '../services/RoomService.ts';
 import { roomManager } from '../roomManagerInstance.ts';
 import { createPublicRoom } from '../sockets/publicRoom.ts';
-import { markPlayerAsSpectatorIfRoomIsFull } from '../roomCapacity.ts';
 
 const router = Router();
 
 router.post('/create', (req, res) => {
-  const { hostName, socketId, avatar } = req.body;
+  const { hostName, avatar } = req.body;
 
-  if (!hostName || !socketId) {
+  if (!hostName) {
     return res.status(400).json({
       error: 'Datos incompletos',
     });
   }
 
-  const room = roomManager.createRoom(hostName, null, socketId, avatar);
-
-  const host = room.players.find((player) => player.id === room.hostId);
+  const { room, player: host } = roomService.createRoom(hostName, avatar);
 
   res.json({
     room: createPublicRoom(room),
@@ -26,27 +24,24 @@ router.post('/create', (req, res) => {
 });
 
 router.post('/join', (req, res) => {
-  const { roomCode, playerName, socketId, avatar } = req.body;
+  const { roomCode, playerName, avatar } = req.body;
 
-  if (!roomCode || !playerName || !socketId) {
+  if (!roomCode || !playerName) {
     return res.status(400).json({
       error: 'Datos incompletos',
     });
   }
 
-  const room = roomManager.joinRoom(roomCode, playerName, socketId, avatar);
-
-  const player = room?.players.find(
-    (candidate) => candidate.socketId === socketId,
-  );
-
-  if (!room) {
-    return res.status(404).json({
-      error: 'Sala no encontrada',
-    });
+  let result;
+  try {
+    result = roomService.joinRoom(roomCode, playerName, avatar);
+  } catch (error) {
+    if (error instanceof RoomServiceError && error.code === 'ROOM_NOT_FOUND') {
+      return res.status(404).json({ error: error.message });
+    }
+    throw error;
   }
-
-  if (player) markPlayerAsSpectatorIfRoomIsFull(room, player.id);
+  const { room, player } = result;
 
   res.json({
     room: createPublicRoom(room),

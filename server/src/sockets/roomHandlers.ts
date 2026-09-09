@@ -6,10 +6,10 @@ import { addLog } from './gameLog.ts';
 import { Room } from '../game/models/Room.ts';
 import { Card } from '../game/models/Card.ts';
 import { GameState } from '../game/models/GameState.ts';
-import { gameRegistry } from '../games/catalog.ts';
 import { createPublicRoom } from './publicRoom.ts';
 import { isRoomFull, markPlayerAsSpectatorIfRoomIsFull } from '../roomCapacity.ts';
 import { CardZoneMovement } from '../game/unstable-unicorns/engine/CardZoneMovement.ts';
+import { roomService, RoomServiceError } from '../services/RoomService.ts';
 
 function sendCardsOnLeave(game: GameState, cards: Card[]): void {
   for (const card of cards) {
@@ -169,38 +169,27 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    // 2. Existe un jugador con el mismo nombre (host que creó la sala via HTTP
-    //    con un socketId diferente al WebSocket actual) → actualizar socketId
-    const byName = existingRoom.players.find(
-      (player) => player.name === playerName,
-    );
-
-    if (byName) {
-      console.log(`[join-room] Encontrado por nombre: ${playerName}. Actualizando socketId de ${byName.socketId} a ${socket.id}`);
-      byName.socketId = socket.id;
-      byName.connected = true;
-      socket.join(existingRoom.code);
-      console.log(`[join-room] Salas actuales del socket ${socket.id}:`, Array.from(socket.rooms));
-       io.to(existingRoom.code).emit('room-updated', createPublicRoom(existingRoom));
-      return;
-    }
-
-    // 3. Jugador nuevo → unirlo a la sala
+    // El jugador nuevo se vincula a la sala mediante su sesión después del join.
     console.log(`[join-room] Jugador nuevo: ${playerName}. Registrando en roomManager...`);
-    const room = roomManager.joinRoom(roomCode, playerName, socket.id, avatar);
-
-    if (!room) {
+    let room;
+    try {
+      room = roomService.joinRoom(roomCode, playerName, avatar).room;
+    } catch (error) {
+      if (!(error instanceof RoomServiceError)) throw error;
       console.log(`[join-room] Error al registrar al jugador nuevo en roomManager`);
       socket.emit('game-error', {
-        code: 'ROOM_NOT_FOUND',
-        message: 'Sala no encontrada.',
+        code: error.code,
+        message: error.message,
         action: 'unknown',
       });
       return;
     }
 
-    const joinedPlayer = room.players.find((player) => player.socketId === socket.id);
-    if (joinedPlayer) markPlayerAsSpectatorIfRoomIsFull(room, joinedPlayer.id);
+    const joinedPlayer = room.players[room.players.length - 1];
+    if (joinedPlayer) {
+      joinedPlayer.socketId = socket.id;
+      joinedPlayer.connected = true;
+    }
 
     socket.join(room.code);
     console.log(`[join-room] Sockets en la sala ${room.code} tras el join:`);
@@ -323,7 +312,11 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
   });
 
   socket.on('room:create', ({ hostName, game, avatar }, callback) => {
-    const room = roomManager.createRoom(hostName, game ?? null, socket.id, avatar);
+    const { room, player } = roomService.createRoom(hostName, avatar);
+    if (game) {
+      room.settings.gameId = game;
+    }
+    player.socketId = socket.id;
 
     socket.join(room.code);
 
@@ -334,14 +327,14 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
   });
 
   socket.on('resume-session', ({ roomCode, sessionToken }, callback) => {
-    const player = roomManager.resumePlayerSession(
-      roomCode,
-      sessionToken,
-      socket.id,
-    );
-
-    if (!player) {
-      callback({ success: false, error: 'No se pudo recuperar la sesión.' });
+    let player;
+    try {
+      player = roomService.resumeSession(roomCode, sessionToken, socket.id);
+    } catch (error) {
+      callback({
+        success: false,
+        error: error instanceof RoomServiceError ? error.message : 'No se pudo recuperar la sesión.',
+      });
       return;
     }
 
@@ -394,31 +387,21 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
     if (!room) return;
 
     const player = room.players.find((candidate) => candidate.socketId === socket.id);
-    if (!player || player.id !== room.hostId) return;
+    if (!player) return;
 
-    if (room.gameState?.started) {
+    let updatedRoom;
+    try {
+      updatedRoom = roomService.updateSettings(roomCode, player.id, settings);
+    } catch (error) {
+      if (!(error instanceof RoomServiceError)) throw error;
       socket.emit('game-error', {
-        code: 'ROOM_ALREADY_STARTED',
-        message: 'La configuración no puede cambiarse después de iniciar la partida.',
+        code: error.code,
+        message: error.message,
         action: 'update-room-settings',
       });
       return;
     }
 
-    const validation = gameRegistry.validateSettings(settings, room.players.length);
-    if (!validation.valid) {
-      socket.emit('game-error', {
-        code: validation.code ?? 'INVALID_ROOM_SETTINGS',
-        message: validation.message ?? 'La configuración de la sala no es válida.',
-        action: 'update-room-settings',
-      });
-      return;
-    }
-
-    const updatedRoom = roomManager.updateRoomSettings(roomCode, settings);
-    if (updatedRoom) {
-      for (const candidate of updatedRoom.players) candidate.isReady = false;
-      io.to(updatedRoom.code).emit('room-updated', createPublicRoom(updatedRoom));
-    }
+    io.to(updatedRoom.code).emit('room-updated', createPublicRoom(updatedRoom));
   });
 }
