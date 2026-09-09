@@ -2,6 +2,7 @@ import type { GameState } from '../../models/GameState.ts';
 import type { Player } from '../../models/Player.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
+import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 import { VictoryManager } from '../../VictoryManager.ts';
 
 export const SADISTIC_RITUAL_ID = 'sadistic_ritual';
@@ -19,7 +20,7 @@ export function drawForSadisticRitual(state: GameState, player: Player): void {
   if (!card) return;
 
   enqueueDrawAnimation(state.roomCode, player.id, card);
-  player.hand.push(card);
+  CardZoneMovement.addToHand(player, card);
 
   VictoryManager.checkWinner(state);
 }

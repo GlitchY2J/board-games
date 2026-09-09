@@ -2,6 +2,7 @@ import type { GameServer, GameSocket } from './socketTypes.ts';
 
 import { ActionResolver } from '../game/unstable-unicorns/engine/ActionResolver.ts';
 import { CardMovement } from '../game/unstable-unicorns/engine/CardMovement.ts';
+import { CardZoneMovement } from '../game/unstable-unicorns/engine/CardZoneMovement.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
 import { TurnPhase } from '../game/turn/TurnPhase.ts';
 import { emitGameError, getSocketGameContext } from './socketContext.ts';
@@ -100,7 +101,7 @@ export function registerActionHandlers(
           (card) => card.uid === pendingAction.card?.uid,
         );
         if (cardIndex < 0) return;
-        sourcePlayer.hand.splice(cardIndex, 1);
+        CardZoneMovement.removeFromHand(sourcePlayer, pendingAction.card.uid);
 
         room.gameState.pendingAction = undefined;
         const previousPendingPlay = pendingAction.pendingPlay;
@@ -305,9 +306,10 @@ export function registerActionHandlers(
           return;
         }
 
-        const [defuse] = gamePlayer.hand.splice(defuseIndex, 1);
-        gamePlayer.hand.splice(kittenIndex > defuseIndex ? kittenIndex - 1 : kittenIndex, 1);
-        game.discard.push(defuse);
+        const defuse = CardZoneMovement.removeFromHand(gamePlayer, gamePlayer.hand[defuseIndex]?.uid ?? '');
+        const kitten = CardZoneMovement.removeFromHand(gamePlayer, pending.card.uid);
+        if (!defuse || !kitten) return;
+        CardZoneMovement.toDiscard(game, defuse);
         game.pendingAction = {
           type: 'select_deck_card',
           reason: 'exploding_kitten_defuse',
@@ -322,8 +324,11 @@ export function registerActionHandlers(
 
       const playerIndex = game.players.findIndex((candidate) => candidate.id === player.id);
       const placement = game.players.length;
-      game.discard.push(...gamePlayer.hand.filter((card) => card.uid !== pending.card.uid));
-      game.discard.push(pending.card);
+      for (const card of [...gamePlayer.hand]) {
+        CardZoneMovement.removeFromHand(gamePlayer, card.uid);
+        CardZoneMovement.toDiscard(game, card);
+      }
+      CardZoneMovement.toDiscard(game, pending.card);
       game.eliminatedPlayers ??= [];
       game.eliminatedPlayers.push({
         id: player.id,
@@ -393,7 +398,11 @@ export function registerActionHandlers(
       );
       if (playerIndex < 0) return;
 
-      game.discard.push(...player.hand, pending.card);
+      for (const card of [...player.hand]) {
+        CardZoneMovement.removeFromHand(player, card.uid);
+        CardZoneMovement.toDiscard(game, card);
+      }
+      CardZoneMovement.toDiscard(game, pending.card);
       game.eliminatedPlayers ??= [];
       game.eliminatedPlayers.push({
         id: player.id,
@@ -694,7 +703,8 @@ export function registerActionHandlers(
         return;
       }
 
-      const [removed] = room.gameState.discard.splice(cardIdx, 1);
+      const removed = CardZoneMovement.removeAt(room.gameState.discard, cardIdx);
+      if (!removed) return;
       room.gameState.pendingAction = undefined;
 
       if (
@@ -703,7 +713,7 @@ export function registerActionHandlers(
         pending.reason === 'swift_flying_unicorn' ||
         pending.reason === 'frenchiecorn'
       ) {
-        player.hand.push(removed);
+        CardZoneMovement.addToHand(player, removed);
 
         if (
           pending.reason === 'swift_flying_unicorn' &&
@@ -726,7 +736,7 @@ export function registerActionHandlers(
       const entered = CardMovement.enterStable(room.gameState, player, removed);
 
       if (!entered) {
-        room.gameState.discard.push(removed);
+        CardZoneMovement.toDiscard(room.gameState, removed);
 
         addLog(
           room.gameState,
@@ -773,14 +783,14 @@ export function registerActionHandlers(
 
       if (pending.reason === 'reanimation') {
         if (broughtFromDiscard.unicornClass !== 'basic') {
-          room.gameState.discard.push(broughtFromDiscard);
+          CardZoneMovement.toDiscard(room.gameState, broughtFromDiscard);
           return;
         }
 
         const drawn = room.gameState.deck.shift();
         if (drawn) {
           enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
-          player.hand.push(drawn);
+          CardZoneMovement.addToHand(player, drawn);
         }
         addLog(
           room.gameState,

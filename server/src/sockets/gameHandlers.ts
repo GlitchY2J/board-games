@@ -22,6 +22,7 @@ import type { ChatMessage } from '../../../shared/types/Game.ts';
 import { hasBlindingLight } from '../game/cards/effects/blindingLight.ts';
 import { gameRegistry } from '../games/catalog.ts';
 import { getRoomMaxPlayers } from '../roomCapacity.ts';
+import { CardZoneMovement } from '../game/unstable-unicorns/engine/CardZoneMovement.ts';
 import { advanceTurnAfterDraw, beginExplodingKittenResolution, beginImplodingKittenResolution, calculateAttackTurns, nextPlayerIndex, reverseTurnOrder, startAttack, startTargetedAttack } from '../game/exploding-kittens/turn.ts';
 
 const NEIGH_WINDOW_MS = 5000;
@@ -158,13 +159,14 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       const owner = game.players.find((player) => player.id === link.playerId);
       const cardIndex = owner?.hand.findIndex((card) => card.uid === link.card.uid) ?? -1;
       if (owner && cardIndex !== -1) {
-        const [card] = owner.hand.splice(cardIndex, 1);
+          const card = CardZoneMovement.removeFromHand(owner, link.card.uid);
+          if (!card) return;
         if (!game.discard.some((discarded) => discarded.uid === card.uid)) {
-          game.discard.push(card);
+          CardZoneMovement.toDiscard(game, card);
           enqueueDiscardAnimation(room.code, owner.id, card);
         }
       } else if (!game.discard.some((discarded) => discarded.uid === link.card.uid)) {
-        game.discard.push(link.card);
+          CardZoneMovement.toDiscard(game, link.card);
       }
     }
 
@@ -173,14 +175,14 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
     for (let i = 1; i < n; i++) {
       const link = chain[i];
       if (link.card.effect === 'nope' && !game.discard.some((card) => card.uid === link.card.uid)) {
-        game.discard.push(link.card);
+          CardZoneMovement.toDiscard(game, link.card);
       }
     }
   } else {
     // Los Neighs ya salieron de las manos al jugarse; conservar su orden real.
     for (let i = 1; i < n; i++) {
       if (isReactionEffect(chain[i].card.effect, explodingKittens)) {
-        game.discard.push(chain[i].card);
+          CardZoneMovement.toDiscard(game, chain[i].card);
       }
     }
   }
@@ -214,7 +216,8 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       );
 
       if (idx !== -1) {
-        const [removed] = activePlayer.hand.splice(idx, 1);
+          const removed = CardZoneMovement.removeFromHand(activePlayer, activePlayer.hand[idx]?.uid ?? '');
+          if (!removed) return;
         const hexNeighCanceled = chain.some(
           (link, index) =>
             index > 0 &&
@@ -226,7 +229,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
           game.removedCards.push(removed);
         } else {
           enqueueDiscardAnimation(room.code, activePlayer.id, removed);
-          game.discard.push(removed);
+            CardZoneMovement.toDiscard(game, removed);
         }
       }
     }
@@ -340,7 +343,7 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
             drawn.id === 'imploding_kitten',
           );
           if (drawn.id !== 'imploding_kitten') {
-            drawingPlayer.hand.push(drawn);
+            CardZoneMovement.addToHand(drawingPlayer, drawn);
           }
         }
 
@@ -412,8 +415,9 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
           ) ?? -1;
 
           if (targetPlayer && selectedIndex >= 0) {
-            const [stolenCard] = targetPlayer.hand.splice(selectedIndex, 1);
-            activePlayer.hand.push(stolenCard);
+            const stolenCard = CardZoneMovement.removeFromHand(targetPlayer, targetPlayer.hand[selectedIndex]?.uid ?? '');
+            if (!stolenCard) return;
+            CardZoneMovement.addToHand(activePlayer, stolenCard);
             enqueueStealAnimation(
               game.roomCode,
               targetPlayer.id,
@@ -924,7 +928,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       }
 
       if (canStackAttack && pending) {
-        gamePlayer.hand.splice(cardIndex, 1);
+        CardZoneMovement.removeFromHand(gamePlayer, card.uid);
         const startedAt = Date.now();
         const targetPlayer = context.game.players[
           (context.game.players.findIndex((player) => player.id === context.player.id) + 1) %
@@ -985,7 +989,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       };
 
       if (card.id === 'attack' && card.effect === 'attack') {
-        gamePlayer.hand.splice(cardIndex, 1);
+        CardZoneMovement.removeFromHand(gamePlayer, card.uid);
       }
 
       addLog(context.game, `${context.player.name} jugó carta "${card.name}"`, {
@@ -1129,7 +1133,7 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
         card.id === 'imploding_kitten',
       );
       if (card.id !== 'imploding_kitten') {
-        gamePlayer.hand.push(card);
+        CardZoneMovement.addToHand(gamePlayer, card);
       }
       const implodingStage = beginImplodingKittenResolution(game, gamePlayer, card);
       if (implodingStage) {
@@ -1259,7 +1263,7 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
     }
 
     enqueueDrawAnimation(game.roomCode, gamePlayer.id, card);
-    gamePlayer.hand.push(card);
+    CardZoneMovement.addToHand(gamePlayer, card);
 
     VictoryManager.checkWinner(game);
 
@@ -1664,7 +1668,7 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
 
     const neighIndex = gamePlayer.hand.findIndex((c) => c.uid === cardId);
 
-    gamePlayer.hand.splice(neighIndex, 1);
+    CardZoneMovement.removeFromHand(gamePlayer, cardId);
 
     const startedAt = Date.now();
 

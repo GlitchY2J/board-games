@@ -2,6 +2,7 @@ import type { Card } from '../../../models/Card.ts';
 import type { GameState } from '../../../models/GameState.ts';
 import type { Player } from '../../../models/Player.ts';
 import { effects } from '../effects/index.ts';
+import { CardZoneMovement } from '../CardZoneMovement.ts';
 
 export class MagicHandler {
   static play(state: GameState, player: Player, card: Card) {
@@ -13,7 +14,7 @@ export class MagicHandler {
     }
 
     if (!consumed) {
-      state.discard.push(card);
+      CardZoneMovement.toDiscard(state, card);
     }
   }
 }

@@ -12,6 +12,7 @@ import { isEffectBlockedByBlindingLight } from '../cards/effects/blindingLight.t
 import { hasUnicornOfDeathTarget } from '../cards/effects/unicornOfDeath.ts';
 import { getHandLimit } from '../cards/effects/unicornOfFamine.ts';
 import { CardMovement } from '../unstable-unicorns/engine/CardMovement.ts';
+import { CardZoneMovement } from '../unstable-unicorns/engine/CardZoneMovement.ts';
 import { effects } from '../unstable-unicorns/engine/effects/index.ts';
 
 const BEGINNING_HOOK_IDS = new Set([
@@ -35,7 +36,7 @@ export class TurnManager {
     if (!card) return;
 
     enqueueDrawAnimation(game.roomCode, player.id, card);
-    player.hand.push(card);
+    CardZoneMovement.addToHand(player, card);
 
     addLog(game, `${player.name} robó una carta del mazo`, {
       playerId: player.id,

@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { ActionResolver } from '../../unstable-unicorns/engine/ActionResolver.ts';
+import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 
 export const mysticalVortex: CardEffect = {
   onPlay(state, player, card) {
@@ -16,7 +17,7 @@ export const mysticalVortex: CardEffect = {
       .map((candidate) => candidate.id);
 
     if (remainingPlayerIds.length === 0) {
-      state.discard.push(card);
+      CardZoneMovement.toDiscard(state, card);
       ActionResolver.advanceMysticalVortex(state, [], [], player.id);
       return true;
     }

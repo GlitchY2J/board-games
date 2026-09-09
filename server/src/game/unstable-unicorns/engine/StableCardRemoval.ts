@@ -16,10 +16,8 @@ export function removeStableCardFromGame(
   for (const player of state.players) {
     if (allowedPlayerIds && !allowedPlayerIds.includes(player.id)) continue;
 
-    const index = player.stable.findIndex((card) => card.uid === cardId);
-    if (index === -1) continue;
-
-    const [card] = player.stable.splice(index, 1);
+    const card = CardMovement.removeFromStable(player, cardId);
+    if (!card) continue;
     CardMovement.removeFromGame(state, player, card);
     return { card, playerId: player.id };
   }

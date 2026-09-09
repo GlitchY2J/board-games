@@ -1,20 +1,19 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import {
-  enqueueDiscardAnimation,
   enqueueDrawAnimation,
 } from '../../cardAnimations.ts';
+import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 
 export const nightmareExorciseRegimen: CardEffect = {
   onEnterStable(state, player) {
     for (const card of player.hand.splice(0)) {
-      enqueueDiscardAnimation(state.roomCode, player.id, card);
-      state.discard.push(card);
+      CardZoneMovement.discard(state, card, player.id);
     }
 
     const drawn = state.deck.shift();
     if (drawn) {
       enqueueDrawAnimation(state.roomCode, player.id, drawn);
-      player.hand.push(drawn);
+      CardZoneMovement.addToHand(player, drawn);
     }
   },
 };

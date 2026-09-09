@@ -2,6 +2,7 @@ import type { GameState } from '../../models/GameState.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
 import { TurnPhase } from '../../turn/TurnPhase.ts';
 import { CardMovement } from './CardMovement.ts';
+import { CardZoneMovement } from './CardZoneMovement.ts';
 import { EffectStack } from './EffectStack.ts';
 import type { Card } from '../../models/Card.ts';
 import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
@@ -114,10 +115,7 @@ export class ActionResolver {
     }
 
     for (const cardId of cardIds) {
-      const idx = player.hand.findIndex((card) => card.uid === cardId);
-      const [discarded] = player.hand.splice(idx, 1);
-      enqueueDiscardAnimation(state.roomCode, player.id, discarded);
-      state.discard.push(discarded);
+      CardMovement.discardFromHand(state, player, cardId);
     }
 
     const remainingPlayerIds = state.players
@@ -160,10 +158,7 @@ export class ActionResolver {
     }
 
     for (const cardId of cardIds) {
-      const idx = player.hand.findIndex((card) => card.uid === cardId);
-      const [discarded] = player.hand.splice(idx, 1);
-      enqueueDiscardAnimation(state.roomCode, player.id, discarded);
-      state.discard.push(discarded);
+      CardMovement.discardFromHand(state, player, cardId);
     }
 
     ActionResolver.advancePestilence(
@@ -236,8 +231,7 @@ export class ActionResolver {
         return false;
       }
       const [discarded] = player.hand.splice(idx, 1);
-      enqueueDiscardAnimation(state.roomCode, player.id, discarded);
-      state.discard.push(discarded);
+      CardMovement.discard(state, discarded, player.id);
     }
 
     state.pendingAction = undefined;
@@ -591,7 +585,8 @@ export class ActionResolver {
         ) {
           const index = target.stable.findIndex((candidate) => candidate.uid === card.uid);
           if (index !== -1) {
-            const [destroyed] = target.stable.splice(index, 1);
+            const destroyed = CardZoneMovement.removeFromStable(target, card.uid);
+            if (!destroyed) continue;
             CardMovement.destroyOrSacrifice(state, target, destroyed, 'destroy');
           }
         }
@@ -748,7 +743,8 @@ export class ActionResolver {
 
       for (const uid of ids) {
         const index = player.stable.findIndex((card) => card.uid === uid);
-        const [sacrificed] = player.stable.splice(index, 1);
+        const sacrificed = CardZoneMovement.removeAt(player.stable, index);
+        if (!sacrificed) return false;
         CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
       }
 
@@ -882,7 +878,8 @@ export class ActionResolver {
 
       for (const uid of ids) {
         const index = target.stable.findIndex((card) => card.uid === uid);
-        const [destroyed] = target.stable.splice(index, 1);
+        const destroyed = CardZoneMovement.removeAt(target.stable, index);
+        if (!destroyed) return false;
         CardMovement.destroyOrSacrifice(state, target, destroyed, 'destroy');
       }
 
@@ -932,7 +929,8 @@ export class ActionResolver {
         return false;
       }
 
-      const [removed] = target.stable.splice(index, 1);
+      const removed = CardZoneMovement.removeAt(target.stable, index);
+      if (!removed) return false;
       CardMovement.destroyOrSacrifice(state, target, removed, 'destroy');
 
       const remaining = (pending.remainingPlayerIds ?? []).filter(
@@ -1034,7 +1032,8 @@ export class ActionResolver {
         return true;
       }
 
-      const [destroyed] = targetPlayer.stable.splice(idx, 1);
+      const destroyed = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+      if (!destroyed) return false;
       const previousPending = state.pendingAction;
       CardMovement.destroyOrSacrifice(
         state,
@@ -1194,7 +1193,8 @@ export class ActionResolver {
       if (target.cardType !== 'unicorn') return false;
       if (isPandamoniumProtected(player, target)) return false;
 
-      const [sacrificed] = player.stable.splice(idx, 1);
+      const sacrificed = CardZoneMovement.removeAt(player.stable, idx);
+      if (!sacrificed) return false;
       const intercepted = CardMovement.destroyOrSacrifice(
         state,
         player,
@@ -1242,7 +1242,8 @@ export class ActionResolver {
       if (target.cardType !== 'unicorn') return false;
       if (isPandamoniumProtected(player, target)) return false;
 
-      const [sacrificed] = player.stable.splice(idx, 1);
+      const sacrificed = CardZoneMovement.removeAt(player.stable, idx);
+      if (!sacrificed) return false;
       CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
 
       drawForSadisticRitual(state, player);
@@ -1272,7 +1273,8 @@ export class ActionResolver {
         return false;
       }
 
-      const [moved] = sourcePlayer.stable.splice(idx, 1);
+      const moved = CardZoneMovement.removeAt(sourcePlayer.stable, idx);
+      if (!moved) return false;
       maybeTriggerBarbedWireLeave(state, sourcePlayer);
 
       // Resolución LIFO centralizada: si el on-enter de la carta movida abre su
@@ -1306,7 +1308,8 @@ export class ActionResolver {
         return false;
       }
 
-      const [stolen] = targetPlayer.stable.splice(idx, 1);
+      const stolen = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+      if (!stolen) return false;
       maybeTriggerBarbedWireLeave(state, targetPlayer);
       const prevPending = state.pendingAction;
       CardMovement.enterStable(state, sourcePlayer, stolen);
@@ -1415,7 +1418,8 @@ export class ActionResolver {
       );
       if (idx === -1) return false;
 
-      const [sacrificed] = player.stable.splice(idx, 1);
+      const sacrificed = CardZoneMovement.removeAt(player.stable, idx);
+      if (!sacrificed) return false;
       const destroyStep = {
         type: 'select_stable_card',
         reason: 'unicorn_of_death_destroy',
@@ -1460,7 +1464,8 @@ export class ActionResolver {
           return false;
         }
 
-        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        const destroyed = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!destroyed) return false;
         CardMovement.destroyOrSacrifice(
           state,
           targetPlayer,
@@ -1641,7 +1646,8 @@ export class ActionResolver {
         return true;
       }
 
-      const [destroyedCard] = targetPlayer.stable.splice(idx, 1);
+      const destroyedCard = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+      if (!destroyedCard) return false;
       const prevPending = state.pendingAction;
       const intercepted = CardMovement.destroyOrSacrifice(
         state,
@@ -1789,7 +1795,8 @@ export class ActionResolver {
 
       let idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
-        [removedCard] = targetPlayer.stable.splice(idx, 1);
+        removedCard = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!removedCard) return false;
       } else {
         idx = targetPlayer.upgrades.findIndex((c) => c.uid === cardId);
         if (idx !== -1) {
@@ -1832,7 +1839,8 @@ export class ActionResolver {
 
       let idx = targetPlayer.stable.findIndex((c) => c.uid === cardId);
       if (idx !== -1) {
-        [removedCard] = targetPlayer.stable.splice(idx, 1);
+        removedCard = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!removedCard) return false;
       } else {
         idx = targetPlayer.upgrades.findIndex((c) => c.uid === cardId);
         if (idx !== -1) {
@@ -1872,7 +1880,8 @@ export class ActionResolver {
         return false;
       }
 
-      const [sacrificedCard] = sourcePlayer.stable.splice(idx, 1);
+      const sacrificedCard = CardZoneMovement.removeAt(sourcePlayer.stable, idx);
+      if (!sacrificedCard) return false;
       const intercepted = CardMovement.destroyOrSacrifice(
         state,
         sourcePlayer,
@@ -1931,7 +1940,8 @@ export class ActionResolver {
             return false;
           }
           targetPlayer = p;
-          [stolenCard] = p.stable.splice(cardIdx, 1);
+          stolenCard = CardZoneMovement.removeAt(p.stable, cardIdx);
+          if (!stolenCard) return false;
           maybeTriggerBarbedWireLeave(state, p);
           break;
         }
@@ -1966,7 +1976,8 @@ export class ActionResolver {
       const index = targetPlayer.stable.findIndex((card) => card.uid === cardId);
       if (index === -1) return false;
 
-      const [returned] = targetPlayer.stable.splice(index, 1);
+      const returned = CardZoneMovement.removeAt(targetPlayer.stable, index);
+      if (!returned) return false;
       CardMovement.returnToHand(state, targetPlayer, returned);
 
       const nextTargets = rest.filter((id) =>
@@ -2025,13 +2036,14 @@ export class ActionResolver {
       );
       if (index === -1) return false;
 
-      const [sacrificed] = player.stable.splice(index, 1);
+      const sacrificed = CardZoneMovement.removeAt(player.stable, index);
+      if (!sacrificed) return false;
       CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
       for (let count = 0; count < 3; count += 1) {
         const drawn = state.deck.shift();
         if (!drawn) break;
         enqueueDrawAnimation(state.roomCode, player.id, drawn);
-        player.hand.push(drawn);
+        CardZoneMovement.addToHand(player, drawn);
       }
       state.pendingAction = undefined;
       return true;
@@ -2053,7 +2065,8 @@ export class ActionResolver {
       );
       if (index === -1) return false;
 
-      const [sacrificed] = player.stable.splice(index, 1);
+      const sacrificed = CardZoneMovement.removeAt(player.stable, index);
+      if (!sacrificed) return false;
       CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
       state.pendingAction = undefined;
       return true;
@@ -2075,7 +2088,8 @@ export class ActionResolver {
       );
       if (index === -1) return false;
 
-      const [sacrificed] = player.stable.splice(index, 1);
+      const sacrificed = CardZoneMovement.removeAt(player.stable, index);
+      if (!sacrificed) return false;
       CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
       state.pendingAction = undefined;
       return true;
@@ -2172,7 +2186,7 @@ export class ActionResolver {
       if (stolen.cardType === 'unicorn') {
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
         if (!entered) {
-          targetPlayer.stable.push(stolen);
+          CardZoneMovement.addToStable(targetPlayer, stolen);
           return false;
         }
       } else if (stolen.cardType === 'upgrade') {
@@ -2313,7 +2327,8 @@ export class ActionResolver {
         return false;
       }
 
-      const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
+      const sacrificed = CardZoneMovement.removeAt(targetPlayer.stable, cardIdx);
+      if (!sacrificed) return false;
       CardMovement.destroyOrSacrifice(
         state,
         targetPlayer,
@@ -2422,7 +2437,8 @@ export class ActionResolver {
         return false;
       }
 
-      const [sacrificed] = targetPlayer.stable.splice(cardIdx, 1);
+      const sacrificed = CardZoneMovement.removeAt(targetPlayer.stable, cardIdx);
+      if (!sacrificed) return false;
       CardMovement.destroyOrSacrifice(
         state,
         targetPlayer,
@@ -2488,7 +2504,8 @@ export class ActionResolver {
 
         if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
-        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        const destroyed = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!destroyed) return false;
         const intercepted = CardMovement.destroyOrSacrifice(
           state,
           targetPlayer,
@@ -2533,7 +2550,8 @@ export class ActionResolver {
 
         if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
-        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        const destroyed = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!destroyed) return false;
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
         const sourcePlayer = state.players.find((p) => p.id === pending.sourcePlayerId);
         const sacrificed = [...state.discard].reverse().find((card) => card.id === 'shark_with_a_horn');
@@ -2584,12 +2602,13 @@ export class ActionResolver {
           return false;
         }
 
-        const [stolen] = targetPlayer.stable.splice(idx, 1);
+        const stolen = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!stolen) return false;
         maybeTriggerBarbedWireLeave(state, targetPlayer);
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
 
         if (!entered) {
-          targetPlayer.stable.push(stolen);
+          CardZoneMovement.addToStable(targetPlayer, stolen);
           return false;
         }
 
@@ -2626,13 +2645,14 @@ export class ActionResolver {
           return false;
         }
 
-        const [stolen] = targetPlayer.stable.splice(idx, 1);
+        const stolen = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!stolen) return false;
         maybeTriggerBarbedWireLeave(state, targetPlayer);
         const prevPending = state.pendingAction;
         const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
 
         if (!entered) {
-          targetPlayer.stable.push(stolen);
+          CardZoneMovement.addToStable(targetPlayer, stolen);
           return false;
         }
 
@@ -2670,7 +2690,8 @@ export class ActionResolver {
 
         if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
-        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        const destroyed = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!destroyed) return false;
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
 
         // Resolución LIFO centralizada: si la destrucción abrió un efecto hijo
@@ -2704,7 +2725,8 @@ export class ActionResolver {
 
         if (isImmuneToUnicornOrUpgradeDestruction(card.id)) return false;
 
-        const [destroyed] = targetPlayer.stable.splice(idx, 1);
+        const destroyed = CardZoneMovement.removeAt(targetPlayer.stable, idx);
+        if (!destroyed) return false;
         CardMovement.destroyOrSacrifice(state, targetPlayer, destroyed);
 
         // Resolución LIFO centralizada: si la destrucción abrió un efecto hijo
@@ -2748,7 +2770,8 @@ export class ActionResolver {
         return false;
       }
 
-      const [upgrade] = sourcePlayer.hand.splice(cardIdx, 1);
+      const upgrade = CardZoneMovement.removeFromHand(sourcePlayer, cardId);
+      if (!upgrade) return false;
       CardMovement.enterStableCard(sourcePlayer, upgrade);
       state.pendingAction = undefined;
       return true;
@@ -2762,9 +2785,8 @@ export class ActionResolver {
       );
       if (cardIdx === -1) return false;
 
-      const [discarded] = sourcePlayer.hand.splice(cardIdx, 1);
-      enqueueDiscardAnimation(state.roomCode, sourcePlayer.id, discarded);
-      state.discard.push(discarded);
+      const discarded = CardMovement.discardFromHand(state, sourcePlayer, cardId);
+      if (!discarded) return false;
       state.pendingAction = {
         type: 'select_discard_card',
         reason: 'zombie_unicorn',
@@ -2777,8 +2799,9 @@ export class ActionResolver {
     const cardIdx = targetPlayer.hand.findIndex((c) => c.uid === cardId);
     if (cardIdx === -1) return false;
 
-    const [stolenCard] = targetPlayer.hand.splice(cardIdx, 1);
-    sourcePlayer.hand.push(stolenCard);
+    const stolenCard = CardZoneMovement.removeFromHand(targetPlayer, cardId);
+    if (!stolenCard) return false;
+    CardZoneMovement.addToHand(sourcePlayer, stolenCard);
 
     state.pendingAction = undefined;
     return true;
@@ -2809,11 +2832,12 @@ export class ActionResolver {
       return false;
     }
 
-    const [moved] = player.hand.splice(cardIdx, 1);
+    const moved = CardZoneMovement.removeFromHand(player, cardId);
+    if (!moved) return false;
     const entered = CardMovement.enterStable(state, player, moved);
 
     if (!entered) {
-      player.hand.push(moved);
+      CardZoneMovement.addToHand(player, moved);
       return false;
     }
 
@@ -2878,9 +2902,8 @@ export class ActionResolver {
     const idx = player.hand.findIndex((c) => c.uid === cardId);
     if (idx === -1) return false;
 
-    const [discarded] = player.hand.splice(idx, 1);
-    enqueueDiscardAnimation(state.roomCode, player.id, discarded);
-    state.discard.push(discarded);
+    const discarded = CardMovement.discardFromHand(state, player, cardId);
+    if (!discarded) return false;
 
     const remaining = pending.remainingPlayerIds.filter((id) => id !== playerId);
     this.advanceMysticalVortex(
@@ -2917,9 +2940,8 @@ export class ActionResolver {
     const idx = player.hand.findIndex((c) => c.uid === cardId);
     if (idx === -1) return false;
 
-    const [discarded] = player.hand.splice(idx, 1);
-    enqueueDiscardAnimation(state.roomCode, player.id, discarded);
-    state.discard.push(discarded);
+    const discarded = CardMovement.discardFromHand(state, player, cardId);
+    if (!discarded) return false;
 
     const remainingPlayerIds = pending.remainingPlayerIds.filter(
       (id) => id !== playerId,
@@ -2960,9 +2982,8 @@ export class ActionResolver {
     const idx = player.hand.findIndex((card) => card.uid === cardIds[0]);
     if (idx === -1) return false;
 
-    const [discarded] = player.hand.splice(idx, 1);
-    enqueueDiscardAnimation(state.roomCode, player.id, discarded);
-    state.discard.push(discarded);
+    const discarded = CardMovement.discardFromHand(state, player, cardIds[0]);
+    if (!discarded) return false;
 
     const remainingPlayerIds = pending.remainingPlayerIds.filter(
       (id) => id !== playerId,

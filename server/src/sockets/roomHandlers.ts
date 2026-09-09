@@ -9,13 +9,14 @@ import { GameState } from '../game/models/GameState.ts';
 import { gameRegistry } from '../games/catalog.ts';
 import { createPublicRoom } from './publicRoom.ts';
 import { isRoomFull, markPlayerAsSpectatorIfRoomIsFull } from '../roomCapacity.ts';
+import { CardZoneMovement } from '../game/unstable-unicorns/engine/CardZoneMovement.ts';
 
 function sendCardsOnLeave(game: GameState, cards: Card[]): void {
   for (const card of cards) {
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
-      game.nursery.push(card);
+      CardZoneMovement.returnToNursery(game, card);
     } else {
-      game.discard.push(card);
+      CardZoneMovement.toDiscard(game, card);
     }
   }
 }

@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
+import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
 import { addLog } from '../../gameLog.ts';
 
@@ -9,7 +10,7 @@ export const changeOfLuck: CardEffect = {
       const drawn = state.deck.shift();
       if (drawn) {
         enqueueDrawAnimation(state.roomCode, player.id, drawn);
-        player.hand.push(drawn);
+        CardZoneMovement.addToHand(player, drawn);
       }
     }
 

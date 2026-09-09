@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation, enqueueShuffleAnimation } from '../../cardAnimations.ts';
+import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 
 function shuffle<T>(arr: T[]): void {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -16,7 +17,7 @@ export const shakeUp: CardEffect = {
     }
 
     const returnedCards = [card, ...player.hand];
-    state.discard.push(card);
+    CardZoneMovement.toDiscard(state, card);
 
     // Baraja la mano restante y todo el descarte, incluido Shake Up, dentro del mazo.
     state.deck.push(...player.hand, ...state.discard);
@@ -31,7 +32,7 @@ export const shakeUp: CardEffect = {
       const drawn = state.deck.shift();
       if (drawn) {
         enqueueDrawAnimation(state.roomCode, player.id, drawn);
-        player.hand.push(drawn);
+        CardZoneMovement.addToHand(player, drawn);
       }
     }
 

@@ -1,5 +1,6 @@
 import type { GameServer, GameSocket } from "./socketTypes.ts";
 import { CardMovement } from "../game/unstable-unicorns/engine/CardMovement.ts";
+import { CardZoneMovement } from "../game/unstable-unicorns/engine/CardZoneMovement.ts";
 import { TurnManager } from "../game/turn/TurnManager.ts";
 import { TurnPhase } from "../game/turn/TurnPhase.ts";
 import { roomManager } from "../roomManagerInstance.ts";
@@ -304,7 +305,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           } else if (drawn.cardType === 'downgrade') {
             CardMovement.enterStableCard(player, drawn);
           } else {
-            player.hand.push(drawn);
+            CardZoneMovement.addToHand(player, drawn);
           }
         }
       }
@@ -331,7 +332,8 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         );
         if (target) {
           const index = player.stable.findIndex((card) => card.uid === target.uid);
-          const [removed] = player.stable.splice(index, 1);
+          const removed = CardZoneMovement.removeAt(player.stable, index);
+          if (!removed) return;
           CardMovement.destroyOrSacrifice(
             room.gameState,
             player,
@@ -354,7 +356,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           const drawn = room.gameState.deck.shift();
           if (!drawn) break;
           enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
-          player.hand.push(drawn);
+          CardZoneMovement.addToHand(player, drawn);
         }
       }
 
@@ -375,8 +377,9 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         const target = targets[Math.floor(Math.random() * targets.length)];
         if (target) {
           const index = Math.floor(Math.random() * target.hand.length);
-          const [stolen] = target.hand.splice(index, 1);
-          player.hand.push(stolen);
+          const stolen = CardZoneMovement.removeFromHand(target, target.hand[index]?.uid ?? '');
+          if (!stolen) return;
+          CardZoneMovement.addToHand(player, stolen);
           enqueueStealAnimation(
             room.gameState.roomCode,
             target.id,
@@ -441,7 +444,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         const drawn = room.gameState.deck.shift();
         if (drawn) {
           enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
-          player.hand.push(drawn);
+          CardZoneMovement.addToHand(player, drawn);
 
           const isNeigh =
             drawn.effect === 'neigh' ||
@@ -487,7 +490,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         const drawn = room.gameState.deck.shift();
         if (drawn) {
           enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
-          player.hand.push(drawn);
+          CardZoneMovement.addToHand(player, drawn);
         }
       }
 
@@ -504,7 +507,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         const drawn = room.gameState.deck.shift();
         if (drawn) {
           enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
-          player.hand.push(drawn);
+          CardZoneMovement.addToHand(player, drawn);
         }
       }
 
@@ -581,7 +584,8 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           (c) => c.id === 'black_knight_unicorn',
         );
         if (idx !== -1) {
-          const [blackKnight] = player.stable.splice(idx, 1);
+          const blackKnight = CardZoneMovement.removeAt(player.stable, idx);
+          if (!blackKnight) return;
           CardMovement.destroyOrSacrifice(
             room.gameState,
             player,
@@ -816,7 +820,8 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           (c) => (uid ? c.uid === uid : c.id === 'angel_unicorn'),
         );
         if (idx !== -1) {
-          const [angelCard] = player.stable.splice(idx, 1);
+          const angelCard = CardZoneMovement.removeAt(player.stable, idx);
+          if (!angelCard) return;
           CardMovement.destroyOrSacrifice(
             room.gameState,
             player,
@@ -1060,7 +1065,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           const drawn = room.gameState.deck.shift();
           if (!drawn) break;
           enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
-          player.hand.push(drawn);
+          CardZoneMovement.addToHand(player, drawn);
           drawnCount += 1;
         }
         if (drawnCount > 0) {
@@ -1235,7 +1240,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           const drawn = room.gameState.deck.shift();
           if (!drawn) break;
           enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
-          player.hand.push(drawn);
+          CardZoneMovement.addToHand(player, drawn);
         }
 
         room.gameState.pendingAction = undefined;
@@ -1426,7 +1431,8 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           (c) => c.id === 'shark_with_a_horn',
         );
         if (sharkIdx !== -1) {
-          const [shark] = player.stable.splice(sharkIdx, 1);
+          const shark = CardZoneMovement.removeAt(player.stable, sharkIdx);
+          if (!shark) return;
           CardMovement.destroyOrSacrifice(
             room.gameState,
             player,
@@ -1473,7 +1479,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
             (c) => c.uid === heldCard.uid,
           );
           if (stableIdx !== -1) {
-            player.stable.splice(stableIdx, 1);
+            CardZoneMovement.removeAt(player.stable, stableIdx);
           }
           enqueueCardAnimation(
             room.gameState.roomCode,
@@ -1481,7 +1487,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
             player.id,
             heldCard,
           );
-          room.gameState.discard.push(heldCard);
+          CardZoneMovement.toDiscard(room.gameState, heldCard);
         }
         room.gameState.pendingAction = undefined;
         if (room.gameState.phase === TurnPhase.BEGINNING) {

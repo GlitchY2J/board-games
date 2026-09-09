@@ -7,6 +7,7 @@ import { emitGameError, getSocketGameContext } from './socketContext.ts';
 import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { CardMovement } from '../game/unstable-unicorns/engine/CardMovement.ts';
+import { CardZoneMovement } from '../game/unstable-unicorns/engine/CardZoneMovement.ts';
 import {
   enqueueDrawAnimation,
   enqueueShuffleAnimation,
@@ -30,7 +31,7 @@ socket.on('select-oracle-cards', ({ roomCode, handCardId, orderCardIds }) => {
   if (!kept || remaining.length !== 2 || orderCardIds.length !== 2 || new Set(orderCardIds).size !== 2) return;
   if (!orderCardIds.every((uid) => remaining.some((card) => card.uid === uid))) return;
 
-  player.hand.push(kept);
+  CardZoneMovement.addToHand(player, kept);
   room.gameState.deck.unshift(...remaining.slice().sort((a, b) => orderCardIds.indexOf(a.uid) - orderCardIds.indexOf(b.uid)));
   room.gameState.pendingAction = undefined;
   if (room.gameState.phase === TurnPhase.BEGINNING) TurnManager.processBeginningQueue(room.gameState);
@@ -221,7 +222,7 @@ socket.on('select-deck-card', ({ roomCode, cardId }) => {
     pending.reason === 'debug_draw' &&
     upgrade.id === 'imploding_kitten';
   if (!isDebugImplodingKitten) {
-    player.hand.push(upgrade);
+    CardZoneMovement.addToHand(player, upgrade);
   }
 
   if (pending.reason !== 'debug_draw') {

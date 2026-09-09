@@ -7,6 +7,7 @@ import { MagicHandler } from './handlers/MagicHandler.ts';
 import { UnicornHandler } from './handlers/UnicornHandler.ts';
 import { UpgradeHandler } from './handlers/UpgradeHandler.ts';
 import { VictoryManager } from '../../VictoryManager.ts';
+import { CardZoneMovement } from './CardZoneMovement.ts';
 import { isBasicUnicornEntryBlocked } from '../../cards/effects/queenBeeUnicorn.ts';
 import {
   actionFailure,
@@ -217,7 +218,7 @@ export class RulesEngine {
       // Recalculamos el índice por si el efecto modificó la mano (p. ej. Shake Up).
       const finalHandIndex = player.hand.findIndex((c) => c.uid === card.uid);
       if (finalHandIndex !== -1) {
-        player.hand.splice(finalHandIndex, 1);
+        CardZoneMovement.removeFromHand(player, card.uid);
       }
 
       this.consumeActionPlay(state);

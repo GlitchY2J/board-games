@@ -9,6 +9,7 @@ import { maybeMagicElexirIntercept } from '../src/game/cards/effects/magicElexir
 import { paranormalAffection } from '../src/game/cards/effects/paranormalAffection.ts';
 import { nightmareCurrentlyIndisposed } from '../src/game/cards/effects/nightmareCurrentlyIndisposed.ts';
 import { CardMovement } from '../src/game/unstable-unicorns/engine/CardMovement.ts';
+import { CardZoneMovement } from '../src/game/unstable-unicorns/engine/CardZoneMovement.ts';
 import { removeStableCardFromGame } from '../src/game/unstable-unicorns/engine/StableCardRemoval.ts';
 import { isReactionEffect } from '../src/sockets/gameHandlers.ts';
 
@@ -116,4 +117,22 @@ test('removeStableCardFromGame retira la carta sin enviarla al descarte', () => 
   assert.equal(target.stable.length, 0);
   assert.deepEqual(game.removedCards?.map((item) => item.uid), [removed.uid]);
   assert.equal(game.discard.length, 0);
+});
+
+test('CardZoneMovement mantiene cada transición en una sola zona', () => {
+  const target = player('A');
+  const handCard = card('basic_unicorn_red');
+  const stableCard = card('basic_unicorn_blue');
+  target.hand = [handCard];
+  target.stable = [stableCard];
+  const game = state([target]);
+
+  assert.equal(CardZoneMovement.removeFromHand(target, handCard.uid)?.uid, handCard.uid);
+  CardZoneMovement.addToHand(target, handCard);
+  assert.equal(CardZoneMovement.removeFromStable(target, stableCard.uid)?.uid, stableCard.uid);
+  CardZoneMovement.toDiscard(game, stableCard);
+
+  assert.deepEqual(target.hand.map((item) => item.uid), [handCard.uid]);
+  assert.equal(target.stable.length, 0);
+  assert.deepEqual(game.discard.map((item) => item.uid), [stableCard.uid]);
 });

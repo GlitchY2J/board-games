@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
+import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 import { addLog } from '../../gameLog.ts';
 
 export const unicornOnTheCob: CardEffect = {
@@ -9,7 +10,7 @@ export const unicornOnTheCob: CardEffect = {
       const drawn = state.deck.shift();
       if (drawn) {
         enqueueDrawAnimation(state.roomCode, player.id, drawn);
-        player.hand.push(drawn);
+      CardZoneMovement.addToHand(player, drawn);
       }
     }
 

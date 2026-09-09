@@ -18,6 +18,7 @@ import {
 } from '../../cards/effects/theTiniestUnicorn.ts';
 import { maybeMagicElexirIntercept } from '../../cards/effects/magicElexir.ts';
 import { hasParanormalAffection } from '../../cards/effects/paranormalAffection.ts';
+import { CardZoneMovement } from './CardZoneMovement.ts';
 
 export function hasUpgrade(player: Player, id: string): boolean {
   return player.upgrades.some((c) => c.id === id);
@@ -34,6 +35,21 @@ import {
 import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
 
 export class CardMovement {
+  static removeFromStable(player: Player, cardUid: string): Card | undefined {
+    return CardZoneMovement.removeFromStable(player, cardUid);
+  }
+
+  static discardFromHand(
+    state: GameState,
+    player: Player,
+    cardUid: string,
+  ): Card | undefined {
+    const card = CardZoneMovement.removeFromHand(player, cardUid);
+    if (!card) return undefined;
+    CardMovement.discard(state, card, player.id);
+    return card;
+  }
+
   /** Coloca una carta ya retirada de su zona en el descarte. */
   static discard(state: GameState, card: Card, playerId: string): void {
     enqueueDiscardAnimation(state.roomCode, playerId, card);
@@ -86,7 +102,7 @@ export class CardMovement {
       return false;
     }
 
-    player.stable.push(card);
+    CardZoneMovement.addToStable(player, card);
 
     // Barbed Wire: se captura ANTES de resolver los efectos on-enter porque la
     // entrada de este unicornio podría provocar que Barbed Wire abandone el
@@ -133,7 +149,7 @@ export class CardMovement {
     if (card.cardType === 'unicorn' && card.unicornClass === 'baby') {
       state.nursery.push(card);
     } else {
-      player.hand.push(card);
+      CardZoneMovement.addToHand(player, card);
     }
   }
 
@@ -202,7 +218,7 @@ export class CardMovement {
       maybeMagicElexirIntercept(state, player, card, animType)
     ) {
       if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
-        player.stable.push(card);
+        CardZoneMovement.addToStable(player, card);
       }
       return true;
     }
@@ -212,7 +228,7 @@ export class CardMovement {
       (animType !== 'sacrifice' && isImmuneToDestruction(card.id))
     ) {
       if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
-        player.stable.push(card);
+        CardZoneMovement.addToStable(player, card);
       }
       return true;
     }
@@ -234,7 +250,7 @@ export class CardMovement {
       hasUpgrade(player, 'rainbow_aura')
     ) {
       if (!player.stable.some((c) => c.uid === card.uid)) {
-        player.stable.push(card);
+        CardZoneMovement.addToStable(player, card);
       }
       return true;
     }
@@ -244,7 +260,7 @@ export class CardMovement {
       !isEffectBlockedByBlindingLight(player, card)
     ) {
       maybeTriggerBarbedWireLeave(state, player);
-      player.hand.push(card);
+      CardZoneMovement.addToHand(player, card);
       return false;
     }
 
@@ -260,7 +276,7 @@ export class CardMovement {
         // establo, así que se restaura su posición sin disparar efectos de
         // salida (p. ej. Barbed Wire).
         if (!player.stable.some((c) => c.uid === card.uid)) {
-          player.stable.push(card);
+          CardZoneMovement.addToStable(player, card);
         }
         return true;
       }

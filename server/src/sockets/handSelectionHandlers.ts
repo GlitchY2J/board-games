@@ -7,6 +7,7 @@ import { emitGameState } from './gameStateEmitter.ts';
 import { addLog } from './gameLog.ts';
 import { enqueueStealAnimation } from '../game/cardAnimations.ts';
 import type { GameState } from '../game/models/GameState.ts';
+import { CardZoneMovement } from '../game/unstable-unicorns/engine/CardZoneMovement.ts';
 
 function continueBeginningPhaseIfReady(game: GameState): void {
   if (!game.pendingAction && game.phase === TurnPhase.BEGINNING) {
@@ -32,12 +33,13 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
       const sourcePlayer = game.players.find((candidate) => candidate.id === pending.sourcePlayerId);
       const cardIndex = targetPlayer?.hand.findIndex((card) => card.uid === cardId) ?? -1;
       if (!targetPlayer || !sourcePlayer || cardIndex < 0) return;
-      const [stolenCard] = targetPlayer.hand.splice(cardIndex, 1);
-      sourcePlayer.hand.push(stolenCard);
+      const stolenCard = CardZoneMovement.removeFromHand(targetPlayer, cardId);
+      if (!stolenCard) return;
+      CardZoneMovement.addToHand(sourcePlayer, stolenCard);
       const favorIndex = sourcePlayer.hand.findIndex((card) => card.uid === game.pendingPlay?.card.uid);
       if (favorIndex >= 0) {
-        const [favorCard] = sourcePlayer.hand.splice(favorIndex, 1);
-        game.discard.push(favorCard);
+        const favorCard = CardZoneMovement.removeFromHand(sourcePlayer, game.pendingPlay?.card.uid ?? '');
+        if (favorCard) CardZoneMovement.toDiscard(game, favorCard);
       }
       game.pendingAction = undefined;
       game.pendingPlay = undefined;

@@ -3,6 +3,7 @@ import type { Player } from '../../models/Player.ts';
 import type { PendingAction } from '../../models/PendingAction.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
+import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 
 export function drawRainbowPrincessCards(
   state: GameState,
@@ -13,7 +14,7 @@ export function drawRainbowPrincessCards(
     const drawn = state.deck.shift();
     if (!drawn) break;
     enqueueDrawAnimation(state.roomCode, player.id, drawn);
-    player.hand.push(drawn);
+    CardZoneMovement.addToHand(player, drawn);
   }
 }
 

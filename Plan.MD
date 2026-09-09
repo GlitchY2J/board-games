@@ -367,7 +367,7 @@ Criterios:
 - Ningún módulo bajo `server/src/game` importa módulos bajo `server/src/sockets`.
 - El registro de efectos no participa en ciclos de runtime.
 
-## Fase 6: Movimiento De Cartas
+## Fase 6: Movimiento De Cartas [COMPLETADA]
 
 Completar la centralización de transiciones entre zonas.
 
