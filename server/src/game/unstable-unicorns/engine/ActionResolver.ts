@@ -287,6 +287,31 @@ export class ActionResolver {
       return true;
     }
 
+    if (reason === 'possession') {
+      const targets = state.players.filter(
+        (candidate) =>
+          candidate.id !== playerId &&
+          (candidate.stable.length > 0 ||
+            candidate.upgrades.length > 0 ||
+            candidate.downgrades.length > 0),
+      );
+      if (targets.length === 1) {
+        state.pendingAction = {
+          type: 'select_stable_card',
+          reason: 'possession_steal',
+          sourcePlayerId: playerId,
+          targetPlayerId: targets[0].id,
+        };
+      } else if (targets.length > 1) {
+        state.pendingAction = {
+          type: 'select_player',
+          reason: 'possession',
+          sourcePlayerId: playerId,
+        };
+      }
+      return true;
+    }
+
     if (reason === 'extremely_fertile_unicorn') {
       if (
         state.nursery.some(
@@ -475,6 +500,26 @@ export class ActionResolver {
       state.pendingAction = {
         type: 'select_hand_card',
         reason: 'winged_horrorcorn',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
+    if (pending.reason === 'possession') {
+      if (targetPlayerId === sourcePlayerId) return false;
+      const target = state.players.find((p) => p.id === targetPlayerId);
+      if (
+        !target ||
+        (target.stable.length === 0 &&
+          target.upgrades.length === 0 &&
+          target.downgrades.length === 0)
+      )
+        return false;
+
+      state.pendingAction = {
+        type: 'select_stable_card',
+        reason: 'possession_steal',
         sourcePlayerId,
         targetPlayerId,
       };
@@ -1944,6 +1989,41 @@ export class ActionResolver {
       }
 
       return false;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'possession_steal'
+    ) {
+      const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
+      const targetPlayer = state.players.find((p) => p.id === pending.targetPlayerId);
+      if (!sourcePlayer || !targetPlayer || sourcePlayer.id === targetPlayer.id) {
+        return false;
+      }
+
+      let stolen: Card | undefined;
+      for (const zone of ['stable', 'upgrades', 'downgrades'] as const) {
+        const index = targetPlayer[zone].findIndex((card) => card.uid === cardId);
+        if (index !== -1) {
+          [stolen] = targetPlayer[zone].splice(index, 1);
+          break;
+        }
+      }
+      if (!stolen) return false;
+
+      if (stolen.cardType === 'unicorn') {
+        const entered = CardMovement.enterStable(state, sourcePlayer, stolen);
+        if (!entered) {
+          targetPlayer.stable.push(stolen);
+          return false;
+        }
+      } else if (stolen.cardType === 'upgrade') {
+        sourcePlayer.upgrades.push(stolen);
+      } else {
+        sourcePlayer.downgrades.push(stolen);
+      }
+      state.pendingAction = undefined;
+      return true;
     }
 
     if (

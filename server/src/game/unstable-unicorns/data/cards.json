@@ -1495,8 +1495,8 @@
     "name": "Possession",
     "cardType": "magic",
     "image": "/cards/unstable-unicorns/nightmares/possession.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "Discard a card, then steal a card.",
+    "effect": "possession",
     "copies": 1,
     "expansion": "nightmares"
   },

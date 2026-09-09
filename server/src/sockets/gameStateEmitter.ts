@@ -41,8 +41,15 @@ function canViewerSeeTargetHand(
     pending.sourcePlayerId === viewerId &&
     pending.targetPlayerId === targetPlayerId;
 
+  const isPossessionViewer =
+    pending?.type === 'select_hand_card' &&
+    pending.reason === 'possession' &&
+    pending.sourcePlayerId === viewerId &&
+    pending.targetPlayerId === targetPlayerId;
+
   if (isTwoOfAKindViewer) return false;
   if (isWingedHorrorcornViewer) return true;
+  if (isPossessionViewer) return true;
 
   if (
     game.players.some(

@@ -369,6 +369,7 @@ export default function GameOverlay({
          const isPlayDowngrade = action.reason === 'play_downgrade';
          const isPlayfulPuppet = action.reason === 'playful_puppet_unicorn';
          const isWingedHorrorcorn = action.reason === 'winged_horrorcorn';
+         const isPossession = action.reason === 'possession';
         const isMermaid = action.reason === 'mermaid_unicorn';
         const isUnfairBargain = action.reason === 'unfair_bargain';
          const isUnicornSwap = action.reason === 'unicorn_swap';
@@ -406,6 +407,8 @@ export default function GameOverlay({
           if (p.id === localPlayerId) return false;
           if (isTargetedAttack) return true;
            if (handInspection) return p.hand.length > 0;
+           if (isPossession)
+             return p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0;
           if (isUnicornSwap)
             return p.stable.some((c) => c.cardType === 'unicorn');
            if (isUnicornPoison) return p.stable.length > 0;
@@ -447,6 +450,7 @@ export default function GameOverlay({
            if (isPlayDowngrade) return '⏬ Jugar Downgrade';
            if (isPlayfulPuppet) return '🪆 Playful Puppet Unicorn';
            if (isWingedHorrorcorn) return '🪽 Winged Horrorcorn';
+           if (isPossession) return '🖐️ Possession';
           if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
           if (isUnfairBargain) return '🤝 Unfair Bargain';
            if (isUnicornSwap) return '🦄 Unicorn Swap';
@@ -482,6 +486,8 @@ export default function GameOverlay({
              return 'Elige otro jugador para recibir un Downgrade de tu establo';
            if (isWingedHorrorcorn)
              return 'Elige a un jugador para mirar su mano y robar una carta';
+           if (isPossession)
+             return 'Elige a un jugador para robarle una carta de su mano';
           if (isMermaid)
             return 'Elige a un jugador para devolver una carta de su establo a su mano';
           if (isUnfairBargain)
@@ -603,13 +609,14 @@ export default function GameOverlay({
         const isTwoOfAKind = action.reason === 'two_of_a_kind';
         const isThreeOfAKind = action.reason === 'three_of_a_kind';
         const isWingedHorrorcorn = action.reason === 'winged_horrorcorn';
+        const isPossession = action.reason === 'possession';
         const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
         const revealAmericorn = isAmericorn && hasNannyCam;
 
         return (
           <CardSelectionOverlay
             hide={hide}
-            title={isWingedHorrorcorn ? '🪽 Winged Horrorcorn' : isFavor ? '🃏 Favor' : isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
+            title={isPossession ? '🖐️ Possession' : isWingedHorrorcorn ? '🪽 Winged Horrorcorn' : isFavor ? '🃏 Favor' : isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
             subtitle={
               isFavor
                 ? `Elige cualquier carta de tu mano para entregársela a ${gameState.players.find((p) => p.id === action.sourcePlayerId)?.name ?? 'ese jugador'}`
@@ -621,19 +628,19 @@ export default function GameOverlay({
                 ? revealAmericorn
                   ? `Nanny Cam: se ven las cartas de ${target.name}. Elige una`
                   : `Elige una carta boca abajo de la mano de ${target.name}`
-                : isWingedHorrorcorn
+                : isWingedHorrorcorn || isPossession
                   ? `Elige una carta de la mano de ${target.name}`
                   : `Elige una carta de la mano de ${target.name} para robarla`
             }
             items={target.hand.map((card, idx) => ({
               id: `${card.id}_${idx}`,
               value: card.uid,
-                title: isWingedHorrorcorn || isFavor ? card.name : revealAmericorn
+                title: isWingedHorrorcorn || isPossession || isFavor ? card.name : revealAmericorn
                 ? card.name
                 : isAmericorn || isTwoOfAKind || isThreeOfAKind
                   ? `Carta ${idx + 1}`
                   : card.name,
-                image: isWingedHorrorcorn || isFavor
+                image: isWingedHorrorcorn || isPossession || isFavor
                   ? card.image
                   : revealAmericorn
                 ? card.image
@@ -1013,6 +1020,43 @@ export default function GameOverlay({
               items={items}
               maxSelection={1}
               confirmText="Sacrificar y robar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'possession_steal') {
+          const target = gameState.players.find(
+            (p) => p.id === action.targetPlayerId,
+          );
+          if (!target) return null;
+
+          const items = [
+            ...target.stable,
+            ...target.upgrades,
+            ...target.downgrades,
+          ].map((card, index) => ({
+            id: `${card.id}_possession_${index}`,
+            value: card.uid,
+            title: card.name,
+            subtitle: `Carta en juego de ${target.name}`,
+            image: card.image,
+          }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🖐️ Possession"
+              subtitle={`Elige una carta en juego de ${target.name} para robarla.`}
+              items={items}
+              maxSelection={1}
+              confirmText="Robar carta"
               onConfirm={([cardId]) => {
                 dismiss();
                 socket.emit('select-stable-card', {

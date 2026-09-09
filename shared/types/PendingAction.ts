@@ -45,6 +45,7 @@ export type PendingAction =
          | "stable_artillery"
          | "dancing_clownicorn"
          | "unicorn_slasher"
+         | "possession"
         | "barbed_wire";
       playerId: string;
       cardsToDiscard: number;
@@ -69,6 +70,7 @@ export type PendingAction =
          | "play_downgrade"
          | "playful_puppet_unicorn"
          | "winged_horrorcorn"
+         | "possession"
          | "mermaid_unicorn"
         | "unfair_bargain"
         | "unicorn_swap"
@@ -95,6 +97,7 @@ export type PendingAction =
           | "chainsaw_massicorn"
           | "dancing_clownicorn"
            | "demonicorn_remove"
+           | "possession_steal"
          | "playful_puppet_unicorn_move"
            | "sweet_old_ladycorn_sacrifice"
            | "unicorn_slasher_remove"
@@ -144,7 +147,7 @@ export type PendingAction =
     }
   | {
       type: "select_hand_card";
-         reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor" | "zombie_unicorn" | "winged_horrorcorn";
+         reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor" | "zombie_unicorn" | "winged_horrorcorn" | "possession";
         sourcePlayerId: string;
         targetPlayerId: string;
         requestedCardType?: string;
