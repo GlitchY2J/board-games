@@ -119,6 +119,7 @@ test('Extremely Fertile Unicorn: descarta una carta y permite elegir un Baby de 
 test('Zombie Unicorn: se ofrece al inicio solo si puede sacrificar y recuperar un unicornio', () => {
   const p1 = makePlayer('P1');
   p1.stable = [card('zombie_unicorn'), card('basic_unicorn_red')];
+  p1.hand = [card('basic_unicorn_blue')];
   const p2 = makePlayer('P2');
   const state = makeGame([p1, p2]);
   state.discard = [card('basic_unicorn_blue')];

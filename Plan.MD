@@ -248,3 +248,261 @@ La implementación de sus reglas deberá conectarse mediante `GameRegistry`, sin
 - Se puede registrar Exploding Kittens sin romper el flujo existente.
 - Las configuraciones inválidas son rechazadas por el servidor.
 - El flujo actual de Unstable Unicorns continúa funcionando.
+
+---
+
+# Plan: Reestructuración Técnica
+
+Este plan continúa el trabajo de modularización del motor de juego. Cada fase debe
+terminar con build correcto y tests relevantes pasando antes de comenzar la siguiente.
+
+## Estado Actual
+
+- [x] Hooks de efectos de inicio de turno.
+- [x] Helpers iniciales para movimiento de cartas.
+- [x] Separación inicial de efectos pasivos y activos.
+- [x] Categorías iniciales de `PendingAction`.
+- [ ] Extracción completa de handlers Socket.IO.
+- [x] Helper común para `Remove From Game`.
+- [x] Datos de cartas separados por expansión.
+- [x] Tests iniciales de cartas con reglas globales.
+- [x] Suite completamente verde.
+
+## Fase 1: Suite Verde [COMPLETADA]
+
+Corregir el fallo de `Zombie Unicorn` y evitar mezclar el dispatcher legacy de
+`TurnManager` con los hooks nuevos.
+
+Archivos principales:
+
+- `server/src/game/turn/TurnManager.ts`
+- `server/src/game/cards/effects/zombieUnicorn.ts`
+- `server/tests/turnBeginning.test.ts`
+
+Criterios:
+
+- `npm run build` del servidor correcto.
+- Todos los tests pasan.
+- `Zombie Unicorn` usa un único flujo de inicio de turno.
+
+## Fase 2: Configuración Única De Sala
+
+Hacer `RoomSettings` la única fuente de verdad y retirar gradualmente `room.game`
+y `room.expansions`.
+
+Áreas afectadas:
+
+- `shared/types/Room.ts`
+- `shared/types/PublicRoom.ts`
+- `server/src/RoomManager.ts`
+- `server/src/game/unstable-unicorns/setup.ts`
+- `server/src/sockets/publicRoom.ts`
+- Cliente y DTOs públicos.
+
+Criterios:
+
+- Una sala nueva puede tener `gameId: null`.
+- El setup lee únicamente `settings.expansionIds`.
+- No existen fallbacks `settings ?? legacy` fuera de una frontera de compatibilidad explícita.
+
+## Fase 3: Validación Centralizada
+
+Crear `GameRegistry.validateSettings()` y reutilizarlo en REST, Socket.IO, cambios
+de configuración e inicio de partida.
+
+Debe validar:
+
+- Juego existente y disponible.
+- Versión perteneciente al juego.
+- Expansiones pertenecientes al juego.
+- Expansiones disponibles y compatibles con la versión.
+- Expansiones duplicadas.
+- Número mínimo y máximo de jugadores.
+
+Criterios:
+
+- Una única implementación de las reglas de validación.
+- Errores estructurados y reutilizables por cliente y servidor.
+
+## Fase 4: Completar Handlers Socket.IO
+
+Reducir `server/src/sockets/actionHandlers.ts` a un compositor de módulos.
+
+Módulos objetivo:
+
+- `discardHandlers.ts`
+- `stableSelectionHandlers.ts`
+- `handSelectionHandlers.ts`
+- `choiceHandlers.ts`
+- `deckSelectionHandlers.ts`
+
+Trabajo pendiente:
+
+- Mover completamente la lógica de `select-choice`.
+- Eliminar el adaptador `legacyHandler`.
+- Eliminar funciones anidadas no utilizadas de `actionHandlers.ts`.
+- Extraer timers y lógica común a un módulo neutral.
+
+Criterios:
+
+- `actionHandlers.ts` solo registra módulos.
+- Cada módulo registra únicamente sus eventos.
+- No hay listeners duplicados ni ramas legacy activas.
+
+## Fase 5: Separación De Capas
+
+Eliminar dependencias del dominio hacia `sockets`.
+
+Actualmente efectos y motores importan logging o animaciones desde la capa Socket.IO.
+
+Objetivo:
+
+- Crear un `GameContext` o `EngineContext` con logging, animaciones y eventos.
+- Pasar ese contexto a efectos que lo necesiten.
+- Mantener sockets como adaptadores de transporte.
+- Eliminar ciclos entre `CardMovement`, `effects/index.ts`, `ActionResolver` y sockets.
+
+Criterios:
+
+- Ningún módulo bajo `server/src/game` importa módulos bajo `server/src/sockets`.
+- El registro de efectos no participa en ciclos de runtime.
+
+## Fase 6: Movimiento De Cartas
+
+Completar la centralización de transiciones entre zonas.
+
+Operaciones objetivo:
+
+- `drawCard`.
+- `discardCard`.
+- `moveToHand`.
+- `enterStable`.
+- `sacrifice`.
+- `destroy`.
+- `removeFromGame`.
+- `returnToNursery`.
+
+Criterios:
+
+- No hay mutaciones directas de zonas en resolvers y sockets salvo dentro del módulo de movimiento.
+- Baby Unicorn, Flying Unicorn, Barbed Wire, interceptores y animaciones se aplican exactamente una vez.
+- Tests de invariantes para cada transición.
+
+## Fase 7: Inicio De Turno
+
+Migrar todos los efectos restantes a `canBeginTurn` y `onBeginningTurn`.
+
+Objetivo:
+
+- `TurnManager` solo administra la cola y el orden de resolución.
+- Las cartas construyen sus propios `PendingAction`.
+- Eliminar `BEGINNING_HOOK_IDS` y el switch legacy.
+
+Criterios:
+
+- No hay razones de cartas hardcodeadas en `TurnManager`.
+- Cada carta de inicio tiene tests de disponibilidad y resolución.
+
+## Fase 8: Pasivos Reales
+
+Convertir `CardPassive` de marcador a mecanismo de reglas.
+
+Consultas a centralizar:
+
+- Límite de mano.
+- Inmunidad a destrucción o sacrificio.
+- Bloqueo de entrada al establo.
+- Protección de cartas.
+- Restricciones de acciones.
+- Conteo de poder del establo.
+
+Criterios:
+
+- Las reglas pasivas no dependen de búsquedas dispersas por `card.id`.
+- Cada modificador declara la consulta que modifica.
+
+## Fase 9: Pending Actions
+
+Reemplazar la unión monolítica por categorías y handlers exhaustivos.
+
+Categorías:
+
+- Selección de jugador.
+- Selección de carta.
+- Descarte.
+- Elección.
+- Selección del mazo.
+
+Criterios:
+
+- Variantes con campos opcionales mínimos.
+- Sin casts `any` para resolver acciones.
+- Ownership y razones validados por handler especializado.
+- Tests de cada categoría y de acciones obsoletas.
+
+## Fase 10: Servicios De Sala Y Motores
+
+Unificar los flujos REST y Socket.IO mediante servicios de aplicación.
+
+Servicios objetivo:
+
+- Crear sala.
+- Unirse a sala.
+- Reanudar sesión.
+- Actualizar configuración.
+- Iniciar partida.
+
+Reglas de seguridad:
+
+- No aceptar `socketId` del cliente.
+- No identificar jugadores por nombre.
+- Reanudar únicamente mediante `sessionToken`.
+
+Además, ampliar `GameEngine` para incluir dispatch de acciones, progresión de
+turno y proyección de estado, evitando ramas `isExplodingKittensRoom()` en sockets.
+
+## Fase 11: Organización De Efectos
+
+Establecer una única convención para efectos:
+
+- Efectos base.
+- Efectos de `nightmares`.
+- Efectos de `rainbow_apocalypse`.
+
+Evitar mezclar implementaciones en `cards/effects`, `engine/effects` y
+`engine/effects/unicorn` sin una regla clara.
+
+Criterios:
+
+- Cada efecto tiene una ubicación canónica.
+- El catálogo de efectos se compone por expansión.
+- No quedan objetos de efecto vacíos sin una justificación documentada.
+
+## Fase 12: Cobertura De Integración
+
+Añadir tests para:
+
+- Configuración de salas.
+- Compatibilidad de versiones y expansiones.
+- Paridad REST/Socket.IO.
+- Reanudación de sesión.
+- Ownership de acciones pendientes.
+- Timers y acciones obsoletas.
+- Selección de motor por juego.
+- Invariantes de movimiento de cartas.
+- Separación entre reglas de Unstable Unicorns y Exploding Kittens.
+
+## Orden De Ejecución
+
+1. Suite verde y `Zombie Unicorn`.
+2. Configuración única de sala.
+3. Validación centralizada.
+4. Handlers Socket.IO completos.
+5. Separación de capas y eliminación de ciclos.
+6. Movimiento de cartas completo.
+7. Migración total de inicio de turno.
+8. Pasivos reales.
+9. `PendingAction` exhaustivo.
+10. Servicios de sala y contrato completo de motores.
+11. Organización final de efectos.
+12. Cobertura de integración.

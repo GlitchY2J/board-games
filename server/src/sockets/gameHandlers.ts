@@ -45,7 +45,7 @@ function playablePlayers(room: Room) {
   return room.players.filter((player) => !player.isSpectator);
 }
 
-function isReactionEffect(effect: string | null, explodingKittens: boolean): boolean {
+export function isReactionEffect(effect: string | null, explodingKittens: boolean): boolean {
   return (
     effect === 'neigh' ||
     effect === 'super_neigh' ||
