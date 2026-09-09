@@ -4,6 +4,7 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 import { VictoryManager } from '../../VictoryManager.ts';
+import { hasAvailableUnicorn } from './pandamonium.ts';
 
 export const SADISTIC_RITUAL_ID = 'sadistic_ritual';
 
@@ -26,7 +27,15 @@ export function drawForSadisticRitual(state: GameState, player: Player): void {
 }
 
 export const sadisticRitual: CardEffect = {
-  // Efecto continuo de inicio de turno: se gestiona en TurnManager
-  // (collectBeginningEffects / startBeginningEffect) y en ActionResolver
-  // (handleSelectStableCard con reason 'sadistic_ritual').
+  canBeginTurn(_state, player) {
+    return hasAvailableUnicorn(player);
+  },
+  onBeginningTurn(state, player) {
+    state.pendingAction = {
+      type: 'select_stable_card',
+      reason: 'sadistic_ritual',
+      sourcePlayerId: player.id,
+    };
+    return true;
+  },
 };

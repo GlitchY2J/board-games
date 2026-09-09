@@ -88,6 +88,18 @@ import { blindingLight } from '../../../cards/effects/blindingLight.ts';
 import { sadisticRitual } from '../../../cards/effects/sadisticRitual.ts';
 import { adorableFlyingUnicorn } from '../../../cards/effects/adorableFlyingUnicorn.ts';
 import { angelUnicorn } from '../../../cards/effects/angelUnicorn.ts';
+import {
+  rhinocorn,
+  caffeineOverload,
+  clairvoyantUnicorn,
+  clawMachine,
+  glitterBomb,
+  rainbowSprinklesChoice,
+  rainbowLasso,
+  specialDeliveryChoice,
+  stableArtillery,
+  extremelyFertileUnicorn,
+} from '../../../cards/effects/beginningChoices.ts';
 import { cottonCandyUnicorn } from '../../../cards/effects/cottonCandyUnicorn.ts';
 import { aCuteAttack } from '../../../cards/effects/aCuteAttack.ts';
 import { fireAndBrimstone } from '../../../cards/effects/fireAndBrimstone.ts';
@@ -105,6 +117,15 @@ import { nightmaresEffects } from './expansions/nightmares.ts';
 import { rainbowApocalypseEffects } from './expansions/rainbowApocalypse.ts';
 
 export const effects: Record<string, CardEffect> = {
+  rhinocorn,
+  caffeine_overload: caffeineOverload,
+  clairvoyant_unicorn: clairvoyantUnicorn,
+  claw_machine: clawMachine,
+  glitter_bomb: glitterBomb,
+  rainbow_lasso: rainbowLasso,
+  special_delivery: specialDeliveryChoice,
+  stable_artillery: stableArtillery,
+  extremely_fertile_unicorn: extremelyFertileUnicorn,
   adorable_flying_unicorn: adorableFlyingUnicorn,
   angel_unicorn: angelUnicorn,
   cotton_candy_unicorn: cottonCandyUnicorn,
@@ -180,8 +201,7 @@ export const effects: Record<string, CardEffect> = {
   necromancer_unicorn: necromancerUnicorn,
   queen_bee_unicorn: queenBeeUnicorn,
   rainbow_unicorn: rainbowUnicorn,
-  rainbow_sprinkles: rainbowSprinkles,
-  special_delivery: specialDelivery,
+  rainbow_sprinkles: rainbowSprinklesChoice,
   seductive_unicorn: seductiveUnicorn,
   shark_with_a_horn: sharkWithAHorn,
   stabby_the_unicorn: stabbyTheUnicorn,

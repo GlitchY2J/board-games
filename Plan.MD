@@ -388,7 +388,7 @@ Criterios:
 - Baby Unicorn, Flying Unicorn, Barbed Wire, interceptores y animaciones se aplican exactamente una vez.
 - Tests de invariantes para cada transición.
 
-## Fase 7: Inicio De Turno
+## Fase 7: Inicio De Turno [COMPLETADA]
 
 Migrar todos los efectos restantes a `canBeginTurn` y `onBeginningTurn`.
 
