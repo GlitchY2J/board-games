@@ -313,6 +313,21 @@ export class ActionResolver {
       return true;
     }
 
+    if (reason === 'strange_craft_project') {
+      const remainingPlayerIds = state.players
+        .filter((candidate) => candidate.stable.length > 0)
+        .map((candidate) => candidate.id);
+      if (remainingPlayerIds.length > 0) {
+        state.pendingAction = {
+          type: 'select_stable_card',
+          reason: 'strange_craft_project_remove',
+          sourcePlayerId: playerId,
+          remainingPlayerIds,
+        };
+      }
+      return true;
+    }
+
     if (reason === 'extremely_fertile_unicorn') {
       if (
         state.nursery.some(
@@ -2163,7 +2178,8 @@ export class ActionResolver {
 
     if (
       pending.type === 'select_stable_card' &&
-      pending.reason === 'heeeeeres_stabby_remove'
+      (pending.reason === 'heeeeeres_stabby_remove' ||
+        pending.reason === 'strange_craft_project_remove')
     ) {
       const targetIds = pending.remainingPlayerIds ?? [];
       if (!targetIds.includes(sourcePlayerId)) return false;
@@ -2179,7 +2195,7 @@ export class ActionResolver {
         state.pendingAction = undefined;
         addLog(
           state,
-          `${state.players.find((p) => p.id === sourcePlayerId)?.name ?? 'Un jugador'} retiró ${removed.name} de la partida por Heeeeere's Stabby`,
+          `${state.players.find((p) => p.id === sourcePlayerId)?.name ?? 'Un jugador'} retiró ${removed.name} de la partida`,
           { playerId: sourcePlayerId },
         );
         return true;

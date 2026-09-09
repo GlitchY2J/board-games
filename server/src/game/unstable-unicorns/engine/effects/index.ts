@@ -29,6 +29,7 @@ import { magicElexir } from '../../../cards/effects/magicElexir.ts';
 import { paranormalAffection } from '../../../cards/effects/paranormalAffection.ts';
 import { poltergeistSwipe } from '../../../cards/effects/poltergeistSwipe.ts';
 import { savedByTheSigil } from '../../../cards/effects/savedByTheSigil.ts';
+import { strangeCraftProject } from '../../../cards/effects/strangeCraftProject.ts';
 import { classyNarwhal } from '../../../cards/effects/classyNarwhal.ts';
 import { greedyFlyingUnicorn } from '../../../cards/effects/greedyFlyingUnicorn.ts';
 import { llamacorn } from '../../../cards/effects/llamacorn.ts';
@@ -145,6 +146,7 @@ export const effects: Record<string, CardEffect> = {
   paranormal_affection: paranormalAffection,
   poltergeist_swipe: poltergeistSwipe,
   saved_by_the_sigil: savedByTheSigil,
+  strange_craft_project: strangeCraftProject,
   classy_narwhal: classyNarwhal,
   greedy_flying_unicorn: greedyFlyingUnicorn,
   llamacorn: llamacorn,

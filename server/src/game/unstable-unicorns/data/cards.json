@@ -1625,7 +1625,8 @@
     "name": "Strange Craft Project",
     "cardType": "upgrade",
     "image": "/cards/unstable-unicorns/nightmares/strange_craft_project.png",
-    "description": "Nightmares expansion card.",
+    "description": "If this card is in your Stable at the beginning of your turn, you may discard 3 cards, then remove a card in any player's Stable from the game.",
+    "effect": "strange_craft_project",
     "effect": null,
     "copies": 1,
     "expansion": "nightmares"

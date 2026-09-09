@@ -934,7 +934,8 @@ export default function GameOverlay({
         if (
           action.reason === 'demonicorn_remove' ||
           action.reason === 'unicorn_slasher_remove' ||
-          action.reason === 'heeeeeres_stabby_remove'
+          action.reason === 'heeeeeres_stabby_remove' ||
+          action.reason === 'strange_craft_project_remove'
         ) {
           const items = gameState.players
             .filter((p) => action.remainingPlayerIds?.includes(p.id))
@@ -956,7 +957,9 @@ export default function GameOverlay({
                   ? '😈 Demonicorn'
                   : action.reason === 'unicorn_slasher_remove'
                     ? '🔪 Unicorn Slasher'
-                    : "🔪 Heeeeere's Stabby"
+                    : action.reason === 'heeeeeres_stabby_remove'
+                      ? "🔪 Heeeeere's Stabby"
+                      : '🛠️ Strange Craft Project'
               }
               subtitle="Elige una carta de cualquier establo para retirarla de la partida."
               items={items}

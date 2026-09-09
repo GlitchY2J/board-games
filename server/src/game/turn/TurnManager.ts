@@ -185,6 +185,15 @@ export class TurnManager {
       uids.push(...poltergeistSwipe.map((c) => c.uid));
     }
 
+    const strangeCraft = allCards.filter((c) => c.id === 'strange_craft_project');
+    if (
+      strangeCraft.length > 0 &&
+      activePlayer.hand.length >= 3 &&
+      game.players.some((candidate) => candidate.stable.length > 0)
+    ) {
+      uids.push(...strangeCraft.map((c) => c.uid));
+    }
+
     const zombie = allCards.filter((c) => c.id === 'zombie_unicorn');
     if (
       zombie.length > 0 &&
@@ -464,6 +473,20 @@ export class TurnManager {
           options: [
             { value: 'yes', text: 'Sí, saltar robo y robar carta' },
             { value: 'no', text: 'No, robar normalmente' },
+          ],
+          effectCardId: uid,
+        };
+        return true;
+      case 'strange_craft_project':
+        game.pendingAction = {
+          type: 'select_choice',
+          reason: 'strange_craft_project',
+          playerId: activePlayer.id,
+          title: '🛠️ Strange Craft Project',
+          description: '¿Deseas DESCARTAR 3 cartas y retirar una carta de cualquier establo de la partida?',
+          options: [
+            { value: 'yes', text: 'Sí, descartar 3 y retirar carta' },
+            { value: 'no', text: 'No, omitir el efecto' },
           ],
           effectCardId: uid,
         };

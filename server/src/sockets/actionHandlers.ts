@@ -1257,6 +1257,25 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'strange_craft_project') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'discard',
+            reason: 'strange_craft_project',
+            playerId: player.id,
+            cardsToDiscard: 3,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+          if (room.gameState.phase === TurnPhase.BEGINNING) {
+            TurnManager.processBeginningQueue(room.gameState);
+          }
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'

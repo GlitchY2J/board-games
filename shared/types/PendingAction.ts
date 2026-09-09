@@ -46,7 +46,8 @@ export type PendingAction =
          | "dancing_clownicorn"
          | "unicorn_slasher"
          | "possession"
-         | "magic_elexir"
+          | "magic_elexir"
+         | "strange_craft_project"
         | "barbed_wire";
       playerId: string;
       cardsToDiscard: number;
@@ -104,7 +105,8 @@ export type PendingAction =
          | "playful_puppet_unicorn_move"
            | "sweet_old_ladycorn_sacrifice"
            | "unicorn_slasher_remove"
-           | "heeeeeres_stabby_remove"
+            | "heeeeeres_stabby_remove"
+            | "strange_craft_project_remove"
            | "vengeful_unicorn_sacrifice"
            | "nightmare_buried_alive_sacrifice"
            | "nightmare_currently_indisposed_sacrifice"
@@ -227,7 +229,8 @@ export type PendingAction =
          | "winged_horrorcorn"
          | "ghost_guide"
          | "paranormal_affection"
-         | "poltergeist_swipe"
+          | "poltergeist_swipe"
+          | "strange_craft_project"
          | "magic_elexir"
         | "classy_narwhal"
         | "the_great_narwhal"
