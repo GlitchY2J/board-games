@@ -16,6 +16,7 @@ import {
   isImmuneToDestruction,
   isImmuneToSacrifice,
 } from '../../cards/effects/theTiniestUnicorn.ts';
+import { maybeMagicElexirIntercept } from '../../cards/effects/magicElexir.ts';
 
 export function hasUpgrade(player: Player, id: string): boolean {
   return player.upgrades.some((c) => c.id === id);
@@ -151,7 +152,18 @@ export class CardMovement {
     card: Card,
     animType: CardAnimType = 'destroy',
     pandamoniumApplies = true,
+    ignoreMagicElexir = false,
   ): boolean {
+    if (
+      !ignoreMagicElexir &&
+      maybeMagicElexirIntercept(state, player, card, animType)
+    ) {
+      if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
+        player.stable.push(card);
+      }
+      return true;
+    }
+
     if (
       (animType === 'sacrifice' && isImmuneToSacrifice(card.id)) ||
       (animType !== 'sacrifice' && isImmuneToDestruction(card.id))

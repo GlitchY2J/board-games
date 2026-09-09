@@ -1172,6 +1172,37 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'magic_elexir') {
+        if (choice === 'yes') {
+          room.gameState.pendingAction = {
+            type: 'discard',
+            reason: 'magic_elexir',
+            playerId: player.id,
+            cardsToDiscard: 1,
+          };
+        } else {
+          const target = player.stable.find(
+            (card) => card.uid === pending.targetCardId,
+          );
+          if (target) {
+            const index = player.stable.findIndex((card) => card.uid === target.uid);
+            const [removed] = player.stable.splice(index, 1);
+            CardMovement.destroyOrSacrifice(
+              room.gameState,
+              player,
+              removed,
+              pending.destructionType ?? 'destroy',
+              true,
+            );
+          }
+          room.gameState.pendingAction = undefined;
+          continueBeginningPhaseIfReady(room.gameState);
+        }
+
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         pending.reason === 'jack_the_reapercorn' ||
         pending.reason === 'jack_the_reapercorn_second'

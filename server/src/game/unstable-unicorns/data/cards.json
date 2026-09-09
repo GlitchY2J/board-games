@@ -1585,7 +1585,7 @@
     "name": "Magic Elexir",
     "cardType": "upgrade",
     "image": "/cards/unstable-unicorns/nightmares/magic_elexir.png",
-    "description": "Nightmares expansion card.",
+    "description": "If a card in your Stable would be sacrificed or destroyed, you may discard a card instead.",
     "effect": null,
     "copies": 2,
     "expansion": "nightmares"

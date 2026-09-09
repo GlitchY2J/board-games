@@ -46,6 +46,7 @@ export type PendingAction =
          | "dancing_clownicorn"
          | "unicorn_slasher"
          | "possession"
+         | "magic_elexir"
         | "barbed_wire";
       playerId: string;
       cardsToDiscard: number;
@@ -225,6 +226,7 @@ export type PendingAction =
          | "unicorn_slasher"
          | "winged_horrorcorn"
          | "ghost_guide"
+         | "magic_elexir"
         | "classy_narwhal"
         | "the_great_narwhal"
         | "dark_angel_unicorn"
@@ -273,7 +275,8 @@ export type PendingAction =
       heldCard?: Card;
       /** Uid del efecto de inicio de turno que se está resolviendo. Permite distinguir
        *  varias copias de la misma carta (cada una se activa por separado). */
-      effectCardId?: string;
+       effectCardId?: string;
+       destructionType?: "destroy" | "sacrifice";
     }
   | {
       type: "select_discard_card";
