@@ -391,7 +391,8 @@ export default function GameOverlay({
          const handInspection = needsHand || isWingedHorrorcorn;
 
         const eligiblePlayers = gameState.players.filter((p) => {
-           if (isPlayDowngrade) return true;
+           if (isPlayDowngrade)
+             return !p.downgrades.some((card) => card.id === 'saved_by_the_sigil');
            if (isPlayfulPuppet) return p.id !== localPlayerId;
           if (isReTargetDestination) {
             // No puede moverse al propio establo ni al jugador de origen

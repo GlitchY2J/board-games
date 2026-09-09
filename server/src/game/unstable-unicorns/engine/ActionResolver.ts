@@ -21,6 +21,7 @@ import {
   nextRainbowPrincessChoice,
 } from '../../cards/effects/unicornRainbowPrincess.ts';
 import { nextSprayBottleChoice } from '../../cards/effects/sprayBottleOfYouth.ts';
+import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
 
 export class ActionResolver {
   static handleSelectPlayers(
@@ -471,6 +472,7 @@ export class ActionResolver {
 
     if (pending.reason === 'play_downgrade') {
       const card = (pending as any).card;
+      if (hasSavedByTheSigil(targetPlayer)) return false;
       if (card) {
         targetPlayer.downgrades.push(card);
       }

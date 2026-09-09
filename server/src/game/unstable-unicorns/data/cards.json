@@ -1615,8 +1615,8 @@
     "name": "Saved by the Sigil",
     "cardType": "upgrade",
     "image": "/cards/unstable-unicorns/nightmares/saved_by_the_sigil.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "Downgrade cards cannot enter your Stable. This card cannot be sacrificed or destroyed.",
+    "effect": "saved_by_the_sigil",
     "copies": 2,
     "expansion": "nightmares"
   },

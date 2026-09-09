@@ -1,6 +1,7 @@
 import type { Card } from '../../models/Card.js';
 import type { GameState } from '../../models/GameState.ts';
 import { TurnPhase } from '../../turn/TurnPhase.ts';
+import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
 import { InstantHandler } from './handlers/InstantHandler.ts';
 import { MagicHandler } from './handlers/MagicHandler.ts';
 import { UnicornHandler } from './handlers/UnicornHandler.ts';
@@ -184,6 +185,13 @@ export class RulesEngine {
           UpgradeHandler.play(player, card);
           break;
         case 'downgrade':
+          if (state.players.every((candidate) => hasSavedByTheSigil(candidate))) {
+            return actionFailure(
+              'ACTION_NOT_ALLOWED',
+              'No hay un establo válido para este Downgrade.',
+              'play-card',
+            );
+          }
           state.pendingAction = {
             type: 'select_player',
             reason: 'play_downgrade',
