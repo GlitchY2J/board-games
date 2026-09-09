@@ -27,7 +27,7 @@ import { advanceTurnAfterDraw, beginExplodingKittenResolution, beginImplodingKit
 const NEIGH_WINDOW_MS = 5000;
 const NEIGH_GRACE_MS = 800;
 
-const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh', 'neigh_thank_you']);
+const NEIGH_EFFECTS = new Set(['neigh', 'super_neigh', 'neigh_thank_you', 'hex_neigh']);
 const NO_NEIGH_CARDS = new Set(['ginormous_unicorn']);
 const REACTION_IDS = new Set([
   'goingcrazy', 'crying', 'boohoo', 'panic', 'shhhhh', 'mischievous',
@@ -50,6 +50,7 @@ function isReactionEffect(effect: string | null, explodingKittens: boolean): boo
     effect === 'neigh' ||
     effect === 'super_neigh' ||
     effect === 'neigh_thank_you' ||
+    effect === 'hex_neigh' ||
     (explodingKittens && effect === 'nope')
   );
 }
@@ -214,8 +215,19 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
       if (idx !== -1) {
         const [removed] = activePlayer.hand.splice(idx, 1);
-        enqueueDiscardAnimation(room.code, activePlayer.id, removed);
-        game.discard.push(removed);
+        const hexNeighCanceled = chain.some(
+          (link, index) =>
+            index > 0 &&
+            link.card.effect === 'hex_neigh' &&
+            !linkCanceled[index],
+        );
+        if (hexNeighCanceled) {
+          game.removedCards ??= [];
+          game.removedCards.push(removed);
+        } else {
+          enqueueDiscardAnimation(room.code, activePlayer.id, removed);
+          game.discard.push(removed);
+        }
       }
     }
 
