@@ -349,7 +349,7 @@ Criterios:
 - Cada módulo registra únicamente sus eventos.
 - No hay listeners duplicados ni ramas legacy activas.
 
-## Fase 5: Separación De Capas
+## Fase 5: Separación De Capas [COMPLETADA]
 
 Eliminar dependencias del dominio hacia `sockets`.
 

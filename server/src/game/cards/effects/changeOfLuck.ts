@@ -1,7 +1,7 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { TurnManager } from '../../turn/TurnManager.ts';
-import { addLog } from '../../../sockets/gameLog.ts';
+import { addLog } from '../../gameLog.ts';
 
 export const changeOfLuck: CardEffect = {
   onPlay(state, player) {

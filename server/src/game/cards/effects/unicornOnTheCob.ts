@@ -1,6 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
-import { addLog } from '../../../sockets/gameLog.ts';
+import { addLog } from '../../gameLog.ts';
 
 export const unicornOnTheCob: CardEffect = {
   onEnterStable(state, player) {

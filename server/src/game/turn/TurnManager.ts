@@ -2,7 +2,7 @@ import type { GameState } from '../models/GameState.ts';
 import { TurnPhase } from './TurnPhase.ts';
 import { VictoryManager } from '../VictoryManager.ts';
 import { enqueueDrawAnimation } from '../cardAnimations.ts';
-import { addLog } from '../../sockets/gameLog.ts';
+import { addLog } from '../gameLog.ts';
 import {
   hasAvailableUnicorn,
   hasAvailableCardToSacrifice,

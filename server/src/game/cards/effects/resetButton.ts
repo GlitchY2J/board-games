@@ -1,5 +1,5 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
-import { addLog } from '../../../sockets/gameLog.ts';
+import { addLog } from '../../gameLog.ts';
 import { enqueueShuffleAnimation } from '../../cardAnimations.ts';
 
 export const resetButton: CardEffect = {
