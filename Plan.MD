@@ -486,7 +486,7 @@ La selección de motor y la creación de estado ya están centralizadas; la
 extracción adicional de dispatch/proyección queda como una mejora interna del
 contrato de motores, sin afectar el flujo de salas.
 
-## Fase 11: Organización De Efectos
+## Fase 11: Organización De Efectos [COMPLETADA]
 
 Establecer una única convención para efectos:
 
@@ -502,6 +502,14 @@ Criterios:
 - Cada efecto tiene una ubicación canónica.
 - El catálogo de efectos se compone por expansión.
 - No quedan objetos de efecto vacíos sin una justificación documentada.
+
+Implementación:
+
+- Los efectos de cartas tienen ubicación canónica en `game/cards/effects`.
+- `engine/effects` contiene tipos, composición y el registro, no implementaciones
+  individuales de cartas.
+- Las expansiones se componen mediante `composeEffectCatalog`.
+- Los efectos sin hooks propios declaran explícitamente su resolución externa.
 
 ## Fase 12: Cobertura De Integración
 

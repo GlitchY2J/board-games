@@ -55,7 +55,7 @@ import { mermaidUnicorn } from '../../../cards/effects/mermaidUnicorn.ts';
 import { motherGooseUnicorn } from '../../../cards/effects/motherGooseUnicorn.ts';
 import { narwhalTorpedo } from '../../../cards/effects/narwhalTorpedo.ts';
 import { necromancerUnicorn } from '../../../cards/effects/necromancerUnicorn.ts';
-import { AlluringNarwhal } from './unicorn/AlluringNarwhal.ts';
+import { alluringNarwhal } from '../../../cards/effects/alluringNarwhal.ts';
 import { queenBeeUnicorn } from '../../../cards/effects/queenBeeUnicorn.ts';
 import { rainbowUnicorn } from '../../../cards/effects/rainbowUnicorn.ts';
 import { rainbowSprinkles } from '../../../cards/effects/rainbowSprinkles.ts';
@@ -115,8 +115,9 @@ import { unicornsOfTheApocalypse } from '../../../cards/effects/unicornsOfTheApo
 import type { CardEffect } from './CardEffect.ts';
 import { nightmaresEffects } from './expansions/nightmares.ts';
 import { rainbowApocalypseEffects } from './expansions/rainbowApocalypse.ts';
+import { composeEffectCatalog } from './composeEffects.ts';
 
-export const effects: Record<string, CardEffect> = {
+const baseEffects: Record<string, CardEffect> = {
   rhinocorn,
   caffeine_overload: caffeineOverload,
   clairvoyant_unicorn: clairvoyantUnicorn,
@@ -141,7 +142,7 @@ export const effects: Record<string, CardEffect> = {
   unicorn_nap: unicornNap,
   unicorns_of_the_apocalypse: unicornsOfTheApocalypse,
   cotton_candy_llamacorn: cottonCandyUnicorn,
-  alluring_narwhal: AlluringNarwhal,
+   alluring_narwhal: alluringNarwhal,
   changeOfLuck,
   backKick,
   blatant_thievery: blatantThievery,
@@ -228,6 +229,9 @@ export const effects: Record<string, CardEffect> = {
   barbed_wire: barbedWire,
   blinding_light: blindingLight,
   sadistic_ritual: sadisticRitual,
-  ...rainbowApocalypseEffects,
-  ...nightmaresEffects,
 };
+
+export const effects = composeEffectCatalog(baseEffects, [
+  rainbowApocalypseEffects,
+  nightmaresEffects,
+]);

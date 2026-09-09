@@ -3,7 +3,10 @@ import type { Card } from '../../models/Card.ts';
 import type { Player } from '../../models/Player.ts';
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 
-export const magicElexir: CardEffect = {};
+export const magicElexir: CardEffect = {
+  // Interception is evaluated by CardMovement before destruction.
+  onPlay() {},
+};
 
 export function maybeMagicElexirIntercept(
   state: GameState,
