@@ -27,6 +27,11 @@ import {
   nextRainbowPrincessChoice,
 } from '../game/cards/effects/unicornRainbowPrincess.ts';
 import { nextSprayBottleChoice } from '../game/cards/effects/sprayBottleOfYouth.ts';
+import { registerDiscardHandlers } from './discardHandlers.ts';
+import { registerStableSelectionHandlers } from './stableSelectionHandlers.ts';
+import { registerHandSelectionHandlers } from './handSelectionHandlers.ts';
+import { registerDeckSelectionHandlers } from './deckSelectionHandlers.ts';
+import { registerChoiceHandlers } from './choiceHandlers.ts';
 
 function isExplodingKittensRoom(room: Room): boolean {
   return (room.settings?.gameId ?? room.game) === 'exploding-kittens';
@@ -36,130 +41,25 @@ export function registerActionHandlers(
   io: GameServer,
   socket: GameSocket,
 ): void {
-  registerDiscardCards(io, socket);
+  registerDiscardHandlers(io, socket);
   registerSelectPlayer(io, socket);
   registerSelectPlayers(io, socket);
-  registerSelectStableCard(io, socket);
-  registerSelectHandCard(io, socket);
+  registerStableSelectionHandlers(io, socket);
+  registerHandSelectionHandlers(io, socket);
   registerResolveExplodingKitten(io, socket);
   registerResolveImplodingKitten(io, socket);
   registerResolveSeeTheFuture(io, socket);
   registerCancelAction(io, socket);
-  registerSelectChoice(io, socket);
+  registerChoiceHandlers(io, socket, registerSelectChoice);
   registerSelectNurseryCard(io, socket);
   registerSelectDiscardCard(io, socket);
   registerSelectDeckCard(io, socket);
-  registerSelectOracleCards(io, socket);
-  registerSelectOwnHandCard(io, socket);
+  registerDeckSelectionHandlers(io, socket);
 
   function continueBeginningPhaseIfReady(game: GameState): void {
     if (!game.pendingAction && game.phase === TurnPhase.BEGINNING) {
       TurnManager.processBeginningQueue(game);
     }
-  }
-
-  function registerDiscardCards(io: GameServer, socket: GameSocket): void {
-    socket.on('discard-cards', ({ roomCode, playerId, cardIds }) => {
-      const context = getSocketGameContext(socket, roomCode);
-
-      if (!context) {
-        return;
-      }
-
-      const { game, player, room } = context;
-
-      if (playerId !== player.id) {
-        emitGameError(
-          socket,
-          'INVALID_PLAYER',
-          'El jugador enviado no coincide con tu sesión.',
-          'discard-card',
-        );
-        return;
-      }
-
-      if (!game.pendingAction) {
-        emitGameError(
-          socket,
-          'NO_PENDING_ACTION',
-          'No hay una acción de descarte pendiente.',
-          'discard-card',
-        );
-        return;
-      }
-
-      let resolved = false;
-      const discardReason = game.pendingAction.type === 'discard'
-        ? game.pendingAction.reason
-        : undefined;
-      const selectedDiscardedCard = discardReason === 'unicorn_on_the_cob'
-        ? player.hand.find((card) => card.uid === cardIds[0])
-        : undefined;
-
-      if (game.pendingAction.type === 'select_discard_count') {
-        resolved = ActionResolver.handlePestilenceDiscardCount(
-          game,
-          player.id,
-          cardIds,
-        );
-      } else if (game.pendingAction.type === 'pestilence_discard') {
-        resolved = ActionResolver.handlePestilenceDiscard(
-          game,
-          player.id,
-          cardIds,
-        );
-      } else if (game.pendingAction.type === 'mystical_vortex') {
-        resolved = ActionResolver.handleMysticalVortexDiscard(
-          game,
-          player.id,
-          cardIds,
-        );
-      } else if (game.pendingAction.type === 'llamacorn') {
-        resolved = ActionResolver.handleLlamacornDiscard(
-          game,
-          player.id,
-          cardIds,
-        );
-      } else if (game.pendingAction.type === 'frenchiecorn') {
-        resolved = ActionResolver.handleFrenchiecornDiscard(
-          game,
-          player.id,
-          cardIds,
-        );
-      } else {
-        resolved = ActionResolver.handleDiscard(game, player.id, cardIds);
-      }
-
-      if (!resolved) {
-        emitGameError(
-          socket,
-          'INVALID_SELECTION',
-          'La selección de descarte no es válida.',
-          'discard-card',
-        );
-        return;
-      }
-
-      continueBeginningPhaseIfReady(game);
-
-      const discardedCard = selectedDiscardedCard ?? game.discard.find(
-        (card) => card.uid === cardIds[0],
-      );
-      if (discardReason === 'unicorn_on_the_cob' && discardedCard) {
-        addLog(game, `${player.name} descartó "${discardedCard.name}"`, {
-          playerId: player.id,
-          cardImage: discardedCard.image,
-        });
-      } else {
-        addLog(
-          game,
-          `${player.name} descartó ${cardIds.length} carta${cardIds.length > 1 ? 's' : ''}`,
-          { playerId: player.id },
-        );
-      }
-
-      emitGameState(io, room, 'game-updated');
-    });
   }
 
   function registerSelectPlayer(io: GameServer, socket: GameSocket): void {
@@ -388,49 +288,6 @@ export function registerActionHandlers(
       if (!resolved) return;
 
       emitGameState(io, room, 'game-updated');
-    });
-  }
-
-  function registerSelectStableCard(io: GameServer, socket: GameSocket): void {
-    socket.on('select-stable-card', ({ roomCode, cardId }) => {
-      const room = roomManager.getRoom(roomCode);
-      if (!room?.gameState) return;
-
-      const sourcePlayer = room.gameState.players.find(
-        (p) => p.socketId === socket.id,
-      );
-      if (!sourcePlayer) return;
-
-      const pendingType = room.gameState.pendingAction?.type;
-      const pendingReason = room.gameState.pendingAction && 'reason' in room.gameState.pendingAction
-        ? room.gameState.pendingAction.reason
-        : undefined;
-
-      const resolved = ActionResolver.handleSelectStableCard(
-        room.gameState,
-        sourcePlayer.id,
-        cardId,
-      );
-
-      if (resolved) {
-        if (
-          !room.gameState.pendingAction &&
-          room.gameState.phase === TurnPhase.BEGINNING
-        ) {
-          TurnManager.processBeginningQueue(room.gameState);
-        }
-
-        // Alluring Narwhal ya registra su propio log específico (qué carta robó).
-        if (pendingType !== 'alluring_narwhal' && pendingReason !== 'shark_with_a_horn') {
-          addLog(
-            room.gameState,
-            `${sourcePlayer.name} eligió una carta de su establo`,
-            { playerId: sourcePlayer.id },
-          );
-        }
-
-        emitGameState(io, room, 'game-updated');
-      }
     });
   }
 
@@ -896,6 +753,7 @@ export function registerActionHandlers(
       ) {
         return;
       }
+
 
       if (pending.reason === 'three_of_a_kind') {
         const validChoices = new Set([
