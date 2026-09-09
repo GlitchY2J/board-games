@@ -371,6 +371,7 @@ export default function GameOverlay({
          const isWingedHorrorcorn = action.reason === 'winged_horrorcorn';
          const isPossession = action.reason === 'possession';
          const isSupernaturalSelection = action.reason === 'supernatural_selection';
+         const isCornjuring = action.reason === 'the_cornjuring';
         const isMermaid = action.reason === 'mermaid_unicorn';
         const isUnfairBargain = action.reason === 'unfair_bargain';
          const isUnicornSwap = action.reason === 'unicorn_swap';
@@ -396,20 +397,16 @@ export default function GameOverlay({
             // No puede moverse al propio establo ni al jugador de origen
             return p.id !== localPlayerId && p.id !== action.fromPlayerId;
           }
-          if (isReTargetSource) {
+           if (isReTargetSource) {
             if (!(p.upgrades.length > 0 || p.downgrades.length > 0))
               return false;
             // Solo es fuente válida si existe al menos un destino posible
             // (distinto del lanzador y del jugador candidato a fuente).
             return gameState.players.some(
               (other) => other.id !== localPlayerId && other.id !== p.id,
-            );
-          }
-          if (p.id === localPlayerId) return false;
-          if (isTargetedAttack) return true;
-           if (handInspection) return p.hand.length > 0;
-           if (isPossession)
-             return p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0;
+             );
+           }
+           if (isCornjuring) return true;
            if (isSupernaturalSelection)
              return p.stable.some(
                (card) =>
@@ -417,6 +414,11 @@ export default function GameOverlay({
                  card.unicornClass === 'basic' &&
                  !isPandamoniumProtected(p, card),
              );
+           if (p.id === localPlayerId) return false;
+          if (isTargetedAttack) return true;
+           if (handInspection) return p.hand.length > 0;
+           if (isPossession)
+             return p.stable.length > 0 || p.upgrades.length > 0 || p.downgrades.length > 0;
           if (isUnicornSwap)
             return p.stable.some((c) => c.cardType === 'unicorn');
            if (isUnicornPoison) return p.stable.length > 0;
@@ -460,6 +462,7 @@ export default function GameOverlay({
            if (isWingedHorrorcorn) return '🪽 Winged Horrorcorn';
            if (isPossession) return '🖐️ Possession';
            if (isSupernaturalSelection) return '🔮 Supernatural Selection';
+           if (isCornjuring) return '🌽 The Cornjuring';
           if (isMermaid) return '🧜‍♀️ Mermaid Unicorn';
           if (isUnfairBargain) return '🤝 Unfair Bargain';
            if (isUnicornSwap) return '🦄 Unicorn Swap';
@@ -499,6 +502,8 @@ export default function GameOverlay({
              return 'Elige a un jugador para robarle una carta de su mano';
            if (isSupernaturalSelection)
              return 'Elige un jugador para destruir todos sus Basic Unicorns';
+           if (isCornjuring)
+             return 'Elige el jugador cuyo establo recibirá el Nightmare Downgrade';
           if (isMermaid)
             return 'Elige a un jugador para devolver una carta de su establo a su mano';
           if (isUnfairBargain)
@@ -1031,6 +1036,43 @@ export default function GameOverlay({
               items={items}
               maxSelection={1}
               confirmText="Sacrificar y robar"
+              onConfirm={([cardId]) => {
+                dismiss();
+                socket.emit('select-stable-card', {
+                  roomCode: gameState.roomCode,
+                  cardId,
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'nightmare_buried_alive_sacrifice') {
+          const source = gameState.players.find((p) => p.id === localPlayerId);
+          if (!source) return null;
+
+          const items = source.stable
+            .filter(
+              (card) =>
+                card.cardType === 'unicorn' &&
+                !isPandamoniumProtected(source, card),
+            )
+            .map((card, index) => ({
+              id: `${card.id}_buried_alive_${index}`,
+              value: card.uid,
+              title: card.name,
+              subtitle: 'Unicorn de tu establo',
+              image: card.image,
+            }));
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="⚰️ Nightmare Buried Alive"
+              subtitle="Debes SACRIFICAR un Unicorn de tu establo."
+              items={items}
+              maxSelection={1}
+              confirmText="Sacrificar"
               onConfirm={([cardId]) => {
                 dismiss();
                 socket.emit('select-stable-card', {
@@ -2673,11 +2715,14 @@ export default function GameOverlay({
           action.reason === 'unicorns_of_the_apocalypse';
         const isExplodingKittenDefuse = action.reason === 'exploding_kitten_defuse';
         const isImplodingKittenPlace = action.reason === 'imploding_kitten_place';
+        const isCornjuring = action.reason === 'the_cornjuring';
 
         const title = isImplodingKittenPlace
           ? '💥 Coloca el Imploding Kitten'
           : isExplodingKittenDefuse
           ? '🛡️ Coloca el Exploding Kitten'
+          : isCornjuring
+          ? '🌽 The Cornjuring'
           : isDebugDraw
           ? '🐛 Modo Debug — Roba una carta'
           : isApocalypseSearch
@@ -2692,6 +2737,8 @@ export default function GameOverlay({
           ? 'Elige en qué posición del mazo quieres colocar el Imploding Kitten boca arriba'
           : isExplodingKittenDefuse
           ? 'Elige en qué posición del mazo quieres devolver el Exploding Kitten'
+          : isCornjuring
+          ? 'Elige un Nightmare Downgrade para colocarlo en el establo elegido y luego barajar el mazo'
           : isDebugDraw
           ? 'Elige qué carta del mazo quieres tomar en tu fase de robo'
           : isApocalypseSearch
@@ -2740,7 +2787,7 @@ export default function GameOverlay({
             items={items}
             maxSelection={isApocalypseSearch ? 4 : 1}
             minSelection={isApocalypseSearch ? 4 : 1}
-             confirmText={isExplodingKittenDefuse || isImplodingKittenPlace ? 'Colocar' : isDebugDraw ? 'Robar' : isApocalypseSearch ? 'Traer al establo' : 'Tomar'}
+              confirmText={isCornjuring ? 'Colocar Downgrade' : isExplodingKittenDefuse || isImplodingKittenPlace ? 'Colocar' : isDebugDraw ? 'Robar' : isApocalypseSearch ? 'Traer al establo' : 'Tomar'}
             searchable={isDebugDraw}
             searchPlaceholder="Buscar carta en el mazo..."
             secondaryText={isExplodingKittenDefuse ? 'Ubicación aleatoria' : undefined}

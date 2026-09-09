@@ -2538,7 +2538,8 @@ export function registerActionHandlers(
         pending.reason !== 'debug_draw' &&
         pending.reason !== 'exploding_kitten_defuse' &&
         pending.reason !== 'imploding_kitten_place' &&
-        pending.reason !== 'unicorns_of_the_apocalypse'
+        pending.reason !== 'unicorns_of_the_apocalypse' &&
+        pending.reason !== 'the_cornjuring'
       )
         return;
 
@@ -2580,6 +2581,39 @@ export function registerActionHandlers(
         }
         enqueueShuffleAnimation(room.gameState.roomCode, player.id);
         room.gameState.pendingAction = undefined;
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'the_cornjuring') {
+        const selectedId = Array.isArray(cardId) ? cardId[0] : cardId;
+        const index = room.gameState.deck.findIndex((card) => card.uid === selectedId);
+        const target = room.gameState.players.find(
+          (candidate) => candidate.id === pending.targetPlayerId,
+        );
+        if (
+          !target ||
+          index === -1 ||
+          !pending.candidates.some((candidate) => candidate.uid === selectedId)
+        )
+          return;
+
+        const [downgrade] = room.gameState.deck.splice(index, 1);
+        target.downgrades.push(downgrade);
+        for (let i = room.gameState.deck.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [room.gameState.deck[i], room.gameState.deck[j]] = [
+            room.gameState.deck[j],
+            room.gameState.deck[i],
+          ];
+        }
+        enqueueShuffleAnimation(room.gameState.roomCode, player.id);
+        room.gameState.pendingAction = undefined;
+        addLog(
+          room.gameState,
+          `${player.name} llevó ${downgrade.name} al establo de ${target.name} por The Cornjuring y barajó el mazo`,
+          { playerId: player.id },
+        );
         emitGameState(io, room, 'game-updated');
         return;
       }

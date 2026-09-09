@@ -527,7 +527,6 @@ export class ActionResolver {
     }
 
     if (pending.reason === 'supernatural_selection') {
-      if (targetPlayerId === sourcePlayerId) return false;
       const target = state.players.find((p) => p.id === targetPlayerId);
       if (!target) return false;
 
@@ -546,6 +545,23 @@ export class ActionResolver {
       }
 
       state.pendingAction = undefined;
+      return true;
+    }
+
+    if (pending.reason === 'the_cornjuring') {
+      const candidates = state.deck.filter(
+        (card) => card.expansion === 'nightmares' && card.cardType === 'downgrade',
+      );
+      if (candidates.length === 0) return false;
+
+      state.pendingAction = {
+        type: 'select_deck_card',
+        reason: 'the_cornjuring',
+        playerId: sourcePlayerId,
+        targetPlayerId,
+        candidates,
+        cardType: 'downgrade',
+      };
       return true;
     }
 
@@ -1964,6 +1980,28 @@ export class ActionResolver {
         enqueueDrawAnimation(state.roomCode, player.id, drawn);
         player.hand.push(drawn);
       }
+      state.pendingAction = undefined;
+      return true;
+    }
+
+    if (
+      pending.type === 'select_stable_card' &&
+      pending.reason === 'nightmare_buried_alive_sacrifice'
+    ) {
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
+      const player = state.players.find((p) => p.id === sourcePlayerId);
+      if (!player) return false;
+
+      const index = player.stable.findIndex(
+        (card) =>
+          card.uid === cardId &&
+          card.cardType === 'unicorn' &&
+          !isPandamoniumProtected(player, card),
+      );
+      if (index === -1) return false;
+
+      const [sacrificed] = player.stable.splice(index, 1);
+      CardMovement.destroyOrSacrifice(state, player, sacrificed, 'sacrifice');
       state.pendingAction = undefined;
       return true;
     }

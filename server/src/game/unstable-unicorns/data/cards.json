@@ -1525,8 +1525,8 @@
     "name": "The Cornjuring",
     "cardType": "magic",
     "image": "/cards/unstable-unicorns/nightmares/the cornjuring.png",
-    "description": "Nightmares expansion card.",
-    "effect": null,
+    "description": "Search the deck for a Nightmare Downgrade card and bring it into any player's Stable, then shuffle the deck.",
+    "effect": "the_cornjuring",
     "copies": 2,
     "expansion": "nightmares"
   },
@@ -1535,7 +1535,7 @@
     "name": "Nightmare Buried Alive",
     "cardType": "downgrade",
     "image": "/cards/unstable-unicorns/nightmares/nightmare_buried_alive.png",
-    "description": "Nightmares expansion card.",
+    "description": "If this card is in your Stable at the beginning of your turn, sacrifice a Unicorn card. If you have no Unicorn cards in your Stable, return this card to your hand.",
     "effect": null,
     "copies": 1,
     "expansion": "nightmares"

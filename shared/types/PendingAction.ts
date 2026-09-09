@@ -72,6 +72,7 @@ export type PendingAction =
          | "winged_horrorcorn"
          | "possession"
          | "supernatural_selection"
+         | "the_cornjuring"
          | "mermaid_unicorn"
         | "unfair_bargain"
         | "unicorn_swap"
@@ -104,6 +105,7 @@ export type PendingAction =
            | "unicorn_slasher_remove"
            | "heeeeeres_stabby_remove"
            | "vengeful_unicorn_sacrifice"
+           | "nightmare_buried_alive_sacrifice"
         | "dark_angel_unicorn"
         | "mermaid_unicorn"
         | "rhinocorn"
@@ -293,12 +295,13 @@ export type PendingAction =
     }
   | {
       type: "select_deck_card";
-       reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse" | "imploding_kitten_place" | "unicorns_of_the_apocalypse";
+       reason: "classy_narwhal" | "the_great_narwhal" | "shabby_the_narwhal" | "debug_draw" | "exploding_kitten_defuse" | "imploding_kitten_place" | "unicorns_of_the_apocalypse" | "the_cornjuring";
       playerId: string;
       cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
-      candidates: Card[];
-      card?: Card;
-      requiredCards?: number;
+       candidates: Card[];
+       card?: Card;
+       requiredCards?: number;
+       targetPlayerId?: string;
     }
   | {
       type: "select_oracle_cards";

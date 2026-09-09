@@ -11,6 +11,7 @@ import { hasDoubleDutch } from '../cards/effects/doubleDutch.ts';
 import { isEffectBlockedByBlindingLight } from '../cards/effects/blindingLight.ts';
 import { hasUnicornOfDeathTarget } from '../cards/effects/unicornOfDeath.ts';
 import { getHandLimit } from '../cards/effects/unicornOfFamine.ts';
+import { CardMovement } from '../unstable-unicorns/engine/CardMovement.ts';
 
 const END_OF_TURN_EFFECTS = new Set<string>([
   // Add here any card whose effect triggers at the end of your turn
@@ -146,6 +147,11 @@ export class TurnManager {
     const sadistic = allCards.filter((c) => c.id === 'sadistic_ritual');
     if (sadistic.length > 0 && hasAvailableUnicorn(activePlayer)) {
       uids.push(...sadistic.map((c) => c.uid));
+    }
+
+    const buriedAlive = allCards.filter((c) => c.id === 'nightmare_buried_alive');
+    if (buriedAlive.length > 0) {
+      uids.push(...buriedAlive.map((c) => c.uid));
     }
 
     const zombie = allCards.filter((c) => c.id === 'zombie_unicorn');
@@ -376,6 +382,23 @@ export class TurnManager {
         game.pendingAction = {
           type: 'select_stable_card',
           reason: 'sadistic_ritual',
+          sourcePlayerId: activePlayer.id,
+        };
+        return true;
+      case 'nightmare_buried_alive':
+        if (!hasAvailableUnicorn(activePlayer)) {
+          const index = activePlayer.downgrades.findIndex(
+            (downgrade) => downgrade.uid === card.uid,
+          );
+          if (index !== -1) {
+            const [buriedAlive] = activePlayer.downgrades.splice(index, 1);
+            CardMovement.returnToHand(game, activePlayer, buriedAlive);
+          }
+          return false;
+        }
+        game.pendingAction = {
+          type: 'select_stable_card',
+          reason: 'nightmare_buried_alive_sacrifice',
           sourcePlayerId: activePlayer.id,
         };
         return true;
