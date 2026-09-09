@@ -305,7 +305,7 @@ Criterios:
 - El setup lee únicamente `settings.expansionIds`.
 - No existen fallbacks `settings ?? legacy` fuera de una frontera de compatibilidad explícita.
 
-## Fase 3: Validación Centralizada
+## Fase 3: Validación Centralizada [COMPLETADA]
 
 Crear `GameRegistry.validateSettings()` y reutilizarlo en REST, Socket.IO, cambios
 de configuración e inicio de partida.

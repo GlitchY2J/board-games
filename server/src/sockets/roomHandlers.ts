@@ -404,55 +404,14 @@ export function registerRoomHandlers(io: GameServer, socket: GameSocket): void {
       return;
     }
 
-    if (settings.gameId === null) {
-      if (settings.versionId !== null || settings.expansionIds.length > 0) {
-        socket.emit('game-error', {
-          code: 'INVALID_ROOM_SETTINGS',
-          message: 'No puedes seleccionar una versión o expansión sin elegir un juego.',
-          action: 'update-room-settings',
-        });
-        return;
-      }
-    } else {
-      const game = gameRegistry.getById(settings.gameId);
-      const version = settings.versionId
-        ? game?.versions.find((candidate) => candidate.id === settings.versionId)
-        : undefined;
-
-      if (!game) {
-        socket.emit('game-error', {
-          code: 'INVALID_ROOM_SETTINGS',
-          message: 'El juego seleccionado no existe.',
-          action: 'update-room-settings',
-        });
-        return;
-      }
-
-      if (!version) {
-        socket.emit('game-error', {
-          code: 'INVALID_GAME_VERSION',
-          message: 'La versión seleccionada no es válida.',
-          action: 'update-room-settings',
-        });
-        return;
-      }
-
-      const validExpansions = settings.expansionIds.every((expansionId) => {
-        const expansion = game.expansions.find((candidate) => candidate.id === expansionId);
-        return (
-          expansion?.available === true &&
-          (!expansion.versionIds || expansion.versionIds.includes(version.id))
-        );
+    const validation = gameRegistry.validateSettings(settings, room.players.length);
+    if (!validation.valid) {
+      socket.emit('game-error', {
+        code: validation.code ?? 'INVALID_ROOM_SETTINGS',
+        message: validation.message ?? 'La configuración de la sala no es válida.',
+        action: 'update-room-settings',
       });
-
-      if (!validExpansions) {
-        socket.emit('game-error', {
-          code: 'INVALID_GAME_EXPANSION',
-          message: 'Una o más expansiones no son compatibles con el juego seleccionado.',
-          action: 'update-room-settings',
-        });
-        return;
-      }
+      return;
     }
 
     const updatedRoom = roomManager.updateRoomSettings(roomCode, settings);

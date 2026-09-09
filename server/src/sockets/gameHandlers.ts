@@ -701,46 +701,12 @@ function validateRoomConfiguration(
     return false;
   }
   const game = gameRegistry.getById(gameId);
-
-  if (!game || !game.available) {
+  const validation = gameRegistry.validateSettings(room.settings);
+  if (!validation.valid || !game) {
     emitGameError(
       socket,
-      'GAME_NOT_AVAILABLE',
-      'Selecciona un juego disponible antes de iniciar la partida.',
-      action,
-    );
-    return false;
-  }
-
-  const versionId = room.settings.versionId;
-  const version = versionId
-    ? game.versions.find((candidate) => candidate.id === versionId)
-    : undefined;
-
-  if (!version?.available) {
-    emitGameError(
-      socket,
-      'INVALID_GAME_VERSION',
-      'Selecciona una versión disponible antes de iniciar la partida.',
-      action,
-    );
-    return false;
-  }
-
-  const expansionIds = room.settings.expansionIds;
-  const hasInvalidExpansion = expansionIds.some((expansionId) => {
-    const expansion = game.expansions.find((candidate) => candidate.id === expansionId);
-    return (
-      !expansion?.available ||
-      (expansion.versionIds && !expansion.versionIds.includes(version.id))
-    );
-  });
-
-  if (hasInvalidExpansion) {
-    emitGameError(
-      socket,
-      'INVALID_GAME_EXPANSION',
-      'Una o más expansiones no son compatibles con la configuración seleccionada.',
+      validation.code ?? 'GAME_NOT_AVAILABLE',
+      validation.message ?? 'La configuración de la partida no es válida.',
       action,
     );
     return false;
