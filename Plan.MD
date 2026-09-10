@@ -511,7 +511,7 @@ Implementación:
 - Las expansiones se componen mediante `composeEffectCatalog`.
 - Los efectos sin hooks propios declaran explícitamente su resolución externa.
 
-## Fase 12: Cobertura De Integración
+## Fase 12: Cobertura De Integración [COMPLETADA]
 
 Añadir tests para:
 
@@ -524,6 +524,14 @@ Añadir tests para:
 - Selección de motor por juego.
 - Invariantes de movimiento de cartas.
 - Separación entre reglas de Unstable Unicorns y Exploding Kittens.
+
+Cobertura añadida:
+
+- Contratos de `RoomService` para sesión, ownership, configuración e inicio.
+- Resolución de acciones pendientes con ownership incorrecto.
+- Selección independiente de motores y creación de estados por juego.
+- Composición del catálogo de efectos por expansión.
+- Invariantes de movimiento, cola de efectos y reglas específicas existentes.
 
 ## Orden De Ejecución
 
