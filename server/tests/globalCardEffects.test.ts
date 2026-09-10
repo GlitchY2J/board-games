@@ -12,6 +12,7 @@ import { CardMovement } from '../src/game/unstable-unicorns/engine/CardMovement.
 import { CardZoneMovement } from '../src/game/unstable-unicorns/engine/CardZoneMovement.ts';
 import { getCardPassive } from '../src/game/unstable-unicorns/engine/effects/CardPassive.ts';
 import { removeStableCardFromGame } from '../src/game/unstable-unicorns/engine/StableCardRemoval.ts';
+import { ActionResolver } from '../src/game/unstable-unicorns/engine/ActionResolver.ts';
 import { isReactionEffect } from '../src/sockets/gameHandlers.ts';
 
 let sequence = 0;
@@ -68,6 +69,41 @@ test('Magic Elexir intercepta destrucción solo con carta en mano', () => {
   assert.equal(game.pendingAction?.type, 'select_choice');
   assert.equal(game.pendingAction?.reason, 'magic_elexir');
   assert.equal(game.pendingAction?.destructionType, 'destroy');
+});
+
+test('Demonicorn abre su elección al ser destruido', () => {
+  const owner = player('owner');
+  const demonicorn = card('demonicorn');
+  owner.stable.push(demonicorn);
+  const game = state([owner, player('opponent')]);
+
+  assert.equal(CardZoneMovement.removeFromStable(owner, demonicorn.uid), demonicorn);
+  CardMovement.destroyOrSacrifice(game, owner, demonicorn, 'destroy');
+
+  assert.equal(game.pendingAction?.type, 'select_choice');
+  assert.equal(game.pendingAction?.reason, 'demonicorn');
+});
+
+test('Demonicorn permite retirar una carta rival aunque sea la única carta de su establo', () => {
+  const owner = player('owner');
+  const opponent = player('opponent');
+  const demonicorn = card('demonicorn');
+  const target = card('basic_unicorn_red');
+  owner.stable.push(demonicorn);
+  opponent.stable.push(target);
+  const game = state([owner, opponent]);
+
+  CardZoneMovement.removeFromStable(owner, demonicorn.uid);
+  CardMovement.destroyOrSacrifice(game, owner, demonicorn, 'destroy');
+  game.pendingAction = {
+    type: 'select_stable_card',
+    reason: 'demonicorn_remove',
+    sourcePlayerId: owner.id,
+    remainingPlayerIds: [opponent.id],
+  };
+
+  assert.equal(ActionResolver.handleSelectStableCard(game, owner.id, target.uid), true);
+  assert.equal(game.removedCards?.some((card) => card.uid === target.uid), true);
 });
 
 test('Paranormal Affection ofrece robar dos cartas al entrar si el mazo no está vacío', () => {

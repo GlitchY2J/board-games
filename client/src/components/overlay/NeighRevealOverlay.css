@@ -1,0 +1,42 @@
+.neigh-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--platform-active) 32%, transparent);
+  animation: neigh-reveal-fade 2.8s ease both;
+}
+
+.neigh-reveal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.1rem 1.35rem 1.35rem;
+  border: 1px solid var(--platform-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--platform-surface-solid) 94%, var(--platform-accent));
+  box-shadow: 0 1.5rem 4rem var(--platform-glow);
+  color: var(--platform-accent-strong);
+  text-align: center;
+}
+
+.neigh-reveal-card p {
+  max-width: min(32rem, 80vw);
+  margin: 0;
+  font-weight: 800;
+}
+
+.neigh-reveal-card img {
+  width: min(13rem, 48vw);
+  border-radius: 0.7rem;
+  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.45);
+}
+
+@keyframes neigh-reveal-fade {
+  0%, 12% { opacity: 0; }
+  20%, 82% { opacity: 1; }
+  100% { opacity: 0; }
+}

@@ -2114,7 +2114,7 @@ export class ActionResolver {
       pending.reason === 'demonicorn_remove'
     ) {
       const targetIds = pending.remainingPlayerIds ?? [];
-      if (!targetIds.includes(sourcePlayerId)) return false;
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
 
       const removedCard = removeStableCardFromGame(
         state,
@@ -2124,10 +2124,20 @@ export class ActionResolver {
       if (removedCard) {
         const { card: removed } = removedCard;
         state.pendingAction = undefined;
+        const sourcePlayer = state.players.find(
+          (player) => player.id === sourcePlayerId,
+        );
+        const demonicorn = [...state.discard]
+          .reverse()
+          .find((card) => card.id === 'demonicorn');
         addLog(
           state,
-          `${state.players.find((p) => p.id === sourcePlayerId)?.name ?? 'Un jugador'} retiró ${removed.name} de la partida por Demonicorn`,
-          { playerId: sourcePlayerId },
+          `${sourcePlayer?.name ?? 'Un jugador'} eligió una carta "${removed.name}" del establo de ${state.players.find((player) => player.id === removedCard.playerId)?.name ?? 'un jugador'} y la removió del juego por el efecto de "Demonicorn"`,
+          {
+            playerId: sourcePlayerId,
+            cardImage: removed.image,
+            relatedCardImage: demonicorn?.image,
+          },
         );
         return true;
       }

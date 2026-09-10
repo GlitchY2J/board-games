@@ -66,7 +66,11 @@ export function registerStableSelectionHandlers(io: GameServer, socket: GameSock
     if (!room.gameState.pendingAction && room.gameState.phase === TurnPhase.BEGINNING) {
       TurnManager.processBeginningQueue(room.gameState);
     }
-    if (pendingType !== 'alluring_narwhal' && pendingReason !== 'shark_with_a_horn') {
+    if (
+      pendingType !== 'alluring_narwhal' &&
+      pendingReason !== 'shark_with_a_horn' &&
+      pendingReason !== 'demonicorn_remove'
+    ) {
       addLog(
         room.gameState,
         `${sourcePlayer.name} eligió una carta "${selectedCard?.name ?? 'del establo'}" del establo de ${selectedOwner?.name ?? sourcePlayer.name} y la ${stableSelectionVerb(typeof pendingReason === 'string' ? pendingReason : undefined)}`,

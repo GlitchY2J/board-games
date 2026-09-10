@@ -10,6 +10,7 @@ import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
 import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
+import NeighRevealOverlay from '../components/overlay/NeighRevealOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
 import PlayerInfo from '../components/player/PlayerInfo';
 import PlayerNotification from '../components/player/PlayerNotification';
@@ -602,6 +603,8 @@ export default function BoardLayout({
         hide={hidePendingPlay}
         spectator={spectator}
       />
+
+      <NeighRevealOverlay gameState={gameState} />
 
       <button
         ref={menuToggleRef}
