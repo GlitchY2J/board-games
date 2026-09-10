@@ -239,7 +239,12 @@ export default function CardFan({
       }
 
       if (selectedCardId) return;
-      if (pendingPlay || document.querySelector('.overlay-backdrop, .pending-play-backdrop')) return;
+       if (
+         pendingPlay ||
+         document.querySelector(
+           '.overlay-backdrop, .pending-play-backdrop, .card-select-backdrop',
+         )
+       ) return;
 
       const keyIndex =
         event.key === '0' ? 9 : Number.parseInt(event.key, 10) - 1;

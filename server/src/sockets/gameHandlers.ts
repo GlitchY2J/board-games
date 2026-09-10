@@ -998,7 +998,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         CardZoneMovement.removeFromHand(gamePlayer, card.uid);
       }
 
-      addLog(context.game, `${context.player.name} jugó carta "${card.name}"`, {
+      addLog(context.game, `${context.player.name} jugó "${card.name}"`, {
         playerId: context.player.id,
         cardImage: card.image,
       });
@@ -1040,7 +1040,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       if (card.id !== 'chainsaw_massicorn') {
         addLog(
           context.game,
-          `${context.player.name} jugó carta "${card.name}" (protegida por Yay)`,
+          `${context.player.name} jugó "${card.name}" (protegida por Yay)`,
           { playerId: context.player.id, cardImage: card.image },
         );
       }
@@ -1067,7 +1067,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
     };
 
     if (card.id !== 'chainsaw_massicorn') {
-      addLog(context.game, `${context.player.name} jugó carta "${card.name}"`, {
+      addLog(context.game, `${context.player.name} jugó "${card.name}"`, {
         playerId: context.player.id,
         cardImage: card.image,
       });

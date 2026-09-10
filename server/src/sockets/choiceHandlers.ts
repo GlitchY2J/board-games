@@ -1084,7 +1084,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           );
           addLog(
             room.gameState,
-            `${player.name} jugó carta "Chainsaw Massicorn" → robó ${drawnCount} carta${drawnCount === 1 ? '' : 's'} del mazo`,
+            `${player.name} jugó "Chainsaw Massicorn" → robó ${drawnCount} carta${drawnCount === 1 ? '' : 's'} del mazo`,
             { playerId: player.id, cardImage: chainsaw?.image },
           );
         }

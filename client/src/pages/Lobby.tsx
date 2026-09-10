@@ -778,7 +778,7 @@ export default function Lobby() {
                                  />
                                   <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-transparent to-slate-950/35" />
                                   {expansion.inProgress && (
-                                    <span className="absolute left-2 top-2 rounded-full bg-amber-500/90 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-slate-950 shadow-lg">
+                                     <span className="absolute bottom-2 left-2 rounded-full border border-amber-300/80 bg-slate-950/95 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-amber-200 shadow-lg">
                                       En progreso
                                     </span>
                                   )}
