@@ -490,7 +490,7 @@ export class ActionResolver {
       const card = pending.card;
       if (hasSavedByTheSigil(targetPlayer)) return false;
       if (card) {
-        CardMovement.enterStableCard(targetPlayer, card);
+         CardMovement.enterStableCardWithEffect(state, targetPlayer, card);
       }
       state.pendingAction = undefined;
       return true;
@@ -568,19 +568,18 @@ export class ActionResolver {
     }
 
     if (pending.reason === 'the_cornjuring') {
-      const candidates = state.deck.filter(
-        (card) => card.expansion === 'nightmares' && card.cardType === 'downgrade',
-      );
-      if (candidates.length === 0) return false;
+      if (pending.sourcePlayerId !== sourcePlayerId || !pending.card) return false;
 
-      state.pendingAction = {
-        type: 'select_deck_card',
-        reason: 'the_cornjuring',
-        playerId: sourcePlayerId,
-        targetPlayerId,
-        candidates,
-        cardType: 'downgrade',
-      };
+      const target = state.players.find((player) => player.id === targetPlayerId);
+       if (!target || !CardMovement.enterStableCardWithEffect(state, target, pending.card)) return false;
+
+      for (let i = state.deck.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
+      }
+      enqueueShuffleAnimation(state.roomCode, sourcePlayerId);
+
+      state.pendingAction = undefined;
       return true;
     }
 
@@ -650,7 +649,7 @@ export class ActionResolver {
       if (card.cardType === 'upgrade') {
         CardMovement.enterStableCard(destPlayer, card);
       } else if (card.cardType === 'downgrade') {
-        CardMovement.enterStableCard(destPlayer, card);
+        CardMovement.enterStableCardWithEffect(state, destPlayer, card);
       } else {
         return false;
       }
@@ -2082,7 +2081,7 @@ export class ActionResolver {
         if (index === -1) continue;
 
         const [downgrade] = targetPlayer.downgrades.splice(index, 1);
-        CardMovement.enterStableCard(sourcePlayer, downgrade);
+         CardMovement.enterStableCardWithEffect(state, sourcePlayer, downgrade);
         state.pendingAction = undefined;
         return true;
       }
@@ -2104,7 +2103,7 @@ export class ActionResolver {
       if (index === -1) return false;
 
       const [downgrade] = sourcePlayer.downgrades.splice(index, 1);
-        CardMovement.enterStableCard(targetPlayer, downgrade);
+         CardMovement.enterStableCardWithEffect(state, targetPlayer, downgrade);
       state.pendingAction = undefined;
       return true;
     }
@@ -2212,7 +2211,7 @@ export class ActionResolver {
         pending.reason === 'strange_craft_project_remove')
     ) {
       const targetIds = pending.remainingPlayerIds ?? [];
-      if (!targetIds.includes(sourcePlayerId)) return false;
+      if (pending.sourcePlayerId !== sourcePlayerId) return false;
 
       const removedCard = removeStableCardFromGame(
         state,

@@ -2,15 +2,17 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 
 export const theCornjuring: CardEffect = {
   onPlay(state, player) {
-    const hasNightmareDowngrade = state.deck.some(
+    const candidates = state.deck.filter(
       (card) => card.expansion === 'nightmares' && card.cardType === 'downgrade',
     );
-    if (!hasNightmareDowngrade) return;
+    if (candidates.length === 0) return;
 
     state.pendingAction = {
-      type: 'select_player',
+      type: 'select_deck_card',
       reason: 'the_cornjuring',
-      sourcePlayerId: player.id,
+      playerId: player.id,
+      candidates,
+      cardType: 'downgrade',
     };
   },
 };

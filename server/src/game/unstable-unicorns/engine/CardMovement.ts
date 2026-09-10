@@ -80,6 +80,18 @@ export class CardMovement {
     return false;
   }
 
+  static enterStableCardWithEffect(
+    state: GameState,
+    player: Player,
+    card: Card,
+  ): boolean {
+    const entered = CardMovement.enterStableCard(player, card);
+    if (entered && card.effect) {
+      effects[card.effect]?.onEnterStable?.(state, player, card);
+    }
+    return entered;
+  }
+
   /**
    * Coloca una carta de Unicornio en el establo de un jugador y dispara sus efectos de entrada.
    * Retorna `false` si no puede entrar (p. ej. bloqueado por Queen Bee Unicorn).

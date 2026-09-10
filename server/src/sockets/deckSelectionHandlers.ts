@@ -129,32 +129,19 @@ socket.on('select-deck-card', ({ roomCode, cardId }) => {
   if (pending.reason === 'the_cornjuring') {
     const selectedId = Array.isArray(cardId) ? cardId[0] : cardId;
     const index = room.gameState.deck.findIndex((card) => card.uid === selectedId);
-    const target = room.gameState.players.find(
-      (candidate) => candidate.id === pending.targetPlayerId,
-    );
     if (
-      !target ||
       index === -1 ||
       !pending.candidates.some((candidate) => candidate.uid === selectedId)
     )
       return;
 
     const [downgrade] = room.gameState.deck.splice(index, 1);
-    CardMovement.enterStableCard(target, downgrade);
-    for (let i = room.gameState.deck.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [room.gameState.deck[i], room.gameState.deck[j]] = [
-        room.gameState.deck[j],
-        room.gameState.deck[i],
-      ];
-    }
-    enqueueShuffleAnimation(room.gameState.roomCode, player.id);
-    room.gameState.pendingAction = undefined;
-    addLog(
-      room.gameState,
-      `${player.name} llevó ${downgrade.name} al establo de ${target.name} por The Cornjuring y barajó el mazo`,
-      { playerId: player.id },
-    );
+    room.gameState.pendingAction = {
+      type: 'select_player',
+      reason: 'the_cornjuring',
+      sourcePlayerId: player.id,
+      card: downgrade,
+    };
     emitGameState(io, room, 'game-updated');
     return;
   }

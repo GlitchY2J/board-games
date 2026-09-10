@@ -14,6 +14,8 @@ import { getCardPassive } from '../src/game/unstable-unicorns/engine/effects/Car
 import { removeStableCardFromGame } from '../src/game/unstable-unicorns/engine/StableCardRemoval.ts';
 import { ActionResolver } from '../src/game/unstable-unicorns/engine/ActionResolver.ts';
 import { isReactionEffect } from '../src/sockets/gameHandlers.ts';
+import { heeeeeresStabby } from '../src/game/cards/effects/heeeeeresStabby.ts';
+import { nightmareExorciseRegimen } from '../src/game/cards/effects/nightmareExorciseRegimen.ts';
 
 let sequence = 0;
 
@@ -104,6 +106,39 @@ test('Demonicorn permite retirar una carta rival aunque sea la única carta de s
 
   assert.equal(ActionResolver.handleSelectStableCard(game, owner.id, target.uid), true);
   assert.equal(game.removedCards?.some((card) => card.uid === target.uid), true);
+});
+
+test("Heeeeere's Stabby abre la selección global y retira la carta elegida del juego", () => {
+  const owner = player('owner');
+  const opponent = player('opponent');
+  const stabby = card('heeeeeres_stabby');
+  const target = card('basic_unicorn_red');
+  owner.stable.push(stabby);
+  opponent.stable.push(target);
+  const game = state([owner, opponent]);
+
+  heeeeeresStabby.onPlay?.(game, owner, stabby);
+
+  assert.equal(game.pendingAction?.type, 'select_stable_card');
+  assert.equal(game.pendingAction?.reason, 'heeeeeres_stabby_remove');
+  assert.deepEqual(game.pendingAction?.remainingPlayerIds, [owner.id, opponent.id]);
+  assert.equal(ActionResolver.handleSelectStableCard(game, owner.id, target.uid), true);
+  assert.equal(game.removedCards?.some((removed) => removed.uid === target.uid), true);
+  assert.equal(game.discard.some((discarded) => discarded.uid === target.uid), false);
+});
+
+test('Nightmare Exorcise Regimen descarta la mano y roba una carta al entrar como Downgrade', () => {
+  const owner = player('owner');
+  const regimen = card('nightmare_exorcise_regimen');
+  const handCard = card('basic_unicorn_red');
+  const drawn = card('basic_unicorn_blue');
+  owner.hand.push(handCard);
+  const game = state([owner]);
+  game.deck.push(drawn);
+
+  assert.equal(CardMovement.enterStableCardWithEffect(game, owner, regimen), true);
+  assert.deepEqual(owner.hand.map((card) => card.uid), [drawn.uid]);
+  assert.equal(game.discard.some((card) => card.uid === handCard.uid), true);
 });
 
 test('Paranormal Affection ofrece robar dos cartas al entrar si el mazo no está vacío', () => {

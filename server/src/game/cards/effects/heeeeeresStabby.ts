@@ -1,7 +1,7 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 
 export const heeeeeresStabby: CardEffect = {
-  onEnterStable(state, player) {
+  onPlay(state, player) {
     const targets = state.players
       .filter((candidate) => candidate.stable.length > 0)
       .map((candidate) => candidate.id);

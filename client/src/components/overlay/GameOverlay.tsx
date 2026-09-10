@@ -2847,8 +2847,8 @@ export default function GameOverlay({
           ? 'Elige en qué posición del mazo quieres colocar el Imploding Kitten boca arriba'
           : isExplodingKittenDefuse
           ? 'Elige en qué posición del mazo quieres devolver el Exploding Kitten'
-          : isCornjuring
-          ? 'Elige un Nightmare Downgrade para colocarlo en el establo elegido y luego barajar el mazo'
+           : isCornjuring
+           ? 'Elige un Nightmare Downgrade del mazo; después elegirás el jugador que lo recibirá'
           : isDebugDraw
           ? 'Elige qué carta del mazo quieres tomar en tu fase de robo'
           : isApocalypseSearch
