@@ -573,7 +573,7 @@ export default function Lobby() {
                       Elige un juego
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                     <div className="flex flex-wrap items-start justify-start gap-2">
                     {games.map((game) => {
                       const isSelected = game.id === roomSettings.gameId;
                       return (
@@ -758,7 +758,7 @@ export default function Lobby() {
                             className={`w-full flex items-center justify-between gap-4 rounded-2xl border text-left transition-all ${
                               active ? 'lobby-expansion-card-selected' : ''
                             } ${
-                               (expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' || expansion.id === 'nightmares') ? 'relative h-40 w-full max-w-[100px] overflow-hidden p-0' : 'p-4'
+                               (expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' || expansion.id === 'nightmares') ? 'relative w-[60px] shrink-0 overflow-hidden p-0 aspect-[2/3]' : 'p-4'
                             } ${
                               active
                                 ? 'bg-amber-500/10 border-amber-500/40'

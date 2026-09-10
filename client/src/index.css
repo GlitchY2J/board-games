@@ -593,7 +593,7 @@ html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
 
 .lobby-expansion-cover {
   display: block;
-  object-fit: fill !important;
+  object-fit: cover !important;
   object-position: center;
 }
 
