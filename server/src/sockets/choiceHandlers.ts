@@ -303,14 +303,16 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           if (drawn.cardType === 'upgrade') {
             CardMovement.enterStableCard(player, drawn);
           } else if (drawn.cardType === 'downgrade') {
-            CardMovement.enterStableCard(player, drawn);
+            CardMovement.enterStableCardWithEffect(room.gameState, player, drawn);
           } else {
             CardZoneMovement.addToHand(player, drawn);
           }
         }
       }
 
-      room.gameState.pendingAction = undefined;
+      if (room.gameState.pendingAction === pending) {
+        room.gameState.pendingAction = undefined;
+      }
       if (room.gameState.phase === TurnPhase.BEGINNING) {
         TurnManager.processBeginningQueue(room.gameState);
       }

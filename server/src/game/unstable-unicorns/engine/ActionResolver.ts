@@ -24,6 +24,7 @@ import {
 } from '../../cards/effects/unicornRainbowPrincess.ts';
 import { nextSprayBottleChoice } from '../../cards/effects/sprayBottleOfYouth.ts';
 import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
+import { isProtectedByParanormalAffection } from '../../cards/effects/paranormalAffection.ts';
 import { removeStableCardFromGame } from './StableCardRemoval.ts';
 import {
   isCardSelectionAction,
@@ -798,6 +799,10 @@ export class ActionResolver {
         located.some(
           (entry) =>
             !entry ||
+            isProtectedByParanormalAffection(
+              entry.player,
+              entry.player[entry.zone][entry.index],
+            ) ||
             isImmuneToDestruction(entry.player[entry.zone][entry.index].id) ||
             isPandamoniumProtected(
               entry.player,
@@ -1660,6 +1665,7 @@ export class ActionResolver {
           );
           if (idx !== -1) {
             const target = targetPlayer.upgrades[idx];
+            if (isProtectedByParanormalAffection(targetPlayer, target)) return false;
             if (
               CardMovement.maybeBlackKnightIntercept(
                 state,
@@ -1718,6 +1724,7 @@ export class ActionResolver {
           );
           if (idx !== -1) {
             const target = targetPlayer.upgrades[idx];
+            if (isProtectedByParanormalAffection(targetPlayer, target)) return false;
             if (
               CardMovement.maybeBlackKnightIntercept(
                 state,

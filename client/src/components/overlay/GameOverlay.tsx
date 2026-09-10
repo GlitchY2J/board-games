@@ -1646,7 +1646,11 @@ export default function GameOverlay({
                 zone: 'downgrade' as const,
               })),
             ].forEach((card, idx) => {
-               if (card.id === 'the_tiniest_unicorn' || !canBeDestroyedOrSacrificed(card)) return;
+               if (
+                 card.id === 'the_tiniest_unicorn' ||
+                 !canBeDestroyedOrSacrificed(card) ||
+                 isParanormalProtected(p, card)
+               ) return;
 
               items.push({
                 id: `${card.id}_${p.id}_${idx}`,
@@ -2317,7 +2321,11 @@ export default function GameOverlay({
 
         const items = gameState.players.flatMap((player) =>
            [...player.stable, ...player.upgrades, ...player.downgrades]
-             .filter(canBeDestroyedOrSacrificed)
+             .filter(
+               (card) =>
+                 canBeDestroyedOrSacrificed(card) &&
+                 !isParanormalProtected(player, card),
+             )
              .map(
             (card, index) => ({
               id: `${player.id}_${card.uid}_${index}`,
@@ -3155,4 +3163,14 @@ export default function GameOverlay({
 
 function canBeDestroyedOrSacrificed(card: { id: string }): boolean {
   return card.id !== 'phantom_unicorn';
+}
+
+function isParanormalProtected(
+  player: { upgrades: { id: string }[] },
+  card: { cardType: string },
+): boolean {
+  return (
+    card.cardType === 'upgrade' &&
+    player.upgrades.some((upgrade) => upgrade.id === 'paranormal_affection')
+  );
 }

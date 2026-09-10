@@ -61,7 +61,7 @@ function state(players: Player[]): GameState {
 test('Magic Elexir intercepta destrucción solo con carta en mano', () => {
   const target = player('A');
   const destroyed = card('basic_unicorn_red');
-  target.downgrades = [card('magic_elexir')];
+  target.upgrades = [card('magic_elexir')];
   const game = state([target]);
 
   assert.equal(maybeMagicElexirIntercept(game, target, destroyed, 'destroy'), false);

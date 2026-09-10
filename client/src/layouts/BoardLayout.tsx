@@ -589,7 +589,7 @@ export default function BoardLayout({
         <GameOverlay
           gameState={gameState}
           localPlayerId={spectator ? '' : localPlayerId}
-          hide={hidePendingPlay &&
+          hide={hidePendingPlay && gameState.pendingAction?.type !== 'llamacorn' &&
             gameState.pendingAction?.type !== 'mystical_vortex' &&
             !(gameState.pendingAction?.type === 'select_choice' &&
               gameState.pendingAction.reason === 'neigh_thank_you')}
@@ -600,7 +600,7 @@ export default function BoardLayout({
         gameState={gameState}
         localPlayerId={spectator ? '' : localPlayerId}
         gameId={gameId}
-        hide={hidePendingPlay}
+        hide={hidePendingPlay && gameState.pendingAction?.type !== 'llamacorn'}
         spectator={spectator}
       />
 

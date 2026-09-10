@@ -4,6 +4,13 @@ export function hasParanormalAffection(player: { upgrades: { id: string }[] }): 
   return player.upgrades.some((card) => card.id === 'paranormal_affection');
 }
 
+export function isProtectedByParanormalAffection(
+  player: { upgrades: { id: string }[] },
+  card: { cardType: string },
+): boolean {
+  return card.cardType === 'upgrade' && hasParanormalAffection(player);
+}
+
 export const paranormalAffection: CardEffect = {
   onEnterStable(state, player) {
     if (state.deck.length === 0) return;

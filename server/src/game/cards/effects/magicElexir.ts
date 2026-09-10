@@ -14,7 +14,7 @@ export function maybeMagicElexirIntercept(
   card: Card,
   animType: 'destroy' | 'sacrifice',
 ): boolean {
-  if (!player.downgrades.some((downgrade) => downgrade.id === 'magic_elexir')) {
+  if (!player.upgrades.some((upgrade) => upgrade.id === 'magic_elexir')) {
     return false;
   }
   if (player.hand.length === 0) return false;

@@ -19,7 +19,7 @@ export default function NeighRevealOverlay({ gameState }: Props) {
     if (
       !entry?.cardImage ||
       !entry.text.includes('reveló') ||
-      !entry.text.includes('carta Neigh')
+      (!entry.text.includes('carta Neigh') && !entry.text.includes('Ghost Guide'))
     ) {
       return;
     }
@@ -35,7 +35,7 @@ export default function NeighRevealOverlay({ gameState }: Props) {
     <div className="neigh-reveal-overlay" role="status" aria-live="polite">
       <div className="neigh-reveal-card">
         <p>{announcement.text}</p>
-        <img src={announcement.cardImage} alt="Carta Neigh revelada" />
+        <img src={announcement.cardImage} alt="Carta revelada" />
       </div>
     </div>
   );

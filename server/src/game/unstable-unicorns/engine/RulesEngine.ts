@@ -186,7 +186,7 @@ export class RulesEngine {
           UnicornHandler.play(state, player, card);
           break;
         case 'upgrade':
-          UpgradeHandler.play(player, card);
+          UpgradeHandler.play(state, player, card);
           break;
         case 'downgrade':
           if (state.players.every((candidate) => hasSavedByTheSigil(candidate))) {
