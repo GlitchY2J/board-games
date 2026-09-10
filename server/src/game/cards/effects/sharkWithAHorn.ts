@@ -1,5 +1,6 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 import { isPandamoniumProtected } from './pandamonium.ts';
+import { isImmuneToUnicornOrUpgradeDestruction } from './theTiniestUnicorn.ts';
 
 export const sharkWithAHorn: CardEffect = {
   onEnterStable(state, player, card) {
@@ -8,9 +9,10 @@ export const sharkWithAHorn: CardEffect = {
     const canDestroy = state.players.some((p) =>
       p.stable.some(
         (c) =>
-          c.cardType === 'unicorn' &&
-          c.uid !== card.uid &&
-          !isPandamoniumProtected(p, c),
+           c.cardType === 'unicorn' &&
+           c.uid !== card.uid &&
+           !isPandamoniumProtected(p, c) &&
+           !isImmuneToUnicornOrUpgradeDestruction(c.id),
       ),
     );
 

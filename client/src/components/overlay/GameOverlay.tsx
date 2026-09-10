@@ -412,6 +412,7 @@ export default function GameOverlay({
              return p.stable.some(
                (card) =>
                  card.cardType === 'unicorn' &&
+                 canBeDestroyedOrSacrificed(card) &&
                  card.unicornClass === 'basic' &&
                  !isPandamoniumProtected(p, card),
              );
@@ -705,7 +706,7 @@ export default function GameOverlay({
               ['downgrade', localPlayer.downgrades],
             ];
             items = zones.flatMap(([zone, cards]) =>
-              cards.map((card, idx) => ({
+              cards.filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
                 id: `${card.id}_${zone}_${idx}`,
                 value: card.uid,
                 title: card.name,
@@ -728,8 +729,8 @@ export default function GameOverlay({
                 ['upgrade', p.upgrades],
                 ['downgrade', p.downgrades],
               ];
-              return zones.flatMap(([zone, cards]) =>
-                cards.map((card, idx) => ({
+               return zones.flatMap(([zone, cards]) =>
+                 cards.filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
                   id: `${card.id}_${p.id}_${zone}_${idx}`,
                   value: card.uid,
                   title: card.name,
@@ -771,8 +772,11 @@ export default function GameOverlay({
             (p) => p.id === action.targetPlayerId,
           );
           if (!target) return null;
-          const items = target.stable
-            .filter((card) => card.cardType === 'unicorn')
+           const items = target.stable
+             .filter(
+               (card) =>
+                 card.cardType === 'unicorn' && canBeDestroyedOrSacrificed(card),
+             )
             .map((card, index) => ({
               id: `${card.uid}_${index}`,
               value: card.uid,
@@ -815,8 +819,11 @@ export default function GameOverlay({
             (p) => p.id === action.targetPlayerId,
           );
           if (!target) return null;
-          const items = target.stable
-            .filter((card) => card.cardType === 'unicorn')
+           const items = target.stable
+             .filter(
+               (card) =>
+                 card.cardType === 'unicorn' && canBeDestroyedOrSacrificed(card),
+             )
             .map((card, index) => ({
               id: `${card.uid}_${index}`,
               value: card.uid,
@@ -1058,8 +1065,9 @@ export default function GameOverlay({
           const items = source.stable
             .filter(
               (card) =>
-                card.cardType === 'unicorn' &&
-                !isPandamoniumProtected(source, card),
+                 card.cardType === 'unicorn' &&
+                 canBeDestroyedOrSacrificed(card) &&
+                 !isPandamoniumProtected(source, card),
             )
             .map((card, index) => ({
               id: `${card.id}_buried_alive_${index}`,
@@ -1095,8 +1103,9 @@ export default function GameOverlay({
           const items = source.stable
             .filter(
               (card) =>
-                card.cardType === 'unicorn' &&
-                !isPandamoniumProtected(source, card),
+                 card.cardType === 'unicorn' &&
+                 canBeDestroyedOrSacrificed(card) &&
+                 !isPandamoniumProtected(source, card),
             )
             .map((card, index) => ({
               id: `${card.id}_indisposed_${index}`,
@@ -1170,7 +1179,7 @@ export default function GameOverlay({
             ...target.stable,
             ...target.upgrades,
             ...target.downgrades,
-          ].map((card, index) => ({
+           ].filter(canBeDestroyedOrSacrificed).map((card, index) => ({
             id: `${card.id}_possession_${index}`,
             value: card.uid,
             title: card.name,
@@ -1371,9 +1380,12 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                   c.cardType === 'unicorn' &&
-                     !isPandamoniumProtected(p, c) &&
-                     c.id !== 'the_tiniest_unicorn',
+                    c.cardType === 'unicorn' &&
+                      canBeDestroyedOrSacrificed(c) &&
+                      !isPandamoniumProtected(p, c) &&
+                     c.id !== 'the_tiniest_unicorn' &&
+                     c.id !== 'unicorn_of_war' &&
+                     c.id !== 'saved_by_the_sigil',
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -1409,9 +1421,10 @@ export default function GameOverlay({
             .flatMap((p) =>
               p.stable
                 .filter(
-                  (card) =>
-                    card.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(p, card) &&
+                   (card) =>
+                     card.cardType === 'unicorn' &&
+                     canBeDestroyedOrSacrificed(card) &&
+                     !isPandamoniumProtected(p, card) &&
                     card.id !== 'the_tiniest_unicorn' &&
                     card.id !== 'unicorn_of_war',
                 )
@@ -1447,8 +1460,12 @@ export default function GameOverlay({
           const localPlayer = gameState.players.find(
             (p) => p.id === localPlayerId,
           );
-          const items = (localPlayer?.stable ?? [])
-            .filter((card) => card.cardType === 'unicorn')
+           const items = (localPlayer?.stable ?? [])
+             .filter(
+               (card) =>
+                 card.cardType === 'unicorn' &&
+                 canBeDestroyedOrSacrificed(card),
+             )
             .map((card, idx) => ({
               id: `${card.id}_stable_${idx}`,
               value: card.uid,
@@ -1521,21 +1538,21 @@ export default function GameOverlay({
           );
 
           const items = [
-            ...(localPlayer?.stable ?? []).map((card, idx) => ({
+             ...(localPlayer?.stable ?? []).filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
               id: `${card.id}_stable_${idx}`,
               value: card.uid,
               title: card.name,
               subtitle: 'Tu establo',
               image: card.image,
             })),
-            ...(localPlayer?.upgrades ?? []).map((card, idx) => ({
+             ...(localPlayer?.upgrades ?? []).filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
               id: `${card.id}_upg_${idx}`,
               value: card.uid,
               title: card.name,
               subtitle: 'Tu upgrade',
               image: card.image,
             })),
-            ...(localPlayer?.downgrades ?? []).map((card, idx) => ({
+             ...(localPlayer?.downgrades ?? []).filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
               id: `${card.id}_dow_${idx}`,
               value: card.uid,
               title: card.name,
@@ -1590,12 +1607,12 @@ export default function GameOverlay({
               subtitle: 'Tu downgrade',
               image: card.image,
             })),
-          ];
+           ].filter(canBeDestroyedOrSacrificed);
 
-          return (
-            <CardSelectionOverlay
-              hide={hide}
-              title="✨ Glitter Bomb"
+           return (
+             <CardSelectionOverlay
+               hide={hide}
+               title="✨ Glitter Bomb"
               subtitle="Elige una carta para SACRIFICAR. Luego destruirás una carta."
               items={items}
               maxSelection={1}
@@ -1629,7 +1646,7 @@ export default function GameOverlay({
                 zone: 'downgrade' as const,
               })),
             ].forEach((card, idx) => {
-              if (card.id === 'the_tiniest_unicorn') return;
+               if (card.id === 'the_tiniest_unicorn' || !canBeDestroyedOrSacrificed(card)) return;
 
               items.push({
                 id: `${card.id}_${p.id}_${idx}`,
@@ -1745,8 +1762,9 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                   c.cardType === 'unicorn' &&
-                     !isPandamoniumProtected(p, c) &&
+                    c.cardType === 'unicorn' &&
+                      canBeDestroyedOrSacrificed(c) &&
+                      !isPandamoniumProtected(p, c) &&
                      c.id !== 'the_tiniest_unicorn',
                 )
                 .map((card, idx) => ({
@@ -1784,9 +1802,12 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                   c.cardType === 'unicorn' &&
-                     !isPandamoniumProtected(p, c) &&
-                     c.id !== 'the_tiniest_unicorn',
+                    c.cardType === 'unicorn' &&
+                      canBeDestroyedOrSacrificed(c) &&
+                      !isPandamoniumProtected(p, c) &&
+                     c.id !== 'the_tiniest_unicorn' &&
+                     c.id !== 'unicorn_of_war' &&
+                     c.id !== 'saved_by_the_sigil',
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -1862,7 +1883,9 @@ export default function GameOverlay({
               p.stable
                 .filter(
                   (c) =>
-                    c.cardType === 'unicorn' && !isPandamoniumProtected(p, c),
+                    c.cardType === 'unicorn' &&
+                    canBeDestroyedOrSacrificed(c) &&
+                    !isPandamoniumProtected(p, c),
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${idx}`,
@@ -1942,9 +1965,10 @@ export default function GameOverlay({
               subtitle="Elige un unicornio de TU establo para sacrificar"
               items={localPlayer.stable
                 .filter(
-                  (c) =>
-                    c.cardType === 'unicorn' &&
-                    !isPandamoniumProtected(localPlayer, c),
+                   (c) =>
+                     c.cardType === 'unicorn' &&
+                     canBeDestroyedOrSacrificed(c) &&
+                     !isPandamoniumProtected(localPlayer, c),
                 )
                 .map((card, idx) => ({
                   id: `${card.id}_${idx}`,
@@ -1971,9 +1995,10 @@ export default function GameOverlay({
           );
           const items = (localPlayer?.stable ?? [])
             .filter(
-              (c) =>
-                c.cardType === 'unicorn' &&
-                (!localPlayer || !isPandamoniumProtected(localPlayer, c)),
+               (c) =>
+                 c.cardType === 'unicorn' &&
+                 canBeDestroyedOrSacrificed(c) &&
+                 (!localPlayer || !isPandamoniumProtected(localPlayer, c)),
             )
             .map((card, idx) => ({
               id: `${card.id}_${idx}`,
@@ -2008,9 +2033,10 @@ export default function GameOverlay({
           );
           const items = (localPlayer?.stable ?? [])
             .filter(
-              (c) =>
-                c.cardType === 'unicorn' &&
-                (!localPlayer || !isPandamoniumProtected(localPlayer, c)),
+               (c) =>
+                 c.cardType === 'unicorn' &&
+                 canBeDestroyedOrSacrificed(c) &&
+                 (!localPlayer || !isPandamoniumProtected(localPlayer, c)),
             )
             .map((card, idx) => ({
               id: `${card.id}_${idx}`,
@@ -2049,8 +2075,9 @@ export default function GameOverlay({
 
         const cardsToSelect = isUnicornPoison
           ? target.stable.filter(
-              (c) =>
-                c.id !== 'magical_kittencorn' &&
+               (c) =>
+                 canBeDestroyedOrSacrificed(c) &&
+                 c.id !== 'magical_kittencorn' &&
                 !isPandamoniumProtected(target, c),
             )
           : [...target.stable, ...target.upgrades, ...target.downgrades];
@@ -2289,7 +2316,9 @@ export default function GameOverlay({
         }
 
         const items = gameState.players.flatMap((player) =>
-          [...player.stable, ...player.upgrades, ...player.downgrades].map(
+           [...player.stable, ...player.upgrades, ...player.downgrades]
+             .filter(canBeDestroyedOrSacrificed)
+             .map(
             (card, index) => ({
               id: `${player.id}_${card.uid}_${index}`,
               value: card.uid,
@@ -2461,7 +2490,11 @@ export default function GameOverlay({
             title="💥 Extremely Destructive Unicorn"
             subtitle="Debes sacrificar 1 unicornio de tu establo."
             items={player.stable
-              .filter((card) => card.cardType === 'unicorn')
+               .filter(
+                 (card) =>
+                   card.cardType === 'unicorn' &&
+                   canBeDestroyedOrSacrificed(card),
+               )
               .map((card, idx) => ({
                 id: `${card.id}_${idx}`,
                 value: card.uid,
@@ -2514,7 +2547,7 @@ export default function GameOverlay({
         ];
 
         const items = zones.flatMap(([zone, cards]) =>
-          cards.map((card, idx) => ({
+           cards.filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
             id: `${card.id}_${zone}_${idx}`,
             value: card.uid,
             title: card.name,
@@ -2578,6 +2611,7 @@ export default function GameOverlay({
           .filter(
             (c) =>
               c.cardType === 'unicorn' &&
+              canBeDestroyedOrSacrificed(c) &&
               !isPandamoniumProtected(targetPlayer, c),
           )
           .map((card, idx) => ({
@@ -3117,4 +3151,8 @@ export default function GameOverlay({
       {!minimized && overlay}
     </>
   );
+}
+
+function canBeDestroyedOrSacrificed(card: { id: string }): boolean {
+  return card.id !== 'phantom_unicorn';
 }
