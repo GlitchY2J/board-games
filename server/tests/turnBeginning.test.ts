@@ -88,6 +88,21 @@ test('activateBeginningTriggers: presenta el efecto individual y genera pendingA
   assert.equal(state.pendingAction?.reason, 'glitter_bomb');
 });
 
+test('Clairvoyant Unicorn: se activa al inicio del turno', () => {
+  const clairvoyant = CardRepository.load(['nightmares']).find(
+    (candidate) => candidate.id === 'clairvoyant_unicorn',
+  );
+  assert.ok(clairvoyant);
+
+  const activePlayer = makePlayer('active');
+  activePlayer.stable.push({ ...clairvoyant, uid: 'clairvoyant-test' });
+  const state = makeGame([activePlayer, makePlayer('opponent')]);
+
+  assert.equal(TurnManager.activateBeginningTriggers(state), true);
+  assert.equal(state.pendingAction?.type, 'select_choice');
+  assert.equal(state.pendingAction?.reason, 'clairvoyant_unicorn');
+});
+
 test('Extremely Fertile Unicorn: descarta una carta y permite elegir un Baby de la Nursery', () => {
   const p1 = makePlayer('P1');
   const fertile = card('extremely_fertile_unicorn');

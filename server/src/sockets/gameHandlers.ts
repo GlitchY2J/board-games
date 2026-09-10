@@ -688,7 +688,10 @@ function registerConfirmStartGame(io: GameServer, socket: GameSocket): void {
       );
     }
 
-    TurnManager.skipBeginningIfNoTriggers(game);
+    const beginningPresented = TurnManager.activateBeginningTriggers(game);
+    if (!beginningPresented) {
+      TurnManager.skipBeginningIfNoTriggers(game);
+    }
 
     emitGameState(io, room, 'game-started');
     emitInitialDealAnimations(io, room);
@@ -1034,11 +1037,13 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
     if (playerHasYay) {
       RulesEngine.resolvePlay(context.game, context.player.id, card);
 
-      addLog(
-        context.game,
-        `${context.player.name} jugó carta "${card.name}" (protegida por Yay)`,
-        { playerId: context.player.id, cardImage: card.image },
-      );
+      if (card.id !== 'chainsaw_massicorn') {
+        addLog(
+          context.game,
+          `${context.player.name} jugó carta "${card.name}" (protegida por Yay)`,
+          { playerId: context.player.id, cardImage: card.image },
+        );
+      }
 
       emitGameState(io, context.room, 'game-updated');
       return;
@@ -1061,10 +1066,12 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       ],
     };
 
-    addLog(context.game, `${context.player.name} jugó carta "${card.name}"`, {
-      playerId: context.player.id,
-      cardImage: card.image,
-    });
+    if (card.id !== 'chainsaw_massicorn') {
+      addLog(context.game, `${context.player.name} jugó carta "${card.name}"`, {
+        playerId: context.player.id,
+        cardImage: card.image,
+      });
+    }
 
     emitGameState(io, context.room, 'game-updated');
 
@@ -1522,7 +1529,10 @@ function registerConfirmRestartGame(io: GameServer, socket: GameSocket): void {
       );
     }
 
-    TurnManager.skipBeginningIfNoTriggers(room.gameState);
+    const beginningPresented = TurnManager.activateBeginningTriggers(room.gameState);
+    if (!beginningPresented) {
+      TurnManager.skipBeginningIfNoTriggers(room.gameState);
+    }
     emitGameState(io, room, 'game-restarted');
     emitInitialDealAnimations(io, room);
     console.log(`Partida reiniciada: ${roomCode}`);

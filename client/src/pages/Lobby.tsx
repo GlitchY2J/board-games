@@ -529,7 +529,9 @@ export default function Lobby() {
                 onClick={handleToggleReady}
                 className={`lobby-ready-button mt-6 w-full rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${localPlayerIsReady ? 'is-ready' : ''}`}
               >
-                {localPlayerIsReady ? 'Listo' : 'Listo?'} ({readyPlayerCount}/{playersRequiringReady.length})
+                {localPlayerIsReady
+                  ? `Esperando al host... (${readyPlayerCount}/${playersRequiringReady.length})`
+                  : `Listo? (${readyPlayerCount}/${playersRequiringReady.length})`}
               </button>
             )}
             {isHost && <div className="mt-6">{hostStartControl}</div>}

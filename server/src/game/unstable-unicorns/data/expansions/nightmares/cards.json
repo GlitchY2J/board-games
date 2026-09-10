@@ -94,7 +94,7 @@
     "unicornClass": "magical",
     "image": "/cards/unstable-unicorns/nightmares/clairvoyant_unicorn.png",
     "description": "Your hand must be visible to all players. If this card is in your Stable at the beginning of your turn, you may DRAW a card.",
-    "effect": null,
+    "effect": "clairvoyant_unicorn",
     "copies": 1,
     "expansion": "nightmares"
   },

@@ -491,6 +491,16 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         if (drawn) {
           enqueueDrawAnimation(room.gameState.roomCode, player.id, drawn);
           CardZoneMovement.addToHand(player, drawn);
+          const effectCard = [
+            ...player.stable,
+            ...player.upgrades,
+            ...player.downgrades,
+          ].find((card) => card.uid === pending.effectCardId);
+          addLog(
+            room.gameState,
+            `${player.name} robó una carta del mazo por el efecto de "${effectCard?.name ?? 'Clairvoyant Unicorn'}"`,
+            { playerId: player.id, cardImage: effectCard?.image },
+          );
         }
       }
 
@@ -1069,9 +1079,14 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           drawnCount += 1;
         }
         if (drawnCount > 0) {
-          addLog(room.gameState, `${player.name} robó ${drawnCount} carta${drawnCount === 1 ? '' : 's'} por Chainsaw Massicorn`, {
-            playerId: player.id,
-          });
+          const chainsaw = player.stable.find(
+            (card) => card.id === 'chainsaw_massicorn',
+          );
+          addLog(
+            room.gameState,
+            `${player.name} jugó carta "Chainsaw Massicorn" → robó ${drawnCount} carta${drawnCount === 1 ? '' : 's'} del mazo`,
+            { playerId: player.id, cardImage: chainsaw?.image },
+          );
         }
         if (room.gameState.phase === TurnPhase.BEGINNING) {
           TurnManager.processBeginningQueue(room.gameState);
