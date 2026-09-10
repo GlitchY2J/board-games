@@ -489,10 +489,13 @@ export class ActionResolver {
     if (pending.reason === 'play_downgrade') {
       const card = pending.card;
       if (hasSavedByTheSigil(targetPlayer)) return false;
+      const resolvingAction = pending;
       if (card) {
          CardMovement.enterStableCardWithEffect(state, targetPlayer, card);
       }
-      state.pendingAction = undefined;
+      if (state.pendingAction === resolvingAction) {
+        state.pendingAction = undefined;
+      }
       return true;
     }
 
