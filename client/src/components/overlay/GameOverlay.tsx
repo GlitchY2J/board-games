@@ -729,8 +729,14 @@ export default function GameOverlay({
                 ['upgrade', p.upgrades],
                 ['downgrade', p.downgrades],
               ];
-               return zones.flatMap(([zone, cards]) =>
-                 cards.filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
+                 return zones.flatMap(([zone, cards]) =>
+                 cards
+                   .filter(
+                     (card) =>
+                       canBeDestroyedOrSacrificed(card) &&
+                       (isSacrifice || !isParanormalProtected(p, card)),
+                   )
+                   .map((card, idx) => ({
                   id: `${card.id}_${p.id}_${zone}_${idx}`,
                   value: card.uid,
                   title: card.name,

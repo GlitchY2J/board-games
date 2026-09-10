@@ -73,6 +73,22 @@ test('Magic Elexir intercepta destrucción solo con carta en mano', () => {
   assert.equal(game.pendingAction?.destructionType, 'destroy');
 });
 
+test('Paranormal Affection protege todos los Upgrades, incluida a sí misma', () => {
+  const target = player('paranormal-owner');
+  const affection = card('paranormal_affection');
+  const otherUpgrade = card('poltergeist_swipe');
+  const game = state([target]);
+  target.upgrades = [affection, otherUpgrade];
+
+  target.upgrades.splice(1, 1);
+  assert.equal(CardMovement.destroyOrSacrifice(game, target, otherUpgrade), true);
+  assert.equal(target.upgrades.some((upgrade) => upgrade.uid === otherUpgrade.uid), true);
+
+  target.upgrades.splice(0, 1);
+  assert.equal(CardMovement.destroyOrSacrifice(game, target, affection), true);
+  assert.equal(target.upgrades.some((upgrade) => upgrade.uid === affection.uid), true);
+});
+
 test('Demonicorn abre su elección al ser destruido', () => {
   const owner = player('owner');
   const demonicorn = card('demonicorn');

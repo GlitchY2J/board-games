@@ -1107,6 +1107,10 @@ export class ActionResolver {
           continue;
         }
 
+        if (isProtectedByParanormalAffection(targetPlayer, destroyedCard)) {
+          continue;
+        }
+
         const idx = targetPlayer[zone].findIndex((c) => c.uid === uid);
         const [removed] = targetPlayer[zone].splice(idx, 1);
         const prevPending = state.pendingAction;

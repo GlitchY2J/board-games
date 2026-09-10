@@ -127,6 +127,8 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     localPlayer?.hand.some((c) => c.effect === 'super_neigh') ?? false;
   const hasNeighThankYou =
     localPlayer?.hand.some((c) => c.effect === 'neigh_thank_you') ?? false;
+  const hasHexNeigh =
+    localPlayer?.hand.some((c) => c.effect === 'hex_neigh') ?? false;
   const hasNope = localPlayer?.hand.some((c) => c.effect === 'nope') ?? false;
   const hasRegularAttack =
     localPlayer?.hand.some(
@@ -188,6 +190,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasRegularNeigh ? 'neigh' : null,
     canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasSuperNeigh ? 'super_neigh' : null,
     canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasNeighThankYou ? 'neigh_thank_you' : null,
+    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasHexNeigh ? 'hex_neigh' : null,
   ].filter((option): option is string => option !== null);
   const pendingOptionNumber = (option: string) => pendingOptionNumbers.indexOf(option) + 1;
 
@@ -221,6 +224,16 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
 
   function playNeighThankYou() {
     const card = localPlayer?.hand.find((c) => c.effect === 'neigh_thank_you');
+    if (!card) return;
+
+    socket.emit('play-neigh', {
+      roomCode: gameState.roomCode,
+      cardId: card.uid,
+    });
+  }
+
+  function playHexNeigh() {
+    const card = localPlayer?.hand.find((c) => c.effect === 'hex_neigh');
     if (!card) return;
 
     socket.emit('play-neigh', {
@@ -484,6 +497,15 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
                 onClick={playNeighThankYou}
               >
                 <kbd>{pendingOptionNumber('neigh_thank_you')}</kbd> Neigh, Thank You
+              </button>
+            )}
+            {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasHexNeigh && (
+              <button
+                data-pending-option={pendingOptionNumber('hex_neigh')}
+                className="pending-neigh-btn"
+                onClick={playHexNeigh}
+              >
+                <kbd>{pendingOptionNumber('hex_neigh')}</kbd> Hex Neigh
               </button>
             )}
           </div>
