@@ -15,7 +15,10 @@ import { drawForSadisticRitual } from '../../cards/effects/sadisticRitual.ts';
 import { addLog } from '../../gameLog.ts';
 import { enqueueShuffleAnimation } from '../../cardAnimations.ts';
 import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
-import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
+import {
+  isImmuneToDestruction,
+  isImmuneToSacrifice,
+} from '../../cards/effects/theTiniestUnicorn.ts';
 import { hasBlindingLight } from '../../cards/effects/blindingLight.ts';
 import { nextUnicornOfWarChoice } from '../../cards/effects/unicornOfWar.ts';
 import {
@@ -758,6 +761,9 @@ export class ActionResolver {
           return undefined;
         });
         if (selected.some((entry) => !entry)) return false;
+        if (selected.some((entry) => entry && isImmuneToSacrifice(player[entry.zone][entry.index].id))) {
+          return false;
+        }
 
         for (const uid of ids) {
           for (const zone of zones) {
@@ -1061,7 +1067,7 @@ export class ActionResolver {
             break;
           }
         }
-        if (!sacrificed || !zone) return false;
+        if (!sacrificed || !zone || isImmuneToSacrifice(sacrificed.id)) return false;
 
         const idx = player[zone].findIndex((c) => c.uid === cardId);
         const [removed] = player[zone].splice(idx, 1);
@@ -1113,7 +1119,10 @@ export class ActionResolver {
           continue;
         }
 
-        if (isImmuneToMagicDestruction(destroyedCard.id)) {
+        if (
+          isImmuneToDestruction(destroyedCard.id) ||
+          isImmuneToMagicDestruction(destroyedCard.id)
+        ) {
           continue;
         }
 
@@ -1372,7 +1381,7 @@ export class ActionResolver {
           break;
         }
       }
-      if (!sacrificed || !zone) return false;
+      if (!sacrificed || !zone || isImmuneToSacrifice(sacrificed.id)) return false;
 
       CardMovement.destroyOrSacrifice(
         state,
@@ -1482,9 +1491,10 @@ export class ActionResolver {
 
       for (const z of ['stable', 'upgrades', 'downgrades'] as const) {
         const i = player[z].findIndex((c) => c.uid === cardId);
-        if (i !== -1) {
-          const target = player[z][i];
-          const [sacrificed] = player[z].splice(i, 1);
+         if (i !== -1) {
+           const target = player[z][i];
+           if (isImmuneToSacrifice(target.id)) return false;
+           const [sacrificed] = player[z].splice(i, 1);
           const prevPending = state.pendingAction;
           const intercepted = CardMovement.destroyOrSacrifice(
             state,
@@ -1679,7 +1689,10 @@ export class ActionResolver {
           );
           if (idx !== -1) {
             const target = targetPlayer.upgrades[idx];
-            if (isProtectedByParanormalAffection(targetPlayer, target)) return false;
+            if (
+              isProtectedByParanormalAffection(targetPlayer, target) ||
+              isImmuneToUnicornOrUpgradeDestruction(target.id)
+            ) return false;
             if (
               CardMovement.maybeBlackKnightIntercept(
                 state,
@@ -1738,7 +1751,10 @@ export class ActionResolver {
           );
           if (idx !== -1) {
             const target = targetPlayer.upgrades[idx];
-            if (isProtectedByParanormalAffection(targetPlayer, target)) return false;
+            if (
+              isProtectedByParanormalAffection(targetPlayer, target) ||
+              isImmuneToUnicornOrUpgradeDestruction(target.id)
+            ) return false;
             if (
               CardMovement.maybeBlackKnightIntercept(
                 state,
@@ -2001,6 +2017,7 @@ export class ActionResolver {
       for (const zone of zones) {
         const index = player[zone].findIndex((card) => card.uid === cardId);
         if (index === -1) continue;
+        if (isImmuneToSacrifice(player[zone][index].id)) return false;
 
         const [sacrificed] = player[zone].splice(index, 1);
         const previousPending = state.pendingAction;
@@ -2387,7 +2404,7 @@ export class ActionResolver {
         }
       }
 
-      if (!sacrificed || !zone) return false;
+      if (!sacrificed || !zone || isImmuneToSacrifice(sacrificed.id)) return false;
 
       const idx = targetPlayer[zone].findIndex((c) => c.uid === cardId);
       const [removed] = targetPlayer[zone].splice(idx, 1);

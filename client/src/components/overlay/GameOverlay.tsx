@@ -394,7 +394,7 @@ export default function GameOverlay({
 
         const eligiblePlayers = gameState.players.filter((p) => {
            if (isPlayDowngrade)
-             return !p.downgrades.some((card) => card.id === 'saved_by_the_sigil');
+              return !p.upgrades.some((card) => card.id === 'saved_by_the_sigil');
            if (isPlayfulPuppet) return p.id !== localPlayerId;
           if (isReTargetDestination) {
             // No puede moverse al propio establo ni al jugador de origen
@@ -1001,7 +1001,7 @@ export default function GameOverlay({
             ...source.upgrades,
             ...source.downgrades,
           ]
-            .filter((card) => card.id !== 'phantom_unicorn')
+             .filter(canBeDestroyedOrSacrificed)
             .map((card, index) => ({
               id: `${card.id}_sacrifice_${index}`,
               value: card.uid,
@@ -1258,7 +1258,13 @@ export default function GameOverlay({
           }[] = [];
           gameState.players.forEach((p) => {
             if (p.id === localPlayerId) return;
-            p.upgrades.forEach((card, idx) => {
+             p.upgrades
+               .filter(
+                 (card) =>
+                   card.id !== 'saved_by_the_sigil' &&
+                   !isParanormalProtected(p, card),
+               )
+               .forEach((card, idx) => {
               items.push({
                 id: `${card.id}_upgrade_${p.id}_${idx}`,
                 value: JSON.stringify({
@@ -1325,7 +1331,13 @@ export default function GameOverlay({
 
           gameState.players.forEach((p) => {
             if (p.id === localPlayerId) return;
-            p.upgrades.forEach((card, idx) => {
+             p.upgrades
+               .filter(
+                 (card) =>
+                   card.id !== 'saved_by_the_sigil' &&
+                   !isParanormalProtected(p, card),
+               )
+               .forEach((card, idx) => {
               items.push({
                 id: `${card.id}_upgrade_${p.id}_${idx}`,
                 value: JSON.stringify({
@@ -1595,28 +1607,28 @@ export default function GameOverlay({
           );
 
           const items = [
-            ...(localPlayer?.stable ?? []).map((card, idx) => ({
+            ...(localPlayer?.stable ?? []).filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
               id: `${card.id}_stable_${idx}`,
               value: card.uid,
               title: card.name,
               subtitle: 'Tu establo',
               image: card.image,
             })),
-            ...(localPlayer?.upgrades ?? []).map((card, idx) => ({
+            ...(localPlayer?.upgrades ?? []).filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
               id: `${card.id}_upg_${idx}`,
               value: card.uid,
               title: card.name,
               subtitle: 'Tu upgrade',
               image: card.image,
             })),
-            ...(localPlayer?.downgrades ?? []).map((card, idx) => ({
+            ...(localPlayer?.downgrades ?? []).filter(canBeDestroyedOrSacrificed).map((card, idx) => ({
               id: `${card.id}_dow_${idx}`,
               value: card.uid,
               title: card.name,
               subtitle: 'Tu downgrade',
               image: card.image,
             })),
-           ].filter(canBeDestroyedOrSacrificed);
+          ];
 
            return (
              <CardSelectionOverlay
@@ -2301,7 +2313,7 @@ export default function GameOverlay({
             ...localPlayer.stable,
             ...localPlayer.upgrades,
             ...localPlayer.downgrades,
-          ].map((card, index) => ({
+           ].filter(canBeDestroyedOrSacrificed).map((card, index) => ({
             id: `${card.uid}_${index}`,
             value: card.uid,
             title: card.name,
@@ -3171,7 +3183,7 @@ export default function GameOverlay({
 }
 
 function canBeDestroyedOrSacrificed(card: { id: string }): boolean {
-  return card.id !== 'phantom_unicorn';
+  return card.id !== 'phantom_unicorn' && card.id !== 'saved_by_the_sigil';
 }
 
 function isParanormalProtected(

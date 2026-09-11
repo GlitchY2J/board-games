@@ -229,7 +229,15 @@ export class CardMovement {
       !ignoreMagicElexir &&
       maybeMagicElexirIntercept(state, player, card, animType)
     ) {
-      if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
+      if (card.cardType === 'upgrade' && !player.upgrades.some((item) => item.uid === card.uid)) {
+        player.upgrades.push(card);
+      } else if (
+        card.cardType === 'downgrade' &&
+        !player.downgrades.some((item) => item.uid === card.uid)
+      ) {
+        player.downgrades.push(card);
+      }
+      else if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
         CardZoneMovement.addToStable(player, card);
       }
       return true;
@@ -239,7 +247,15 @@ export class CardMovement {
       (animType === 'sacrifice' && isImmuneToSacrifice(card.id)) ||
       (animType !== 'sacrifice' && isImmuneToDestruction(card.id))
     ) {
-      if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
+      if (card.cardType === 'upgrade' && !player.upgrades.some((item) => item.uid === card.uid)) {
+        player.upgrades.push(card);
+      } else if (
+        card.cardType === 'downgrade' &&
+        !player.downgrades.some((item) => item.uid === card.uid)
+      ) {
+        player.downgrades.push(card);
+      }
+      else if (!player.stable.some((stableCard) => stableCard.uid === card.uid)) {
         CardZoneMovement.addToStable(player, card);
       }
       return true;

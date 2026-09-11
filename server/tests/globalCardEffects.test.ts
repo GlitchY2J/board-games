@@ -171,10 +171,44 @@ test('Paranormal Affection ofrece robar dos cartas al entrar si el mazo no está
 
 test('Saved by the Sigil impide colocar Downgrades en el establo', () => {
   const target = player('A');
-  target.downgrades = [card('saved_by_the_sigil')];
+  target.upgrades = [card('saved_by_the_sigil')];
 
   assert.equal(CardMovement.enterStableCard(target, card('pandamonium')), false);
-  assert.equal(target.downgrades.length, 1);
+  assert.equal(target.upgrades.length, 1);
+});
+
+test('Saved by the Sigil no puede ser destruido ni sacrificado', () => {
+  const target = player('A');
+  const sigil = card('saved_by_the_sigil');
+  const game = state([target]);
+
+  target.upgrades = [sigil];
+  target.upgrades.splice(0, 1);
+  assert.equal(CardMovement.destroyOrSacrifice(game, target, sigil, 'destroy'), true);
+  assert.deepEqual(target.upgrades.map((upgrade) => upgrade.uid), [sigil.uid]);
+  assert.equal(game.discard.length, 0);
+
+  target.upgrades.splice(0, 1);
+  assert.equal(CardMovement.destroyOrSacrifice(game, target, sigil, 'sacrifice'), true);
+  assert.deepEqual(target.upgrades.map((upgrade) => upgrade.uid), [sigil.uid]);
+  assert.equal(game.discard.length, 0);
+});
+
+test('Glitter Bomb rechaza Saved by the Sigil como sacrificio', () => {
+  const target = player('A');
+  const sigil = card('saved_by_the_sigil');
+  const game = state([target]);
+  target.upgrades = [sigil];
+  game.pendingAction = {
+    type: 'select_stable_card',
+    reason: 'glitter_bomb_sacrifice',
+    sourcePlayerId: target.id,
+  };
+
+  assert.equal(ActionResolver.handleSelectStableCard(game, target.id, sigil.uid), false);
+  assert.deepEqual(target.upgrades.map((upgrade) => upgrade.uid), [sigil.uid]);
+  assert.equal(game.pendingAction.reason, 'glitter_bomb_sacrifice');
+  assert.equal(game.discard.length, 0);
 });
 
 test('Hex Neigh pertenece a la ventana de reacciones Neigh', () => {
