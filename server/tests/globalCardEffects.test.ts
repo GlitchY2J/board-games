@@ -211,6 +211,29 @@ test('Glitter Bomb rechaza Saved by the Sigil como sacrificio', () => {
   assert.equal(game.discard.length, 0);
 });
 
+test('Strange Craft Project puede retirar cualquier zona del establo', () => {
+  const source = player('source');
+  const target = player('target');
+  const upgrade = card('poltergeist_swipe');
+  const downgrade = card('broken_stable');
+  const unicorn = card('basic_unicorn_red');
+  source.hand = [card('basic_unicorn_blue'), card('basic_unicorn_green'), card('basic_unicorn_yellow')];
+  target.upgrades = [upgrade];
+  target.downgrades = [downgrade];
+  target.stable = [unicorn];
+  const game = state([source, target]);
+  game.pendingAction = {
+    type: 'select_stable_card',
+    reason: 'strange_craft_project_remove',
+    sourcePlayerId: source.id,
+    remainingPlayerIds: [target.id],
+  };
+
+  assert.equal(ActionResolver.handleSelectStableCard(game, source.id, upgrade.uid), true);
+  assert.equal(target.upgrades.length, 0);
+  assert.equal(game.removedCards?.some((removed) => removed.uid === upgrade.uid), true);
+});
+
 test('Hex Neigh pertenece a la ventana de reacciones Neigh', () => {
   assert.equal(isReactionEffect('hex_neigh', false), true);
   assert.equal(isReactionEffect('ordinary_card', false), false);

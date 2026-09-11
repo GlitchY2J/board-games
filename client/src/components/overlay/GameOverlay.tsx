@@ -955,15 +955,19 @@ export default function GameOverlay({
         ) {
           const items = gameState.players
             .filter((p) => action.remainingPlayerIds?.includes(p.id))
-            .flatMap((p) =>
-              p.stable.map((card, index) => ({
+            .flatMap((p) => {
+              const cards =
+                action.reason === 'strange_craft_project_remove'
+                  ? [...p.stable, ...p.upgrades, ...p.downgrades]
+                  : p.stable;
+              return cards.map((card, index) => ({
                 id: `${card.id}_${p.id}_${index}`,
                 value: card.uid,
                 title: card.name,
                 subtitle: `Establo de ${p.name}`,
                 image: card.image,
-              })),
-            );
+              }));
+            });
 
           return (
             <CardSelectionOverlay

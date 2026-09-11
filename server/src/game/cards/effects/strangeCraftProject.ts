@@ -5,7 +5,14 @@ export const strangeCraftProject: CardEffect = {
     return player.hand.length >= 3;
   },
   onBeginningTurn(state, player, card) {
-    if (!state.players.some((candidate) => candidate.stable.length > 0)) {
+    if (
+      !state.players.some(
+        (candidate) =>
+          candidate.stable.length > 0 ||
+          candidate.upgrades.length > 0 ||
+          candidate.downgrades.length > 0,
+      )
+    ) {
       return false;
     }
     state.pendingAction = {

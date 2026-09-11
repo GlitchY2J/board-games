@@ -279,7 +279,12 @@ export class ActionResolver {
 
     if (reason === 'unicorn_slasher') {
       const remainingPlayerIds = state.players
-        .filter((candidate) => candidate.stable.length > 0)
+        .filter(
+          (candidate) =>
+            candidate.stable.length > 0 ||
+            candidate.upgrades.length > 0 ||
+            candidate.downgrades.length > 0,
+        )
         .map((candidate) => candidate.id);
 
       if (remainingPlayerIds.length > 0) {
@@ -2258,6 +2263,7 @@ export class ActionResolver {
         state,
         cardId,
         targetIds,
+        pending.reason === 'strange_craft_project_remove',
       );
       if (removedCard) {
         const { card: removed } = removedCard;
