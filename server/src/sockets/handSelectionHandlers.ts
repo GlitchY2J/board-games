@@ -59,7 +59,7 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
     }
 
     let resolvedCardId = cardId;
-    if (pending.reason === 'americorn' || pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
+    if (pending.reason === 'americorn' || pending.reason === 'poltergeist_swipe' || pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
       const targetPlayer = game.players.find((candidate) => candidate.id === pending.targetPlayerId);
       if (!targetPlayer) {
         emitGameError(socket, 'PLAYER_NOT_FOUND', 'No se encontró el jugador objetivo.', 'select-hand-card');
@@ -80,7 +80,7 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
       }
     }
 
-    const stolenCard = (pending.reason === 'americorn' || pending.reason === 'blatant_thievery' || pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind')
+    const stolenCard = (pending.reason === 'americorn' || pending.reason === 'poltergeist_swipe' || pending.reason === 'blatant_thievery' || pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind')
       ? game.players.find((candidate) => candidate.id === pending.targetPlayerId)?.hand.find((card) => card.uid === resolvedCardId)
       : undefined;
     if (pending.reason === 'three_of_a_kind') {
@@ -97,8 +97,19 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
       return;
     }
     if (stolenCard) enqueueStealAnimation(game.roomCode, pending.targetPlayerId, player.id, stolenCard);
+    if (pending.reason === 'poltergeist_swipe') {
+      game.skipDrawPhase = true;
+    }
     continueBeginningPhaseIfReady(game);
-    if (pending.reason === 'americorn') {
+    if (
+      pending.reason === 'poltergeist_swipe' &&
+      !game.pendingAction &&
+      game.phase === TurnPhase.DRAW
+    ) {
+      game.skipDrawPhase = false;
+      game.phase = TurnPhase.ACTION;
+    }
+    if (pending.reason === 'americorn' || pending.reason === 'poltergeist_swipe') {
       const targetPlayer = game.players.find((candidate) => candidate.id === pending.targetPlayerId);
       addLog(game, targetPlayer ? `${player.name} eligió a ${targetPlayer.name} y robó una carta de su mano al azar` : `${player.name} robó una carta de una mano al azar`, { playerId: player.id });
     } else if (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {

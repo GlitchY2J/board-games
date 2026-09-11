@@ -360,6 +360,7 @@ export default function GameOverlay({
 
          const isBlatantThievery = action.reason === 'blatant_thievery';
          const isAmericorn = action.reason === 'americorn';
+         const isPoltergeistSwipe = action.reason === 'poltergeist_swipe';
          const isTwoOfAKind = action.reason === 'two_of_a_kind';
           const isThreeOfAKind = action.reason === 'three_of_a_kind';
           const isTargetedAttack = action.reason === 'targeted_attack';
@@ -381,7 +382,8 @@ export default function GameOverlay({
         const isReTargetDestination = action.reason === 're_target_destination';
         const needsHand =
            isBlatantThievery ||
-           isAmericorn ||
+            isAmericorn ||
+            isPoltergeistSwipe ||
             isTwoOfAKind ||
              isThreeOfAKind ||
              isFavor ||
@@ -623,7 +625,8 @@ export default function GameOverlay({
         );
         if (!target) return null;
 
-        const isAmericorn = action.reason === 'americorn';
+         const isAmericorn = action.reason === 'americorn';
+         const isPoltergeistSwipe = action.reason === 'poltergeist_swipe';
         const isTwoOfAKind = action.reason === 'two_of_a_kind';
         const isThreeOfAKind = action.reason === 'three_of_a_kind';
         const isWingedHorrorcorn = action.reason === 'winged_horrorcorn';
@@ -634,7 +637,7 @@ export default function GameOverlay({
         return (
           <CardSelectionOverlay
             hide={hide}
-            title={isPossession ? '🖐️ Possession' : isWingedHorrorcorn ? '🪽 Winged Horrorcorn' : isFavor ? '🃏 Favor' : isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
+             title={isPoltergeistSwipe ? '👻 Poltergeist Swipe' : isPossession ? '🖐️ Possession' : isWingedHorrorcorn ? '🪽 Winged Horrorcorn' : isFavor ? '🃏 Favor' : isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
             subtitle={
               isFavor
                 ? `Elige cualquier carta de tu mano para entregársela a ${gameState.players.find((p) => p.id === action.sourcePlayerId)?.name ?? 'ese jugador'}`
@@ -642,7 +645,7 @@ export default function GameOverlay({
                 ? `Elige una carta boca abajo de tipo ${action.requestedCardType ?? 'seleccionado'} de la mano de ${target.name}`
                 : isTwoOfAKind
                   ? `Elige una carta boca abajo de la mano de ${target.name}`
-                : isAmericorn || isTwoOfAKind
+                 : isPoltergeistSwipe || isAmericorn || isTwoOfAKind
                 ? revealAmericorn
                   ? `Nanny Cam: se ven las cartas de ${target.name}. Elige una`
                   : `Elige una carta boca abajo de la mano de ${target.name}`
@@ -655,14 +658,14 @@ export default function GameOverlay({
               value: card.uid,
                 title: isWingedHorrorcorn || isPossession || isFavor ? card.name : revealAmericorn
                 ? card.name
-                : isAmericorn || isTwoOfAKind || isThreeOfAKind
+                 : isPoltergeistSwipe || isAmericorn || isTwoOfAKind || isThreeOfAKind
                   ? `Carta ${idx + 1}`
                   : card.name,
                 image: isWingedHorrorcorn || isPossession || isFavor
                   ? card.image
                   : revealAmericorn
                 ? card.image
-                : isAmericorn || isTwoOfAKind || isThreeOfAKind
+                 : isPoltergeistSwipe || isAmericorn || isTwoOfAKind || isThreeOfAKind
                   ? '/cards/unstable-unicorns/base/card_back.png'
                   : card.image,
             }))}

@@ -92,9 +92,10 @@ export function createGameStateForPlayer(
 
       // El jugador que usa Americorn ve la mano objetivo boca abajo, pero en
       // orden aleatorio (sin filtrar el orden real de la mano).
-  const isAmericornViewer =
+   const isAmericornViewer =
         game.pendingAction?.type === 'select_hand_card' &&
-        game.pendingAction?.reason === 'americorn' &&
+        (game.pendingAction?.reason === 'americorn' ||
+          game.pendingAction?.reason === 'poltergeist_swipe') &&
         game.pendingAction?.sourcePlayerId === viewerId &&
         game.pendingAction?.targetPlayerId === player.id;
   const isTwoOfAKindViewer =

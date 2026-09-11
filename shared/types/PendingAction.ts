@@ -61,8 +61,9 @@ export type PendingAction =
   | {
       type: "select_player";
       reason:
-        | "back_kick"
+         | "back_kick"
          | "americorn"
+         | "poltergeist_swipe"
          | "blatant_thievery"
          | "two_of_a_kind"
          | "three_of_a_kind"
@@ -155,7 +156,7 @@ export type PendingAction =
     }
   | {
       type: "select_hand_card";
-         reason: "blatant_thievery" | "americorn" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor" | "zombie_unicorn" | "winged_horrorcorn" | "possession";
+         reason: "blatant_thievery" | "americorn" | "poltergeist_swipe" | "glitter_unicorn" | "two_of_a_kind" | "three_of_a_kind" | "favor" | "zombie_unicorn" | "winged_horrorcorn" | "possession";
         sourcePlayerId: string;
         targetPlayerId: string;
         requestedCardType?: string;

@@ -145,7 +145,12 @@ export class TurnManager {
 
     game.beginningEffectsQueue = [];
     if (game.phase === TurnPhase.BEGINNING) {
-      this.nextPhase(game);
+      if (game.skipDrawPhase) {
+        game.skipDrawPhase = false;
+        game.phase = TurnPhase.ACTION;
+      } else {
+        this.nextPhase(game);
+      }
     }
     return false;
   }

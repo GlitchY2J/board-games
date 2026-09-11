@@ -376,27 +376,24 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           (candidate) =>
             candidate.id !== player.id && candidate.hand.length > 0,
         );
-        const target = targets[Math.floor(Math.random() * targets.length)];
-        if (target) {
-          const index = Math.floor(Math.random() * target.hand.length);
-          const stolen = CardZoneMovement.removeFromHand(target, target.hand[index]?.uid ?? '');
-          if (!stolen) return;
-          CardZoneMovement.addToHand(player, stolen);
-          enqueueStealAnimation(
-            room.gameState.roomCode,
-            target.id,
-            player.id,
-            stolen,
-          );
-          addLog(
-            room.gameState,
-            `${player.name} robó una carta aleatoria de ${target.name} por Poltergeist Swipe`,
-            { playerId: player.id },
-          );
+        if (targets.length === 1) {
+          room.gameState.pendingAction = {
+            type: 'select_hand_card',
+            reason: 'poltergeist_swipe',
+            sourcePlayerId: player.id,
+            targetPlayerId: targets[0].id,
+          };
+        } else if (targets.length > 1) {
+          room.gameState.pendingAction = {
+            type: 'select_player',
+            reason: 'poltergeist_swipe',
+            sourcePlayerId: player.id,
+          };
         }
+      } else {
+        room.gameState.pendingAction = undefined;
       }
 
-      room.gameState.pendingAction = undefined;
       if (room.gameState.phase === TurnPhase.BEGINNING) {
         TurnManager.processBeginningQueue(room.gameState);
         if (choice === 'yes' && !room.gameState.pendingAction) {

@@ -90,6 +90,8 @@ export interface GameState {
   /** Uids de los efectos de inicio de turno pendientes de resolverse en el turno actual.
    *  Si hay 2 o más, el jugador elige en qué orden resolverlos. */
   beginningEffectsQueue?: string[];
+  /** Omite la fase de robo después de resolver un efecto de inicio de turno. */
+  skipDrawPhase?: boolean;
   actionUsed: boolean;
   /** Double Dutch: número de cartas que el jugador activo aún puede jugar en
    *  esta fase de acción (2 si eligió "jugar 2"). Undefined = acción normal. */

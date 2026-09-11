@@ -438,6 +438,16 @@ export class ActionResolver {
       return true;
     }
 
+    if (pending.reason === 'poltergeist_swipe') {
+      state.pendingAction = {
+        type: 'select_hand_card',
+        reason: 'poltergeist_swipe',
+        sourcePlayerId,
+        targetPlayerId,
+      };
+      return true;
+    }
+
     if (pending.reason === 'a_cute_attack') {
       const target = state.players.find((p) => p.id === targetPlayerId);
       if (!target || target.id === sourcePlayerId) return false;
