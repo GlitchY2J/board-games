@@ -1514,7 +1514,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         choice === 'yes' && heldCard
           ? `${player.name} descartó una carta para salvar a Unicorn Phoenix`
           : `${player.name} dejó que Unicorn Phoenix fuera destruido`,
-        { playerId: player.id },
+        { playerId: player.id, cardImage: choice === 'yes' ? heldCard?.image : undefined },
       );
 
       emitGameState(io, room, 'game-updated');

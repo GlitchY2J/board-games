@@ -59,7 +59,7 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
         resolved = ActionResolver.handleFrenchiecornDiscard(game, player.id, cardIds);
         break;
       case 'discard':
-        resolved = ActionResolver.handleDiscard(game, player.id, cardIds);
+        resolved = ActionResolver.handleDiscard(game, player.id, cardIds, discardReason === 'hand_limit');
         break;
     }
 
@@ -70,15 +70,16 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
 
     continueBeginningPhaseIfReady(game);
     const discardedCard = selectedDiscardedCard ?? game.discard.find((card) => card.uid === cardIds[0]);
-    if (discardReason === 'unicorn_on_the_cob' && discardedCard) {
-      addLog(game, `${player.name} descartó "${discardedCard.name}"`, {
-        playerId: player.id,
-        cardImage: discardedCard.image,
-      });
-    } else {
-      addLog(game, `${player.name} descartó ${cardIds.length} carta${cardIds.length > 1 ? 's' : ''}`, {
-        playerId: player.id,
-      });
+    const discardedImages = cardIds
+      .map((cardId) => game.discard.find((card) => card.uid === cardId)?.image)
+      .filter((image): image is string => !!image);
+    addLog(game, `${player.name} descartó`, {
+      playerId: player.id,
+      cardImage: discardedCard?.image,
+      cardImages: discardedImages,
+    });
+    if (discardReason === 'hand_limit') {
+      TurnManager.nextPhase(game);
     }
     emitGameState(io, room, 'game-updated');
   });

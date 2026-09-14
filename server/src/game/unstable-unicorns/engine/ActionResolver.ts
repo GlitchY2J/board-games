@@ -179,6 +179,7 @@ export class ActionResolver {
     state: GameState,
     playerId: string,
     cardIds: string[],
+    deferTurnAdvance = false,
   ): boolean {
     const pending = state.pendingAction;
     if (
@@ -198,6 +199,7 @@ export class ActionResolver {
 
     const reason = pending.reason;
     const isNecromancer = reason === 'necromancer_unicorn';
+    const discardedImages: string[] = [];
 
     for (const cardId of cardIds) {
       const idx = player.hand.findIndex((c) => c.uid === cardId);
@@ -207,6 +209,7 @@ export class ActionResolver {
       }
       const [discarded] = player.hand.splice(idx, 1);
       CardMovement.discard(state, discarded, player.id);
+      discardedImages.push(discarded.image);
     }
 
     state.pendingAction = undefined;
@@ -220,7 +223,7 @@ export class ActionResolver {
       addLog(
         state,
         `${player.name} descartó una carta y robó otra por Claw Machine`,
-        { playerId },
+        { playerId, cardImages: discardedImages },
       );
       return true;
     }
@@ -363,7 +366,7 @@ export class ActionResolver {
       return true;
     }
 
-    if (reason === 'hand_limit') {
+    if (reason === 'hand_limit' && !deferTurnAdvance) {
       TurnManager.nextPhase(state);
     }
 

@@ -582,7 +582,7 @@ export default function Lobby() {
                           type="button"
                           disabled={false}
                           onClick={() => handleSelectGame(game)}
-                          className={`lobby-game-card w-full text-left rounded-2xl border transition-all ${
+                           className={`lobby-game-card w-full sm:w-52 text-left rounded-2xl border transition-all ${
                             isSelected ? 'lobby-game-card-selected' : ''
                           } ${
                             game.id === 'unstable-unicorns' || game.id === 'exploding-kittens'
@@ -746,7 +746,7 @@ export default function Lobby() {
                         : 'No hay expansiones activas.'}
                     </p>
                   ) : (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="flex flex-wrap gap-2">
                       {visibleExpansions.map((expansion) => {
                         const active = roomSettings.expansionIds.includes(expansion.id);
                         return (
@@ -758,7 +758,7 @@ export default function Lobby() {
                             className={`w-full flex items-center justify-between gap-4 rounded-2xl border text-left transition-all ${
                               active ? 'lobby-expansion-card-selected' : ''
                             } ${
-                               (expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' || expansion.id === 'nightmares') ? 'relative w-[60px] shrink-0 overflow-hidden p-0 aspect-[2/3]' : 'p-4'
+                               (expansion.id === 'rainbow_apocalypse' || expansion.id === 'imploding_kittens' || expansion.id === 'nightmares') ? 'lobby-expansion-cover-card relative shrink-0 overflow-hidden p-0 aspect-[2/3]' : 'p-4'
                             } ${
                               active
                                 ? 'bg-amber-500/10 border-amber-500/40'

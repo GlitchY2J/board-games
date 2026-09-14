@@ -1165,9 +1165,10 @@ function registerDrawActionCard(io: GameServer, socket: GameSocket): void {
         emitGameState(io, room, 'game-updated');
         return;
       }
-      addLog(game, `${player.name} robó una carta y terminó su turno`, {
+      addLog(game, `${player.name} robó una carta del mazo`, {
         playerId: player.id,
       });
+      addLog(game, `${player.name} terminó su turno`, { playerId: player.id });
       advanceTurnAfterDraw(game);
       emitGameState(io, room, 'game-updated');
       return;

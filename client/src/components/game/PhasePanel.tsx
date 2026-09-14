@@ -27,7 +27,10 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
   const [open, setOpen] = useState(false);
   const { showPreview, hidePreview } = useCardPreview();
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
-  const logEntries = useMemo(() => gameState.log ?? [], [gameState.log]);
+  const logEntries = useMemo(
+    () => (gameState.log ?? []).filter((entry) => entry.event),
+    [gameState.log],
+  );
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,6 +62,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
 
   function renderEntry(entry: GameLogEntry) {
     const reactionImages = entry.reactionCardImages ?? (entry.reactionCardImage ? [entry.reactionCardImage] : []);
+    const cardImages = entry.cardImages ?? (entry.cardImage ? [entry.cardImage] : []);
     const previewImage = (src: string, alt: string) => (
       <img
         className="history-card-thumbnail"
@@ -131,6 +135,14 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
       );
     };
 
+    const renderDiscardedCards = () => (
+      <span className="inline-flex items-center gap-1 ml-1 align-middle">
+        {cardImages.map((image, index) => (
+          <span key={`${image}-${index}`}>{previewImage(image, 'Carta descartada')}</span>
+        ))}
+      </span>
+    );
+
     if (entry.playerName && entry.text.startsWith(entry.playerName)) {
       const color = entry.playerId
         ? playerColors.get(entry.playerId) ?? PLAYER_COLORS[0]
@@ -149,6 +161,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
             {entry.playerName}
           </span>
            <span>{renderText(entry.text.slice(entry.playerName.length))}</span>
+           {entry.event === 'discard-card' && renderDiscardedCards()}
         </>
       );
     }

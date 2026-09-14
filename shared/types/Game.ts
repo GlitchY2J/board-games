@@ -38,12 +38,21 @@ export interface PendingPlay {
   attackCount?: number;
 }
 
+export type GameLogEvent =
+  | 'turn-start'
+  | 'turn-end'
+  | 'play-card'
+  | 'draw-card'
+  | 'discard-card';
+
 export interface GameLogEntry {
   id: string;
   text: string;
+  event?: GameLogEvent;
   playerId?: string;
   playerName?: string;
   cardImage?: string;
+  cardImages?: string[];
   reactionCardImage?: string;
   reactionCardImages?: string[];
   relatedCardImage?: string;

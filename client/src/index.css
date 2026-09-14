@@ -35,10 +35,14 @@ body,
 
 body {
   background-color: #0b0d11;
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, hsla(220, 14%, 15%, 0.9) 0px, transparent 50%),
     radial-gradient(at 50% 0%, hsla(220, 10%, 10%, 0.9) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(220, 14%, 13%, 0.9) 0px, transparent 50%),
+    radial-gradient(
+      at 100% 100%,
+      hsla(220, 14%, 13%, 0.9) 0px,
+      transparent 50%
+    ),
     radial-gradient(at 0% 100%, hsla(220, 10%, 8%, 0.9) 0px, transparent 50%);
   background-attachment: fixed;
   color: #f8fafc;
@@ -163,7 +167,11 @@ html[data-platform-theme] .phase-panel-toggle {
 html[data-platform-theme] .game-menu-toggle:hover,
 html[data-platform-theme] .room-code-display:hover,
 html[data-platform-theme] .phase-panel-toggle:hover {
-  background: color-mix(in srgb, var(--platform-accent) 16%, var(--platform-surface-solid)) !important;
+  background: color-mix(
+    in srgb,
+    var(--platform-accent) 16%,
+    var(--platform-surface-solid)
+  ) !important;
   color: var(--platform-accent-strong) !important;
 }
 
@@ -179,12 +187,20 @@ html[data-platform-theme] .controls-overlay h2 {
 
 html[data-platform-theme] .control-row {
   border-color: color-mix(in srgb, var(--platform-accent) 18%, transparent);
-  background: color-mix(in srgb, var(--platform-accent) 7%, var(--platform-surface-solid));
+  background: color-mix(
+    in srgb,
+    var(--platform-accent) 7%,
+    var(--platform-surface-solid)
+  );
 }
 
 html[data-platform-theme] .control-row kbd {
   border-color: var(--platform-border);
-  background: color-mix(in srgb, var(--platform-accent) 14%, var(--platform-surface-solid));
+  background: color-mix(
+    in srgb,
+    var(--platform-accent) 14%,
+    var(--platform-surface-solid)
+  );
   color: var(--platform-accent-strong);
 }
 
@@ -204,13 +220,21 @@ html[data-platform-theme] .platform-options-apply,
 html[data-platform-theme] .glow-btn-emerald,
 html[data-platform-theme] .confirm-button,
 html[data-platform-theme] [data-card-confirm] {
-  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong));
+  background: linear-gradient(
+    135deg,
+    var(--platform-accent),
+    var(--platform-accent-strong)
+  );
   box-shadow: 0 0 20px var(--platform-glow);
 }
 
 html[data-platform-theme] .choice-button,
 html[data-platform-theme] .pending-accept-btn {
-  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong));
+  background: linear-gradient(
+    135deg,
+    var(--platform-accent),
+    var(--platform-accent-strong)
+  );
   color: #08111f;
 }
 
@@ -220,7 +244,11 @@ html[data-platform-theme] .card-select-cancel {
 }
 
 html[data-platform-theme] .card-select-cancel:hover {
-  background: color-mix(in srgb, var(--platform-accent) 16%, var(--platform-surface-solid)) !important;
+  background: color-mix(
+    in srgb,
+    var(--platform-accent) 16%,
+    var(--platform-surface-solid)
+  ) !important;
   color: var(--platform-accent-strong) !important;
 }
 
@@ -235,7 +263,11 @@ html[data-platform-theme] .card-selection-window h2,
 html[data-platform-theme] .selection-title,
 html[data-platform-theme] .pending-play-title,
 html[data-platform-theme] .victory-title {
-  background: linear-gradient(135deg, var(--platform-accent-strong), var(--platform-accent));
+  background: linear-gradient(
+    135deg,
+    var(--platform-accent-strong),
+    var(--platform-accent)
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -246,13 +278,21 @@ html[data-platform-theme] .selection-subtitle,
 html[data-platform-theme] .pending-play-subtitle,
 html[data-platform-theme] .victory-text,
 html[data-platform-theme] .victory-waiting {
-  color: color-mix(in srgb, var(--platform-accent-strong) 58%, #94a3b8) !important;
+  color: color-mix(
+    in srgb,
+    var(--platform-accent-strong) 58%,
+    #94a3b8
+  ) !important;
 }
 
 html[data-platform-theme] .selection-card-content,
 html[data-platform-theme] .selection-list-item,
 html[data-platform-theme] .pending-play-target {
-  background-color: color-mix(in srgb, var(--platform-surface) 86%, transparent) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--platform-surface) 86%,
+    transparent
+  ) !important;
 }
 
 html[data-platform-theme] .selection-card.selected {
@@ -261,7 +301,11 @@ html[data-platform-theme] .selection-card.selected {
 }
 
 html[data-platform-theme] .selection-badge {
-  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong)) !important;
+  background: linear-gradient(
+    135deg,
+    var(--platform-accent),
+    var(--platform-accent-strong)
+  ) !important;
   color: #08111f !important;
   box-shadow: none !important;
 }
@@ -279,7 +323,11 @@ html[data-platform-theme] .space-key {
 }
 
 html[data-platform-theme] .turn-order-row-active {
-  background: color-mix(in srgb, var(--platform-active) 88%, var(--platform-accent));
+  background: color-mix(
+    in srgb,
+    var(--platform-active) 88%,
+    var(--platform-accent)
+  );
   border-color: var(--platform-accent) !important;
 }
 
@@ -293,16 +341,28 @@ html[data-platform-theme] .turn-order-row-active .text-emerald-400 {
 }
 
 html[data-platform-theme] .turn-order-row-active .bg-gradient-to-br {
-  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong)) !important;
+  background: linear-gradient(
+    135deg,
+    var(--platform-accent),
+    var(--platform-accent-strong)
+  ) !important;
 }
 
 html[data-platform-theme] .turn-order-row-idle {
-  background: color-mix(in srgb, var(--platform-surface-solid) 72%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--platform-surface-solid) 72%,
+    transparent
+  ) !important;
   border-color: transparent !important;
 }
 
 html[data-platform-theme] .turn-order-row-idle:hover {
-  background: color-mix(in srgb, var(--platform-accent) 14%, var(--platform-surface-solid)) !important;
+  background: color-mix(
+    in srgb,
+    var(--platform-accent) 14%,
+    var(--platform-surface-solid)
+  ) !important;
   border-color: transparent !important;
 }
 
@@ -311,7 +371,11 @@ html[data-platform-theme] .turn-order-row-idle .turn-order-avatar {
 }
 
 html[data-platform-theme] .turn-order-row-idle .bg-slate-700 {
-  background-color: color-mix(in srgb, var(--platform-accent) 18%, var(--platform-surface-solid)) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--platform-accent) 18%,
+    var(--platform-surface-solid)
+  ) !important;
 }
 
 html[data-platform-theme] .card-hotkey,
@@ -323,7 +387,11 @@ html[data-platform-theme] .deck-count-badge {
 
 html[data-platform-theme] .turn-order-row-idle .turn-order-name,
 html[data-platform-theme] .turn-order-eliminated-title {
-  color: color-mix(in srgb, var(--platform-accent-strong) 55%, #94a3b8) !important;
+  color: color-mix(
+    in srgb,
+    var(--platform-accent-strong) 55%,
+    #94a3b8
+  ) !important;
 }
 
 html[data-platform-theme] .turn-order-local {
@@ -331,12 +399,20 @@ html[data-platform-theme] .turn-order-local {
 }
 
 html[data-platform-theme] .turn-shuffle-card {
-  background: linear-gradient(135deg, var(--platform-surface-solid), var(--platform-active)) !important;
+  background: linear-gradient(
+    135deg,
+    var(--platform-surface-solid),
+    var(--platform-active)
+  ) !important;
   border-color: var(--platform-border) !important;
 }
 
 html[data-platform-theme] .turn-order-entry {
-  background-color: color-mix(in srgb, var(--platform-surface) 72%, transparent) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--platform-surface) 72%,
+    transparent
+  ) !important;
   border-color: var(--platform-border) !important;
 }
 
@@ -354,7 +430,11 @@ html[data-platform-theme] .turn-shuffle-progress {
 }
 
 html[data-platform-theme] .turn-order-position-first {
-  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong)) !important;
+  background: linear-gradient(
+    135deg,
+    var(--platform-accent),
+    var(--platform-accent-strong)
+  ) !important;
 }
 
 html[data-platform-theme] .player-info-card[style] {
@@ -477,7 +557,11 @@ html[data-platform-theme] .platform-flat-page input::placeholder {
 }
 
 html[data-platform-theme] .lobby-themed-page [class*='bg-slate-'] {
-  background-color: color-mix(in srgb, var(--platform-surface-solid) 78%, transparent) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--platform-surface-solid) 78%,
+    transparent
+  ) !important;
 }
 
 html[data-platform-theme] .lobby-themed-page [class*='text-cyan-'],
@@ -503,7 +587,11 @@ html[data-platform-theme] .lobby-themed-page [class*='to-cyan-'] {
 }
 
 html[data-platform-theme] .lobby-themed-page [class*='text-slate-'] {
-  color: color-mix(in srgb, var(--platform-accent-strong) 58%, #94a3b8) !important;
+  color: color-mix(
+    in srgb,
+    var(--platform-accent-strong) 58%,
+    #94a3b8
+  ) !important;
 }
 
 html[data-platform-theme] .lobby-themed-page button.glow-btn-emerald {
@@ -521,7 +609,11 @@ html[data-platform-theme] .home-join-button {
 }
 
 html[data-platform-theme] .home-join-button:hover {
-  background: color-mix(in srgb, var(--platform-accent) 16%, var(--platform-surface-solid)) !important;
+  background: color-mix(
+    in srgb,
+    var(--platform-accent) 16%,
+    var(--platform-surface-solid)
+  ) !important;
   color: var(--platform-accent-strong) !important;
 }
 
@@ -552,7 +644,11 @@ html[data-platform-theme] .home-join-button:hover {
 }
 
 html[data-platform-theme] .lobby-spectator-section {
-  background-color: color-mix(in srgb, var(--platform-surface) 82%, transparent) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--platform-surface) 82%,
+    transparent
+  ) !important;
 }
 
 html[data-platform-theme] .lobby-spectator-switch.is-off {
@@ -570,7 +666,11 @@ html[data-platform-theme] .lobby-spectator-switch.is-off {
 }
 
 html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
-  background: linear-gradient(135deg, var(--platform-accent), var(--platform-accent-strong)) !important;
+  background: linear-gradient(
+    135deg,
+    var(--platform-accent),
+    var(--platform-accent-strong)
+  ) !important;
   color: #08111f !important;
 }
 
@@ -583,7 +683,7 @@ html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
 
 .lobby-game-cover {
   display: block;
-  object-fit: fill !important;
+  object-fit: cover !important;
   object-position: center;
 }
 
@@ -595,6 +695,10 @@ html[data-platform-theme] .lobby-ready-button:not(.is-ready) {
   display: block;
   object-fit: cover !important;
   object-position: center;
+}
+
+.lobby-expansion-cover-card {
+  width: 116px !important;
 }
 
 .lobby-expansion-progress {
@@ -682,22 +786,38 @@ html[data-platform-theme] .lobby-player-menu button {
 }
 
 html[data-platform-theme] .lobby-player-menu button:hover {
-  background-color: color-mix(in srgb, var(--platform-accent) 16%, var(--platform-surface-solid)) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--platform-accent) 16%,
+    var(--platform-surface-solid)
+  ) !important;
 }
 
 html[data-platform-theme='midnight'] .platform-shell {
   background-color: #050b1c;
-  background-image: linear-gradient(135deg, rgba(5, 11, 28, 0.96), rgba(15, 23, 42, 0.96));
+  background-image: linear-gradient(
+    135deg,
+    rgba(5, 11, 28, 0.96),
+    rgba(15, 23, 42, 0.96)
+  );
 }
 
 html[data-platform-theme='ember'] .platform-shell {
   background-color: #180b0a;
-  background-image: linear-gradient(135deg, rgba(24, 11, 10, 0.96), rgba(54, 24, 16, 0.96));
+  background-image: linear-gradient(
+    135deg,
+    rgba(24, 11, 10, 0.96),
+    rgba(54, 24, 16, 0.96)
+  );
 }
 
 html[data-platform-theme='nebula'] .platform-shell {
   background-color: #10091f;
-  background-image: linear-gradient(135deg, rgba(16, 9, 31, 0.96), rgba(30, 16, 53, 0.96));
+  background-image: linear-gradient(
+    135deg,
+    rgba(16, 9, 31, 0.96),
+    rgba(30, 16, 53, 0.96)
+  );
 }
 
 .page-scroll {
@@ -736,9 +856,15 @@ html[data-platform-theme='nebula'] .platform-shell {
 
 /* Animaciones sutiles */
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .animate-float {
