@@ -14,7 +14,8 @@ export const alluringNarwhal: CardEffect = {
     state.pendingAction = {
       type: 'alluring_narwhal',
       playerId: player.id,
-      sourceCardId: card.id,
+      sourceCardId: card.uid,
+      confirmed: false,
     };
   },
 };

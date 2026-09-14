@@ -9,6 +9,7 @@ export function createPublicRoom(room: Room): PublicRoom {
       gameId: room.settings.gameId,
       versionId: room.settings.versionId,
       expansionIds: [...room.settings.expansionIds],
+      unstableUnicornsTwoPlayerRules: room.settings.unstableUnicornsTwoPlayerRules ?? true,
     },
     players: room.players.map(({ id, connected, name, avatar, isDummy, isSpectator, isReady }) => ({
       id,

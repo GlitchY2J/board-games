@@ -6,9 +6,17 @@ type Player = GameState['players'][number];
 
 interface Props {
   player: Player;
+  selectableUpgradeIds?: Set<string>;
+  selectedUpgradeId?: string;
+  onUpgradeSelect?(cardId: string): void;
 }
 
-export default function Stable({ player }: Props) {
+export default function Stable({
+  player,
+  selectableUpgradeIds,
+  selectedUpgradeId,
+  onUpgradeSelect,
+}: Props) {
   const hasUnicorns = player.stable.length > 0;
   const hasUpgrades = player.upgrades.length > 0;
   const hasDowngrades = player.downgrades.length > 0;
@@ -26,10 +34,18 @@ export default function Stable({ player }: Props) {
               <div
                 key={card.uid}
                 data-card-uid={card.uid}
-                className="relative group transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+                className={`relative group transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
+                  selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''
+                }`}
+                onClick={selectableUpgradeIds?.has(card.uid) ? () => onUpgradeSelect?.(card.uid) : undefined}
               >
                 <div className="absolute inset-0 bg-amber-500/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <PlayingCard name={card.name} image={card.image} size="small" />
+                <PlayingCard
+                  name={card.name}
+                  image={card.image}
+                  size="small"
+                  selected={selectedUpgradeId === card.uid}
+                />
               </div>
             ))}
           </div>
@@ -46,11 +62,17 @@ export default function Stable({ player }: Props) {
           {hasUpgrades && (
             <div className="flex items-center gap-2 flex-nowrap shrink-0">
               {player.upgrades.map((card) => (
-                <div key={card.uid} data-card-uid={card.uid}>
+                <div
+                  key={card.uid}
+                  data-card-uid={card.uid}
+                  className={selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : undefined}
+                  onClick={selectableUpgradeIds?.has(card.uid) ? () => onUpgradeSelect?.(card.uid) : undefined}
+                >
                   <PlayingCard
                     name={card.name}
                     image={card.image}
                     size="small"
+                    selected={selectedUpgradeId === card.uid}
                   />
                 </div>
               ))}

@@ -5,7 +5,7 @@ import { TurnPhase } from '../game/turn/TurnPhase.ts';
 import { roomManager } from '../roomManagerInstance.ts';
 import { emitGameError, getSocketGameContext } from './socketContext.ts';
 import { emitGameState } from './gameStateEmitter.ts';
-import { addLog } from './gameLog.ts';
+import { addDeckSearchLog, addLog } from './gameLog.ts';
 import { CardMovement } from '../game/unstable-unicorns/engine/CardMovement.ts';
 import { CardZoneMovement } from '../game/unstable-unicorns/engine/CardZoneMovement.ts';
 import {
@@ -122,6 +122,7 @@ socket.on('select-deck-card', ({ roomCode, cardId }) => {
     }
     enqueueShuffleAnimation(room.gameState.roomCode, player.id);
     room.gameState.pendingAction = undefined;
+    addDeckSearchLog(room.gameState, player.id, undefined, 4);
     emitGameState(io, room, 'game-updated');
     return;
   }
@@ -142,6 +143,7 @@ socket.on('select-deck-card', ({ roomCode, cardId }) => {
       sourcePlayerId: player.id,
       card: downgrade,
     };
+    addDeckSearchLog(room.gameState, player.id);
     emitGameState(io, room, 'game-updated');
     return;
   }
@@ -271,13 +273,13 @@ socket.on('select-deck-card', ({ roomCode, cardId }) => {
     VictoryManager.checkWinner(room.gameState);
   }
 
-  addLog(
-    room.gameState,
-    pending.reason === 'debug_draw'
-      ? `${player.name} (debug) eligió ${upgrade.name} del mazo`
-      : `${player.name} buscó un upgrade en el mazo y lo añadió a su mano`,
-    { playerId: player.id },
-  );
+  if (pending.reason === 'debug_draw') {
+    addLog(room.gameState, `${player.name} (debug) eligió ${upgrade.name} del mazo`, {
+      playerId: player.id,
+    });
+  } else {
+    addDeckSearchLog(room.gameState, player.id);
+  }
 
   emitGameState(io, room, 'game-updated');
 });

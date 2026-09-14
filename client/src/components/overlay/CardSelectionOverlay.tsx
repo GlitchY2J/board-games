@@ -26,6 +26,8 @@ interface Props {
   searchable?: boolean;
   searchPlaceholder?: string;
   keyboardNavigation?: boolean;
+  showSelection?: boolean;
+  compact?: boolean;
 }
 
 export default function CardSelectionOverlay({
@@ -43,6 +45,8 @@ export default function CardSelectionOverlay({
   searchable = false,
   searchPlaceholder = 'Buscar carta...',
   keyboardNavigation = maxSelection === 1,
+  showSelection = true,
+  compact = false,
 }: Props) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string[]>(() =>
@@ -135,7 +139,7 @@ export default function CardSelectionOverlay({
 
   return (
     <div className={`overlay-backdrop ${hide ? 'animating-out' : ''}`}>
-      <div className={`card-selection-window ${hide ? 'animating-out' : ''}`}>
+      <div className={`card-selection-window ${compact ? 'compact' : ''} ${hide ? 'animating-out' : ''}`}>
         <h2>{title}</h2>
 
         {subtitle && <p>{subtitle}</p>}
@@ -158,10 +162,10 @@ export default function CardSelectionOverlay({
             return (
               <div
                 key={item.id}
-                className={`selection-card ${active ? 'selected' : ''}`}
+                className={`selection-card ${active && showSelection ? 'selected' : ''}`}
                 onClick={() => toggle(item.id)}
               >
-                {active && <div className="selection-badge">✓</div>}
+                {active && showSelection && <div className="selection-badge">✓</div>}
                 {item.image && keyboardNavigation && items.length <= 10 && (
                   <kbd className="selection-hotkey selection-card-hotkey">
                     {items.findIndex((candidate) => candidate.id === item.id) === 9
@@ -175,7 +179,7 @@ export default function CardSelectionOverlay({
                       name={item.title}
                       image={item.image}
                       size="large"
-                      selected={active}
+                       selected={active && showSelection}
                       preview={!item.image.includes('card_back')}
                     />
                     <div className="selection-card-title">{item.title}</div>

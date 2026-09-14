@@ -162,9 +162,10 @@ export type PendingAction =
         requestedCardType?: string;
     }
   | {
-      type: "alluring_narwhal";
-      playerId: string;
-      sourceCardId: string;
+       type: "alluring_narwhal";
+       playerId: string;
+       sourceCardId: string;
+       confirmed?: boolean;
     }
   | {
       // glitter_tornado: el jugador que jugó la carta elige una por cada establo

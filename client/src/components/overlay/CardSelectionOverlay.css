@@ -189,6 +189,14 @@
   transition: all 0.2s ease;
 }
 
+.card-selection-window.compact {
+  width: fit-content;
+  min-width: min(340px, 92vw);
+  max-width: 92vw;
+  padding: 24px;
+  gap: 14px;
+}
+
 .selection-hotkey {
   display: inline-flex;
   align-items: center;

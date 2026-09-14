@@ -8,6 +8,7 @@ import Chat from '../components/game/Chat';
 import TurnOrder from '../components/game/TurnOrder';
 import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
+import PlayingCard from '../components/card/PlayingCard';
 import GameOverlay from '../components/overlay/GameOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import NeighRevealOverlay from '../components/overlay/NeighRevealOverlay';
@@ -117,6 +118,7 @@ export default function BoardLayout({
     useState<PlatformTheme>(platformTheme);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
+  const [selectedAlluringUpgradeId, setSelectedAlluringUpgradeId] = useState<string | null>(null);
 
   useEffect(() => {
     const onOverlayConfirm = (event: KeyboardEvent) => {
@@ -329,6 +331,25 @@ export default function BoardLayout({
                 : ['left', 'top', 'top', 'top', 'right', 'bottom', 'bottom'];
   const seatPositions = positions;
   const localPlayerId = localPlayer?.id ?? '';
+  const alluringAction = gameState.pendingAction?.type === 'alluring_narwhal' &&
+    gameState.pendingAction.confirmed === true &&
+    gameState.pendingAction.playerId === localPlayerId;
+  const alluringUpgradeCards = alluringAction
+    ? gameState.players
+      .filter((player) => player.id !== localPlayerId)
+      .flatMap((player) => [
+        ...player.upgrades,
+        ...player.stable.filter((card) => card.cardType === 'upgrade'),
+      ])
+    : [];
+  const alluringUpgradeIds = new Set(alluringUpgradeCards.map((card) => card.uid));
+  const selectedAlluringUpgrade = alluringUpgradeCards.find(
+    (card) => card.uid === selectedAlluringUpgradeId,
+  );
+
+  useEffect(() => {
+    if (!alluringAction) setSelectedAlluringUpgradeId(null);
+  }, [alluringAction]);
 
   const renderOpponent = (opp: (typeof opponents)[number]) => (
     <div
@@ -354,6 +375,9 @@ export default function BoardLayout({
           player={opp}
           isLocalPlayer={false}
           isMyTurn={opp.id === activePlayer.id}
+          selectableUpgradeIds={alluringAction ? alluringUpgradeIds : undefined}
+          selectedUpgradeId={selectedAlluringUpgradeId ?? undefined}
+          onUpgradeSelect={setSelectedAlluringUpgradeId}
         />
       )}
     </div>
@@ -483,6 +507,12 @@ export default function BoardLayout({
                     gameId={gameId}
                   />
 
+                  {alluringAction && (
+                    <span className="draw-hint">
+                      Selecciona un Upgrade para robar
+                    </span>
+                  )}
+
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
                       Presiona <kbd className="space-key">Space</kbd> para robar
@@ -565,6 +595,8 @@ export default function BoardLayout({
                   isMyTurn={
                     layoutLocalPlayer.id === activePlayer?.id && !spectator
                   }
+                  selectableUpgradeIds={undefined}
+                  selectedUpgradeId={undefined}
                 />
               )}
             </div>
@@ -577,6 +609,51 @@ export default function BoardLayout({
           })}
         </div>
       </div>
+
+      {alluringAction && selectedAlluringUpgrade && (
+        <div
+          className="overlay-backdrop"
+          onClick={() => setSelectedAlluringUpgradeId(null)}
+        >
+          <div
+            className="card-selection-window compact"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2>✨ Alluring Narwhal</h2>
+            <p>Confirma el Upgrade que deseas robar</p>
+            <div className="selection-card-content">
+              <PlayingCard
+                name={selectedAlluringUpgrade.name}
+                image={selectedAlluringUpgrade.image}
+                size="large"
+              />
+              <div className="selection-card-title">{selectedAlluringUpgrade.name}</div>
+            </div>
+            <div className="selection-buttons">
+              <button
+                type="button"
+                className="cancel-button"
+                onClick={() => setSelectedAlluringUpgradeId(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="confirm-button"
+                onClick={() => {
+                  socket.emit('select-stable-card', {
+                    roomCode: gameState.roomCode,
+                    cardId: selectedAlluringUpgrade.uid,
+                  });
+                  setSelectedAlluringUpgradeId(null);
+                }}
+              >
+                Robar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {spectator && winner && (
         <div className="spectator-result" role="status">

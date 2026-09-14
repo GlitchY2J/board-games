@@ -144,6 +144,7 @@ export default function Lobby() {
       gameId: gameId || null,
       versionId,
       expansionIds: room?.settings?.expansionIds ?? [],
+      unstableUnicornsTwoPlayerRules: room?.settings?.unstableUnicornsTwoPlayerRules ?? true,
     };
   };
 
@@ -277,6 +278,8 @@ export default function Lobby() {
   const allPlayersReady = playersRequiringReady
     .every((player) => player.id === room.hostId || player.isDummy || player.isReady);
   const roomSettings = getRoomSettings();
+  const isTwoPlayerUnstableUnicorns =
+    roomSettings.gameId === 'unstable-unicorns' && availablePlayers.length === 2;
   const selectedGame = games.find((game) => game.id === roomSettings.gameId);
   const lobbyMaxPlayers =
     selectedGame?.id === 'exploding-kittens' &&
@@ -726,6 +729,39 @@ export default function Lobby() {
                       {selectedVersion?.name ?? 'Esperando versión'}
                     </p>
                   )}
+                </div>
+              )}
+
+              {canEditSettings && isTwoPlayerUnstableUnicorns && (
+                <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/5 px-4 py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                        Reglas para 2 jugadores
+                      </span>
+                      <span className="mt-1 block text-[10px] leading-relaxed text-slate-500">
+                        Quita cartas especiales del mazo y garantiza Neighs iniciales.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={roomSettings.unstableUnicornsTwoPlayerRules}
+                      onClick={() => handleUpdateSettings({
+                        ...roomSettings,
+                        unstableUnicornsTwoPlayerRules: !roomSettings.unstableUnicornsTwoPlayerRules,
+                      })}
+                      className={`lobby-spectator-switch relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                        roomSettings.unstableUnicornsTwoPlayerRules
+                          ? 'is-on'
+                          : 'is-off'
+                      }`}
+                    >
+                      <span
+                        className="lobby-spectator-switch-thumb absolute top-1 h-4 w-4 rounded-full transition-transform"
+                      />
+                    </button>
+                  </div>
                 </div>
               )}
 

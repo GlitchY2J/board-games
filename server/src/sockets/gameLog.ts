@@ -1,1 +1,1 @@
-export { addLog } from '../game/gameLog.ts';
+export { addDeckSearchLog, addLog } from '../game/gameLog.ts';

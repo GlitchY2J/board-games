@@ -56,6 +56,12 @@ export function registerStableSelectionHandlers(io: GameServer, socket: GameSock
     const selectedCard = selectedOwner?.stable.find(
       (card) => card.uid === selectedCardId,
     );
+    if (pending?.type === 'alluring_narwhal' && !pending.confirmed) {
+      if (selectedCardId !== pending.sourceCardId) return;
+      pending.confirmed = true;
+      emitGameState(io, room, 'game-updated');
+      return;
+    }
     const resolved = ActionResolver.handleSelectStableCard(
       room.gameState,
       sourcePlayer.id,

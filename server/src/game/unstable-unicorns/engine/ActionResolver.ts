@@ -12,7 +12,7 @@ import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencor
 import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import { maybeTriggerBarbedWireLeave } from '../../cards/effects/barbedWire.ts';
 import { drawForSadisticRitual } from '../../cards/effects/sadisticRitual.ts';
-import { addLog } from '../../gameLog.ts';
+import { addDeckSearchLog, addLog } from '../../gameLog.ts';
 import { enqueueShuffleAnimation } from '../../cardAnimations.ts';
 import { isImmuneToUnicornOrUpgradeDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 import {
@@ -988,6 +988,9 @@ export class ActionResolver {
         const [searchedCard] = state.deck.splice(phoenixIndex, 1);
         const source = state.players.find((p) => p.id === pending.sourcePlayerId);
         if (source) CardMovement.enterStable(state, source, searchedCard);
+        addDeckSearchLog(state, pending.sourcePlayerId, searchedCard);
+      } else {
+        addDeckSearchLog(state, pending.sourcePlayerId);
       }
 
       for (let i = state.deck.length - 1; i > 0; i--) {
@@ -1970,6 +1973,11 @@ export class ActionResolver {
 
       const sourcePlayer = state.players.find((p) => p.id === sourcePlayerId);
       if (!sourcePlayer) return false;
+      const sourceCard = [
+        ...sourcePlayer.stable,
+        ...sourcePlayer.upgrades,
+        ...sourcePlayer.downgrades,
+      ].find((card) => card.uid === pending.sourceCardId);
 
       CardMovement.enterStableCard(sourcePlayer, stolenCard);
       if (state.pendingAction === pending || !state.pendingAction) {
@@ -1978,8 +1986,15 @@ export class ActionResolver {
 
       addLog(
         state,
-        `${sourcePlayer.name} usó Alluring Narwhal y robó "${stolenCard.name}" de ${targetPlayer.name}`,
-        { playerId: sourcePlayer.id },
+        `${sourcePlayer.name} usó "${sourceCard?.name ?? 'Alluring Narwhal'}" y robó "${stolenCard.name}" de ${targetPlayer.name}`,
+        {
+          playerId: sourcePlayer.id,
+          cardImage: sourceCard?.image,
+          cardImages: [sourceCard?.image, stolenCard.image].filter(
+            (image): image is string => !!image,
+          ),
+          event: 'steal-card',
+        },
       );
       return true;
     }

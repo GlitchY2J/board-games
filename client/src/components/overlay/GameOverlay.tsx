@@ -2153,43 +2153,37 @@ export default function GameOverlay({
       // ALLURING NARWHAL — Robar Upgrade del establo
       // ───────────────────────────────────
       case 'alluring_narwhal': {
-        if (action.playerId !== localPlayerId) return null;
+        if (action.playerId !== localPlayerId || action.confirmed) return null;
 
-        const opponentsWithUpgrades = gameState.players.filter(
-          (p) =>
-            p.id !== localPlayerId &&
-            (p.upgrades.length > 0 ||
-              p.stable.some((c) => c.cardType === 'upgrade')),
-        );
+        const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+        const sourceCard = sourcePlayer && [
+          ...sourcePlayer.stable,
+          ...sourcePlayer.upgrades,
+          ...sourcePlayer.downgrades,
+        ].find((card) => card.uid === action.sourceCardId);
 
-        const upgradeCards = opponentsWithUpgrades.flatMap((p) =>
-          [
-            ...p.upgrades,
-            ...p.stable.filter((c) => c.cardType === 'upgrade'),
-          ].map((card, idx) => ({
-            id: `${card.id}_${idx}`,
-            value: card.uid,
-            title: card.name,
-            subtitle: `Establo de ${p.name}`,
-            image: card.image,
-          })),
-        );
-
-        if (upgradeCards.length === 0) return null;
+        if (!sourceCard) return null;
 
         return (
           <CardSelectionOverlay
             hide={hide}
             title="✨ Alluring Narwhal"
-            subtitle="Roba una carta de Upgrade del establo de otro jugador"
-            items={upgradeCards}
+            subtitle="¿Deseas usar Alluring Narwhal para robar un Upgrade?"
+            items={[{
+              id: sourceCard.uid,
+              value: sourceCard.uid,
+              title: sourceCard.name,
+              image: sourceCard.image,
+            }]}
             maxSelection={1}
-            confirmText="Robar Upgrade"
-            onConfirm={([cardId]) => {
+            confirmText="Usar efecto"
+            showSelection={false}
+            compact
+            onConfirm={() => {
               dismiss();
               socket.emit('select-stable-card', {
                 roomCode: gameState.roomCode,
-                cardId,
+                cardId: sourceCard.uid,
               });
             }}
             onCancel={() => {

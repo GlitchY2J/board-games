@@ -3,10 +3,29 @@ import type { GameState } from './models/GameState.ts';
 
 let logSeq = 0;
 
+export function addDeckSearchLog(
+  game: GameState,
+  playerId: string,
+  card?: { name: string; image: string },
+  count = 1,
+): void {
+  const player = game.players.find((candidate) => candidate.id === playerId);
+  const text = card
+    ? `${player?.name ?? 'Jugador'} buscó "${card.name}" en el mazo`
+    : `${player?.name ?? 'Jugador'} buscó ${count > 1 ? 'cartas' : 'una carta'} en el mazo`;
+
+  addLog(game, text, {
+    playerId,
+    event: 'search-deck',
+    cardImage: card?.image,
+  });
+}
+
 function getBasicEvent(text: string): GameLogEvent | undefined {
   if (text.startsWith('Comienza el turno de')) return 'turn-start';
   if (text.includes('terminó su turno')) return 'turn-end';
   if (text.includes('jugó') || text.includes('apiló')) return 'play-card';
+  if (text.includes('buscó') && text.includes('mazo')) return 'search-deck';
   if (text.includes('descartó')) return 'discard-card';
   if (
     text.includes('del mazo') ||

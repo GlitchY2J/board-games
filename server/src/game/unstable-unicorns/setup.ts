@@ -10,9 +10,10 @@ import { TurnManager } from '../turn/TurnManager.ts';
 export function createGameState(room: Room): GameState {
   let deck = CardRepository.load(room.settings.expansionIds);
   const isTwoPlayerGame = room.players.length === 2;
+  const useTwoPlayerRules = room.settings.unstableUnicornsTwoPlayerRules ?? true;
   const guaranteedNeighs: Card[] = [];
 
-  if (isTwoPlayerGame) {
+  if (isTwoPlayerGame && useTwoPlayerRules) {
     const removedCardIds = new Set([
       'queen_bee_unicorn',
       'seductive_unicorn',
@@ -86,7 +87,7 @@ export function createGameState(room: Room): GameState {
     giveBabyUnicorn(nursery, player);
   }
 
-  if (isTwoPlayerGame) {
+  if (isTwoPlayerGame && useTwoPlayerRules) {
     players.forEach((player, index) => {
       const neigh = guaranteedNeighs[index];
       if (neigh) player.hand.push(neigh);

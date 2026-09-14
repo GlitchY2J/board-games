@@ -73,6 +73,7 @@ export class RoomManager {
         gameId: game,
         versionId: null,
         expansionIds: [],
+        unstableUnicornsTwoPlayerRules: true,
       },
     };
     this.rooms.set(room.code, room);
@@ -154,6 +155,7 @@ export class RoomManager {
       gameId: settings.gameId,
       versionId: settings.versionId,
       expansionIds: [...settings.expansionIds],
+      unstableUnicornsTwoPlayerRules: settings.unstableUnicornsTwoPlayerRules ?? true,
     };
     return room;
   }

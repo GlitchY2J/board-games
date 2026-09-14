@@ -116,21 +116,32 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
     }
 
     const renderText = (text: string) => {
-      if (!entry.cardImage) return text;
-      const match = text.match(/^(.*?)("[^"]+")(.*)$/);
-      if (!match) return text;
+      const textCardImages = entry.cardImages ?? (entry.cardImage ? [entry.cardImage] : []);
+      if (textCardImages.length === 0) return text;
+
+      const parts = text.split(/("[^"]+")/g);
+      let imageIndex = 0;
       return (
         <>
-          <span>{match[1]}</span>
-          <img
-            className="history-card-thumbnail"
-            src={entry.cardImage}
-            alt={match[2].slice(1, -1)}
-            onMouseEnter={(event) => showPreview(entry.cardImage!, event.clientX, event.clientY)}
-            onMouseMove={(event) => showPreview(entry.cardImage!, event.clientX, event.clientY)}
-            onMouseLeave={hidePreview}
-          />
-          <span>{match[3]}</span>
+          {parts.map((part, index) => {
+            if (!part.startsWith('"') || !part.endsWith('"')) {
+              return <span key={index}>{part}</span>;
+            }
+
+            const image = textCardImages[imageIndex++] ?? textCardImages.at(-1);
+            if (!image) return <span key={index}>{part}</span>;
+            return (
+              <img
+                key={index}
+                className="history-card-thumbnail"
+                src={image}
+                alt={part.slice(1, -1)}
+                onMouseEnter={(event) => showPreview(image, event.clientX, event.clientY)}
+                onMouseMove={(event) => showPreview(image, event.clientX, event.clientY)}
+                onMouseLeave={hidePreview}
+              />
+            );
+          })}
         </>
       );
     };

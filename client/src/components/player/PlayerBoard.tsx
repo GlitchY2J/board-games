@@ -7,11 +7,17 @@ interface Props {
   player: Player;
   isLocalPlayer: boolean;
   isMyTurn: boolean;
+  selectableUpgradeIds?: Set<string>;
+  selectedUpgradeId?: string;
+  onUpgradeSelect?(cardId: string): void;
 }
 
 export default function PlayerBoard({
   player,
   isMyTurn,
+  selectableUpgradeIds,
+  selectedUpgradeId,
+  onUpgradeSelect,
 }: Props) {
   return (
     <div
@@ -27,7 +33,12 @@ export default function PlayerBoard({
       }}
     >
       <div className="w-full flex justify-center">
-        <Stable player={player} />
+        <Stable
+          player={player}
+          selectableUpgradeIds={selectableUpgradeIds}
+          selectedUpgradeId={selectedUpgradeId}
+          onUpgradeSelect={onUpgradeSelect}
+        />
       </div>
     </div>
   );

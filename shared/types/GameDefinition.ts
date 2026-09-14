@@ -35,4 +35,6 @@ export interface RoomSettings {
   gameId: GameId | null;
   versionId: VersionId | null;
   expansionIds: ExpansionId[];
+  /** Unstable Unicorns: aplica el mazo especial para partidas de dos jugadores. */
+  unstableUnicornsTwoPlayerRules?: boolean;
 }

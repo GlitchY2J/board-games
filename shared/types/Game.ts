@@ -43,7 +43,9 @@ export type GameLogEvent =
   | 'turn-end'
   | 'play-card'
   | 'draw-card'
-  | 'discard-card';
+  | 'discard-card'
+  | 'search-deck'
+  | 'steal-card';
 
 export interface GameLogEntry {
   id: string;

@@ -1776,3 +1776,24 @@
     flex-basis: auto;
   }
 }
+.alluring-upgrade-backdrop {
+  background: color-mix(in srgb, var(--platform-accent) 16%, rgb(2 6 23 / 0.82));
+}
+
+.alluring-upgrade-modal {
+  border: 1px solid color-mix(in srgb, var(--platform-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--platform-surface-solid) 94%, var(--platform-accent));
+}
+
+.alluring-upgrade-kicker {
+  color: var(--platform-accent-strong);
+}
+
+.alluring-upgrade-confirm {
+  background: var(--platform-accent);
+  color: var(--platform-surface-solid);
+}
+
+.alluring-upgrade-confirm:hover {
+  background: var(--platform-accent-strong);
+}

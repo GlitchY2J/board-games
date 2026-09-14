@@ -4,14 +4,17 @@ import { CardMovement } from '../../unstable-unicorns/engine/CardMovement.ts';
 import { isImmuneToDestruction } from '../../cards/effects/theTiniestUnicorn.ts';
 import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
 import { enqueueShuffleAnimation } from '../../cardAnimations.ts';
+import { addDeckSearchLog } from '../../gameLog.ts';
 
 function finish(state: GameState, playerId: string): void {
   const index = state.deck.findIndex((card) => card.id === 'llamacorn');
+  let searchedCard;
   if (index !== -1) {
-    const [llamacorn] = state.deck.splice(index, 1);
+    [searchedCard] = state.deck.splice(index, 1);
     const player = state.players.find((candidate) => candidate.id === playerId);
-    if (player) CardMovement.enterStable(state, player, llamacorn);
+    if (player) CardMovement.enterStable(state, player, searchedCard);
   }
+  addDeckSearchLog(state, playerId, searchedCard);
   for (let i = state.deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];

@@ -2,8 +2,32 @@
   width: 32px;
 }
 
+.stable-compact .playing-card img {
+  border-radius: 2px;
+}
+
 .stable-compact {
   gap: 4px;
+}
+
+.alluring-upgrade-selectable {
+  cursor: pointer;
+  border-radius: 0.75rem;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--platform-accent) 72%, transparent));
+  animation: alluring-upgrade-pulse 1.6s ease-in-out infinite;
+}
+
+.alluring-upgrade-selectable:hover {
+  transform: scale(1.12);
+}
+
+@keyframes alluring-upgrade-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--platform-accent) 58%, transparent));
+  }
+  50% {
+    filter: drop-shadow(0 0 11px color-mix(in srgb, var(--platform-accent) 88%, transparent));
+  }
 }
 
 .stable-compact > div {
