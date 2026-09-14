@@ -2179,6 +2179,8 @@ export default function GameOverlay({
             confirmText="Usar efecto"
             showSelection={false}
             compact
+            keyboardNavigation={false}
+            buttonHotkeys
             onConfirm={() => {
               dismiss();
               socket.emit('select-stable-card', {

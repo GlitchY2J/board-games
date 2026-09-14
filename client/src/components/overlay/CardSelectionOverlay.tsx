@@ -28,6 +28,7 @@ interface Props {
   keyboardNavigation?: boolean;
   showSelection?: boolean;
   compact?: boolean;
+  buttonHotkeys?: boolean;
 }
 
 export default function CardSelectionOverlay({
@@ -47,6 +48,7 @@ export default function CardSelectionOverlay({
   keyboardNavigation = maxSelection === 1,
   showSelection = true,
   compact = false,
+  buttonHotkeys = false,
 }: Props) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string[]>(() =>
@@ -126,6 +128,24 @@ export default function CardSelectionOverlay({
       return item?.value ?? selectedId;
     });
   }, [selected, items]);
+
+  useEffect(() => {
+    if (!buttonHotkeys) return;
+
+    const onButtonHotkey = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      if (event.key === '1' && onCancel) {
+        event.preventDefault();
+        onCancel();
+      } else if (event.key === '2' && canConfirm) {
+        event.preventDefault();
+        onConfirm(selectedValues);
+      }
+    };
+
+    window.addEventListener('keydown', onButtonHotkey);
+    return () => window.removeEventListener('keydown', onButtonHotkey);
+  }, [buttonHotkeys, canConfirm, onCancel, onConfirm, selectedValues]);
 
   const visibleItems = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
@@ -228,6 +248,7 @@ export default function CardSelectionOverlay({
         <div className="selection-buttons">
           {onCancel && (
             <button className="cancel-button" onClick={onCancel}>
+              {buttonHotkeys && <span className="button-hotkey" aria-hidden="true">1 </span>}
               Cancelar
             </button>
           )}
@@ -236,12 +257,13 @@ export default function CardSelectionOverlay({
               {secondaryText ?? 'Otra opción'}
             </button>
           )}
-          <button
+            <button
             className="confirm-button"
             disabled={!canConfirm}
             onClick={() => onConfirm(selectedValues)}
-          >
-            {confirmText}
+            >
+              {buttonHotkeys && <span className="button-hotkey" aria-hidden="true">2 </span>}
+              {confirmText}
           </button>
         </div>
       </div>

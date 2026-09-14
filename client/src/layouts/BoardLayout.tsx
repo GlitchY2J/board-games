@@ -351,6 +351,28 @@ export default function BoardLayout({
     if (!alluringAction) setSelectedAlluringUpgradeId(null);
   }, [alluringAction]);
 
+  useEffect(() => {
+    if (!alluringAction || !selectedAlluringUpgrade) return;
+
+    const onAlluringConfirmHotkey = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+      if (event.key === '1') {
+        event.preventDefault();
+        setSelectedAlluringUpgradeId(null);
+      } else if (event.key === '2') {
+        event.preventDefault();
+        socket.emit('select-stable-card', {
+          roomCode: gameState.roomCode,
+          cardId: selectedAlluringUpgrade.uid,
+        });
+        setSelectedAlluringUpgradeId(null);
+      }
+    };
+
+    window.addEventListener('keydown', onAlluringConfirmHotkey);
+    return () => window.removeEventListener('keydown', onAlluringConfirmHotkey);
+  }, [alluringAction, gameState.roomCode, selectedAlluringUpgrade]);
+
   const renderOpponent = (opp: (typeof opponents)[number]) => (
     <div
       key={opp.id}
@@ -621,7 +643,7 @@ export default function BoardLayout({
           >
             <h2>✨ Alluring Narwhal</h2>
             <p>Confirma el Upgrade que deseas robar</p>
-            <div className="selection-card-content">
+            <div className="selection-card-content alluring-selected-card-content">
               <PlayingCard
                 name={selectedAlluringUpgrade.name}
                 image={selectedAlluringUpgrade.image}
@@ -635,6 +657,7 @@ export default function BoardLayout({
                 className="cancel-button"
                 onClick={() => setSelectedAlluringUpgradeId(null)}
               >
+                <span className="button-hotkey" aria-hidden="true">1 </span>
                 Cancelar
               </button>
               <button
@@ -648,6 +671,7 @@ export default function BoardLayout({
                   setSelectedAlluringUpgradeId(null);
                 }}
               >
+                <span className="button-hotkey" aria-hidden="true">2 </span>
                 Robar
               </button>
             </div>

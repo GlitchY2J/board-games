@@ -189,6 +189,11 @@
   transition: all 0.2s ease;
 }
 
+.alluring-selected-card-content {
+  width: fit-content;
+  align-self: center;
+}
+
 .card-selection-window.compact {
   width: fit-content;
   min-width: min(340px, 92vw);
@@ -250,6 +255,22 @@
   justify-content: center;
   gap: 16px;
   margin-top: 8px;
+}
+
+.selection-buttons button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-hotkey {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  margin-right: 6px;
+  opacity: 0.75;
+  vertical-align: middle;
 }
 
 .confirm-button {
@@ -528,6 +549,15 @@
   padding: 18px;
   border: 0;
   background: transparent;
+}
+
+.selection-buttons button .choice-hotkey {
+  position: static;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  font-size: 11px;
+  vertical-align: middle;
 }
 
 .choice-hotkey {
