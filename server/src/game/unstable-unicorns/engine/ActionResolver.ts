@@ -6,7 +6,7 @@ import { CardZoneMovement } from './CardZoneMovement.ts';
 import { getCardPassive } from './effects/CardPassive.ts';
 import { EffectStack } from './EffectStack.ts';
 import type { Card } from '../../models/Card.ts';
-import { enqueueDiscardAnimation } from '../../cardAnimations.ts';
+import { enqueueDiscardAnimation, enqueueStealAnimation } from '../../cardAnimations.ts';
 import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { isImmuneToMagicDestruction } from '../../cards/effects/magicalKittencorn.ts';
 import { isPandamoniumProtected } from '../../cards/effects/pandamonium.ts';
@@ -1326,6 +1326,7 @@ export class ActionResolver {
       maybeTriggerBarbedWireLeave(state, targetPlayer);
       const prevPending = state.pendingAction;
       CardMovement.enterStable(state, sourcePlayer, stolen);
+      enqueueStealAnimation(state.roomCode, targetPlayer.id, sourcePlayer.id, stolen);
 
       // Resolución LIFO centralizada: si el on-enter del unicornio robado abrió
       // su propio efecto hijo interactivo, se mantiene activo; si no, termina el
@@ -1980,6 +1981,7 @@ export class ActionResolver {
       ].find((card) => card.uid === pending.sourceCardId);
 
       CardMovement.enterStableCard(sourcePlayer, stolenCard);
+      enqueueStealAnimation(state.roomCode, targetPlayer.id, sourcePlayer.id, stolenCard);
       if (state.pendingAction === pending || !state.pendingAction) {
         state.pendingAction = undefined;
       }
@@ -2239,6 +2241,7 @@ export class ActionResolver {
       } else {
         CardMovement.enterStableCard(sourcePlayer, stolen);
       }
+      enqueueStealAnimation(state.roomCode, targetPlayer.id, sourcePlayer.id, stolen);
       state.pendingAction = undefined;
       return true;
     }
@@ -2658,6 +2661,8 @@ export class ActionResolver {
           return false;
         }
 
+        enqueueStealAnimation(state.roomCode, targetPlayer.id, sourcePlayer.id, stolen);
+
         // Resolución LIFO centralizada: si la carta robada abrió un efecto hijo
         // interactivo al entrar, se mantiene activo; si no, termina el paso.
         EffectStack.finish(state, pending);
@@ -2701,6 +2706,8 @@ export class ActionResolver {
           CardZoneMovement.addToStable(targetPlayer, stolen);
           return false;
         }
+
+        enqueueStealAnimation(state.roomCode, targetPlayer.id, sourcePlayer.id, stolen);
 
         // Rainbow Lasso ya terminó en el momento en que roba el unicornio.
         // Si el unicornio abre un efecto interactivo al entrar, ese efecto

@@ -24,18 +24,16 @@ export default function CardStealEffect({ animation, localPlayerId, onDone }: Pr
       const isFromMe = animation.sourcePlayerId === localPlayerId;
       const isToMe = animation.targetPlayerId === localPlayerId;
 
-      // Find initial element: exact card slot in hand if stolen from local player
-      const cardEl = isFromMe
-        ? document.querySelector(`[data-card-uid="${animation.card.uid}"]`)
-        : null;
+       // Use the exact card while it is still rendered before the state update.
+       const cardEl = document.querySelector(`[data-card-uid="${animation.card.uid}"]`);
 
       const sourceEl = cardEl ?? (isFromMe
         ? document.querySelector('[data-hand]')
-        : document.querySelector(`[data-player-id="${animation.sourcePlayerId}"]`));
+         : document.querySelector(`[data-stable-id="${animation.sourcePlayerId}"]`));
 
       const destinationEl = isToMe
         ? document.querySelector('[data-hand]')
-        : document.querySelector(`[data-player-id="${animation.targetPlayerId}"]`);
+         : document.querySelector(`[data-stable-id="${animation.targetPlayerId}"]`);
 
       const sourceRect = sourceEl?.getBoundingClientRect();
       const destinationRect = destinationEl?.getBoundingClientRect();
