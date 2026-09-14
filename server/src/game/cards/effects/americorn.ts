@@ -14,12 +14,16 @@ export const americorn: CardEffect = {
         reason: 'americorn',
         sourcePlayerId: player.id,
         targetPlayerId: rivals[0].id,
+        confirmed: false,
+        sourceCardImage: card.image,
       };
     } else {
       state.pendingAction = {
         type: 'select_player',
         reason: 'americorn',
         sourcePlayerId: player.id,
+        confirmed: false,
+        sourceCardImage: card.image,
       };
     }
   },

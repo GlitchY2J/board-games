@@ -43,10 +43,14 @@ export function addLog(
   text: string,
   opts: {
     playerId?: string;
+    playerName?: string;
     cardImage?: string;
     cardImages?: string[];
     reactionCardImage?: string;
     reactionCardImages?: string[];
+    reactionPlayerNames?: string[];
+    reactionCardBlocked?: boolean[];
+    originalCardBlocked?: boolean;
     relatedCardImage?: string;
     cardStatus?: 'sacrificed' | 'destroyed';
     relatedCardStatus?: 'sacrificed' | 'destroyed';
@@ -62,11 +66,14 @@ export function addLog(
     text,
     event: opts.event ?? getBasicEvent(text),
     playerId: opts.playerId,
-    playerName: player?.name,
+    playerName: opts.playerName ?? player?.name,
     cardImage: opts.cardImage,
     cardImages: opts.cardImages,
     reactionCardImage: opts.reactionCardImage,
     reactionCardImages: opts.reactionCardImages,
+    reactionPlayerNames: opts.reactionPlayerNames,
+    reactionCardBlocked: opts.reactionCardBlocked,
+    originalCardBlocked: opts.originalCardBlocked,
     relatedCardImage: opts.relatedCardImage,
     cardStatus: opts.cardStatus,
     relatedCardStatus: opts.relatedCardStatus,

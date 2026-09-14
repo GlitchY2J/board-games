@@ -329,6 +329,7 @@ export interface ClientToServerEvents {
 
   // Select Player
   'select-player': (payload: SelectPlayerPayload) => void;
+  'confirm-americorn': (payload: { roomCode: string }) => void;
   'select-players': (payload: SelectPlayersPayload) => void;
 
   // Select Stable Card

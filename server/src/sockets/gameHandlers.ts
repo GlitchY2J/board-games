@@ -190,6 +190,28 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
 
   const original = chain[0];
   const activePlayer = game.players.find((p) => p.id === original.playerId);
+
+  for (let end = 1; end < chain.length; end += 1) {
+    const visibleChain = chain.slice(0, end + 1);
+    const visibleBlocked = getChainBlockedLinks(visibleChain, explodingKittens);
+    const response = chain[end];
+
+    addLog(
+      game,
+      `${response.playerName} jugó "${response.card.name}"`,
+      {
+        playerId: response.playerId,
+        playerName: response.playerName,
+        cardImage: original.card.image,
+        reactionCardImages: visibleChain.slice(1).map((link) => link.card.image),
+        reactionPlayerNames: visibleChain.slice(1).map((link) => link.playerName),
+        reactionCardBlocked: visibleBlocked.slice(1),
+        originalCardBlocked: visibleBlocked[0],
+        event: 'neigh-chain',
+      },
+    );
+  }
+
   const thankYouIndex = chain.findIndex(
     (link, index) =>
       link.card.effect === 'neigh_thank_you' && !linkCanceled[index],
@@ -240,17 +262,6 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
       RulesEngine.consumeActionPlay(game);
     }
 
-    addLog(
-      game,
-      `${original.playerName} recibió un Neigh sobre su carta "${original.card.name}"`,
-      {
-        playerId: original.playerId,
-        cardImage: original.card.image,
-        reactionCardImages: chain.slice(1)
-          .filter((link) => isReactionEffect(link.card.effect, explodingKittens))
-          .map((link) => link.card.image),
-      },
-    );
   } else if (activePlayer) {
     if (explodingKittens) {
       const successfulAttacks = chain.filter(
@@ -505,6 +516,13 @@ function resolvePendingPlayWindow(io: GameServer, room: Room): void {
   }
 
   emitGameState(io, room, 'game-updated');
+}
+
+function getChainBlockedLinks(
+  chain: PendingPlayLink[],
+  _explodingKittens: boolean,
+): boolean[] {
+  return chain.map((_, index) => (chain.length - index - 1) % 2 === 1);
 }
 
 export function registerGameHandlers(io: GameServer, socket: GameSocket): void {
@@ -1707,16 +1725,6 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
     pending.startedAt = startedAt;
     pending.acceptedIds = [];
     pending.neighGraceUntil = startedAt + NEIGH_GRACE_MS;
-
-    addLog(
-      game,
-      explodingKittens
-        ? `${player.name} jugó un Nope`
-        : neighCard.effect === 'super_neigh'
-          ? `${player.name} jugó un Super Neigh`
-          : `${player.name} jugó un Neigh`,
-      { playerId: player.id, cardImage: neighCard.image },
-    );
 
     // Super Neigh no puede ser Neigh'd: la cadena termina aquí.
     // Yay: el Neigh jugado por un jugador con Yay tampoco puede ser Neigh'd.

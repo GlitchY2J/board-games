@@ -360,6 +360,18 @@ export function registerActionHandlers(
     });
   }
 
+  socket.on('confirm-americorn', ({ roomCode }) => {
+    const room = roomManager.getRoom(roomCode);
+    const player = room?.gameState?.players.find((candidate) => candidate.socketId === socket.id);
+    const pending = room?.gameState?.pendingAction;
+    if (!room?.gameState || !player) return;
+    if (pending?.type !== 'select_player' && pending?.type !== 'select_hand_card') return;
+    if (pending.reason !== 'americorn' || pending.sourcePlayerId !== player.id) return;
+
+    pending.confirmed = true;
+    emitGameState(io, room, 'game-updated');
+  });
+
   function registerResolveImplodingKitten(io: GameServer, socket: GameSocket): void {
     socket.on('resolve-imploding-kitten', ({ roomCode }) => {
       const context = getSocketGameContext(socket, roomCode);

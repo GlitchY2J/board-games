@@ -92,6 +92,10 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
       }
     }
 
+    const americornImage = pending.reason === 'americorn'
+      ? pending.sourceCardImage
+      : undefined;
+
     if (!ActionResolver.handleSelectHandCard(game, player.id, resolvedCardId)) {
       emitGameError(socket, 'INVALID_SELECTION', 'No se pudo seleccionar esa carta.', 'select-hand-card');
       return;
@@ -111,7 +115,22 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
     }
     if (pending.reason === 'americorn' || pending.reason === 'poltergeist_swipe') {
       const targetPlayer = game.players.find((candidate) => candidate.id === pending.targetPlayerId);
-      addLog(game, targetPlayer ? `${player.name} eligió a ${targetPlayer.name} y robó una carta de su mano al azar` : `${player.name} robó una carta de una mano al azar`, { playerId: player.id });
+      addLog(
+        game,
+        targetPlayer && stolenCard
+          ? `${player.name} usó "Americorn" y robó una carta de la mano al azar de ${targetPlayer.name}`
+          : targetPlayer
+            ? `${player.name} eligió a ${targetPlayer.name} y robó una carta de su mano al azar`
+            : `${player.name} robó una carta de una mano al azar`,
+        {
+          playerId: player.id,
+          cardImage: americornImage,
+          cardImages: [americornImage].filter(
+            (image): image is string => !!image,
+          ),
+          event: pending.reason === 'americorn' ? 'steal-card' : undefined,
+        },
+      );
     } else if (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
       addLog(game, `${player.name} robó una carta con ${pending.reason === 'three_of_a_kind' ? 'Three' : 'Two'} of a Kind`, { playerId: player.id });
     } else {

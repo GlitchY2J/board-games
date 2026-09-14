@@ -19,7 +19,11 @@ interface Props {
   onPlayCards?(cardIds: string[]): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
+  selectionOnly?: boolean;
+  onCardSelect?(cardId: string): void;
   compact?: boolean;
+  small?: boolean;
+  reverseHotkeys?: boolean;
   gameId?: string;
   sortHandMode?: 'alphabetical' | 'type' | null;
 }
@@ -55,7 +59,11 @@ export default function CardFan({
   onPlayCards,
   onSelectionChange,
   onInvalidAction,
+  selectionOnly = false,
+  onCardSelect,
   compact = false,
+  small = false,
+  reverseHotkeys = false,
   gameId,
   sortHandMode = null,
 }: Props) {
@@ -330,7 +338,7 @@ export default function CardFan({
         <div
           ref={fanRef}
           onMouseLeave={() => setKeyboardCardIndex(null)}
-          className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}${cards.length > 10 ? ' card-fan-many' : ''}`}
+           className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}${small ? ' card-fan-small' : ''}${cards.length > 10 ? ' card-fan-many' : ''}`}
           style={{
             '--hand-card-width': `${cardWidth}px`,
             '--hand-card-overlap': `-${overlap}px`,
@@ -340,7 +348,8 @@ export default function CardFan({
           const total = displayCards.length;
           const middle = (total - 1) / 2;
           const rotation = (index - middle) * 5;
-          const hotkey = index < 9 ? index + 1 : index === 9 ? 0 : null;
+           const hotkeyIndex = reverseHotkeys ? total - index - 1 : index;
+           const hotkey = hotkeyIndex < 9 ? hotkeyIndex + 1 : hotkeyIndex === 9 ? 0 : null;
           const isNew = newCardUids.has(card.uid);
 
           return (
@@ -408,7 +417,12 @@ export default function CardFan({
                     return;
                   }
 
-                  selectCard(card.uid);
+                   if (selectionOnly) {
+                     onCardSelect?.(card.uid);
+                     return;
+                   }
+
+                   selectCard(card.uid);
                 }}
               />
             </div>

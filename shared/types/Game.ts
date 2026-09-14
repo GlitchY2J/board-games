@@ -45,7 +45,8 @@ export type GameLogEvent =
   | 'draw-card'
   | 'discard-card'
   | 'search-deck'
-  | 'steal-card';
+  | 'steal-card'
+  | 'neigh-chain';
 
 export interface GameLogEntry {
   id: string;
@@ -57,6 +58,9 @@ export interface GameLogEntry {
   cardImages?: string[];
   reactionCardImage?: string;
   reactionCardImages?: string[];
+  reactionPlayerNames?: string[];
+  reactionCardBlocked?: boolean[];
+  originalCardBlocked?: boolean;
   relatedCardImage?: string;
   cardStatus?: 'sacrificed' | 'destroyed';
   relatedCardStatus?: 'sacrificed' | 'destroyed';

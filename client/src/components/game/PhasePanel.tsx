@@ -62,6 +62,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
 
   function renderEntry(entry: GameLogEntry) {
     const reactionImages = entry.reactionCardImages ?? (entry.reactionCardImage ? [entry.reactionCardImage] : []);
+    const reactionBlocked = entry.reactionCardBlocked ?? [];
     const cardImages = entry.cardImages ?? (entry.cardImage ? [entry.cardImage] : []);
     const previewImage = (src: string, alt: string) => (
       <img
@@ -74,17 +75,30 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
       />
     );
     const renderBlockedCards = () => (
-      <span className="history-blocked-cards">
-        {reactionImages.map((image, index) => (
-          <span key={`${image}-${index}`} className="history-blocked-card">
-            {previewImage(image, 'Neigh')}
+      <span className="history-blocked-cards history-neigh-chain">
+        {entry.playerName && entry.text.startsWith(entry.playerName) && (
+          <span>{entry.text.slice(entry.playerName.length).split('"')[0]}</span>
+        )}
+        {[...reactionImages].reverse().map((image, index) => {
+          const sourceIndex = reactionImages.length - index - 1;
+          const blocked = reactionBlocked[sourceIndex] ?? false;
+
+          return (
+            <span key={`${image}-${index}`} className="history-neigh-link">
+            <span className="history-blocked-card history-neigh-card">
+              {previewImage(image, `Neigh ${reactionImages.length - index}`)}
+              {blocked && <span className="history-blocked-symbol" aria-hidden="true">⛔</span>}
+            </span>
+            <span className="history-blocked-arrow" aria-hidden="true">→</span>
           </span>
-        ))}
-        <span className="history-blocked-arrow">→</span>
+          );
+        })}
         {entry.cardImage && (
           <span className="history-blocked-card">
-            {previewImage(entry.cardImage, 'Carta bloqueada')}
-            <span className="history-blocked-symbol" aria-hidden="true">⛔</span>
+            {previewImage(entry.cardImage, 'Carta original')}
+            {(entry.originalCardBlocked ?? true) && (
+              <span className="history-blocked-symbol" aria-hidden="true">⛔</span>
+            )}
           </span>
         )}
       </span>
@@ -104,14 +118,6 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
           <span className="history-blocked-arrow">→</span>
           {renderStatusCard(entry.relatedCardImage, entry.relatedCardStatus, 'Carta destruida')}
         </span>
-      );
-    }
-
-    if (reactionImages.length > 0 && entry.cardImage) {
-      return (
-        <>
-          {renderBlockedCards()}
-        </>
       );
     }
 
@@ -154,23 +160,39 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
       </span>
     );
 
-    if (entry.playerName && entry.text.startsWith(entry.playerName)) {
+    const renderPlayerBadge = () => {
+      if (!entry.playerName) return null;
       const color = entry.playerId
         ? playerColors.get(entry.playerId) ?? PLAYER_COLORS[0]
         : PLAYER_COLORS[0];
 
       return (
+        <span
+          className="inline-block px-1.5 py-0.5 mr-1 rounded-md font-black text-[9px] uppercase tracking-wide align-middle"
+          style={{
+            color: color.text,
+            backgroundColor: color.bg,
+            border: `1px solid ${color.border}`,
+          }}
+        >
+          {entry.playerName}
+        </span>
+      );
+    };
+
+    if (reactionImages.length > 0 && entry.cardImage && entry.playerName) {
+      return (
         <>
-          <span
-            className="inline-block px-1.5 py-0.5 mr-1 rounded-md font-black text-[9px] uppercase tracking-wide align-middle"
-            style={{
-              color: color.text,
-              backgroundColor: color.bg,
-              border: `1px solid ${color.border}`,
-            }}
-          >
-            {entry.playerName}
-          </span>
+          {renderPlayerBadge()}
+          {renderBlockedCards()}
+        </>
+      );
+    }
+
+    if (entry.playerName && entry.text.startsWith(entry.playerName)) {
+      return (
+        <>
+          {renderPlayerBadge()}
            <span>{renderText(entry.text.slice(entry.playerName.length))}</span>
            {entry.event === 'discard-card' && renderDiscardedCards()}
         </>

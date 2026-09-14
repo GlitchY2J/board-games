@@ -89,7 +89,9 @@ export type PendingAction =
        cardIds?: string[];
        card?: Card;
        pendingPlay?: PendingPlay;
-      /** Jugador dueño original de la carta que se mueve (Re-Target). */
+       confirmed?: boolean;
+       sourceCardImage?: string;
+       /** Jugador dueño original de la carta que se mueve (Re-Target). */
       fromPlayerId?: string;
     }
   | {
@@ -160,6 +162,8 @@ export type PendingAction =
         sourcePlayerId: string;
         targetPlayerId: string;
         requestedCardType?: string;
+        confirmed?: boolean;
+        sourceCardImage?: string;
     }
   | {
        type: "alluring_narwhal";

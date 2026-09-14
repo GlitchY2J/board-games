@@ -334,6 +334,10 @@ export default function BoardLayout({
   const alluringAction = gameState.pendingAction?.type === 'alluring_narwhal' &&
     gameState.pendingAction.confirmed === true &&
     gameState.pendingAction.playerId === localPlayerId;
+  const americornAction = gameState.pendingAction?.type === 'select_hand_card' &&
+    gameState.pendingAction.reason === 'americorn' &&
+    gameState.pendingAction.confirmed === true &&
+    gameState.pendingAction.sourcePlayerId === localPlayerId;
   const alluringUpgradeCards = alluringAction
     ? gameState.players
       .filter((player) => player.id !== localPlayerId)
@@ -535,6 +539,12 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {americornAction && (
+                    <span className="draw-hint">
+                      Selecciona una carta del abanico para robarla de la mano
+                    </span>
+                  )}
+
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
                       Presiona <kbd className="space-key">Space</kbd> para robar
@@ -556,7 +566,8 @@ export default function BoardLayout({
                     isMyTurn &&
                     gameState.phase === 'ACTION' &&
                     !gameState.actionUsed &&
-                    !gameState.pendingPlay && (
+                    !gameState.pendingPlay &&
+                    !americornAction && (
                       <span className="draw-hint">
                         Juega una carta o presiona{' '}
                         <kbd className="space-key">Space</kbd> para robar

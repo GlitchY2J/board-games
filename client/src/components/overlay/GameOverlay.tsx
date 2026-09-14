@@ -1,9 +1,10 @@
 import { socket } from '../../services/socket';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { GameState } from '../../types/GameState';
 import CardSelectionOverlay from './CardSelectionOverlay';
 import PlayingCard from '../card/PlayingCard';
+import CardFan from '../card/CardFan';
 import AlterTheFutureOverlay from './AlterTheFutureOverlay';
 
 function isPandamoniumProtected(
@@ -28,6 +29,34 @@ export default function GameOverlay({
   hide = false,
 }: Props) {
   const action = gameState.pendingAction;
+  const [americornPosition, setAmericornPosition] = useState<{ left: number; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (action?.type !== 'select_hand_card' || action.reason !== 'americorn' || !action.targetPlayerId) {
+      setAmericornPosition(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const target = document.querySelector<HTMLElement>(
+        `[data-player-id="${action.targetPlayerId}"]`,
+      );
+      if (!target) return;
+
+      const rect = target.getBoundingClientRect();
+      setAmericornPosition({
+        left: rect.left + rect.width / 2,
+        top: Math.max(8, rect.top - 170),
+      });
+    };
+
+    const frame = requestAnimationFrame(updatePosition);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [action]);
 
   const actionKey = (() => {
     if (!action) return null;
@@ -46,6 +75,7 @@ export default function GameOverlay({
     if ('resolvedPlayerIds' in action)
       parts.push(`resolved:${action.resolvedPlayerIds?.join(',') ?? ''}`);
     if ('effectCardId' in action) parts.push(`uid:${action.effectCardId}`);
+    if ('confirmed' in action) parts.push(`confirmed:${action.confirmed ? 'yes' : 'no'}`);
     return parts.join(':');
   })();
 
@@ -359,7 +389,7 @@ export default function GameOverlay({
         if (action.sourcePlayerId !== localPlayerId) return null;
 
          const isBlatantThievery = action.reason === 'blatant_thievery';
-         const isAmericorn = action.reason === 'americorn';
+          const isAmericorn = action.reason === 'americorn';
          const isPoltergeistSwipe = action.reason === 'poltergeist_swipe';
          const isTwoOfAKind = action.reason === 'two_of_a_kind';
           const isThreeOfAKind = action.reason === 'three_of_a_kind';
@@ -379,7 +409,41 @@ export default function GameOverlay({
          const isACuteAttack = action.reason === 'a_cute_attack';
          const isUnicornNap = action.reason === 'unicorn_nap';
         const isReTargetSource = action.reason === 're_target_source';
-        const isReTargetDestination = action.reason === 're_target_destination';
+          const isReTargetDestination = action.reason === 're_target_destination';
+
+         if (isAmericorn && action.confirmed !== true) {
+           const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+           const sourceCard = sourcePlayer?.stable.find((card) => card.id === 'americorn');
+           if (!sourceCard) return null;
+
+           return (
+             <CardSelectionOverlay
+               hide={hide}
+               title="🇺🇸 Americorn"
+               subtitle="¿Deseas usar el efecto de Americorn?"
+               items={[{
+                 id: sourceCard.uid,
+                 value: sourceCard.uid,
+                 title: sourceCard.name,
+                 image: sourceCard.image,
+               }]}
+               maxSelection={1}
+               confirmText="Usar efecto"
+               showSelection={false}
+               compact
+               keyboardNavigation={false}
+               buttonHotkeys
+               onConfirm={() => {
+                 dismiss();
+                 socket.emit('confirm-americorn', { roomCode: gameState.roomCode });
+               }}
+               onCancel={() => {
+                 dismiss();
+                 socket.emit('cancel-action', { roomCode: gameState.roomCode });
+               }}
+             />
+           );
+         }
         const needsHand =
            isBlatantThievery ||
             isAmericorn ||
@@ -631,10 +695,79 @@ export default function GameOverlay({
         const isThreeOfAKind = action.reason === 'three_of_a_kind';
         const isWingedHorrorcorn = action.reason === 'winged_horrorcorn';
         const isPossession = action.reason === 'possession';
-        const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
-        const revealAmericorn = isAmericorn && hasNannyCam;
+         const hasNannyCam = target.downgrades.some((c) => c.id === 'nanny_cam');
+          const revealAmericorn = isAmericorn && hasNannyCam;
 
-        return (
+         if (isAmericorn && action.confirmed !== true) {
+           const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+           const sourceCard = sourcePlayer?.stable.find((card) => card.id === 'americorn');
+           if (!sourceCard) return null;
+
+           return (
+             <CardSelectionOverlay
+               hide={hide}
+               title="🇺🇸 Americorn"
+               subtitle="¿Deseas usar el efecto de Americorn?"
+               items={[{
+                 id: sourceCard.uid,
+                 value: sourceCard.uid,
+                 title: sourceCard.name,
+                 image: sourceCard.image,
+               }]}
+               maxSelection={1}
+               confirmText="Usar efecto"
+               showSelection={false}
+               compact
+               keyboardNavigation={false}
+               buttonHotkeys
+               onConfirm={() => {
+                 dismiss();
+                 socket.emit('confirm-americorn', { roomCode: gameState.roomCode });
+               }}
+               onCancel={() => {
+                 dismiss();
+                 socket.emit('cancel-action', { roomCode: gameState.roomCode });
+               }}
+             />
+           );
+         }
+
+          if (isAmericorn) {
+           const fanCards = target.hand.map((card) => ({
+             ...card,
+             image: revealAmericorn
+               ? card.image
+               : '/cards/unstable-unicorns/base/card_back.png',
+           }));
+
+           return (
+             <div
+               className={`americorn-card-fan-overlay ${americornPosition ? 'positioned' : ''} ${hide ? 'animating-out' : ''}`}
+               style={americornPosition ?? undefined}
+             >
+                 <CardFan
+                   cards={fanCards}
+                   isMyTurn
+                   gamePhase="ACTION"
+                   actionUsed={false}
+                   pendingPlay={false}
+                   small
+                   reverseHotkeys
+                   selectionOnly
+                   onPlay={() => undefined}
+                   onCardSelect={(cardId) => {
+                     dismiss();
+                     socket.emit('select-hand-card', {
+                       roomCode: gameState.roomCode,
+                       cardId,
+                     });
+                   }}
+                 />
+             </div>
+           );
+         }
+
+         return (
           <CardSelectionOverlay
             hide={hide}
              title={isPoltergeistSwipe ? '👻 Poltergeist Swipe' : isPossession ? '🖐️ Possession' : isWingedHorrorcorn ? '🪽 Winged Horrorcorn' : isFavor ? '🃏 Favor' : isThreeOfAKind ? '🐱 Three of a Kind' : isTwoOfAKind ? '🐱 Two of a Kind' : isAmericorn ? '🇺🇸 Americorn' : '🃏 Blatant Thievery'}
@@ -3170,13 +3303,15 @@ export default function GameOverlay({
 
   return (
     <>
-      <button
-        className="overlay-toggle"
-        title={minimized ? 'Mostrar overlay' : 'Ocultar overlay'}
-        onClick={() => setMinimized((m) => !m)}
-      >
-        {minimized ? '◉' : '−'}
-      </button>
+      {!(action?.type === 'select_hand_card' && 'reason' in action && action.reason === 'americorn') && (
+        <button
+          className="overlay-toggle"
+          title={minimized ? 'Mostrar overlay' : 'Ocultar overlay'}
+          onClick={() => setMinimized((m) => !m)}
+        >
+          {minimized ? '◉' : '−'}
+        </button>
+      )}
       {!minimized && overlay}
     </>
   );

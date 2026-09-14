@@ -63,8 +63,56 @@
   width: var(--hand-card-width, 112px);
 }
 
+.card-fan-small {
+  height: 185px;
+}
+
+.card-fan-small .fan-card {
+  margin-left: -40px;
+}
+
+.card-fan-small .fan-card:first-child {
+  margin-left: 0;
+}
+
+.card-fan-small .playing-card.large {
+  width: 96px !important;
+}
+
 .card-fan .playing-card.large {
   width: var(--hand-card-width, 148px);
+}
+
+.americorn-card-fan-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.americorn-card-fan-overlay .card-fan-wrap {
+  width: min(960px, 96vw);
+  pointer-events: auto;
+}
+
+.americorn-card-fan-overlay.positioned {
+  inset: auto;
+  transform: translateX(-50%);
+}
+
+.americorn-card-fan-overlay .card-fan {
+  transform: rotate(180deg);
+}
+
+.americorn-card-fan-overlay .card-hotkey {
+  transform: translateX(-50%) rotate(180deg);
+}
+
+.americorn-card-fan-overlay .card-fan-wrap {
+  margin-top: 18px;
 }
 
 @media (max-width: 1024px) {
