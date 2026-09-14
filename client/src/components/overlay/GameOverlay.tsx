@@ -296,6 +296,7 @@ export default function GameOverlay({
       case 'discard': {
         const player = gameState.players.find((p) => p.id === localPlayerId);
         if (!player || action.playerId !== localPlayerId) return null;
+        if (action.reason === 'annoying_flying_unicorn') return null;
 
         const titleMap: Record<string, string> = {
           hand_limit: 'Límite de mano superado',
@@ -2806,6 +2807,50 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        if (action.reason === 'annoying_flying_unicorn') {
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'annoying_flying_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦄 Annoying Flying Unicorn"
+              subtitle="¿Deseas usar el efecto para forzar a otro jugador a descartar una carta?"
+              items={[{
+                id: sourceCard?.uid ?? 'annoying-flying-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Annoying Flying Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         const isNeighThankYou = action.reason === 'neigh_thank_you';
         const needsNeighThankYouChoice =
           isNeighThankYou && action.remainingPlayerIds?.includes(localPlayerId);

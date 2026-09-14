@@ -17,6 +17,8 @@ interface Props {
   onPlayCards?(cardIds: string[]): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
+  discardSelection?: boolean;
+  onDiscardSelect?(cardId: string): void;
   compact?: boolean;
   gameId?: string;
   sortHandMode?: 'alphabetical' | 'type' | null;
@@ -34,6 +36,8 @@ export default function PlayerHand({
   onPlayCards,
   onSelectionChange,
   onInvalidAction,
+  discardSelection,
+  onDiscardSelect,
   compact,
   gameId,
   sortHandMode,
@@ -54,7 +58,9 @@ export default function PlayerHand({
           onInvalidAction={onInvalidAction}
           compact={compact}
           gameId={gameId}
-          sortHandMode={sortHandMode}
+           sortHandMode={sortHandMode}
+           discardSelection={discardSelection}
+           onDiscardSelect={onDiscardSelect}
         />
       ) : (
         <HiddenHand cardCount={player.hand.length} />

@@ -338,6 +338,9 @@ export default function BoardLayout({
     gameState.pendingAction.reason === 'americorn' &&
     gameState.pendingAction.confirmed === true &&
     gameState.pendingAction.sourcePlayerId === localPlayerId;
+  const annoyingDiscardAction = gameState.pendingAction?.type === 'discard' &&
+    gameState.pendingAction.reason === 'annoying_flying_unicorn' &&
+    gameState.pendingAction.playerId === localPlayerId;
   const alluringUpgradeCards = alluringAction
     ? gameState.players
       .filter((player) => player.id !== localPlayerId)
@@ -545,6 +548,12 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {annoyingDiscardAction && (
+                    <span className="draw-hint">
+                      Descarta una carta de tu mano
+                    </span>
+                  )}
+
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
                       Presiona <kbd className="space-key">Space</kbd> para robar
@@ -567,7 +576,8 @@ export default function BoardLayout({
                     gameState.phase === 'ACTION' &&
                     !gameState.actionUsed &&
                     !gameState.pendingPlay &&
-                    !americornAction && (
+                    !americornAction &&
+                    !annoyingDiscardAction && (
                       <span className="draw-hint">
                         Juega una carta o presiona{' '}
                         <kbd className="space-key">Space</kbd> para robar
@@ -1032,6 +1042,14 @@ export default function BoardLayout({
             }
             gameId={gameId}
             sortHandMode={sortHandMode}
+            discardSelection={annoyingDiscardAction}
+            onDiscardSelect={(cardId) => {
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds: [cardId],
+              });
+            }}
             onInvalidAction={showPlayerNotification}
             onSelectionChange={(selected) => {
               cardSelectedRef.current = selected;

@@ -15,6 +15,8 @@ interface Props {
   onPlayCards?(cardIds: string[]): void;
   onSelectionChange?(selected: boolean): void;
   onInvalidAction?(message: string): void;
+  discardSelection?: boolean;
+  onDiscardSelect?(cardId: string): void;
   compact?: boolean;
   gameId?: string;
   sortHandMode?: 'alphabetical' | 'type' | null;
@@ -31,6 +33,8 @@ export default function LocalHand({
   onPlayCards,
   onSelectionChange,
   onInvalidAction,
+  discardSelection = false,
+  onDiscardSelect,
   compact,
   gameId,
   sortHandMode,
@@ -50,6 +54,9 @@ export default function LocalHand({
       compact={compact}
       gameId={gameId}
       sortHandMode={sortHandMode}
+      selectionOnly={discardSelection}
+      selectionConfirm={discardSelection}
+      onCardSelect={onDiscardSelect}
     />
   );
 }

@@ -287,6 +287,7 @@ export type PendingAction =
       /** Uid del efecto de inicio de turno que se está resolviendo. Permite distinguir
        *  varias copias de la misma carta (cada una se activa por separado). */
        effectCardId?: string;
+       sourceCardImage?: string;
        destructionType?: "destroy" | "sacrifice";
     }
   | {

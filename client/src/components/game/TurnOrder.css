@@ -54,6 +54,10 @@
 }
 
 .turn-order-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 24px;
   height: 24px;
   border-radius: 9999px;
@@ -64,8 +68,10 @@
 
 .turn-order-avatar img {
   display: block;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
   object-fit: cover;
   object-position: center;
 }
@@ -91,14 +97,17 @@
 @media (max-width: 640px) {
   .turn-order-minimal {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     gap: 7px;
     flex-wrap: nowrap;
   }
 
   .turn-order-row {
+    box-sizing: border-box;
+    width: 100%;
+    justify-content: center;
     gap: 0;
-    padding: 2px;
+    padding: 0;
     background: transparent;
     border-color: transparent;
     box-shadow: none;
@@ -110,8 +119,17 @@
   }
 
   .turn-order-avatar {
+    box-sizing: border-box;
     width: 30px;
     height: 30px;
+    margin: 0;
+    transform: none;
+  }
+
+  .turn-order-avatar img {
+    left: 0;
+    right: 0;
+    width: 100% !important;
   }
 
   .turn-order-name-wrap,

@@ -21,6 +21,7 @@ interface Props {
   onInvalidAction?(message: string): void;
   selectionOnly?: boolean;
   onCardSelect?(cardId: string): void;
+  selectionConfirm?: boolean;
   compact?: boolean;
   small?: boolean;
   reverseHotkeys?: boolean;
@@ -61,6 +62,7 @@ export default function CardFan({
   onInvalidAction,
   selectionOnly = false,
   onCardSelect,
+  selectionConfirm = false,
   compact = false,
   small = false,
   reverseHotkeys = false,
@@ -338,7 +340,7 @@ export default function CardFan({
         <div
           ref={fanRef}
           onMouseLeave={() => setKeyboardCardIndex(null)}
-           className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}${small ? ' card-fan-small' : ''}${cards.length > 10 ? ' card-fan-many' : ''}`}
+           className={`card-fan${compact && cards.length > 12 ? ' card-fan-compact' : ''}${small ? ' card-fan-small' : ''}${selectionConfirm ? ' card-fan-selection' : ''}${cards.length > 10 ? ' card-fan-many' : ''}`}
           style={{
             '--hand-card-width': `${cardWidth}px`,
             '--hand-card-overlap': `-${overlap}px`,
@@ -372,10 +374,15 @@ export default function CardFan({
                 size="large"
                 disabled={false}
                 selected={selectedCardId === card.uid}
-                onClick={() => {
-                  const isNow = card.effect === 'now';
+                 onClick={() => {
+                   const isNow = card.effect === 'now';
 
-                  if (!isMyTurn && !isNow) {
+                   if (selectionOnly && selectionConfirm) {
+                     selectCard(card.uid);
+                     return;
+                   }
+
+                   if (!isMyTurn && !isNow) {
                     onInvalidAction?.('No es tu turno');
                     return;
                   }
@@ -417,7 +424,7 @@ export default function CardFan({
                     return;
                   }
 
-                   if (selectionOnly) {
+                   if (selectionOnly && !selectionConfirm) {
                      onCardSelect?.(card.uid);
                      return;
                    }
@@ -460,7 +467,19 @@ export default function CardFan({
                    Cancelar
                 </button>
 
-                {isBlocked(selectedCardId) ? (
+                 {selectionConfirm ? (
+                   <button
+                     data-card-option="2"
+                     data-card-confirm
+                     className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-white font-black text-xs uppercase tracking-wider border border-rose-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-rose-500/10"
+                     onClick={() => {
+                       onCardSelect?.(selectedCardId);
+                       setSelectedCardId(null);
+                     }}
+                   >
+                     <kbd>2</kbd> Descartar
+                   </button>
+                 ) : isBlocked(selectedCardId) ? (
                   <p className="text-xs text-slate-400 font-medium max-w-[200px] text-center">
                     {blockedReason(selectedCard)}
                   </p>
