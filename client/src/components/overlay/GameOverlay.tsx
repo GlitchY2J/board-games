@@ -2807,6 +2807,48 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        if (action.reason === 'black_knight_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = sourcePlayer?.stable.find((card) => card.id === 'black_knight_unicorn');
+          const image = sourceCard?.image ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🛡️ Black Knight Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'black-knight-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Black Knight Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'annoying_flying_unicorn') {
           if (action.playerId !== localPlayerId) return null;
 
