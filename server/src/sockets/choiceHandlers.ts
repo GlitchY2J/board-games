@@ -738,6 +738,9 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
 
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'classy_narwhal') {
+      const classyNarwhalCard = player.stable.find(
+        (card) => card.id === 'classy_narwhal',
+      );
       if (choice === 'yes') {
         const candidates = room.gameState.deck.filter(
           (card) => card.cardType === 'upgrade',
@@ -767,9 +770,17 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
       addLog(
         room.gameState,
         choice === 'yes'
-          ? `${player.name} usó el efecto de Classy Narwhal`
+          ? `${player.name} buscó un Upgrade en el mazo por el efecto de "Classy Narwhal"`
           : `${player.name} omitió el efecto de Classy Narwhal`,
-        { playerId: player.id },
+        {
+          playerId: player.id,
+          cardImages: choice === 'yes'
+            ? [classyNarwhalCard?.image].filter(
+                (image): image is string => !!image,
+              )
+            : undefined,
+          event: choice === 'yes' ? 'search-deck' : undefined,
+        },
       );
 
       emitGameState(io, room, 'game-updated');

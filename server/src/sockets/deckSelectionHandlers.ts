@@ -277,7 +277,7 @@ socket.on('select-deck-card', ({ roomCode, cardId }) => {
     addLog(room.gameState, `${player.name} (debug) eligió ${upgrade.name} del mazo`, {
       playerId: player.id,
     });
-  } else {
+  } else if (pending.reason !== 'classy_narwhal') {
     addDeckSearchLog(room.gameState, player.id);
   }
 
