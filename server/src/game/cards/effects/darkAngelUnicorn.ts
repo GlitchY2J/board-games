@@ -11,6 +11,8 @@ export const darkAngelUnicorn: CardEffect = {
       type: 'select_choice',
       reason: 'dark_angel_unicorn',
       playerId: player.id,
+      effectCardId: card.uid,
+      sourceCardImage: card.image,
       title: '😈 Dark Angel Unicorn',
       description:
         '¿Deseas sacrificar un unicornio de TU establo para traer un unicornio del descarte a tu establo?',

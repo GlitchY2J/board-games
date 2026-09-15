@@ -671,12 +671,6 @@ export function registerActionHandlers(
       if (cardIdx === -1) return;
 
       const selectedCard = room.gameState.discard[cardIdx];
-      if (
-        pending.reason === 'dark_angel_unicorn' &&
-        selectedCard.id === 'dark_angel_unicorn'
-      )
-        return;
-
       if (pending.cardType && selectedCard.cardType !== pending.cardType) {
         emitGameError(
           socket,
@@ -763,6 +757,24 @@ export function registerActionHandlers(
           TurnManager.processBeginningQueue(room.gameState);
         }
 
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
+      if (pending.reason === 'dark_angel_unicorn') {
+        addLog(
+          room.gameState,
+          `${player.name} sacrificó "${pending.sacrificedCardName ?? 'unicornio'}" y trajo del descarte a "${broughtFromDiscard.name}" por el efecto de "Dark Angel Unicorn"`,
+          {
+            playerId: player.id,
+            cardImages: [
+              pending.sacrificedCardImage,
+              broughtFromDiscard.image,
+              pending.effectCardImage,
+            ].filter((image): image is string => !!image),
+            event: 'play-card',
+          },
+        );
         emitGameState(io, room, 'game-updated');
         return;
       }

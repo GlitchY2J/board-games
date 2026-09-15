@@ -694,9 +694,11 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         room.gameState.pendingAction = {
           type: 'select_stable_card',
           reason: 'dark_angel_unicorn',
-          sourcePlayerId: player.id,
-          targetPlayerId: player.id,
-        };
+           sourcePlayerId: player.id,
+           targetPlayerId: player.id,
+           effectCardId: pending.effectCardId,
+           sourceCardImage: pending.sourceCardImage,
+         };
       } else {
         room.gameState.pendingAction = undefined;
         if (room.gameState.phase === TurnPhase.BEGINNING) {
@@ -704,13 +706,13 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         }
       }
 
-      addLog(
-        room.gameState,
-        choice === 'yes'
-          ? `${player.name} usó el efecto de Dark Angel Unicorn`
-          : `${player.name} omitió el efecto de Dark Angel Unicorn`,
-        { playerId: player.id },
-      );
+      if (choice === 'no') {
+        addLog(
+          room.gameState,
+          `${player.name} omitió el efecto de Dark Angel Unicorn`,
+          { playerId: player.id },
+        );
+      }
 
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'zombie_unicorn') {

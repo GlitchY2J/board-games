@@ -908,7 +908,7 @@ export default function GameOverlay({
       }
 
       case 'select_stable_card': {
-        if (action.reason === 'chainsaw_unicorn') return null;
+        if (action.reason === 'chainsaw_unicorn' || action.reason === 'dark_angel_unicorn') return null;
 
         if (action.sourcePlayerId !== localPlayerId) return null;
 
@@ -2045,43 +2045,6 @@ export default function GameOverlay({
           );
         }
 
-        if (action.reason === 'dark_angel_unicorn') {
-          const localPlayer = gameState.players.find(
-            (p) => p.id === localPlayerId,
-          );
-          if (!localPlayer) return null;
-
-          return (
-            <CardSelectionOverlay
-              hide={hide}
-              title="😈 Dark Angel Unicorn"
-              subtitle="Elige un unicornio de TU establo para sacrificar"
-              items={localPlayer.stable
-                .filter(
-                   (c) =>
-                     c.cardType === 'unicorn' &&
-                     canBeDestroyedOrSacrificed(c) &&
-                     !isPandamoniumProtected(localPlayer, c),
-                )
-                .map((card, idx) => ({
-                  id: `${card.id}_${idx}`,
-                  value: card.uid,
-                  title: card.name,
-                  image: card.image,
-                }))}
-              maxSelection={1}
-              confirmText="Sacrificar"
-              onConfirm={([cardId]) => {
-                dismiss();
-                socket.emit('select-stable-card', {
-                  roomCode: gameState.roomCode,
-                  cardId,
-                });
-              }}
-            />
-          );
-        }
-
         if (action.reason === 'tiny_stable') {
           const localPlayer = gameState.players.find(
             (p) => p.id === localPlayerId,
@@ -2829,6 +2792,52 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'dark_angel_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'dark_angel_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="😈 Dark Angel Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'dark-angel-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Dark Angel Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'black_knight_unicorn') {
           if (action.playerId !== localPlayerId) return null;
 
@@ -3023,8 +3032,6 @@ export default function GameOverlay({
             (!isFrenchiecorn || action.discardedCardIds?.includes(card.uid)) &&
             (!isReanimation ||
               (card.cardType === 'unicorn' && card.unicornClass === 'basic')) &&
-            (action.reason !== 'dark_angel_unicorn' ||
-              card.id !== 'dark_angel_unicorn') &&
             (!isSwiftFlyingUnicorn ||
               card.effect === 'neigh' ||
               card.effect === 'super_neigh' ||

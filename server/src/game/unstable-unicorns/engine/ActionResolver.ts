@@ -1919,7 +1919,7 @@ export class ActionResolver {
       // p. ej. cuando Dark Angel se sacrifica a sí mismo sobre un descarte sin
       // otros unicornios.
       const hasValidTarget = state.discard.some(
-        (c) => c.cardType === 'unicorn' && c.id !== 'dark_angel_unicorn',
+        (c) => c.cardType === 'unicorn',
       );
 
       if (!hasValidTarget) {
@@ -1931,10 +1931,17 @@ export class ActionResolver {
       // onDestroyed interactivo (p. ej. Stabby The Unicorn), el siguiente paso
       // se suspende en la pila y se reanuda después del efecto hijo.
       EffectStack.advance(state, pending, {
-        type: 'select_discard_card',
+      type: 'select_discard_card',
         reason: 'dark_angel_unicorn',
         playerId: sourcePlayerId,
         cardType: 'unicorn',
+        sacrificedCardImage: sacrificedCard.image,
+        sacrificedCardName: sacrificedCard.name,
+        effectCardImage: pending.sourceCardImage ?? (pending.effectCardId
+          ? state.players
+            .flatMap((candidate) => candidate.stable)
+            .find((candidate) => candidate.uid === pending.effectCardId)?.image
+          : undefined),
       });
       return true;
     }

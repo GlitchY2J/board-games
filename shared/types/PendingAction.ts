@@ -147,9 +147,11 @@ export type PendingAction =
         sourcePlayerId: string;
         targetPlayerId?: string;
         remainingPlayerIds?: string[];
-        remainingToDestroy?: number;
-        sprayPlayerIds?: string[];
-     }
+         remainingToDestroy?: number;
+         sprayPlayerIds?: string[];
+         effectCardId?: string;
+         sourceCardImage?: string;
+      }
   | {
       type: "plague_of_death";
       sourcePlayerId: string;
@@ -296,7 +298,10 @@ export type PendingAction =
       playerId: string;
        cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
        discardedCardIds?: string[];
-    }
+       sacrificedCardImage?: string;
+       sacrificedCardName?: string;
+       effectCardImage?: string;
+     }
   | {
       type: "see_the_future";
       playerId: string;

@@ -121,6 +121,7 @@ export default function BoardLayout({
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   const [selectedAlluringUpgradeId, setSelectedAlluringUpgradeId] = useState<string | null>(null);
   const [selectedChainsawCardId, setSelectedChainsawCardId] = useState<string | null>(null);
+  const [selectedDarkAngelCardId, setSelectedDarkAngelCardId] = useState<string | null>(null);
 
   useEffect(() => {
     const onOverlayConfirm = (event: KeyboardEvent) => {
@@ -380,6 +381,17 @@ export default function BoardLayout({
     });
   }
   const chainsawTargetIds = new Set(chainsawTargets.keys());
+  const darkAngelAction = gameState.pendingAction?.type === 'select_stable_card' &&
+    gameState.pendingAction.reason === 'dark_angel_unicorn' &&
+    gameState.pendingAction.sourcePlayerId === localPlayerId;
+  const darkAngelTargets = darkAngelAction
+    ? new Set((localPlayer?.stable ?? [])
+      .filter((card) =>
+        card.cardType === 'unicorn' &&
+        !(localPlayer?.downgrades.some((downgrade) => downgrade.id === 'pandamonium') ?? false),
+      )
+      .map((card) => card.uid))
+    : new Set<string>();
   const selectedChainsawCard = selectedChainsawCardId
     ? gameState.players.flatMap((player) => [
         ...player.upgrades,
@@ -393,7 +405,8 @@ export default function BoardLayout({
   useEffect(() => {
     if (!alluringAction) setSelectedAlluringUpgradeId(null);
     if (!chainsawAction) setSelectedChainsawCardId(null);
-  }, [alluringAction, chainsawAction]);
+    if (!darkAngelAction) setSelectedDarkAngelCardId(null);
+  }, [alluringAction, chainsawAction, darkAngelAction]);
 
   useEffect(() => {
     if (!alluringAction || !selectedAlluringUpgrade) return;
@@ -441,12 +454,14 @@ export default function BoardLayout({
           player={opp}
           isLocalPlayer={false}
           isMyTurn={opp.id === activePlayer.id}
-           selectableUpgradeIds={alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : undefined}
+            selectableUpgradeIds={alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : darkAngelAction && opp.id === localPlayerId ? darkAngelTargets : undefined}
            selectedUpgradeId={selectedAlluringUpgradeId ?? undefined}
            onUpgradeSelect={(cardId) => {
-             if (chainsawAction) {
-               setSelectedChainsawCardId(cardId);
-             } else {
+              if (chainsawAction) {
+                setSelectedChainsawCardId(cardId);
+              } else if (darkAngelAction) {
+                setSelectedDarkAngelCardId(cardId);
+              } else {
                setSelectedAlluringUpgradeId(cardId);
              }
            }}
@@ -597,6 +612,12 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {darkAngelAction && (
+                    <span className="draw-hint">
+                      Selecciona un unicornio de tu establo para sacrificar
+                    </span>
+                  )}
+
                   {annoyingDiscardAction && (
                     <span className="draw-hint">
                       Descarta una carta de tu mano
@@ -626,7 +647,8 @@ export default function BoardLayout({
                     !gameState.actionUsed &&
                     !gameState.pendingPlay &&
                     !americornAction &&
-                    !chainsawAction &&
+                     !chainsawAction &&
+                     !darkAngelAction &&
                     !annoyingDiscardAction && (
                       <span className="draw-hint">
                         Juega una carta o presiona{' '}
@@ -688,10 +710,11 @@ export default function BoardLayout({
                   isMyTurn={
                     layoutLocalPlayer.id === activePlayer?.id && !spectator
                   }
-                    selectableUpgradeIds={chainsawAction ? chainsawTargetIds : undefined}
+                    selectableUpgradeIds={chainsawAction ? chainsawTargetIds : darkAngelAction ? darkAngelTargets : undefined}
                     selectedUpgradeId={undefined}
                     onUpgradeSelect={(cardId) => {
-                      if (chainsawTargets.has(cardId)) setSelectedChainsawCardId(cardId);
+                      if (chainsawAction && chainsawTargets.has(cardId)) setSelectedChainsawCardId(cardId);
+                      if (darkAngelAction && darkAngelTargets.has(cardId)) setSelectedDarkAngelCardId(cardId);
                     }}
                 />
               )}
@@ -782,6 +805,30 @@ export default function BoardLayout({
           onCancel={() => setSelectedChainsawCardId(null)}
         />
       )}
+
+      {darkAngelAction && selectedDarkAngelCardId && (() => {
+        const card = localPlayer?.stable.find((item) => item.uid === selectedDarkAngelCardId);
+        if (!card) return null;
+        return (
+          <CardSelectionOverlay
+            hide={false}
+            title="😈 Dark Angel Unicorn"
+            subtitle={`¿Deseas sacrificar "${card.name}" para resolver el efecto?`}
+            items={[{ id: card.uid, value: card.uid, title: card.name, image: card.image }]}
+            maxSelection={1}
+            confirmText="Sacrificar"
+            showSelection={false}
+            compact
+            keyboardNavigation={false}
+            buttonHotkeys
+            onConfirm={() => {
+              setSelectedDarkAngelCardId(null);
+              socket.emit('select-stable-card', { roomCode: gameState.roomCode, cardId: card.uid });
+            }}
+            onCancel={() => setSelectedDarkAngelCardId(null)}
+          />
+        );
+      })()}
 
       {spectator && winner && (
         <div className="spectator-result" role="status">
