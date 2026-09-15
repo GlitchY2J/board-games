@@ -194,7 +194,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
         <>
           {renderPlayerBadge()}
            <span>{renderText(entry.text.slice(entry.playerName.length))}</span>
-           {entry.event === 'discard-card' && renderDiscardedCards()}
+            {entry.event === 'discard-card' && !entry.text.includes('"') && renderDiscardedCards()}
         </>
       );
     }

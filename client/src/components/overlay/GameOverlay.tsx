@@ -2808,6 +2808,8 @@ export default function GameOverlay({
       // ───────────────────────────────────
       case 'select_choice': {
         if (action.reason === 'annoying_flying_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
           const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
           const sourceCard = action.effectCardId
             ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)

@@ -73,11 +73,27 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
     const discardedImages = cardIds
       .map((cardId) => game.discard.find((card) => card.uid === cardId)?.image)
       .filter((image): image is string => !!image);
-    addLog(game, `${player.name} descartó`, {
-      playerId: player.id,
-      cardImage: discardedCard?.image,
-      cardImages: discardedImages,
-    });
+    const annoyingFlyingCard = discardReason === 'annoying_flying_unicorn'
+      ? game.players
+        .flatMap((candidate) => candidate.stable)
+        .find((card) => card.id === 'annoying_flying_unicorn')
+      : undefined;
+    addLog(
+      game,
+      discardReason === 'annoying_flying_unicorn' && discardedCard
+        ? `${player.name} descartó "${discardedCard.name}" por el efecto de "Annoying Flying Unicorn"`
+        : `${player.name} descartó`,
+      {
+        playerId: player.id,
+        cardImage: discardedCard?.image,
+        cardImages: discardReason === 'annoying_flying_unicorn'
+          ? [discardedCard?.image, annoyingFlyingCard?.image].filter(
+            (image): image is string => !!image,
+          )
+          : discardedImages,
+        event: discardReason === 'annoying_flying_unicorn' ? 'discard-card' : undefined,
+      },
+    );
     if (discardReason === 'hand_limit') {
       TurnManager.nextPhase(game);
     }
