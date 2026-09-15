@@ -586,6 +586,19 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
     } else if (pending.reason === 'black_knight_unicorn') {
       const targetCardId = pending.targetCardId;
       const originalTargetPlayerId = pending.originalTargetPlayerId;
+      const blackKnightCard = player.stable.find(
+        (card) => card.id === 'black_knight_unicorn',
+      );
+      const targetPlayerBeforeResolution = originalTargetPlayerId
+        ? room.gameState.players.find((candidate) => candidate.id === originalTargetPlayerId)
+        : undefined;
+      const targetCardBeforeResolution = targetPlayerBeforeResolution && targetCardId
+        ? [
+            ...targetPlayerBeforeResolution.stable,
+            ...targetPlayerBeforeResolution.upgrades,
+            ...targetPlayerBeforeResolution.downgrades,
+          ].find((card) => card.uid === targetCardId)
+        : undefined;
 
       if (choice === 'yes') {
         // Sacrificar a Black Knight Unicorn
@@ -639,9 +652,17 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
       addLog(
         room.gameState,
         choice === 'yes'
-          ? `${player.name} sacrificó a Black Knight Unicorn`
+          ? `${player.name} sacrificó a "Black Knight Unicorn" por "${targetCardBeforeResolution?.name ?? 'la carta objetivo'}"`
           : `${player.name} destruyó la carta objetivo`,
-        { playerId: player.id },
+        {
+          playerId: player.id,
+          cardImages: choice === 'yes'
+            ? [blackKnightCard?.image, targetCardBeforeResolution?.image].filter(
+                (image): image is string => !!image,
+              )
+            : undefined,
+          event: choice === 'yes' ? 'play-card' : undefined,
+        },
       );
 
       emitGameState(io, room, 'game-updated');

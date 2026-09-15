@@ -307,7 +307,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
                       <div
                         key={entry.id}
                         className={cn(
-                          "text-[10px] leading-snug",
+                          "text-[11px] leading-snug",
                           entry.playerId === localPlayer?.id
                              ? "text-emerald-300/90"
                              : "text-slate-400/90",
