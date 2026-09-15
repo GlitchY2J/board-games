@@ -10,6 +10,7 @@ import PhaseActionButton from '../components/game/PhaseActionButton';
 import PlayerHand from '../components/player/PlayerHand';
 import PlayingCard from '../components/card/PlayingCard';
 import GameOverlay from '../components/overlay/GameOverlay';
+import CardSelectionOverlay from '../components/overlay/CardSelectionOverlay';
 import PendingPlayOverlay from '../components/overlay/PendingPlayOverlay';
 import NeighRevealOverlay from '../components/overlay/NeighRevealOverlay';
 import { getPlayerStatus } from '../lib/playerStatus';
@@ -119,6 +120,7 @@ export default function BoardLayout({
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   const [selectedAlluringUpgradeId, setSelectedAlluringUpgradeId] = useState<string | null>(null);
+  const [selectedChainsawCardId, setSelectedChainsawCardId] = useState<string | null>(null);
 
   useEffect(() => {
     const onOverlayConfirm = (event: KeyboardEvent) => {
@@ -350,13 +352,48 @@ export default function BoardLayout({
       ])
     : [];
   const alluringUpgradeIds = new Set(alluringUpgradeCards.map((card) => card.uid));
+  const chainsawAction = gameState.pendingAction?.type === 'select_stable_card' &&
+    gameState.pendingAction.reason === 'chainsaw_unicorn' &&
+    gameState.pendingAction.sourcePlayerId === localPlayerId;
+  const chainsawTargets = new Map<string, string>();
+  if (chainsawAction) {
+    gameState.players.forEach((player) => {
+      if (player.id !== localPlayerId) {
+        player.upgrades.forEach((card) => {
+          if (card.id !== 'saved_by_the_sigil') {
+            chainsawTargets.set(card.uid, JSON.stringify({
+              cardId: card.uid,
+              targetPlayerId: player.id,
+              type: 'upgrade',
+            }));
+          }
+        });
+      } else {
+        player.downgrades.forEach((card) => {
+          chainsawTargets.set(card.uid, JSON.stringify({
+            cardId: card.uid,
+            targetPlayerId: player.id,
+            type: 'downgrade',
+          }));
+        });
+      }
+    });
+  }
+  const chainsawTargetIds = new Set(chainsawTargets.keys());
+  const selectedChainsawCard = selectedChainsawCardId
+    ? gameState.players.flatMap((player) => [
+        ...player.upgrades,
+        ...player.downgrades,
+      ]).find((card) => card.uid === selectedChainsawCardId)
+    : undefined;
   const selectedAlluringUpgrade = alluringUpgradeCards.find(
     (card) => card.uid === selectedAlluringUpgradeId,
   );
 
   useEffect(() => {
     if (!alluringAction) setSelectedAlluringUpgradeId(null);
-  }, [alluringAction]);
+    if (!chainsawAction) setSelectedChainsawCardId(null);
+  }, [alluringAction, chainsawAction]);
 
   useEffect(() => {
     if (!alluringAction || !selectedAlluringUpgrade) return;
@@ -404,9 +441,15 @@ export default function BoardLayout({
           player={opp}
           isLocalPlayer={false}
           isMyTurn={opp.id === activePlayer.id}
-          selectableUpgradeIds={alluringAction ? alluringUpgradeIds : undefined}
-          selectedUpgradeId={selectedAlluringUpgradeId ?? undefined}
-          onUpgradeSelect={setSelectedAlluringUpgradeId}
+           selectableUpgradeIds={alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : undefined}
+           selectedUpgradeId={selectedAlluringUpgradeId ?? undefined}
+           onUpgradeSelect={(cardId) => {
+             if (chainsawAction) {
+               setSelectedChainsawCardId(cardId);
+             } else {
+               setSelectedAlluringUpgradeId(cardId);
+             }
+           }}
         />
       )}
     </div>
@@ -548,6 +591,12 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {chainsawAction && (
+                    <span className="draw-hint">
+                      Selecciona un Upgrade rival o un Downgrade de tu establo
+                    </span>
+                  )}
+
                   {annoyingDiscardAction && (
                     <span className="draw-hint">
                       Descarta una carta de tu mano
@@ -577,6 +626,7 @@ export default function BoardLayout({
                     !gameState.actionUsed &&
                     !gameState.pendingPlay &&
                     !americornAction &&
+                    !chainsawAction &&
                     !annoyingDiscardAction && (
                       <span className="draw-hint">
                         Juega una carta o presiona{' '}
@@ -638,8 +688,11 @@ export default function BoardLayout({
                   isMyTurn={
                     layoutLocalPlayer.id === activePlayer?.id && !spectator
                   }
-                  selectableUpgradeIds={undefined}
-                  selectedUpgradeId={undefined}
+                    selectableUpgradeIds={chainsawAction ? chainsawTargetIds : undefined}
+                    selectedUpgradeId={undefined}
+                    onUpgradeSelect={(cardId) => {
+                      if (chainsawTargets.has(cardId)) setSelectedChainsawCardId(cardId);
+                    }}
                 />
               )}
             </div>
@@ -698,6 +751,36 @@ export default function BoardLayout({
             </div>
           </div>
         </div>
+      )}
+
+      {chainsawAction && selectedChainsawCard && (
+        <CardSelectionOverlay
+          hide={false}
+          title="🪚 Chainsaw Unicorn"
+          subtitle={`¿Deseas seleccionar "${selectedChainsawCard.name}" para resolver el efecto?`}
+          items={[{
+            id: selectedChainsawCard.uid,
+            value: selectedChainsawCard.uid,
+            title: selectedChainsawCard.name,
+            image: selectedChainsawCard.image,
+          }]}
+          maxSelection={1}
+          confirmText="Confirmar"
+          showSelection={false}
+          compact
+          keyboardNavigation={false}
+          buttonHotkeys
+          onConfirm={() => {
+            const target = chainsawTargets.get(selectedChainsawCard.uid);
+            if (!target) return;
+            setSelectedChainsawCardId(null);
+            socket.emit('select-stable-card', {
+              roomCode: gameState.roomCode,
+              cardId: target,
+            });
+          }}
+          onCancel={() => setSelectedChainsawCardId(null)}
+        />
       )}
 
       {spectator && winner && (

@@ -56,6 +56,26 @@ export function registerStableSelectionHandlers(io: GameServer, socket: GameSock
     const selectedCard = selectedOwner?.stable.find(
       (card) => card.uid === selectedCardId,
     );
+    let chainsawSelection: { cardId: string; targetPlayerId: string; type: 'upgrade' | 'downgrade' } | undefined;
+    if (pendingReason === 'chainsaw_unicorn') {
+      try {
+        chainsawSelection = JSON.parse(selectedCardId);
+      } catch {
+        return;
+      }
+    }
+    const chainsawTargetPlayer = chainsawSelection
+      ? room.gameState.players.find((candidate) => candidate.id === chainsawSelection!.targetPlayerId)
+      : undefined;
+    const chainsawCard = chainsawSelection && chainsawTargetPlayer
+      ? [...chainsawTargetPlayer.upgrades, ...chainsawTargetPlayer.downgrades]
+        .find((card) => card.uid === chainsawSelection!.cardId)
+      : undefined;
+    const chainsawEffectCard = pendingReason === 'chainsaw_unicorn'
+      ? room.gameState.players
+        .flatMap((candidate) => candidate.stable)
+        .find((card) => card.id === 'chainsaw_unicorn')
+      : undefined;
     if (pending?.type === 'alluring_narwhal' && !pending.confirmed) {
       if (selectedCardId !== pending.sourceCardId) return;
       pending.confirmed = true;
@@ -77,6 +97,23 @@ export function registerStableSelectionHandlers(io: GameServer, socket: GameSock
       pendingReason !== 'shark_with_a_horn' &&
       pendingReason !== 'demonicorn_remove'
     ) {
+      if (pendingReason === 'chainsaw_unicorn' && chainsawCard && chainsawTargetPlayer) {
+        addLog(
+          room.gameState,
+          chainsawSelection?.type === 'upgrade'
+            ? `${sourcePlayer.name} destruyó "${chainsawCard.name}" de ${chainsawTargetPlayer.name} por el efecto de "Chainsaw Unicorn"`
+            : `${sourcePlayer.name} sacrificó "${chainsawCard.name}" por el efecto de "Chainsaw Unicorn"`,
+          {
+            playerId: sourcePlayer.id,
+            cardImages: [chainsawCard.image, chainsawEffectCard?.image].filter(
+              (image): image is string => !!image,
+            ),
+            event: 'discard-card',
+          },
+        );
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
       addLog(
         room.gameState,
         `${sourcePlayer.name} eligió una carta "${selectedCard?.name ?? 'del establo'}" del establo de ${selectedOwner?.name ?? sourcePlayer.name} y la ${stableSelectionVerb(typeof pendingReason === 'string' ? pendingReason : undefined)}`,

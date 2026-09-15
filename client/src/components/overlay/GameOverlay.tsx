@@ -908,6 +908,8 @@ export default function GameOverlay({
       }
 
       case 'select_stable_card': {
+        if (action.reason === 'chainsaw_unicorn') return null;
+
         if (action.sourcePlayerId !== localPlayerId) return null;
 
         if (action.reason === 'a_cute_attack_destroy') {
@@ -1381,78 +1383,6 @@ export default function GameOverlay({
                 socket.emit('select-stable-card', {
                   roomCode: gameState.roomCode,
                   cardId,
-                });
-              }}
-            />
-          );
-        }
-
-        if (action.reason === 'chainsaw_unicorn') {
-          const items: {
-            id: string;
-            value: string;
-            title: string;
-            image: string;
-          }[] = [];
-          gameState.players.forEach((p) => {
-            if (p.id === localPlayerId) return;
-             p.upgrades
-               .filter(
-                 (card) =>
-                   card.id !== 'saved_by_the_sigil' &&
-                   !isParanormalProtected(p, card),
-               )
-               .forEach((card, idx) => {
-              items.push({
-                id: `${card.id}_upgrade_${p.id}_${idx}`,
-                value: JSON.stringify({
-                  cardId: card.uid,
-                  targetPlayerId: p.id,
-                  type: 'upgrade',
-                }),
-                title: `Upgrade de ${p.name}`,
-                image: card.image,
-              });
-            });
-          });
-
-          const localPlayer = gameState.players.find(
-            (p) => p.id === localPlayerId,
-          );
-          if (localPlayer) {
-            localPlayer.downgrades.forEach((card, idx) => {
-              items.push({
-                id: `${card.id}_downgrade_${localPlayerId}_${idx}`,
-                value: JSON.stringify({
-                  cardId: card.uid,
-                  targetPlayerId: localPlayerId,
-                  type: 'downgrade',
-                }),
-                title: `Downgrade de ${localPlayer.name}`,
-                image: card.image,
-              });
-            });
-          }
-
-          return (
-            <CardSelectionOverlay
-              hide={hide}
-              title="🪚 Chainsaw Unicorn"
-              subtitle="Selecciona un Upgrade de cualquier jugador para DESTRUIR, o un Downgrade de tu establo para SACRIFICAR"
-              items={items}
-              maxSelection={1}
-              confirmText="Confirmar"
-              onConfirm={([cardValue]) => {
-                dismiss();
-                socket.emit('select-stable-card', {
-                  roomCode: gameState.roomCode,
-                  cardId: cardValue,
-                });
-              }}
-              onCancel={() => {
-                dismiss();
-                socket.emit('cancel-action', {
-                  roomCode: gameState.roomCode,
                 });
               }}
             />
@@ -2807,6 +2737,52 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        if (action.reason === 'chainsaw_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'chainsaw_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🪚 Chainsaw Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'chainsaw-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Chainsaw Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'black_knight_unicorn') {
           if (action.playerId !== localPlayerId) return null;
 

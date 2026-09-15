@@ -1,7 +1,7 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 
 export const chainsawUnicorn: CardEffect = {
-  onEnterStable(state, player) {
+  onEnterStable(state, player, card) {
     // Los upgrades solo pueden destruirse en el establo de OTROS jugadores.
     const hasOtherUpgrades = state.players.some(
       (p) => p.id !== player.id && p.upgrades.length > 0,
@@ -17,6 +17,8 @@ export const chainsawUnicorn: CardEffect = {
       type: 'select_choice',
       reason: 'chainsaw_unicorn',
       playerId: player.id,
+      effectCardId: card.uid,
+      sourceCardImage: card.image,
       title: '🪚 Chainsaw Unicorn',
       description:
         '¿Deseas activar el efecto de Chainsaw Unicorn para destruir un Upgrade o sacrificar un Downgrade?',

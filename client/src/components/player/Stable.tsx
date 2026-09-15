@@ -82,7 +82,12 @@ export default function Stable({
           {hasDowngrades && (
             <div className="flex items-center gap-2 flex-nowrap shrink-0">
               {player.downgrades.map((card) => (
-                <div key={card.uid} data-card-uid={card.uid}>
+                  <div
+                    key={card.uid}
+                    data-card-uid={card.uid}
+                    className={selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : undefined}
+                    onClick={selectableUpgradeIds?.has(card.uid) ? () => onUpgradeSelect?.(card.uid) : undefined}
+                  >
                   <PlayingCard
                     name={card.name}
                     image={card.image}
