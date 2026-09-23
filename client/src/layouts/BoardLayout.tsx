@@ -122,6 +122,7 @@ export default function BoardLayout({
   const [selectedAlluringUpgradeId, setSelectedAlluringUpgradeId] = useState<string | null>(null);
   const [selectedChainsawCardId, setSelectedChainsawCardId] = useState<string | null>(null);
   const [selectedDarkAngelCardId, setSelectedDarkAngelCardId] = useState<string | null>(null);
+  const [selectedExtremelyDestructiveCardId, setSelectedExtremelyDestructiveCardId] = useState<string | null>(null);
 
   useEffect(() => {
     const onOverlayConfirm = (event: KeyboardEvent) => {
@@ -392,6 +393,17 @@ export default function BoardLayout({
       )
       .map((card) => card.uid))
     : new Set<string>();
+  const extremelyDestructiveAction = gameState.pendingAction?.type === 'extremely_destructive_unicorn' &&
+    gameState.pendingAction.remainingPlayerIds.includes(localPlayerId) &&
+    !gameState.pendingAction.resolvedPlayerIds.includes(localPlayerId);
+  const extremelyDestructiveTargets = extremelyDestructiveAction
+    ? new Set((localPlayer?.stable ?? [])
+      .filter((card) =>
+        card.cardType === 'unicorn' &&
+        !(localPlayer?.downgrades.some((downgrade) => downgrade.id === 'pandamonium') ?? false),
+      )
+      .map((card) => card.uid))
+    : new Set<string>();
   const selectedChainsawCard = selectedChainsawCardId
     ? gameState.players.flatMap((player) => [
         ...player.upgrades,
@@ -406,7 +418,8 @@ export default function BoardLayout({
     if (!alluringAction) setSelectedAlluringUpgradeId(null);
     if (!chainsawAction) setSelectedChainsawCardId(null);
     if (!darkAngelAction) setSelectedDarkAngelCardId(null);
-  }, [alluringAction, chainsawAction, darkAngelAction]);
+    if (!extremelyDestructiveAction) setSelectedExtremelyDestructiveCardId(null);
+  }, [alluringAction, chainsawAction, darkAngelAction, extremelyDestructiveAction]);
 
   useEffect(() => {
     if (!alluringAction || !selectedAlluringUpgrade) return;
@@ -618,6 +631,12 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {extremelyDestructiveAction && (
+                    <span className="draw-hint">
+                      Selecciona un unicornio de tu establo para sacrificar
+                    </span>
+                  )}
+
                   {annoyingDiscardAction && (
                     <span className="draw-hint">
                       Descarta una carta de tu mano
@@ -649,6 +668,7 @@ export default function BoardLayout({
                     !americornAction &&
                      !chainsawAction &&
                      !darkAngelAction &&
+                     !extremelyDestructiveAction &&
                     !annoyingDiscardAction && (
                       <span className="draw-hint">
                         Juega una carta o presiona{' '}
@@ -710,11 +730,12 @@ export default function BoardLayout({
                   isMyTurn={
                     layoutLocalPlayer.id === activePlayer?.id && !spectator
                   }
-                    selectableUpgradeIds={chainsawAction ? chainsawTargetIds : darkAngelAction ? darkAngelTargets : undefined}
+                    selectableUpgradeIds={chainsawAction ? chainsawTargetIds : darkAngelAction ? darkAngelTargets : extremelyDestructiveAction ? extremelyDestructiveTargets : undefined}
                     selectedUpgradeId={undefined}
                     onUpgradeSelect={(cardId) => {
                       if (chainsawAction && chainsawTargets.has(cardId)) setSelectedChainsawCardId(cardId);
                       if (darkAngelAction && darkAngelTargets.has(cardId)) setSelectedDarkAngelCardId(cardId);
+                      if (extremelyDestructiveAction && extremelyDestructiveTargets.has(cardId)) setSelectedExtremelyDestructiveCardId(cardId);
                     }}
                 />
               )}
@@ -826,6 +847,30 @@ export default function BoardLayout({
               socket.emit('select-stable-card', { roomCode: gameState.roomCode, cardId: card.uid });
             }}
             onCancel={() => setSelectedDarkAngelCardId(null)}
+          />
+        );
+      })()}
+
+      {extremelyDestructiveAction && selectedExtremelyDestructiveCardId && (() => {
+        const card = localPlayer?.stable.find((item) => item.uid === selectedExtremelyDestructiveCardId);
+        if (!card) return null;
+        return (
+          <CardSelectionOverlay
+            hide={false}
+            title="💥 Extremely Destructive Unicorn"
+            subtitle={`¿Deseas sacrificar "${card.name}" para resolver el efecto?`}
+            items={[{ id: card.uid, value: card.uid, title: card.name, image: card.image }]}
+            maxSelection={1}
+            confirmText="Sacrificar"
+            showSelection={false}
+            compact
+            keyboardNavigation={false}
+            buttonHotkeys
+            onConfirm={() => {
+              setSelectedExtremelyDestructiveCardId(null);
+              socket.emit('select-stable-card', { roomCode: gameState.roomCode, cardId: card.uid });
+            }}
+            onCancel={() => setSelectedExtremelyDestructiveCardId(null)}
           />
         );
       })()}

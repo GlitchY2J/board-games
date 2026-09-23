@@ -2392,6 +2392,18 @@ export class ActionResolver {
         'sacrifice',
       );
 
+      addLog(
+        state,
+        `${targetPlayer.name} sacrificó "${sacrificed.name}" por el efecto de "Extremely Destructive Unicorn"`,
+        {
+          playerId: targetPlayer.id,
+          cardImages: [sacrificed.image, pending.sourceCardImage].filter(
+            (image): image is string => !!image,
+          ),
+          event: 'discard-card',
+        },
+      );
+
       const resolvedPlayerIds = [...pending.resolvedPlayerIds, sourcePlayerId];
       const onDestroyedOpened = EffectStack.childOpened(state, pending);
 

@@ -2520,54 +2520,8 @@ export default function GameOverlay({
           action.remainingPlayerIds.includes(localPlayerId) &&
           !action.resolvedPlayerIds.includes(localPlayerId);
 
-        if (!targetPlayer) return null;
-
-        if (!needsToResolve) {
-          return (
-            <div className="overlay-backdrop">
-              <div className="card-selection-window choice-window">
-                <h2>💥 Extremely Destructive Unicorn</h2>
-                <p>
-                  {action.remainingPlayerIds.length >
-                  action.resolvedPlayerIds.length
-                    ? 'Esperando sacrificios de otros jugadores...'
-                    : 'Resolviendo efecto...'}
-                </p>
-              </div>
-            </div>
-          );
-        }
-
-        const player = targetPlayer;
-
-        return (
-          <CardSelectionOverlay
-            hide={hide}
-            title="💥 Extremely Destructive Unicorn"
-            subtitle="Debes sacrificar 1 unicornio de tu establo."
-            items={player.stable
-               .filter(
-                 (card) =>
-                   card.cardType === 'unicorn' &&
-                   canBeDestroyedOrSacrificed(card),
-               )
-              .map((card, idx) => ({
-                id: `${card.id}_${idx}`,
-                value: card.uid,
-                title: card.name,
-                image: card.image,
-              }))}
-            maxSelection={1}
-            confirmText="Sacrificar"
-            onConfirm={([cardId]) => {
-              dismiss();
-              socket.emit('select-stable-card', {
-                roomCode: gameState.roomCode,
-                cardId,
-              });
-            }}
-          />
-        );
+        if (!targetPlayer || !needsToResolve) return null;
+        return null;
       }
 
       case 'adorable_flying_unicorn': {

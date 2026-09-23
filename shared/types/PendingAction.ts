@@ -199,9 +199,10 @@ export type PendingAction =
     }
   | {
       type: "extremely_destructive_unicorn";
-      remainingPlayerIds: string[]; // cola de jugadores que deben sacrificar un unicornio
-      resolvedPlayerIds: string[];
-    }
+       remainingPlayerIds: string[]; // cola de jugadores que deben sacrificar un unicornio
+       resolvedPlayerIds: string[];
+       sourceCardImage?: string;
+     }
   | {
       type: "adorable_flying_unicorn";
       remainingPlayerIds: string[]; // cola de jugadores que deben sacrificar una carta

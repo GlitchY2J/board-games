@@ -94,8 +94,9 @@ export function registerStableSelectionHandlers(io: GameServer, socket: GameSock
     }
     if (
       pendingType !== 'alluring_narwhal' &&
-      pendingReason !== 'shark_with_a_horn' &&
-      pendingReason !== 'demonicorn_remove'
+       pendingReason !== 'shark_with_a_horn' &&
+       pendingReason !== 'demonicorn_remove' &&
+       pendingType !== 'extremely_destructive_unicorn'
     ) {
       if (pendingReason === 'chainsaw_unicorn' && chainsawCard && chainsawTargetPlayer) {
         addLog(

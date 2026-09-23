@@ -2,7 +2,7 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 import { hasAvailableUnicorn } from './pandamonium.ts';
 
 export const extremelyDestructiveUnicorn: CardEffect = {
-  onEnterStable(state) {
+  onEnterStable(state, _player, card) {
     const remainingPlayerIds = state.players
       .filter((player) => hasAvailableUnicorn(player))
       .map((player) => player.id);
@@ -15,6 +15,7 @@ export const extremelyDestructiveUnicorn: CardEffect = {
       type: 'extremely_destructive_unicorn',
       remainingPlayerIds,
       resolvedPlayerIds: [],
+      sourceCardImage: card.image,
     };
   },
 };
