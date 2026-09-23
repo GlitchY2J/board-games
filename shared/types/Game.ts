@@ -32,6 +32,7 @@ export interface PendingPlay {
   /** Hasta cuándo (Date.now()) los Neighs se agrupan con el Neigh actual,
    * apuntando a la misma carta, en vez de encadenarse uno encima del otro. */
   neighGraceUntil?: number;
+  neighSelectionPlayerId?: string;
   targetPlayerId?: string;
   targetPlayerName?: string;
   requestedCardType?: string;

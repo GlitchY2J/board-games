@@ -98,6 +98,10 @@ export interface NeighAcceptPayload {
   roomCode: string;
 }
 
+export interface NeighPreparePayload {
+  roomCode: string;
+}
+
 export interface PlayNeighPayload {
   roomCode: string;
   cardId: string;
@@ -377,6 +381,7 @@ export interface ClientToServerEvents {
 
   // Neigh Accept
   'neigh-accept': (payload: NeighAcceptPayload) => void;
+  'neigh-prepare': (payload: NeighPreparePayload) => void;
 
   // Play Neigh
   'play-neigh': (payload: PlayNeighPayload) => void;

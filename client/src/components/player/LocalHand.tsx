@@ -17,9 +17,12 @@ interface Props {
   onInvalidAction?(message: string): void;
   discardSelection?: boolean;
   onDiscardSelect?(cardId: string): void;
+  onCardSelect?(cardId: string): void;
   compact?: boolean;
   gameId?: string;
   sortHandMode?: 'alphabetical' | 'type' | null;
+  selectableCardIds?: Set<string>;
+  selectionOnly?: boolean;
 }
 
 export default function LocalHand({
@@ -35,9 +38,12 @@ export default function LocalHand({
   onInvalidAction,
   discardSelection = false,
   onDiscardSelect,
+  onCardSelect,
   compact,
   gameId,
   sortHandMode,
+  selectableCardIds,
+  selectionOnly = false,
 }: Props) {
   return (
     <CardFan
@@ -54,9 +60,10 @@ export default function LocalHand({
       compact={compact}
       gameId={gameId}
       sortHandMode={sortHandMode}
-      selectionOnly={discardSelection}
+       selectionOnly={discardSelection || selectionOnly}
+       selectableCardIds={selectableCardIds}
       selectionConfirm={discardSelection}
-      onCardSelect={onDiscardSelect}
+       onCardSelect={onCardSelect ?? onDiscardSelect}
     />
   );
 }

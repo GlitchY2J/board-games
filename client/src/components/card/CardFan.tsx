@@ -27,6 +27,7 @@ interface Props {
   reverseHotkeys?: boolean;
   gameId?: string;
   sortHandMode?: 'alphabetical' | 'type' | null;
+  selectableCardIds?: Set<string>;
 }
 
 function getCardTypeRank(card: CardType): number {
@@ -68,6 +69,7 @@ export default function CardFan({
   reverseHotkeys = false,
   gameId,
   sortHandMode = null,
+  selectableCardIds,
 }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [keyboardCardIndex, setKeyboardCardIndex] = useState<number | null>(null);
@@ -357,7 +359,7 @@ export default function CardFan({
           return (
             <div
               key={card.uid}
-              className={`fan-card${isNew ? ' arrived-glow' : ''}${keyboardCardIndex === index ? ' keyboard-hover' : ''}`}
+             className={`fan-card${isNew ? ' arrived-glow' : ''}${keyboardCardIndex === index ? ' keyboard-hover' : ''}${selectableCardIds?.has(card.uid) ? ' neigh-selectable' : ''}`}
               data-card-uid={card.uid}
               data-card-hotkey={index}
               onMouseEnter={() => setKeyboardCardIndex(index)}
@@ -377,8 +379,15 @@ export default function CardFan({
                  onClick={() => {
                    const isNow = card.effect === 'now';
 
+                   if (selectionOnly && !selectionConfirm) {
+                     if (selectableCardIds && !selectableCardIds.has(card.uid)) return;
+                     onCardSelect?.(card.uid);
+                     return;
+                   }
+
                    if (selectionOnly && selectionConfirm) {
-                     selectCard(card.uid);
+                      if (selectableCardIds && !selectableCardIds.has(card.uid)) return;
+                      selectCard(card.uid);
                      return;
                    }
 
@@ -417,19 +426,14 @@ export default function CardFan({
                     return;
                   }
 
-                  if (isNeigh(card)) {
+                   if (isNeigh(card)) {
                     onInvalidAction?.(
                       'Neigh solo puede jugarse como respuesta a la carta de otro jugador',
                     );
                     return;
                   }
 
-                   if (selectionOnly && !selectionConfirm) {
-                     onCardSelect?.(card.uid);
-                     return;
-                   }
-
-                   selectCard(card.uid);
+                    selectCard(card.uid);
                 }}
               />
             </div>

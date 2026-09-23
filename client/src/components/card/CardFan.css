@@ -63,6 +63,20 @@
   width: var(--hand-card-width, 112px);
 }
 
+.fan-card.neigh-selectable {
+  z-index: 4;
+  animation: neighFanSwing 2.2s ease-in-out infinite;
+}
+
+.fan-card.neigh-selectable .playing-card {
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.95), 0 0 24px rgba(251, 191, 36, 0.8);
+}
+
+@keyframes neighFanSwing {
+  0%, 100% { transform: rotate(-3deg) translateY(-4px); }
+  50% { transform: rotate(3deg) translateY(-8px); }
+}
+
 .card-fan-small {
   height: 185px;
 }

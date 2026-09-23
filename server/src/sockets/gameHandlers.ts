@@ -1630,11 +1630,11 @@ function registerNeighAccept(io: GameServer, socket: GameSocket): void {
     const pending = game.pendingPlay;
 
     if (!pending) return;
+    if (pending.neighSelectionPlayerId) return;
 
     const top = pending.chain[pending.chain.length - 1];
 
     if (top.playerId === player.id) return;
-
     if (!pending.acceptedIds.includes(player.id)) {
       pending.acceptedIds.push(player.id);
     }
@@ -1745,6 +1745,7 @@ function registerPlayNeigh(io: GameServer, socket: GameSocket): void {
     pending.startedAt = startedAt;
     pending.acceptedIds = [];
     pending.neighGraceUntil = startedAt + NEIGH_GRACE_MS;
+    pending.neighSelectionPlayerId = undefined;
 
     // Super Neigh no puede ser Neigh'd: la cadena termina aquí.
     // Yay: el Neigh jugado por un jugador con Yay tampoco puede ser Neigh'd.
@@ -1820,6 +1821,23 @@ function registerChatTyping(io: GameServer, socket: GameSocket): void {
       playerName: context.player.name,
       isTyping: Boolean(isTyping),
     });
+  });
+
+  socket.on('neigh-prepare', ({ roomCode }) => {
+    const context = getSocketGameContext(socket, roomCode);
+    if (!context) return;
+
+    const { game, player, room } = context;
+    const pending = game.pendingPlay;
+    if (!pending) return;
+    if (pending.neighSelectionPlayerId && pending.neighSelectionPlayerId !== player.id) return;
+
+    const top = pending.chain[pending.chain.length - 1];
+    if (top.playerId === player.id) return;
+
+    clearPendingTimer(room.code);
+    pending.neighSelectionPlayerId = player.id;
+    emitGameState(io, room, 'game-updated');
   });
 }
 

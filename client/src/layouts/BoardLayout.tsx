@@ -123,6 +123,7 @@ export default function BoardLayout({
   const [selectedChainsawCardId, setSelectedChainsawCardId] = useState<string | null>(null);
   const [selectedDarkAngelCardId, setSelectedDarkAngelCardId] = useState<string | null>(null);
   const [selectedExtremelyDestructiveCardId, setSelectedExtremelyDestructiveCardId] = useState<string | null>(null);
+  const [neighSelectionActive, setNeighSelectionActive] = useState(false);
 
   useEffect(() => {
     const onOverlayConfirm = (event: KeyboardEvent) => {
@@ -335,6 +336,18 @@ export default function BoardLayout({
                 : ['left', 'top', 'top', 'top', 'right', 'bottom', 'bottom'];
   const seatPositions = positions;
   const localPlayerId = localPlayer?.id ?? '';
+  const neighSelectableIds = new Set(
+    gameState.pendingPlay && neighSelectionActive
+      ? (localPlayer?.hand ?? [])
+        .filter((card) =>
+          card.effect === 'neigh' ||
+          card.effect === 'super_neigh' ||
+          card.effect === 'neigh_thank_you' ||
+          card.effect === 'hex_neigh',
+        )
+        .map((card) => card.uid)
+      : [],
+  );
   const alluringAction = gameState.pendingAction?.type === 'alluring_narwhal' &&
     gameState.pendingAction.confirmed === true &&
     gameState.pendingAction.playerId === localPlayerId;
@@ -643,6 +656,12 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {neighSelectionActive && (
+                    <span className="draw-hint">
+                      Selecciona la carta Neigh a utilizar
+                    </span>
+                  )}
+
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
                       Presiona <kbd className="space-key">Space</kbd> para robar
@@ -899,6 +918,8 @@ export default function BoardLayout({
         gameId={gameId}
         hide={hidePendingPlay && gameState.pendingAction?.type !== 'llamacorn'}
         spectator={spectator}
+        neighSelectionActive={neighSelectionActive}
+        onNeighSelectionChange={setNeighSelectionActive}
       />
 
       <NeighRevealOverlay gameState={gameState} />
@@ -1217,8 +1238,17 @@ export default function BoardLayout({
             }
             gameId={gameId}
             sortHandMode={sortHandMode}
-            discardSelection={annoyingDiscardAction}
-            onDiscardSelect={(cardId) => {
+             discardSelection={annoyingDiscardAction}
+             selectionOnly={neighSelectionActive}
+             selectableCardIds={neighSelectableIds}
+             onCardSelect={(cardId) => {
+               setNeighSelectionActive(false);
+               socket.emit('play-neigh', {
+                 roomCode: gameState.roomCode,
+                 cardId,
+               });
+             }}
+             onDiscardSelect={(cardId) => {
               socket.emit('discard-cards', {
                 roomCode: gameState.roomCode,
                 playerId: localPlayerId,

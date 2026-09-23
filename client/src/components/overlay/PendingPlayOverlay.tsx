@@ -12,9 +12,11 @@ interface Props {
   gameId?: string;
   hide?: boolean;
   spectator?: boolean;
+  neighSelectionActive?: boolean;
+  onNeighSelectionChange?(active: boolean): void;
 }
 
-export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, hide = false, spectator = false }: Props) {
+export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, hide = false, spectator = false, neighSelectionActive = false, onNeighSelectionChange }: Props) {
   const pending = gameState.pendingPlay;
   const isExplodingKittens =
     gameId === 'exploding-kittens' ||
@@ -27,7 +29,8 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
 
   useEffect(() => {
     if (pending) playPendingPlaySound();
-  }, [pending?.startedAt]);
+    onNeighSelectionChange?.(false);
+  }, [pending?.card.uid, pending?.chain.length, pending?.playerId]);
 
   useEffect(() => {
     if (!pending) return;
@@ -59,7 +62,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     return () => window.removeEventListener('keydown', onOptionKeyDown, true);
   }, [pending]);
 
-  if (!pending || hide) return null;
+  if (!pending || hide || neighSelectionActive || pending.neighSelectionPlayerId) return null;
 
   const isMyPlay = !spectator && pending.playerId === localPlayerId;
   const remainingMs = Math.max(
@@ -121,14 +124,13 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   };
 
   const localPlayer = gameState.players.find((p) => p.id === localPlayerId);
-  const hasRegularNeigh =
-    localPlayer?.hand.some((c) => c.effect === 'neigh') ?? false;
-  const hasSuperNeigh =
-    localPlayer?.hand.some((c) => c.effect === 'super_neigh') ?? false;
-  const hasNeighThankYou =
-    localPlayer?.hand.some((c) => c.effect === 'neigh_thank_you') ?? false;
-  const hasHexNeigh =
-    localPlayer?.hand.some((c) => c.effect === 'hex_neigh') ?? false;
+  const neighCards = localPlayer?.hand.filter((card) =>
+    card.effect === 'neigh' ||
+    card.effect === 'super_neigh' ||
+    card.effect === 'neigh_thank_you' ||
+    card.effect === 'hex_neigh',
+  ) ?? [];
+  const hasNeigh = neighCards.length > 0;
   const hasNope = localPlayer?.hand.some((c) => c.effect === 'nope') ?? false;
   const hasRegularAttack =
     localPlayer?.hand.some(
@@ -187,10 +189,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     canRespond && isExplodingKittens && hasNope ? 'nope' : null,
     canRespond && canStackAttack && hasRegularAttack ? 'attack' : null,
     canRespond && canStackAttack && hasTargetedAttack ? 'targeted_attack' : null,
-    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasRegularNeigh ? 'neigh' : null,
-    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasSuperNeigh ? 'super_neigh' : null,
-    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasNeighThankYou ? 'neigh_thank_you' : null,
-    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasHexNeigh ? 'hex_neigh' : null,
+    canRespond && !isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasNeigh ? 'neigh' : null,
   ].filter((option): option is string => option !== null);
   const pendingOptionNumber = (option: string) => pendingOptionNumbers.indexOf(option) + 1;
 
@@ -198,48 +197,20 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
     socket.emit('neigh-accept', { roomCode: gameState.roomCode });
   }
 
-  function playNeigh() {
-    const neighCard = localPlayer?.hand.find((c) => c.effect === 'neigh');
-
-    if (!neighCard) return;
-
+  function playNeigh(cardId: string) {
     socket.emit('play-neigh', {
       roomCode: gameState.roomCode,
-      cardId: neighCard.uid,
+      cardId,
     });
   }
 
-  function playSuperNeigh() {
-    const superNeighCard = localPlayer?.hand.find(
-      (c) => c.effect === 'super_neigh',
-    );
-
-    if (!superNeighCard) return;
-
-    socket.emit('play-neigh', {
-      roomCode: gameState.roomCode,
-      cardId: superNeighCard.uid,
-    });
-  }
-
-  function playNeighThankYou() {
-    const card = localPlayer?.hand.find((c) => c.effect === 'neigh_thank_you');
-    if (!card) return;
-
-    socket.emit('play-neigh', {
-      roomCode: gameState.roomCode,
-      cardId: card.uid,
-    });
-  }
-
-  function playHexNeigh() {
-    const card = localPlayer?.hand.find((c) => c.effect === 'hex_neigh');
-    if (!card) return;
-
-    socket.emit('play-neigh', {
-      roomCode: gameState.roomCode,
-      cardId: card.uid,
-    });
+  function chooseNeigh() {
+    if (neighCards.length === 1) {
+      playNeigh(neighCards[0].uid);
+    } else if (neighCards.length > 1) {
+      socket.emit('neigh-prepare', { roomCode: gameState.roomCode });
+      onNeighSelectionChange?.(true);
+    }
   }
 
   function playNope() {
@@ -269,6 +240,7 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   }
 
   return (
+    <>
     <div className={`pending-play-backdrop ${hide ? 'animating-out' : ''}`}>
       <div className="pending-play-window">
         <h2 className="pending-play-title">
@@ -472,45 +444,19 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
                   <kbd>{pendingOptionNumber('targeted_attack')}</kbd> Targeted Attack
                 </button>
               )}
-              {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasRegularNeigh && (
+             {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasNeigh && (
                <button
                  data-pending-option={pendingOptionNumber('neigh')}
                  className="pending-neigh-btn"
-                onClick={playNeigh}
-              >
+                 onClick={chooseNeigh}
+               >
                  <kbd>{pendingOptionNumber('neigh')}</kbd> Neigh
-              </button>
-            )}
-            {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasSuperNeigh && (
-              <button
-                data-pending-option={pendingOptionNumber('super_neigh')}
-                className="pending-super-neigh-btn"
-                onClick={playSuperNeigh}
-              >
-                <kbd>{pendingOptionNumber('super_neigh')}</kbd> Super Neigh
-              </button>
-            )}
-            {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasNeighThankYou && (
-              <button
-                data-pending-option={pendingOptionNumber('neigh_thank_you')}
-                className="pending-neigh-btn"
-                onClick={playNeighThankYou}
-              >
-                <kbd>{pendingOptionNumber('neigh_thank_you')}</kbd> Neigh, Thank You
-              </button>
-            )}
-            {!isExplodingKittens && !hasGinormousUnicorn && !hasSlowdown && hasHexNeigh && (
-              <button
-                data-pending-option={pendingOptionNumber('hex_neigh')}
-                className="pending-neigh-btn"
-                onClick={playHexNeigh}
-              >
-                <kbd>{pendingOptionNumber('hex_neigh')}</kbd> Hex Neigh
-              </button>
-            )}
+               </button>
+             )}
           </div>
         )}
       </div>
     </div>
+    </>
   );
 }
