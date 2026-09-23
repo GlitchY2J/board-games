@@ -3,7 +3,7 @@ import { enqueueDrawAnimation } from '../../cardAnimations.ts';
 import { CardZoneMovement } from '../../unstable-unicorns/engine/CardZoneMovement.ts';
 
 export const greedyFlyingUnicorn: CardEffect = {
-  onEnterStable(state, player) {
+  onEnterStable(state, player, card) {
     const drawn = state.deck.shift();
     if (drawn) {
       enqueueDrawAnimation(state.roomCode, player.id, drawn);

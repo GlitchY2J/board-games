@@ -1016,10 +1016,18 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         CardZoneMovement.removeFromHand(gamePlayer, card.uid);
       }
 
-      addLog(context.game, `${context.player.name} jugó "${card.name}"`, {
-        playerId: context.player.id,
-        cardImage: card.image,
-      });
+       addLog(
+         context.game,
+         card.id === 'greedy_flying_unicorn'
+           ? `${context.player.name} jugó "Greedy Flying Unicorn" y robó una carta del mazo`
+           : `${context.player.name} jugó "${card.name}"`,
+         {
+         playerId: context.player.id,
+         ...(card.id === 'greedy_flying_unicorn'
+           ? { cardImages: [card.image] }
+           : { cardImage: card.image }),
+         },
+       );
 
       emitGameState(io, context.room, 'game-updated');
       startPendingTimer(io, context.room, startedAt);
@@ -1056,11 +1064,15 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       RulesEngine.resolvePlay(context.game, context.player.id, card);
 
       if (card.id !== 'chainsaw_massicorn') {
-        addLog(
-          context.game,
-          `${context.player.name} jugó "${card.name}" (protegida por Yay)`,
-          { playerId: context.player.id, cardImage: card.image },
-        );
+         addLog(
+           context.game,
+           card.id === 'greedy_flying_unicorn'
+             ? `${context.player.name} jugó "Greedy Flying Unicorn" y robó una carta del mazo`
+             : `${context.player.name} jugó "${card.name}" (protegida por Yay)`,
+           card.id === 'greedy_flying_unicorn'
+             ? { playerId: context.player.id, cardImages: [card.image] }
+             : { playerId: context.player.id, cardImage: card.image },
+         );
       }
 
       emitGameState(io, context.room, 'game-updated');
@@ -1085,10 +1097,18 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
     };
 
     if (card.id !== 'chainsaw_massicorn') {
-      addLog(context.game, `${context.player.name} jugó "${card.name}"`, {
-        playerId: context.player.id,
-        cardImage: card.image,
-      });
+       addLog(
+         context.game,
+         card.id === 'greedy_flying_unicorn'
+           ? `${context.player.name} jugó "Greedy Flying Unicorn" y robó una carta del mazo`
+           : `${context.player.name} jugó "${card.name}"`,
+         {
+         playerId: context.player.id,
+         ...(card.id === 'greedy_flying_unicorn'
+           ? { cardImages: [card.image] }
+           : { cardImage: card.image }),
+         },
+       );
     }
 
     emitGameState(io, context.room, 'game-updated');
