@@ -299,6 +299,7 @@ export type PendingAction =
       playerId: string;
        cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
        discardedCardIds?: string[];
+       sourceCardImage?: string;
        sacrificedCardImage?: string;
        sacrificedCardName?: string;
        effectCardImage?: string;

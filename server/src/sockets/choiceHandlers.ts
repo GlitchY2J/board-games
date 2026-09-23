@@ -918,6 +918,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
             reason: 'magical_flying_unicorn',
             playerId: player.id,
             cardType: 'magic',
+            sourceCardImage: pending.sourceCardImage,
           };
         } else {
           room.gameState.pendingAction = undefined;
@@ -932,13 +933,13 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         }
       }
 
-      addLog(
-        room.gameState,
-        choice === 'yes'
-          ? `${player.name} usó el efecto de Magical Flying Unicorn`
-          : `${player.name} omitió el efecto de Magical Flying Unicorn`,
-        { playerId: player.id },
-      );
+      if (choice === 'no') {
+        addLog(
+          room.gameState,
+          `${player.name} omitió el efecto de Magical Flying Unicorn`,
+          { playerId: player.id },
+        );
+      }
 
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'majestic_flying_unicorn') {

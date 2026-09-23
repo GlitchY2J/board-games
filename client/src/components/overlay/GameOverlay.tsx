@@ -2408,53 +2408,7 @@ export default function GameOverlay({
       // LLAMACORN — cada jugador descarta 1 carta en orden
       // ───────────────────────────────────
       case 'llamacorn': {
-        const needsToDiscard =
-          action.remainingPlayerIds.includes(localPlayerId);
-        const alreadyDiscarded =
-          action.resolvedPlayerIds.includes(localPlayerId);
-
-        if (!needsToDiscard && !alreadyDiscarded) return null;
-
-        if (alreadyDiscarded) {
-          return (
-            <div className="overlay-backdrop">
-              <div className="card-selection-window choice-window">
-                <h2>🦙 Llamacorn</h2>
-                <p>
-                  Esperando a que los demás jugadores descarten sus cartas...
-                </p>
-              </div>
-            </div>
-          );
-        }
-
-        const player = gameState.players.find((p) => p.id === localPlayerId);
-        if (!player) return null;
-
-        return (
-          <CardSelectionOverlay
-            hide={hide}
-            key={localPlayerId}
-            title="🦙 Llamacorn"
-            subtitle="Debes descartar 1 carta de tu mano."
-            items={player.hand.map((card, idx) => ({
-              id: `${card.id}_${idx}`,
-              value: card.uid,
-              title: card.name,
-              image: card.image,
-            }))}
-            maxSelection={1}
-            confirmText="Descartar"
-            onConfirm={(cardIds) => {
-              dismiss();
-              socket.emit('discard-cards', {
-                roomCode: gameState.roomCode,
-                playerId: localPlayerId,
-                cardIds,
-              });
-            }}
-          />
-        );
+        return null;
       }
 
       // ───────────────────────────────────
@@ -2654,6 +2608,52 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        if (action.reason === 'magical_flying_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'magical_flying_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦄 Magical Flying Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'magical-flying-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Magical Flying Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'classy_narwhal') {
           if (action.playerId !== localPlayerId) return null;
 

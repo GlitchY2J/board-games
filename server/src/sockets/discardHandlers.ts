@@ -38,6 +38,7 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
     const discardReason = game.pendingAction.type === 'discard'
       ? game.pendingAction.reason
       : undefined;
+    const isLlamacorn = game.pendingAction.type === 'llamacorn';
     const selectedDiscardedCard = discardReason === 'unicorn_on_the_cob'
       ? player.hand.find((card) => card.uid === cardIds[0])
       : undefined;
@@ -77,21 +78,32 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
       ? game.players
         .flatMap((candidate) => candidate.stable)
         .find((card) => card.id === 'annoying_flying_unicorn')
+        : undefined;
+    const llamacornCard = isLlamacorn
+      ? game.players
+        .flatMap((candidate) => candidate.stable)
+        .find((card) => card.id === 'llamacorn')
       : undefined;
     addLog(
       game,
-      discardReason === 'annoying_flying_unicorn' && discardedCard
+      isLlamacorn && discardedCard
+        ? `${player.name} descartó "${discardedCard.name}" por el efecto de "Llamacorn"`
+        : discardReason === 'annoying_flying_unicorn' && discardedCard
         ? `${player.name} descartó "${discardedCard.name}" por el efecto de "Annoying Flying Unicorn"`
         : `${player.name} descartó`,
       {
         playerId: player.id,
         cardImage: discardedCard?.image,
-        cardImages: discardReason === 'annoying_flying_unicorn'
+        cardImages: isLlamacorn
+          ? [discardedCard?.image, llamacornCard?.image].filter(
+            (image): image is string => !!image,
+          )
+          : discardReason === 'annoying_flying_unicorn'
           ? [discardedCard?.image, annoyingFlyingCard?.image].filter(
             (image): image is string => !!image,
           )
           : discardedImages,
-        event: discardReason === 'annoying_flying_unicorn' ? 'discard-card' : undefined,
+        event: isLlamacorn || discardReason === 'annoying_flying_unicorn' ? 'discard-card' : undefined,
       },
     );
     if (discardReason === 'hand_limit') {

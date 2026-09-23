@@ -721,6 +721,22 @@ export function registerActionHandlers(
       ) {
         CardZoneMovement.addToHand(player, removed);
 
+        if (pending.reason === 'magical_flying_unicorn') {
+          addLog(
+            room.gameState,
+            `${player.name} jugó "Magical Flying Unicorn" y robó una carta mágica del descarte`,
+            {
+              playerId: player.id,
+              cardImages: [pending.sourceCardImage].filter(
+                (image): image is string => !!image,
+              ),
+              event: 'play-card',
+            },
+          );
+          emitGameState(io, room, 'game-updated');
+          return;
+        }
+
         if (
           pending.reason === 'swift_flying_unicorn' &&
           room.gameState.phase === TurnPhase.BEGINNING

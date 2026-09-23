@@ -348,6 +348,11 @@ export default function BoardLayout({
         .map((card) => card.uid)
       : [],
   );
+  const llamacornAction = gameState.pendingAction?.type === 'llamacorn' &&
+    gameState.pendingAction.remainingPlayerIds.includes(localPlayerId);
+  const llamacornSelectableIds = llamacornAction
+    ? new Set((localPlayer?.hand ?? []).map((card) => card.uid))
+    : new Set<string>();
   const alluringAction = gameState.pendingAction?.type === 'alluring_narwhal' &&
     gameState.pendingAction.confirmed === true &&
     gameState.pendingAction.playerId === localPlayerId;
@@ -659,6 +664,12 @@ export default function BoardLayout({
                   {neighSelectionActive && (
                     <span className="draw-hint">
                       Selecciona la carta Neigh a utilizar
+                    </span>
+                  )}
+
+                  {llamacornAction && (
+                    <span className="draw-hint">
+                      Selecciona la carta a descartar
                     </span>
                   )}
 
@@ -1239,14 +1250,22 @@ export default function BoardLayout({
             gameId={gameId}
             sortHandMode={sortHandMode}
              discardSelection={annoyingDiscardAction}
-             selectionOnly={neighSelectionActive}
-             selectableCardIds={neighSelectableIds}
+             selectionOnly={neighSelectionActive || llamacornAction}
+             selectableCardIds={llamacornAction ? llamacornSelectableIds : neighSelectableIds}
              onCardSelect={(cardId) => {
-               setNeighSelectionActive(false);
-               socket.emit('play-neigh', {
-                 roomCode: gameState.roomCode,
-                 cardId,
-               });
+               if (llamacornAction) {
+                 socket.emit('discard-cards', {
+                   roomCode: gameState.roomCode,
+                   playerId: localPlayerId,
+                   cardIds: [cardId],
+                 });
+               } else {
+                 setNeighSelectionActive(false);
+                 socket.emit('play-neigh', {
+                   roomCode: gameState.roomCode,
+                   cardId,
+                 });
+               }
              }}
              onDiscardSelect={(cardId) => {
               socket.emit('discard-cards', {
