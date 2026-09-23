@@ -1016,7 +1016,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
         CardZoneMovement.removeFromHand(gamePlayer, card.uid);
       }
 
-       if (card.id !== 'magical_flying_unicorn') addLog(
+       if (card.id !== 'magical_flying_unicorn' && card.id !== 'majestic_flying_unicorn' && card.id !== 'mother_goose_unicorn') addLog(
          context.game,
          card.id === 'greedy_flying_unicorn'
            ? `${context.player.name} jugó "Greedy Flying Unicorn" y robó una carta del mazo`
@@ -1063,7 +1063,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
     if (playerHasYay) {
       RulesEngine.resolvePlay(context.game, context.player.id, card);
 
-       if (card.id !== 'chainsaw_massicorn' && card.id !== 'magical_flying_unicorn') {
+       if (card.id !== 'chainsaw_massicorn' && card.id !== 'magical_flying_unicorn' && card.id !== 'majestic_flying_unicorn' && card.id !== 'mother_goose_unicorn') {
          addLog(
            context.game,
            card.id === 'greedy_flying_unicorn'
@@ -1096,7 +1096,7 @@ function registerPlayCard(io: GameServer, socket: GameSocket): void {
       ],
     };
 
-     if (card.id !== 'chainsaw_massicorn' && card.id !== 'magical_flying_unicorn') {
+     if (card.id !== 'chainsaw_massicorn' && card.id !== 'magical_flying_unicorn' && card.id !== 'majestic_flying_unicorn' && card.id !== 'mother_goose_unicorn') {
        addLog(
          context.game,
          card.id === 'greedy_flying_unicorn'

@@ -2654,6 +2654,98 @@ export default function GameOverlay({
           );
         }
 
+        if (action.reason === 'majestic_flying_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'majestic_flying_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦄 Majestic Flying Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'majestic-flying-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Majestic Flying Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'mother_goose_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'mother_goose_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦢 Mother Goose Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'mother-goose-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Mother Goose Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'classy_narwhal') {
           if (action.playerId !== localPlayerId) return null;
 

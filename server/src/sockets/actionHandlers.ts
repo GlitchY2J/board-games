@@ -616,6 +616,22 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'mother_goose_unicorn') {
+        addLog(
+          room.gameState,
+          `${player.name} jugó "Mother Goose Unicorn" y trajo "${removed.name}" de la guardería a su establo`,
+          {
+            playerId: player.id,
+            cardImages: [pending.sourceCardImage, removed.image].filter(
+              (image): image is string => !!image,
+            ),
+            event: 'play-card',
+          },
+        );
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (
         room.gameState.phase === TurnPhase.BEGINNING &&
         !room.gameState.pendingAction
@@ -720,6 +736,22 @@ export function registerActionHandlers(
         pending.reason === 'frenchiecorn'
       ) {
         CardZoneMovement.addToHand(player, removed);
+
+        if (pending.reason === 'majestic_flying_unicorn') {
+          addLog(
+            room.gameState,
+            `${player.name} jugó "Majestic Flying Unicorn" y añadió una carta de unicornio del descarte a su mano`,
+            {
+              playerId: player.id,
+              cardImages: [pending.sourceCardImage].filter(
+                (image): image is string => !!image,
+              ),
+              event: 'play-card',
+            },
+          );
+          emitGameState(io, room, 'game-updated');
+          return;
+        }
 
         if (pending.reason === 'magical_flying_unicorn') {
           addLog(

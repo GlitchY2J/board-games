@@ -883,6 +883,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
             reason: 'angel_unicorn',
             playerId: player.id,
             cardType: 'unicorn',
+            sourceCardImage: pending.sourceCardImage,
           };
         } else {
           room.gameState.pendingAction = undefined;
@@ -954,6 +955,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
             reason: 'majestic_flying_unicorn',
             playerId: player.id,
             cardType: 'unicorn',
+            sourceCardImage: pending.sourceCardImage,
           };
         } else {
           room.gameState.pendingAction = undefined;
@@ -968,13 +970,13 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         }
       }
 
-      addLog(
-        room.gameState,
-        choice === 'yes'
-          ? `${player.name} usó el efecto de Majestic Flying Unicorn`
-          : `${player.name} omitió el efecto de Majestic Flying Unicorn`,
-        { playerId: player.id },
-      );
+      if (choice === 'no') {
+        addLog(
+          room.gameState,
+          `${player.name} omitió el efecto de Majestic Flying Unicorn`,
+          { playerId: player.id },
+        );
+      }
 
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'mother_goose_unicorn') {
@@ -989,6 +991,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
             type: 'select_nursery_card',
             reason: 'mother_goose_unicorn',
             playerId: player.id,
+            sourceCardImage: pending.sourceCardImage,
           };
         } else {
           room.gameState.pendingAction = undefined;
@@ -1003,13 +1006,13 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         }
       }
 
-      addLog(
-        room.gameState,
-        choice === 'yes'
-          ? `${player.name} usó el efecto de Mother Goose Unicorn`
-          : `${player.name} omitió el efecto de Mother Goose Unicorn`,
-        { playerId: player.id },
-      );
+      if (choice === 'no') {
+        addLog(
+          room.gameState,
+          `${player.name} omitió el efecto de Mother Goose Unicorn`,
+          { playerId: player.id },
+        );
+      }
 
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'extremely_fertile_unicorn') {

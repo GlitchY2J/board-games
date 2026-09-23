@@ -1,7 +1,7 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 
 export const motherGooseUnicorn: CardEffect = {
-  onEnterStable(state, player) {
+  onEnterStable(state, player, card) {
     const hasBabyInNursery = state.nursery.some(
       (c) => c.cardType === 'unicorn' && c.unicornClass === 'baby',
     );
@@ -12,6 +12,8 @@ export const motherGooseUnicorn: CardEffect = {
       type: 'select_choice',
       reason: 'mother_goose_unicorn',
       playerId: player.id,
+      effectCardId: card.uid,
+      sourceCardImage: card.image,
       title: '🦢 Mother Goose Unicorn',
       description:
         '¿Deseas traer un Baby Unicorn de la Nursery a tu establo?',
