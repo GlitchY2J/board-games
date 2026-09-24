@@ -1020,7 +1020,11 @@ export class ActionResolver {
         [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
       }
       enqueueShuffleAnimation(state.roomCode, pending.sourcePlayerId);
-      state.pendingAction = undefined;
+      // The searched card may open its own interactive enter-stable effect
+      // (e.g. Extremely Destructive Unicorn). Do not clear that action.
+      if (state.pendingAction === pending) {
+        state.pendingAction = undefined;
+      }
       return true;
     }
 
