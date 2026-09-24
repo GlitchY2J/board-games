@@ -42,9 +42,10 @@ socket.on('select-oracle-cards', ({ roomCode, handCardId, orderCardIds }) => {
 socket.on('select-own-hand-card', ({ roomCode, cardId }) => {
   const context = getSocketGameContext(socket, roomCode);
   if (!context) return;
-  const { room, game, player } = context;
+  const { room, game, player: roomPlayer } = context;
+  const player = game.players.find((candidate) => candidate.id === roomPlayer.id);
   const pending = game.pendingAction;
-  if (!pending || pending.type !== 'select_own_hand_card' || pending.playerId !== player.id || pending.reason !== 'rainbow_unicorn') return;
+  if (!player || !pending || pending.type !== 'select_own_hand_card' || pending.playerId !== player.id) return;
   const selectedCard = player.hand.find((card) => card.uid === cardId);
   if (!selectedCard) return;
   if (!ActionResolver.handleSelectOwnHandCardToStable(game, player.id, cardId)) {

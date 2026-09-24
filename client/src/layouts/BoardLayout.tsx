@@ -126,6 +126,7 @@ export default function BoardLayout({
   const [selectedMermaidCardId, setSelectedMermaidCardId] = useState<string | null>(null);
   const [selectedNecromancerCardIds, setSelectedNecromancerCardIds] = useState<Set<string>>(new Set());
   const [selectedNecromancerCardId, setSelectedNecromancerCardId] = useState<string | null>(null);
+  const [selectedRainbowCardId, setSelectedRainbowCardId] = useState<string | null>(null);
   const [neighSelectionActive, setNeighSelectionActive] = useState(false);
 
   useEffect(() => {
@@ -1000,6 +1001,33 @@ export default function BoardLayout({
         );
       })()}
 
+      {rainbowAction && selectedRainbowCardId && (() => {
+        const card = localPlayer?.hand.find((item) => item.uid === selectedRainbowCardId);
+        if (!card) return null;
+        return (
+          <CardSelectionOverlay
+            hide={false}
+            title="Rainbow Unicorn"
+            subtitle={`¿Deseas traer "${card.name}" de tu mano a tu establo?`}
+            items={[{ id: card.uid, value: card.uid, title: card.name, image: card.image }]}
+            maxSelection={1}
+            confirmText="Traer al establo"
+            showSelection={false}
+            compact
+            keyboardNavigation={false}
+            buttonHotkeys
+            onConfirm={() => {
+              setSelectedRainbowCardId(null);
+              socket.emit('select-own-hand-card', {
+                roomCode: gameState.roomCode,
+                cardId: card.uid,
+              });
+            }}
+            onCancel={() => setSelectedRainbowCardId(null)}
+          />
+        );
+      })()}
+
       {mermaidAction && selectedMermaidCardId && (() => {
         const card = gameState.players
           .flatMap((player) => [...player.stable, ...player.upgrades, ...player.downgrades])
@@ -1378,13 +1406,14 @@ export default function BoardLayout({
              discardSelection={annoyingDiscardAction}
              selectionOnly={neighSelectionActive || llamacornAction || necromancerDiscardAction || rainbowAction}
              selectableCardIds={rainbowAction ? rainbowSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
-             selectedCardIds={necromancerDiscardAction ? selectedNecromancerCardIds : undefined}
+             selectedCardIds={rainbowAction && selectedRainbowCardId
+               ? new Set([selectedRainbowCardId])
+               : necromancerDiscardAction
+                 ? selectedNecromancerCardIds
+                 : undefined}
              onCardSelect={(cardId) => {
-               if (rainbowAction) {
-                 socket.emit('select-own-hand-card', {
-                   roomCode: gameState.roomCode,
-                   cardId,
-                 });
+                if (rainbowAction) {
+                  setSelectedRainbowCardId(cardId);
                } else if (necromancerDiscardAction) {
                  if (selectedNecromancerCardIds.has(cardId)) return;
                  setSelectedNecromancerCardId(cardId);

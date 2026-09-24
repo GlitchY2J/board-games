@@ -379,13 +379,13 @@ export default function CardFan({
                 disabled={false}
                     selected={selectedCardId === card.uid || selectedCardIds?.has(card.uid)}
                  onClick={() => {
-                   const isNow = card.effect === 'now';
+                    const isNow = card.effect === 'now';
 
-                   if (selectionOnly && !selectionConfirm) {
-                     if (selectableCardIds && !selectableCardIds.has(card.uid)) return;
-                     onCardSelect?.(card.uid);
-                     return;
-                   }
+                    if (selectionOnly && !selectionConfirm) {
+                      if (selectableCardIds && !selectableCardIds.has(card.uid)) return;
+                      onCardSelect?.(card.uid);
+                      return;
+                    }
 
                    if (selectionOnly && selectionConfirm) {
                       if (selectableCardIds && !selectableCardIds.has(card.uid)) return;
