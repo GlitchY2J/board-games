@@ -424,8 +424,11 @@ export default function BoardLayout({
   if (chainsawAction) {
     gameState.players.forEach((player) => {
       if (player.id !== localPlayerId) {
+        const upgradesProtected = player.upgrades.some(
+          (card) => card.id === 'paranormal_affection',
+        );
         player.upgrades.forEach((card) => {
-          if (card.id !== 'saved_by_the_sigil') {
+          if (!upgradesProtected && card.id !== 'saved_by_the_sigil') {
             chainsawTargets.set(card.uid, JSON.stringify({
               cardId: card.uid,
               targetPlayerId: player.id,
