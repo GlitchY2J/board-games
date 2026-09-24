@@ -404,6 +404,9 @@ export default function BoardLayout({
   const annoyingDiscardAction = gameState.pendingAction?.type === 'discard' &&
     gameState.pendingAction.reason === 'annoying_flying_unicorn' &&
     gameState.pendingAction.playerId === localPlayerId;
+  const annoyingDiscardSelectableIds = annoyingDiscardAction
+    ? new Set((localPlayer?.hand ?? []).map((card) => card.uid))
+    : new Set<string>();
   const alluringUpgradeCards = alluringAction
     ? gameState.players
       .filter((player) => player.id !== localPlayerId)
@@ -1405,7 +1408,7 @@ export default function BoardLayout({
             sortHandMode={sortHandMode}
              discardSelection={annoyingDiscardAction}
              selectionOnly={neighSelectionActive || llamacornAction || necromancerDiscardAction || rainbowAction}
-             selectableCardIds={rainbowAction ? rainbowSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
+              selectableCardIds={rainbowAction ? rainbowSelectableIds : annoyingDiscardAction ? annoyingDiscardSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
              selectedCardIds={rainbowAction && selectedRainbowCardId
                ? new Set([selectedRainbowCardId])
                : necromancerDiscardAction
@@ -1414,7 +1417,13 @@ export default function BoardLayout({
              onCardSelect={(cardId) => {
                 if (rainbowAction) {
                   setSelectedRainbowCardId(cardId);
-               } else if (necromancerDiscardAction) {
+                } else if (annoyingDiscardAction) {
+                  socket.emit('discard-cards', {
+                    roomCode: gameState.roomCode,
+                    playerId: localPlayerId,
+                    cardIds: [cardId],
+                  });
+                } else if (necromancerDiscardAction) {
                  if (selectedNecromancerCardIds.has(cardId)) return;
                  setSelectedNecromancerCardId(cardId);
                } else if (llamacornAction) {
