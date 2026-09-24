@@ -687,6 +687,39 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           { playerId: player.id },
         );
       }
+    } else if (pending.reason === 'narwhal_torpedo') {
+      if (choice === 'yes') {
+        const downgrades = [...player.downgrades];
+        for (const downgrade of downgrades) {
+          CardMovement.destroyOrSacrifice(
+            room.gameState,
+            player,
+            downgrade,
+            'sacrifice',
+          );
+        }
+        player.downgrades = [];
+        room.gameState.pendingAction = undefined;
+        addLog(
+          room.gameState,
+          `${player.name} sacrificó ${downgrades.map((card) => `"${card.name}"`).join(', ')} por el efecto de "Narwhal Torpedo"`,
+          {
+            playerId: player.id,
+            cardImages: [
+              ...downgrades.map((card) => card.image),
+              pending.sourceCardImage,
+            ].filter((image): image is string => !!image),
+            event: 'discard-card',
+          },
+        );
+      } else {
+        room.gameState.pendingAction = undefined;
+        if (room.gameState.phase === TurnPhase.BEGINNING) {
+          TurnManager.processBeginningQueue(room.gameState);
+        }
+      }
+
+      emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'mermaid_unicorn') {
       if (choice === 'yes') {
         const validTargets = room.gameState.players.filter(

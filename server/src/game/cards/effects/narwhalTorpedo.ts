@@ -4,15 +4,23 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 import { CardMovement } from '../../unstable-unicorns/engine/CardMovement.ts';
 
 export const narwhalTorpedo: CardEffect = {
-  onEnterStable(state: GameState, player: Player) {
+  onEnterStable(state: GameState, player: Player, card) {
     // Solo se sacrifican los downgrades del establo en el que ENTRA esta carta,
     // no los de todos los jugadores.
-    const downgrades = [...player.downgrades];
+    if (player.downgrades.length === 0) return;
 
-    for (const downgrade of downgrades) {
-      CardMovement.destroyOrSacrifice(state, player, downgrade, 'sacrifice');
-    }
-
-    player.downgrades = [];
+    state.pendingAction = {
+      type: 'select_choice',
+      reason: 'narwhal_torpedo',
+      playerId: player.id,
+      title: '🐋 Narwhal Torpedo',
+      description: '¿Deseas sacrificar todos los Downgrades de tu establo?',
+      options: [
+        { value: 'yes', text: 'Sí, sacrificar Downgrades' },
+        { value: 'no', text: 'No, omitir efecto' },
+      ],
+      effectCardId: card.uid,
+      sourceCardImage: card.image,
+    };
   },
 };

@@ -271,6 +271,7 @@ export type PendingAction =
          | "stable_artillery"
          | "angel_unicorn"
          | "mermaid_unicorn"
+         | "narwhal_torpedo"
          | "three_of_a_kind"
          | "favor"
          | "neigh_thank_you"

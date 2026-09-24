@@ -2604,6 +2604,52 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        if (action.reason === 'narwhal_torpedo') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'narwhal_torpedo');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🐋 Narwhal Torpedo"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'narwhal-torpedo',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Narwhal Torpedo',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'mermaid_unicorn') {
           if (action.playerId !== localPlayerId) return null;
 
