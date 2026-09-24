@@ -123,6 +123,7 @@ export default function BoardLayout({
   const [selectedChainsawCardId, setSelectedChainsawCardId] = useState<string | null>(null);
   const [selectedDarkAngelCardId, setSelectedDarkAngelCardId] = useState<string | null>(null);
   const [selectedExtremelyDestructiveCardId, setSelectedExtremelyDestructiveCardId] = useState<string | null>(null);
+  const [selectedMermaidCardId, setSelectedMermaidCardId] = useState<string | null>(null);
   const [neighSelectionActive, setNeighSelectionActive] = useState(false);
 
   useEffect(() => {
@@ -353,6 +354,27 @@ export default function BoardLayout({
   const llamacornSelectableIds = llamacornAction
     ? new Set((localPlayer?.hand ?? []).map((card) => card.uid))
     : new Set<string>();
+  const mermaidAction = gameState.pendingAction &&
+    'reason' in gameState.pendingAction &&
+    gameState.pendingAction.reason === 'mermaid_unicorn' &&
+    ((gameState.pendingAction.type === 'select_player' &&
+      gameState.pendingAction.sourcePlayerId === localPlayerId) ||
+      (gameState.pendingAction.type === 'select_stable_card' &&
+        gameState.pendingAction.sourcePlayerId === localPlayerId));
+  const mermaidTargets = new Map<string, string>();
+  if (mermaidAction) {
+    gameState.players.forEach((player) => {
+      if (player.id === localPlayerId) return;
+      if (
+        gameState.pendingAction?.type === 'select_stable_card' &&
+        !gameState.pendingAction.remainingPlayerIds?.includes(player.id)
+      ) return;
+      [...player.stable, ...player.upgrades, ...player.downgrades].forEach((card) => {
+        mermaidTargets.set(card.uid, player.id);
+      });
+    });
+  }
+  const mermaidTargetIds = new Set(mermaidTargets.keys());
   const alluringAction = gameState.pendingAction?.type === 'alluring_narwhal' &&
     gameState.pendingAction.confirmed === true &&
     gameState.pendingAction.playerId === localPlayerId;
@@ -437,7 +459,8 @@ export default function BoardLayout({
     if (!chainsawAction) setSelectedChainsawCardId(null);
     if (!darkAngelAction) setSelectedDarkAngelCardId(null);
     if (!extremelyDestructiveAction) setSelectedExtremelyDestructiveCardId(null);
-  }, [alluringAction, chainsawAction, darkAngelAction, extremelyDestructiveAction]);
+    if (!mermaidAction) setSelectedMermaidCardId(null);
+  }, [alluringAction, chainsawAction, darkAngelAction, extremelyDestructiveAction, mermaidAction]);
 
   useEffect(() => {
     if (!alluringAction || !selectedAlluringUpgrade) return;
@@ -485,13 +508,18 @@ export default function BoardLayout({
           player={opp}
           isLocalPlayer={false}
           isMyTurn={opp.id === activePlayer.id}
-            selectableUpgradeIds={alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : darkAngelAction && opp.id === localPlayerId ? darkAngelTargets : undefined}
+            selectableUpgradeIds={alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : darkAngelAction && opp.id === localPlayerId ? darkAngelTargets : mermaidAction ? mermaidTargetIds : undefined}
            selectedUpgradeId={selectedAlluringUpgradeId ?? undefined}
            onUpgradeSelect={(cardId) => {
               if (chainsawAction) {
                 setSelectedChainsawCardId(cardId);
               } else if (darkAngelAction) {
                 setSelectedDarkAngelCardId(cardId);
+              } else if (mermaidAction) {
+                const targetPlayerId = mermaidTargets.get(cardId);
+                if (targetPlayerId) {
+                  setSelectedMermaidCardId(cardId);
+                }
               } else {
                setSelectedAlluringUpgradeId(cardId);
              }
@@ -670,6 +698,12 @@ export default function BoardLayout({
                   {llamacornAction && (
                     <span className="draw-hint">
                       Selecciona la carta a descartar
+                    </span>
+                  )}
+
+                  {mermaidAction && (
+                    <span className="draw-hint">
+                      Selecciona una carta de cada establo oponente para regresarla a su mano
                     </span>
                   )}
 
@@ -901,6 +935,37 @@ export default function BoardLayout({
               socket.emit('select-stable-card', { roomCode: gameState.roomCode, cardId: card.uid });
             }}
             onCancel={() => setSelectedExtremelyDestructiveCardId(null)}
+          />
+        );
+      })()}
+
+      {mermaidAction && selectedMermaidCardId && (() => {
+        const card = gameState.players
+          .flatMap((player) => [...player.stable, ...player.upgrades, ...player.downgrades])
+          .find((item) => item.uid === selectedMermaidCardId);
+        const targetPlayerId = mermaidTargets.get(selectedMermaidCardId);
+        if (!card || !targetPlayerId) return null;
+        return (
+          <CardSelectionOverlay
+            hide={false}
+            title="🧜‍♀️ Mermaid Unicorn"
+            subtitle={`¿Deseas devolver "${card.name}" a la mano de su dueño?`}
+            items={[{ id: card.uid, value: card.uid, title: card.name, image: card.image }]}
+            maxSelection={1}
+            confirmText="Devolver"
+            showSelection={false}
+            compact
+            keyboardNavigation={false}
+            buttonHotkeys
+            onConfirm={() => {
+              setSelectedMermaidCardId(null);
+              socket.emit('select-player', {
+                roomCode: gameState.roomCode,
+                playerId: targetPlayerId,
+                cardId: card.uid,
+              });
+            }}
+            onCancel={() => setSelectedMermaidCardId(null)}
           />
         );
       })()}

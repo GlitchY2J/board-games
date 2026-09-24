@@ -92,11 +92,33 @@ export function registerStableSelectionHandlers(io: GameServer, socket: GameSock
     if (!room.gameState.pendingAction && room.gameState.phase === TurnPhase.BEGINNING) {
       TurnManager.processBeginningQueue(room.gameState);
     }
+    if (pendingReason === 'mermaid_unicorn' && selectedCard) {
+      const sourceCardImage = pending && 'sourceCardImage' in pending
+        ? pending.sourceCardImage
+        : undefined;
+      const destination = selectedCard.unicornClass === 'baby'
+        ? 'la guardería'
+        : `la mano de ${selectedOwner?.name ?? 'su dueño'}`;
+      addLog(
+        room.gameState,
+        `${sourcePlayer.name} regresó "${selectedCard.name}" a ${destination} por el efecto de "Mermaid Unicorn"`,
+        {
+          playerId: sourcePlayer.id,
+          cardImages: [selectedCard.image, sourceCardImage].filter(
+            (image): image is string => !!image,
+          ),
+          event: 'discard-card',
+        },
+      );
+      emitGameState(io, room, 'game-updated');
+      return;
+    }
     if (
       pendingType !== 'alluring_narwhal' &&
        pendingReason !== 'shark_with_a_horn' &&
        pendingReason !== 'demonicorn_remove' &&
-       pendingType !== 'extremely_destructive_unicorn'
+       pendingType !== 'extremely_destructive_unicorn' &&
+       pendingReason !== 'mermaid_unicorn'
     ) {
       if (pendingReason === 'chainsaw_unicorn' && chainsawCard && chainsawTargetPlayer) {
         addLog(

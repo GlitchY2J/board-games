@@ -1,7 +1,7 @@
 import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffect.ts';
 
 export const mermaidUnicorn: CardEffect = {
-  onEnterStable(state, player) {
+  onEnterStable(state, player, card) {
     const validTargets = state.players.filter(
       (p) =>
         p.id !== player.id &&
@@ -14,20 +14,18 @@ export const mermaidUnicorn: CardEffect = {
       return;
     }
 
-    if (validTargets.length === 1) {
-      state.pendingAction = {
-        type: 'select_stable_card',
-        reason: 'mermaid_unicorn',
-        sourcePlayerId: player.id,
-        targetPlayerId: validTargets[0].id,
-      };
-      return;
-    }
-
     state.pendingAction = {
-      type: 'select_player',
+      type: 'select_choice',
       reason: 'mermaid_unicorn',
-      sourcePlayerId: player.id,
+      playerId: player.id,
+      title: '🧜‍♀️ Mermaid Unicorn',
+      description: '¿Deseas devolver una carta de un establo rival a su mano?',
+      options: [
+        { value: 'yes', text: 'Sí, devolver una carta' },
+        { value: 'no', text: 'No, omitir efecto' },
+      ],
+      effectCardId: card.uid,
+      sourceCardImage: card.image,
     };
   },
 };

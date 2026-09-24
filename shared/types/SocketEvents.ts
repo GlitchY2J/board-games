@@ -42,6 +42,7 @@ export interface DiscardCardsPayload {
 export interface SelectPlayerPayload {
   roomCode: string;
   playerId: string;
+  cardId?: string;
 }
 
 export interface SelectPlayersPayload {

@@ -52,7 +52,7 @@ export function registerActionHandlers(
   }
 
   function registerSelectPlayer(io: GameServer, socket: GameSocket): void {
-    socket.on('select-player', ({ roomCode, playerId }) => {
+    socket.on('select-player', ({ roomCode, playerId, cardId }) => {
       const room = roomManager.getRoom(roomCode);
       if (!room?.gameState) return;
 
@@ -62,6 +62,57 @@ export function registerActionHandlers(
       if (!sourcePlayer) return;
 
       const pendingAction = room.gameState.pendingAction;
+      if (
+        (pendingAction?.type === 'select_player' || pendingAction?.type === 'select_stable_card') &&
+        pendingAction.reason === 'mermaid_unicorn' &&
+        cardId
+      ) {
+        if (pendingAction.sourcePlayerId !== sourcePlayer.id || playerId === sourcePlayer.id) return;
+
+        const targetPlayer = room.gameState.players.find((candidate) => candidate.id === playerId);
+        const targetCard = targetPlayer && [
+          ...targetPlayer.stable,
+          ...targetPlayer.upgrades,
+          ...targetPlayer.downgrades,
+        ].find((card) => card.uid === cardId);
+        if (!targetPlayer || !targetCard) return;
+
+        const remainingPlayerIds = 'remainingPlayerIds' in pendingAction
+          ? pendingAction.remainingPlayerIds ?? []
+          : [];
+        if (!remainingPlayerIds.includes(targetPlayer.id)) return;
+        room.gameState.pendingAction = {
+          type: 'select_stable_card',
+          reason: 'mermaid_unicorn',
+          sourcePlayerId: sourcePlayer.id,
+          targetPlayerId: targetPlayer.id,
+          remainingPlayerIds,
+          sourceCardImage: pendingAction.sourceCardImage,
+        };
+        const resolved = ActionResolver.handleSelectStableCard(
+          room.gameState,
+          sourcePlayer.id,
+          cardId,
+        );
+        if (!resolved) return;
+
+        const destination = targetCard.unicornClass === 'baby'
+          ? 'la guardería'
+          : `la mano de ${targetPlayer.name}`;
+        addLog(
+          room.gameState,
+          `${sourcePlayer.name} regresó "${targetCard.name}" a ${destination} por el efecto de "Mermaid Unicorn"`,
+          {
+            playerId: sourcePlayer.id,
+            cardImages: [targetCard.image, pendingAction.sourceCardImage].filter(
+              (image): image is string => !!image,
+            ),
+            event: 'discard-card',
+          },
+        );
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
       if (
         isExplodingKittensRoom(room) &&
         pendingAction?.type === 'select_player' &&

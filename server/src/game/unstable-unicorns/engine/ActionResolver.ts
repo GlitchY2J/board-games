@@ -1880,7 +1880,15 @@ export class ActionResolver {
 
       CardMovement.returnToHand(state, targetPlayer, removedCard);
 
-      if (state.pendingAction === pending || !state.pendingAction) {
+      const remainingPlayerIds = (pending.remainingPlayerIds ?? [])
+        .filter((id) => id !== targetPlayer.id);
+      if (remainingPlayerIds.length > 0) {
+        state.pendingAction = {
+          ...pending,
+          targetPlayerId: undefined,
+          remainingPlayerIds,
+        };
+      } else if (state.pendingAction === pending || !state.pendingAction) {
         state.pendingAction = undefined;
       }
       return true;

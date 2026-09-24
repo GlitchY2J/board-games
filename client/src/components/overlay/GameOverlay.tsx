@@ -404,7 +404,8 @@ export default function GameOverlay({
          const isPossession = action.reason === 'possession';
          const isSupernaturalSelection = action.reason === 'supernatural_selection';
          const isCornjuring = action.reason === 'the_cornjuring';
-        const isMermaid = action.reason === 'mermaid_unicorn';
+         const isMermaid = action.reason === 'mermaid_unicorn';
+         if (isMermaid) return null;
         const isUnfairBargain = action.reason === 'unfair_bargain';
          const isUnicornSwap = action.reason === 'unicorn_swap';
          const isACuteAttack = action.reason === 'a_cute_attack';
@@ -908,7 +909,7 @@ export default function GameOverlay({
       }
 
       case 'select_stable_card': {
-        if (action.reason === 'chainsaw_unicorn' || action.reason === 'dark_angel_unicorn') return null;
+        if (action.reason === 'chainsaw_unicorn' || action.reason === 'dark_angel_unicorn' || action.reason === 'mermaid_unicorn') return null;
 
         if (action.sourcePlayerId !== localPlayerId) return null;
 
@@ -2127,7 +2128,6 @@ export default function GameOverlay({
         if (!target) return null;
 
         const isUnicornPoison = action.reason === 'unicorn_poison';
-        const isMermaid = action.reason === 'mermaid_unicorn';
 
         const cardsToSelect = isUnicornPoison
           ? target.stable.filter(
@@ -2144,16 +2144,12 @@ export default function GameOverlay({
             title={
               isUnicornPoison
                 ? '🧪 Unicorn Poison'
-                : isMermaid
-                  ? '🧜‍♀️ Mermaid Unicorn'
-                  : 'Seleccionar Carta del Establo'
+                : 'Seleccionar Carta del Establo'
             }
             subtitle={
               isUnicornPoison
                 ? `Selecciona un unicornio del establo de ${target.name} para destruirlo`
-                : isMermaid
-                  ? `Selecciona una carta del establo de ${target.name} para devolverla a su mano`
-                  : `Selecciona una carta del establo de ${target.name}`
+                : `Selecciona una carta del establo de ${target.name}`
             }
             items={cardsToSelect.map((card, idx) => ({
               id: `${card.id}_${idx}`,
@@ -2163,7 +2159,7 @@ export default function GameOverlay({
             }))}
             maxSelection={1}
             confirmText={
-              isUnicornPoison ? 'Destruir' : isMermaid ? 'Devolver' : 'Aceptar'
+              isUnicornPoison ? 'Destruir' : 'Aceptar'
             }
             onConfirm={([cardId]) => {
               dismiss();
@@ -2608,6 +2604,52 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        if (action.reason === 'mermaid_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'mermaid_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🧜‍♀️ Mermaid Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'mermaid-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Mermaid Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'magical_flying_unicorn') {
           if (action.playerId !== localPlayerId) return null;
 

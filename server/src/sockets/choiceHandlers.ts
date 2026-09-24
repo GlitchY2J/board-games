@@ -687,7 +687,40 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           { playerId: player.id },
         );
       }
+    } else if (pending.reason === 'mermaid_unicorn') {
+      if (choice === 'yes') {
+        const validTargets = room.gameState.players.filter(
+          (candidate) =>
+            candidate.id !== player.id &&
+            (candidate.stable.length > 0 ||
+              candidate.upgrades.length > 0 ||
+              candidate.downgrades.length > 0),
+        );
+        if (validTargets.length > 0) {
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'mermaid_unicorn',
+            sourcePlayerId: player.id,
+            remainingPlayerIds: validTargets.map((candidate) => candidate.id),
+            sourceCardImage: pending.sourceCardImage,
+          };
+        } else {
+          room.gameState.pendingAction = undefined;
+        }
+      } else {
+        room.gameState.pendingAction = undefined;
+        if (room.gameState.phase === TurnPhase.BEGINNING) {
+          TurnManager.processBeginningQueue(room.gameState);
+        }
+      }
 
+      if (choice === 'no') {
+        addLog(
+          room.gameState,
+          `${player.name} omitió el efecto de Mermaid Unicorn`,
+          { playerId: player.id },
+        );
+      }
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'dark_angel_unicorn') {
       if (choice === 'yes') {

@@ -270,7 +270,8 @@ export type PendingAction =
          | "special_delivery"
          | "stable_artillery"
          | "angel_unicorn"
-        | "three_of_a_kind"
+         | "mermaid_unicorn"
+         | "three_of_a_kind"
          | "favor"
          | "neigh_thank_you"
          | "spray_bottle_of_youth";
