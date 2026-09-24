@@ -25,6 +25,7 @@ interface Props {
   sortHandMode?: 'alphabetical' | 'type' | null;
   selectableCardIds?: Set<string>;
   selectionOnly?: boolean;
+  selectedCardIds?: Set<string>;
 }
 
 export default function PlayerHand({
@@ -47,6 +48,7 @@ export default function PlayerHand({
   sortHandMode,
   selectableCardIds,
   selectionOnly = false,
+  selectedCardIds,
 }: Props) {
   return (
     <div className="player-hand">
@@ -68,6 +70,7 @@ export default function PlayerHand({
            discardSelection={discardSelection}
            selectionOnly={selectionOnly}
            selectableCardIds={selectableCardIds}
+           selectedCardIds={selectedCardIds}
            onDiscardSelect={onDiscardSelect}
            onCardSelect={onCardSelect}
         />

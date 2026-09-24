@@ -19,6 +19,8 @@ export const necromancerUnicorn: CardEffect = {
       type: 'select_choice',
       reason: 'necromancer_unicorn',
       playerId: player.id,
+      effectCardId: card.uid,
+      sourceCardImage: card.image,
       title: '🧙 Necromancer Unicorn',
       description:
         '¿Deseas descartar 2 unicornios de TU mano para traer un unicornio del descarte a tu establo?',

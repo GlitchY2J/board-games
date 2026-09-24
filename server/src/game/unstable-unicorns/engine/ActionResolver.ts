@@ -190,7 +190,8 @@ export class ActionResolver {
       return false;
     }
 
-    if (cardIds.length !== pending.cardsToDiscard) {
+    const requiredCards = pending.reason === 'necromancer_unicorn' ? 1 : pending.cardsToDiscard;
+    if (cardIds.length !== requiredCards) {
       return false;
     }
 
@@ -200,6 +201,7 @@ export class ActionResolver {
     const reason = pending.reason;
     const isNecromancer = reason === 'necromancer_unicorn';
     const discardedImages: string[] = [];
+    const discardedNames: string[] = [];
 
     for (const cardId of cardIds) {
       const idx = player.hand.findIndex((c) => c.uid === cardId);
@@ -210,6 +212,17 @@ export class ActionResolver {
       const [discarded] = player.hand.splice(idx, 1);
       CardMovement.discard(state, discarded, player.id);
       discardedImages.push(discarded.image);
+      discardedNames.push(discarded.name);
+    }
+
+    if (isNecromancer && pending.cardsToDiscard > 1) {
+      state.pendingAction = {
+        ...pending,
+        cardsToDiscard: pending.cardsToDiscard - 1,
+        discardedCardImages: [...(pending.discardedCardImages ?? []), ...discardedImages],
+        discardedCardNames: [...(pending.discardedCardNames ?? []), ...discardedNames],
+      };
+      return true;
     }
 
     state.pendingAction = undefined;
@@ -234,6 +247,15 @@ export class ActionResolver {
         reason: 'necromancer_unicorn',
         playerId,
         cardType: 'unicorn',
+        discardedCardImages: [
+          ...(pending.discardedCardImages ?? []),
+          ...discardedImages,
+        ],
+        discardedCardNames: [
+          ...(pending.discardedCardNames ?? []),
+          ...discardedNames,
+        ],
+        sourceCardImage: pending.sourceCardImage,
       };
       return true;
     }

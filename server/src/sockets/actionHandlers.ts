@@ -878,6 +878,24 @@ export function registerActionHandlers(
         return;
       }
 
+      if (pending.reason === 'necromancer_unicorn') {
+        addLog(
+          room.gameState,
+          `${player.name} descartó ${(pending.discardedCardNames ?? []).map((name) => `"${name}"`).join(', ')} y trajo "${broughtFromDiscard.name}" del descarte a su establo por el efecto de "Necromancer Unicorn"`,
+          {
+            playerId: player.id,
+            cardImages: [
+              ...(pending.discardedCardImages ?? []),
+              broughtFromDiscard.image,
+              pending.sourceCardImage,
+            ].filter((image): image is string => !!image),
+            event: 'play-card',
+          },
+        );
+        emitGameState(io, room, 'game-updated');
+        return;
+      }
+
       if (pending.reason === 'zombie_unicorn') {
         addLog(
           room.gameState,

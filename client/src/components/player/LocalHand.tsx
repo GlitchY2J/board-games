@@ -23,6 +23,7 @@ interface Props {
   sortHandMode?: 'alphabetical' | 'type' | null;
   selectableCardIds?: Set<string>;
   selectionOnly?: boolean;
+  selectedCardIds?: Set<string>;
 }
 
 export default function LocalHand({
@@ -44,6 +45,7 @@ export default function LocalHand({
   sortHandMode,
   selectableCardIds,
   selectionOnly = false,
+  selectedCardIds,
 }: Props) {
   return (
     <CardFan
@@ -62,6 +64,7 @@ export default function LocalHand({
       sortHandMode={sortHandMode}
        selectionOnly={discardSelection || selectionOnly}
        selectableCardIds={selectableCardIds}
+       selectedCardIds={selectedCardIds}
       selectionConfirm={discardSelection}
        onCardSelect={onCardSelect ?? onDiscardSelect}
     />

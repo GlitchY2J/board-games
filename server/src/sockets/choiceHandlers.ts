@@ -170,6 +170,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           reason: 'dancing_clownicorn',
           playerId: player.id,
           cardsToDiscard: 2,
+          sourceCardImage: pending.sourceCardImage,
         };
       } else {
         room.gameState.pendingAction = undefined;
@@ -1132,13 +1133,13 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         }
       }
 
-      addLog(
-        room.gameState,
-        choice === 'yes'
-          ? `${player.name} usó el efecto de Necromancer Unicorn`
-          : `${player.name} omitió el efecto de Necromancer Unicorn`,
-        { playerId: player.id },
-      );
+      if (choice === 'no') {
+        addLog(
+          room.gameState,
+          `${player.name} omitió el efecto de Necromancer Unicorn`,
+          { playerId: player.id },
+        );
+      }
 
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'rainbow_unicorn') {

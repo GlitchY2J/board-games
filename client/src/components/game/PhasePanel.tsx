@@ -168,7 +168,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
 
       return (
         <span
-          className="inline-block px-1.5 py-0.5 mr-1 rounded-md font-black text-[9px] uppercase tracking-wide align-middle"
+          className="history-player-badge inline-block px-1.5 py-0.5 rounded-md font-black text-[9px] uppercase tracking-wide align-middle"
           style={{
             color: color.text,
             backgroundColor: color.bg,
@@ -307,7 +307,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
                       <div
                         key={entry.id}
                         className={cn(
-                          "text-[11px] leading-snug",
+                           "history-entry text-[11px] leading-snug",
                           entry.playerId === localPlayer?.id
                              ? "text-emerald-300/90"
                              : "text-slate-400/90",

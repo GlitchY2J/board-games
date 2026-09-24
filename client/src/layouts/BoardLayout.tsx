@@ -124,6 +124,8 @@ export default function BoardLayout({
   const [selectedDarkAngelCardId, setSelectedDarkAngelCardId] = useState<string | null>(null);
   const [selectedExtremelyDestructiveCardId, setSelectedExtremelyDestructiveCardId] = useState<string | null>(null);
   const [selectedMermaidCardId, setSelectedMermaidCardId] = useState<string | null>(null);
+  const [selectedNecromancerCardIds, setSelectedNecromancerCardIds] = useState<Set<string>>(new Set());
+  const [selectedNecromancerCardId, setSelectedNecromancerCardId] = useState<string | null>(null);
   const [neighSelectionActive, setNeighSelectionActive] = useState(false);
 
   useEffect(() => {
@@ -354,6 +356,14 @@ export default function BoardLayout({
   const llamacornSelectableIds = llamacornAction
     ? new Set((localPlayer?.hand ?? []).map((card) => card.uid))
     : new Set<string>();
+  const necromancerDiscardAction = gameState.pendingAction?.type === 'discard' &&
+    gameState.pendingAction.reason === 'necromancer_unicorn' &&
+    gameState.pendingAction.playerId === localPlayerId;
+  const necromancerSelectableIds = necromancerDiscardAction
+    ? new Set((localPlayer?.hand ?? [])
+      .filter((card) => card.cardType === 'unicorn')
+      .map((card) => card.uid))
+    : new Set<string>();
   const mermaidAction = gameState.pendingAction &&
     'reason' in gameState.pendingAction &&
     gameState.pendingAction.reason === 'mermaid_unicorn' &&
@@ -460,7 +470,9 @@ export default function BoardLayout({
     if (!darkAngelAction) setSelectedDarkAngelCardId(null);
     if (!extremelyDestructiveAction) setSelectedExtremelyDestructiveCardId(null);
     if (!mermaidAction) setSelectedMermaidCardId(null);
-  }, [alluringAction, chainsawAction, darkAngelAction, extremelyDestructiveAction, mermaidAction]);
+    if (!necromancerDiscardAction) setSelectedNecromancerCardIds(new Set());
+    if (!necromancerDiscardAction) setSelectedNecromancerCardId(null);
+  }, [alluringAction, chainsawAction, darkAngelAction, extremelyDestructiveAction, mermaidAction, necromancerDiscardAction]);
 
   useEffect(() => {
     if (!alluringAction || !selectedAlluringUpgrade) return;
@@ -707,6 +719,12 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {necromancerDiscardAction && (
+                    <span className="draw-hint">
+                      Descarta cartas de Unicornio ({gameState.pendingAction?.type === 'discard' ? gameState.pendingAction.cardsToDiscard : 0} pendientes)
+                    </span>
+                  )}
+
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
                       Presiona <kbd className="space-key">Space</kbd> para robar
@@ -935,6 +953,35 @@ export default function BoardLayout({
               socket.emit('select-stable-card', { roomCode: gameState.roomCode, cardId: card.uid });
             }}
             onCancel={() => setSelectedExtremelyDestructiveCardId(null)}
+          />
+        );
+      })()}
+
+      {necromancerDiscardAction && selectedNecromancerCardId && (() => {
+        const card = localPlayer?.hand.find((item) => item.uid === selectedNecromancerCardId);
+        if (!card) return null;
+        return (
+          <CardSelectionOverlay
+            hide={false}
+            title="🧙 Necromancer Unicorn"
+            subtitle="¿Deseas descartar esta carta de Unicornio?"
+            items={[{ id: card.uid, value: card.uid, title: card.name, image: card.image }]}
+            maxSelection={1}
+            confirmText="Descartar"
+            showSelection={false}
+            compact
+            keyboardNavigation={false}
+            buttonHotkeys
+            onConfirm={() => {
+              setSelectedNecromancerCardId(null);
+              setSelectedNecromancerCardIds(new Set());
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds: [card.uid],
+              });
+            }}
+            onCancel={() => setSelectedNecromancerCardId(null)}
           />
         );
       })()}
@@ -1315,10 +1362,14 @@ export default function BoardLayout({
             gameId={gameId}
             sortHandMode={sortHandMode}
              discardSelection={annoyingDiscardAction}
-             selectionOnly={neighSelectionActive || llamacornAction}
-             selectableCardIds={llamacornAction ? llamacornSelectableIds : neighSelectableIds}
+             selectionOnly={neighSelectionActive || llamacornAction || necromancerDiscardAction}
+             selectableCardIds={llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
+             selectedCardIds={necromancerDiscardAction ? selectedNecromancerCardIds : undefined}
              onCardSelect={(cardId) => {
-               if (llamacornAction) {
+               if (necromancerDiscardAction) {
+                 if (selectedNecromancerCardIds.has(cardId)) return;
+                 setSelectedNecromancerCardId(cardId);
+               } else if (llamacornAction) {
                  socket.emit('discard-cards', {
                    roomCode: gameState.roomCode,
                    playerId: localPlayerId,

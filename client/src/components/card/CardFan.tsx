@@ -28,6 +28,7 @@ interface Props {
   gameId?: string;
   sortHandMode?: 'alphabetical' | 'type' | null;
   selectableCardIds?: Set<string>;
+  selectedCardIds?: Set<string>;
 }
 
 function getCardTypeRank(card: CardType): number {
@@ -70,6 +71,7 @@ export default function CardFan({
   gameId,
   sortHandMode = null,
   selectableCardIds,
+  selectedCardIds,
 }: Props) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [keyboardCardIndex, setKeyboardCardIndex] = useState<number | null>(null);
@@ -375,7 +377,7 @@ export default function CardFan({
                 image={card.image}
                 size="large"
                 disabled={false}
-                selected={selectedCardId === card.uid}
+                    selected={selectedCardId === card.uid || selectedCardIds?.has(card.uid)}
                  onClick={() => {
                    const isNow = card.effect === 'now';
 

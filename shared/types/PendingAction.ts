@@ -24,8 +24,8 @@ export type PendingAction =
       reason: "unicorn_of_pestilence";
       sourcePlayerId: string;
       playerId: string;
-      remainingPlayerIds: string[];
-      cardsToDiscard: number;
+       remainingPlayerIds: string[];
+       cardsToDiscard: number;
     }
   | {
       type: "discard";
@@ -49,9 +49,12 @@ export type PendingAction =
           | "magic_elexir"
          | "strange_craft_project"
         | "barbed_wire";
-      playerId: string;
-      cardsToDiscard: number;
-    }
+       playerId: string;
+       cardsToDiscard: number;
+       sourceCardImage?: string;
+       discardedCardImages?: string[];
+       discardedCardNames?: string[];
+     }
   | {
       type: "select_players";
       reason: "unicorn_rainbow_princess";
@@ -301,6 +304,8 @@ export type PendingAction =
       playerId: string;
        cardType?: "unicorn" | "magic" | "upgrade" | "downgrade" | "instant";
        discardedCardIds?: string[];
+       discardedCardImages?: string[];
+       discardedCardNames?: string[];
        sourceCardImage?: string;
        sacrificedCardImage?: string;
        sacrificedCardName?: string;

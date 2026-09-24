@@ -297,6 +297,7 @@ export default function GameOverlay({
         const player = gameState.players.find((p) => p.id === localPlayerId);
         if (!player || action.playerId !== localPlayerId) return null;
         if (action.reason === 'annoying_flying_unicorn') return null;
+        if (action.reason === 'necromancer_unicorn') return null;
 
         const titleMap: Record<string, string> = {
           hand_limit: 'Límite de mano superado',
@@ -316,19 +317,14 @@ export default function GameOverlay({
           zombie_unicorn: '🧟 Zombie Unicorn',
         };
 
-        const isNecromancer = action.reason === 'necromancer_unicorn';
-        const discardableCards = isNecromancer
-          ? player.hand.filter((c) => c.cardType === 'unicorn')
-          : player.hand;
+        const discardableCards = player.hand;
 
         return (
           <CardSelectionOverlay
             hide={hide}
             title={titleMap[action.reason] ?? 'Descarta cartas'}
             subtitle={
-              isNecromancer
-                ? `Debes descartar ${action.cardsToDiscard} unicornio(s) de tu mano.`
-                : `Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`
+               `Debes descartar ${action.cardsToDiscard} carta(s) de tu mano.`
             }
             items={discardableCards.map((card, idx) => ({
               id: `${card.id}_${idx}`,
@@ -2604,6 +2600,52 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        if (action.reason === 'necromancer_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'necromancer_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🧙 Necromancer Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'necromancer-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Necromancer Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'narwhal_torpedo') {
           if (action.playerId !== localPlayerId) return null;
 

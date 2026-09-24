@@ -70,6 +70,10 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
     }
 
     continueBeginningPhaseIfReady(game);
+    if (discardReason === 'necromancer_unicorn') {
+      emitGameState(io, room, 'game-updated');
+      return;
+    }
     const discardedCard = selectedDiscardedCard ?? game.discard.find((card) => card.uid === cardIds[0]);
     const discardedImages = cardIds
       .map((cardId) => game.discard.find((card) => card.uid === cardId)?.image)

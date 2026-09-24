@@ -32,11 +32,15 @@ export default function PhaseActionButton({ gameState, autoEnabled = false }: Pr
   // debe poder terminar el turno manualmente, incluso con el modo automático.
   const doubleDutchCanEnd =
     gameState.phase === 'ACTION' && gameState.actionPlaysRemaining === 1;
+  const hasPendingResolution = Boolean(
+    gameState.pendingAction || gameState.pendingPlay,
+  );
 
   const showButton =
-    (gameState.phase === 'ACTION' &&
+    !hasPendingResolution &&
+    ((gameState.phase === 'ACTION' &&
       (gameState.actionUsed || gameState.actionPlaysRemaining === 1)) ||
-    gameState.phase === 'END';
+    gameState.phase === 'END');
 
   useEffect(() => {
     if (!isActivePlayer || !showButton) return;
@@ -61,7 +65,7 @@ export default function PhaseActionButton({ gameState, autoEnabled = false }: Pr
 
   if (autoEnabled && !doubleDutchCanEnd) return null;
 
-  if (!showButton) return null;
+  if (!showButton || hasPendingResolution) return null;
 
   return (
     <button
