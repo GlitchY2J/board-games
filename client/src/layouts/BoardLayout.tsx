@@ -127,6 +127,7 @@ export default function BoardLayout({
   const [selectedNecromancerCardIds, setSelectedNecromancerCardIds] = useState<Set<string>>(new Set());
   const [selectedNecromancerCardId, setSelectedNecromancerCardId] = useState<string | null>(null);
   const [selectedRainbowCardId, setSelectedRainbowCardId] = useState<string | null>(null);
+  const [selectedLlamacornCardId, setSelectedLlamacornCardId] = useState<string | null>(null);
   const [neighSelectionActive, setNeighSelectionActive] = useState(false);
 
   useEffect(() => {
@@ -1031,6 +1032,34 @@ export default function BoardLayout({
         );
       })()}
 
+      {llamacornAction && selectedLlamacornCardId && (() => {
+        const card = localPlayer?.hand.find((item) => item.uid === selectedLlamacornCardId);
+        if (!card) return null;
+        return (
+          <CardSelectionOverlay
+            hide={false}
+            title="Llamacorn"
+            subtitle={`¿Deseas descartar "${card.name}" por el efecto de Llamacorn?`}
+            items={[{ id: card.uid, value: card.uid, title: card.name, image: card.image }]}
+            maxSelection={1}
+            confirmText="Descartar"
+            showSelection={false}
+            compact
+            keyboardNavigation={false}
+            buttonHotkeys
+            onConfirm={() => {
+              setSelectedLlamacornCardId(null);
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds: [card.uid],
+              });
+            }}
+            onCancel={() => setSelectedLlamacornCardId(null)}
+          />
+        );
+      })()}
+
       {mermaidAction && selectedMermaidCardId && (() => {
         const card = gameState.players
           .flatMap((player) => [...player.stable, ...player.upgrades, ...player.downgrades])
@@ -1409,9 +1438,11 @@ export default function BoardLayout({
              discardSelection={annoyingDiscardAction}
              selectionOnly={neighSelectionActive || llamacornAction || necromancerDiscardAction || rainbowAction}
               selectableCardIds={rainbowAction ? rainbowSelectableIds : annoyingDiscardAction ? annoyingDiscardSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
-             selectedCardIds={rainbowAction && selectedRainbowCardId
-               ? new Set([selectedRainbowCardId])
-               : necromancerDiscardAction
+              selectedCardIds={rainbowAction && selectedRainbowCardId
+                ? new Set([selectedRainbowCardId])
+                : llamacornAction && selectedLlamacornCardId
+                  ? new Set([selectedLlamacornCardId])
+                : necromancerDiscardAction
                  ? selectedNecromancerCardIds
                  : undefined}
              onCardSelect={(cardId) => {
@@ -1426,12 +1457,8 @@ export default function BoardLayout({
                 } else if (necromancerDiscardAction) {
                  if (selectedNecromancerCardIds.has(cardId)) return;
                  setSelectedNecromancerCardId(cardId);
-               } else if (llamacornAction) {
-                 socket.emit('discard-cards', {
-                   roomCode: gameState.roomCode,
-                   playerId: localPlayerId,
-                   cardIds: [cardId],
-                 });
+                } else if (llamacornAction) {
+                  setSelectedLlamacornCardId(cardId);
                } else {
                  setNeighSelectionActive(false);
                  socket.emit('play-neigh', {
