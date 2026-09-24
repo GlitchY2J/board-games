@@ -1089,8 +1089,8 @@ export default function GameOverlay({
           const items = gameState.players
             .filter((p) => action.remainingPlayerIds?.includes(p.id))
             .flatMap((p) => {
-              const cards =
-                action.reason === 'strange_craft_project_remove'
+                const cards =
+                action.reason === 'unicorn_slasher_remove' || action.reason === 'strange_craft_project_remove'
                   ? [...p.stable, ...p.upgrades, ...p.downgrades]
                   : p.stable;
               return cards.map((card, index) => ({
@@ -1114,10 +1114,12 @@ export default function GameOverlay({
                       ? "🔪 Heeeeere's Stabby"
                       : '🛠️ Strange Craft Project'
               }
-              subtitle="Elige una carta de cualquier establo para retirarla de la partida."
+              subtitle={action.reason === 'unicorn_slasher_remove'
+                ? 'Elige una carta de cualquier establo para removerla de la partida.'
+                : 'Elige una carta de cualquier establo para retirarla de la partida.'}
               items={items}
               maxSelection={1}
-              confirmText="Retirar de la partida"
+              confirmText={action.reason === 'unicorn_slasher_remove' ? 'Remover de la partida' : 'Retirar de la partida'}
               onConfirm={([cardId]) => {
                 dismiss();
                 socket.emit('select-stable-card', {

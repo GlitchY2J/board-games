@@ -2226,6 +2226,7 @@ export class ActionResolver {
         state,
         cardId,
         targetIds,
+        true,
       );
       if (removedCard) {
         const { card: removed } = removedCard;
@@ -2298,6 +2299,7 @@ export class ActionResolver {
         state,
         cardId,
         targetIds,
+        true,
       );
       if (removedCard) {
         const { card: removed } = removedCard;
