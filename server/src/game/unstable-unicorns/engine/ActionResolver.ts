@@ -1935,6 +1935,19 @@ export class ActionResolver {
 
       const sacrificedCard = CardZoneMovement.removeAt(sourcePlayer.stable, idx);
       if (!sacrificedCard) return false;
+      const nextStep = {
+        type: 'select_discard_card' as const,
+        reason: 'dark_angel_unicorn' as const,
+        playerId: sourcePlayerId,
+        cardType: 'unicorn' as const,
+        sacrificedCardImage: sacrificedCard.image,
+        sacrificedCardName: sacrificedCard.name,
+        effectCardImage: pending.sourceCardImage ?? (pending.effectCardId
+          ? state.players
+            .flatMap((candidate) => candidate.stable)
+            .find((candidate) => candidate.uid === pending.effectCardId)?.image
+          : undefined),
+      };
       const intercepted = CardMovement.destroyOrSacrifice(
         state,
         sourcePlayer,
@@ -1942,7 +1955,10 @@ export class ActionResolver {
         'sacrifice',
       );
 
-      if (intercepted) return true;
+      if (intercepted) {
+        EffectStack.advance(state, pending, nextStep);
+        return true;
+      }
 
       // Si no hay ningún unicornio válido (distinto de Dark Angel) en el descarte
       // para traer de vuelta, se omite la segunda parte del efecto. Esto ocurre
@@ -1960,19 +1976,7 @@ export class ActionResolver {
       // Resolución LIFO centralizada: si el sacrificio disparó un efecto
       // onDestroyed interactivo (p. ej. Stabby The Unicorn), el siguiente paso
       // se suspende en la pila y se reanuda después del efecto hijo.
-      EffectStack.advance(state, pending, {
-      type: 'select_discard_card',
-        reason: 'dark_angel_unicorn',
-        playerId: sourcePlayerId,
-        cardType: 'unicorn',
-        sacrificedCardImage: sacrificedCard.image,
-        sacrificedCardName: sacrificedCard.name,
-        effectCardImage: pending.sourceCardImage ?? (pending.effectCardId
-          ? state.players
-            .flatMap((candidate) => candidate.stable)
-            .find((candidate) => candidate.uid === pending.effectCardId)?.image
-          : undefined),
-      });
+      EffectStack.advance(state, pending, nextStep);
       return true;
     }
 
