@@ -45,6 +45,7 @@ export default function PlayingCard({
   }
 
   function handleClick() {
+    hidePreview();
     playCardClickSound();
     onClick?.();
   }

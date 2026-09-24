@@ -65,6 +65,9 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   if (!pending || hide || neighSelectionActive || pending.neighSelectionPlayerId) return null;
 
   const isMyPlay = !spectator && pending.playerId === localPlayerId;
+  // After responding with a Neigh, the responder must wait for the other
+  // players but should not have their board covered by their own Neigh card.
+  if (isMyPlay && pending.chain.length > 1) return null;
   const remainingMs = Math.max(
     0,
     pending.startedAt + pending.durationMs - now,
@@ -205,7 +208,8 @@ export default function PendingPlayOverlay({ gameState, localPlayerId, gameId, h
   }
 
   function chooseNeigh() {
-    if (neighCards.length === 1) {
+    const distinctNeighs = new Set(neighCards.map((card) => card.id));
+    if (neighCards.length > 0 && distinctNeighs.size === 1) {
       playNeigh(neighCards[0].uid);
     } else if (neighCards.length > 1) {
       socket.emit('neigh-prepare', { roomCode: gameState.roomCode });

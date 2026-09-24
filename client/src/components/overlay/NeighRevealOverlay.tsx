@@ -25,9 +25,13 @@ export default function NeighRevealOverlay({ gameState }: Props) {
     }
 
     setAnnouncement(entry);
+  }, [gameState.log, latestLogId]);
+
+  useEffect(() => {
+    if (!announcement) return;
     const timeout = window.setTimeout(() => setAnnouncement(undefined), 2800);
     return () => window.clearTimeout(timeout);
-  }, [gameState.log, latestLogId]);
+  }, [announcement]);
 
   if (!announcement?.cardImage) return null;
 

@@ -205,8 +205,11 @@ export default function Game() {
         pendingGameStateRef.current = state;
         if (isNeighThankYouChoice) {
           pendingNeighThankYouStateRef.current = state;
+        } else {
+          pendingNeighThankYouStateRef.current = null;
         }
       } else {
+        pendingNeighThankYouStateRef.current = null;
         applyGameState(state);
       }
     };
@@ -626,8 +629,8 @@ export default function Game() {
   }
 
   function removeNeighAnim(animId: string) {
-    if (!neighAnims.some((animation) => animation.animId === animId)) return;
     setNeighAnims((prev) => prev.filter((animation) => animation.animId !== animId));
+    if (neighAnimationCountRef.current === 0) return;
     neighAnimationCountRef.current = 0;
     activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
 
