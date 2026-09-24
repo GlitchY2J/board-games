@@ -45,12 +45,24 @@ socket.on('select-own-hand-card', ({ roomCode, cardId }) => {
   const { room, game, player } = context;
   const pending = game.pendingAction;
   if (!pending || pending.type !== 'select_own_hand_card' || pending.playerId !== player.id || pending.reason !== 'rainbow_unicorn') return;
+  const selectedCard = player.hand.find((card) => card.uid === cardId);
+  if (!selectedCard) return;
   if (!ActionResolver.handleSelectOwnHandCardToStable(game, player.id, cardId)) {
     emitGameError(socket, 'INVALID_SELECTION', 'La carta seleccionada no es un unicornio básico válido.', 'select-own-hand-card');
     return;
   }
   if (game.phase === TurnPhase.BEGINNING && !game.pendingAction) TurnManager.processBeginningQueue(game);
-  addLog(game, `${player.name} trajo un unicornio básico de su mano a su establo`, { playerId: player.id });
+    addLog(
+      game,
+      `${player.name} trajo "${selectedCard.name}" de su mano a su establo por el efecto de "Rainbow Unicorn"`,
+      {
+        playerId: player.id,
+        cardImages: [selectedCard.image, pending.sourceCardImage].filter(
+         (image): image is string => !!image,
+       ),
+       event: 'play-card',
+     },
+   );
   emitGameState(io, room, 'game-updated');
 });
 

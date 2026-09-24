@@ -2600,6 +2600,52 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        if (action.reason === 'rainbow_unicorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'rainbow_unicorn');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🌈 Rainbow Unicorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'rainbow-unicorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Rainbow Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'necromancer_unicorn') {
           if (action.playerId !== localPlayerId) return null;
 
@@ -3529,38 +3575,7 @@ export default function GameOverlay({
       // RAINBOW UNICORN — traer un unicornio básico de la mano al establo
       // ───────────────────────────────────
       case 'select_own_hand_card': {
-        if (action.playerId !== localPlayerId) return null;
-
-        const player = gameState.players.find((p) => p.id === localPlayerId);
-        if (!player) return null;
-
-        const basicUnicorns = player.hand.filter(
-          (card) =>
-            card.cardType === 'unicorn' && card.unicornClass === 'basic',
-        );
-
-        return (
-          <CardSelectionOverlay
-            hide={hide}
-            title="🌈 Rainbow Unicorn"
-            subtitle="Elige un unicornio básico de tu mano para traerlo directamente a tu establo"
-            items={basicUnicorns.map((card, idx) => ({
-              id: `${card.id}_${idx}`,
-              value: card.uid,
-              title: card.name,
-              image: card.image,
-            }))}
-            maxSelection={1}
-            confirmText="Traer al Establo"
-            onConfirm={([cardId]) => {
-              dismiss();
-              socket.emit('select-own-hand-card', {
-                roomCode: gameState.roomCode,
-                cardId,
-              });
-            }}
-          />
-        );
+        return null;
       }
 
       // ───────────────────────────────────

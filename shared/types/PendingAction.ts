@@ -348,8 +348,9 @@ export type PendingAction =
        remainingPlayerIds?: string[];
        sourceCardImage?: string;
     }
-  | {
-      type: "select_own_hand_card";
-      reason: "rainbow_unicorn";
-      playerId: string;
-    };
+   | {
+       type: "select_own_hand_card";
+       reason: "rainbow_unicorn";
+       playerId: string;
+       sourceCardImage?: string;
+     };

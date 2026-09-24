@@ -1125,6 +1125,7 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
           reason: 'necromancer_unicorn',
           playerId: player.id,
           cardsToDiscard: 2,
+          sourceCardImage: pending.sourceCardImage,
         };
       } else {
         room.gameState.pendingAction = undefined;
@@ -1146,8 +1147,9 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
       if (choice === 'yes') {
         room.gameState.pendingAction = {
           type: 'select_own_hand_card',
-          reason: 'rainbow_unicorn',
-          playerId: player.id,
+            reason: 'rainbow_unicorn',
+            playerId: player.id,
+            sourceCardImage: pending.sourceCardImage,
         };
       } else {
         room.gameState.pendingAction = undefined;
@@ -1156,13 +1158,13 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
         }
       }
 
-      addLog(
-        room.gameState,
-        choice === 'yes'
-          ? `${player.name} usó el efecto de Rainbow Unicorn`
-          : `${player.name} omitió el efecto de Rainbow Unicorn`,
-        { playerId: player.id },
-      );
+      if (choice === 'no') {
+        addLog(
+          room.gameState,
+          `${player.name} omitió el efecto de Rainbow Unicorn`,
+          { playerId: player.id },
+        );
+      }
 
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'chainsaw_massicorn') {

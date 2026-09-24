@@ -364,6 +364,14 @@ export default function BoardLayout({
       .filter((card) => card.cardType === 'unicorn')
       .map((card) => card.uid))
     : new Set<string>();
+  const rainbowAction = gameState.pendingAction?.type === 'select_own_hand_card' &&
+    gameState.pendingAction.reason === 'rainbow_unicorn' &&
+    gameState.pendingAction.playerId === localPlayerId;
+  const rainbowSelectableIds = rainbowAction
+    ? new Set((localPlayer?.hand ?? [])
+      .filter((card) => card.cardType === 'unicorn' && card.unicornClass === 'basic')
+      .map((card) => card.uid))
+    : new Set<string>();
   const mermaidAction = gameState.pendingAction &&
     'reason' in gameState.pendingAction &&
     gameState.pendingAction.reason === 'mermaid_unicorn' &&
@@ -722,6 +730,12 @@ export default function BoardLayout({
                   {necromancerDiscardAction && (
                     <span className="draw-hint">
                       Descarta cartas de Unicornio ({gameState.pendingAction?.type === 'discard' ? gameState.pendingAction.cardsToDiscard : 0} pendientes)
+                    </span>
+                  )}
+
+                  {rainbowAction && (
+                    <span className="draw-hint">
+                      Selecciona un Unicornio básico de tu mano para traerlo a tu establo
                     </span>
                   )}
 
@@ -1362,11 +1376,16 @@ export default function BoardLayout({
             gameId={gameId}
             sortHandMode={sortHandMode}
              discardSelection={annoyingDiscardAction}
-             selectionOnly={neighSelectionActive || llamacornAction || necromancerDiscardAction}
-             selectableCardIds={llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
+             selectionOnly={neighSelectionActive || llamacornAction || necromancerDiscardAction || rainbowAction}
+             selectableCardIds={rainbowAction ? rainbowSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
              selectedCardIds={necromancerDiscardAction ? selectedNecromancerCardIds : undefined}
              onCardSelect={(cardId) => {
-               if (necromancerDiscardAction) {
+               if (rainbowAction) {
+                 socket.emit('select-own-hand-card', {
+                   roomCode: gameState.roomCode,
+                   cardId,
+                 });
+               } else if (necromancerDiscardAction) {
                  if (selectedNecromancerCardIds.has(cardId)) return;
                  setSelectedNecromancerCardId(cardId);
                } else if (llamacornAction) {

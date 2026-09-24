@@ -2,7 +2,7 @@ import type { CardEffect } from '../../unstable-unicorns/engine/effects/CardEffe
 import { isBasicUnicornEntryBlocked } from './queenBeeUnicorn.ts';
 
 export const rainbowUnicorn: CardEffect = {
-  onEnterStable(state, player) {
+  onEnterStable(state, player, card) {
     if (isBasicUnicornEntryBlocked(state, player.id)) return;
 
     const hasBasicInHand = player.hand.some(
@@ -15,6 +15,8 @@ export const rainbowUnicorn: CardEffect = {
       type: 'select_choice',
       reason: 'rainbow_unicorn',
       playerId: player.id,
+      effectCardId: card.uid,
+      sourceCardImage: card.image,
       title: '🌈 Rainbow Unicorn',
       description:
         '¿Deseas traer un unicornio básico de tu mano directamente a tu establo?',
