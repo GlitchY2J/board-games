@@ -306,9 +306,10 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
                     {round.entries.map((entry) => (
                       <div
                         key={entry.id}
-                        className={cn(
-                           "history-entry text-[11px] leading-snug",
-                          entry.playerId === localPlayer?.id
+                         className={cn(
+                            "history-entry text-[11px] leading-snug",
+                           !entry.playerName && "history-entry-system",
+                           entry.playerId === localPlayer?.id
                              ? "text-emerald-300/90"
                              : "text-slate-400/90",
                           (entry.reactionCardImage || entry.reactionCardImages?.length || entry.relatedCardImage)

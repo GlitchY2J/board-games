@@ -185,6 +185,18 @@
   grid-template-columns: max-content minmax(0, 1fr);
   align-items: start;
   column-gap: 6px;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 5px 4px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.45);
+}
+
+.history-entry.history-entry-system {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.history-entry:last-child {
+  border-bottom: 0;
 }
 
 .history-entry .history-player-badge {
