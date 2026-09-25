@@ -504,7 +504,7 @@ export default function CardFan({
                         setSelectedCardId(null);
                       }}
                     >
-                       <kbd>2</kbd> Jugar Carta
+                        <kbd>2</kbd> Jugar
                     </button>
                     {canPlayPair && (
                       <button
@@ -560,7 +560,7 @@ export default function CardFan({
                     }}
                   >
                     <Play size={14} fill="currentColor" />
-                    <kbd>2</kbd> Jugar Carta
+                     <kbd>2</kbd> Jugar
                   </button>
                 )}
               </div>

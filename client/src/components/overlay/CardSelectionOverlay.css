@@ -21,7 +21,8 @@
 }
 
 .card-selection-window {
-  width: min(1000px, 92vw);
+  width: fit-content;
+  max-width: 92vw;
   max-height: 90vh;
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(20px);
@@ -261,16 +262,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
 }
 
 .button-hotkey {
-  display: inline-block;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1;
-  margin-right: 6px;
-  opacity: 0.75;
-  vertical-align: middle;
+  display: inline;
+  font-family: monospace;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  margin: 0;
+  opacity: 1;
+  vertical-align: baseline;
 }
 
 .confirm-button {

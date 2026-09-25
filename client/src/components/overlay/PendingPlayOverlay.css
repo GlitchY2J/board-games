@@ -170,6 +170,12 @@
   transition: width 0.1s linear;
 }
 
+.pending-play-card .playing-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  z-index: auto;
+}
+
 .pending-neigh-selection-backdrop {
   position: fixed;
   inset: 0;

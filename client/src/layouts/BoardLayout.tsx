@@ -33,6 +33,7 @@ import { useNavigate } from 'react-router-dom';
 import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import ControlsOverlay from '../components/overlay/ControlsOverlay';
 import { useState, useEffect, useRef } from 'react';
+import { getKeyboardHintsEnabled, setKeyboardHintsEnabled } from '../services/uiPreferences';
 
 type PlatformTheme = 'classic' | 'midnight' | 'ember' | 'nebula';
 
@@ -118,6 +119,7 @@ export default function BoardLayout({
   const [pendingTheme, setPendingTheme] =
     useState<PlatformTheme>(platformTheme);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const [keyboardHints, setKeyboardHints] = useState(getKeyboardHintsEnabled);
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   const [selectedAlluringUpgradeId, setSelectedAlluringUpgradeId] = useState<string | null>(null);
   const [selectedChainsawCardId, setSelectedChainsawCardId] = useState<string | null>(null);
@@ -1339,6 +1341,25 @@ export default function BoardLayout({
                   )}
                 </div>
               </label>
+              <div className="platform-keyboard-row">
+                <div>
+                  <span className="platform-options-label">Numeros de teclado</span>
+                  <small>Mostrar numeros en botones, overlays y cartas del CardFan</small>
+                </div>
+                <button
+                  type="button"
+                  className={`platform-options-switch${keyboardHints ? ' is-enabled' : ''}`}
+                  aria-pressed={keyboardHints}
+                  aria-label="Mostrar numeros de teclado"
+                  onClick={() => {
+                    const next = !keyboardHints;
+                    setKeyboardHints(next);
+                    setKeyboardHintsEnabled(next);
+                  }}
+                >
+                  <span />
+                </button>
+              </div>
               <button
                 type="button"
                 className="platform-options-apply"

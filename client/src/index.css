@@ -89,6 +89,15 @@ html[data-platform-theme='classic'] {
   --platform-active: #19191c;
 }
 
+html[data-keyboard-hints='false'] .card-hotkey,
+html[data-keyboard-hints='false'] .selection-hotkey,
+html[data-keyboard-hints='false'] .button-hotkey,
+html[data-keyboard-hints='false'] .pending-play-actions kbd,
+html[data-keyboard-hints='false'] .card-select-actions kbd,
+html[data-keyboard-hints='false'] .control-row kbd {
+  display: none;
+}
+
 html[data-platform-theme='midnight'] {
   --platform-accent: #22d3ee;
   --platform-accent-strong: #67e8f9;

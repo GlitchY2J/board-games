@@ -248,7 +248,7 @@ export default function CardSelectionOverlay({
         <div className="selection-buttons">
           {onCancel && (
             <button className="cancel-button" onClick={onCancel}>
-              {buttonHotkeys && <span className="button-hotkey" aria-hidden="true">1 </span>}
+              {buttonHotkeys && <kbd className="button-hotkey" aria-hidden="true">1</kbd>}
               Cancelar
             </button>
           )}
@@ -262,7 +262,7 @@ export default function CardSelectionOverlay({
             disabled={!canConfirm}
             onClick={() => onConfirm(selectedValues)}
             >
-              {buttonHotkeys && <span className="button-hotkey" aria-hidden="true">2 </span>}
+              {buttonHotkeys && <kbd className="button-hotkey" aria-hidden="true">2</kbd>}
               {confirmText}
           </button>
         </div>

@@ -5,9 +5,9 @@ import CreateRoom from './pages/CreateRoom';
 import Lobby from './pages/Lobby';
 import StartingGame from './pages/StartingGame';
 import Game from './pages/Game';
-import Settings from './pages/Settings';
 import { useEffect } from 'react';
 import JoinRoom from './pages/JoinRoom';
+import LayoutShowcase from './pages/LayoutShowcase';
 import { CardPreviewProvider } from './context/CardPreviewContext';
 import { useGame } from './context/useGame';
 import CardPreview from './components/card/CardPreview';
@@ -16,6 +16,7 @@ import { Loader2 } from 'lucide-react';
 import { playButtonSound } from './lib/buttonSounds';
 import { playChatMessageSound } from './lib/chatMessageSound';
 import { socket } from './services/socket';
+import { getKeyboardHintsEnabled } from './services/uiPreferences';
 
 export default function App() {
   const { status, room, gameState } = useGame();
@@ -25,6 +26,7 @@ export default function App() {
   useEffect(() => {
     const theme = localStorage.getItem('platform-theme') ?? 'classic';
     document.documentElement.dataset.platformTheme = theme;
+    document.documentElement.dataset.keyboardHints = String(getKeyboardHintsEnabled());
   }, []);
 
   useEffect(() => {
@@ -38,6 +40,7 @@ export default function App() {
     if (status === 'loading') return;
 
     const path = location.pathname;
+    if (path === '/layout') return;
 
     if (status === 'none') {
       if (path === '/game' || path === '/lobby' || path === '/starting') {
@@ -113,7 +116,7 @@ export default function App() {
           <Route path="/lobby" element={<Lobby />} />
           <Route path="/starting" element={<StartingGame />} />
           <Route path="/game" element={<Game />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/layout" element={<LayoutShowcase />} />
         </Route>
       </Routes>
       <CardPreview />
