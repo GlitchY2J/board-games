@@ -34,6 +34,7 @@ import LeaveConfirm from '../components/overlay/LeaveConfirm';
 import ControlsOverlay from '../components/overlay/ControlsOverlay';
 import { useState, useEffect, useRef } from 'react';
 import { getKeyboardHintsEnabled, setKeyboardHintsEnabled } from '../services/uiPreferences';
+import { getBoardStableSelection } from '../lib/boardStableSelection';
 
 type PlatformTheme = 'classic' | 'midnight' | 'ember' | 'nebula';
 
@@ -125,6 +126,7 @@ export default function BoardLayout({
   const [selectedChainsawCardId, setSelectedChainsawCardId] = useState<string | null>(null);
   const [selectedDarkAngelCardId, setSelectedDarkAngelCardId] = useState<string | null>(null);
   const [selectedRhinocornCardId, setSelectedRhinocornCardId] = useState<string | null>(null);
+  const [selectedBoardCardIds, setSelectedBoardCardIds] = useState<Set<string>>(new Set());
   const [selectedExtremelyDestructiveCardId, setSelectedExtremelyDestructiveCardId] = useState<string | null>(null);
   const [selectedMermaidCardId, setSelectedMermaidCardId] = useState<string | null>(null);
   const [selectedNecromancerCardIds, setSelectedNecromancerCardIds] = useState<Set<string>>(new Set());
@@ -190,6 +192,35 @@ export default function BoardLayout({
 
   function activateBeginningEffect(cardUid: string) {
     socket.emit('activate-beginning-effect', { roomCode: gameState.roomCode, cardUid });
+  }
+  const boardStableSelection = localPlayer
+    ? getBoardStableSelection(gameState, localPlayer.id)
+    : null;
+  const boardStableTargetIds = new Set(boardStableSelection?.targets.keys() ?? []);
+  const boardSelectionKey = gameState.pendingAction
+    ? JSON.stringify(gameState.pendingAction)
+    : '';
+
+  useEffect(() => {
+    setSelectedBoardCardIds(new Set());
+  }, [boardSelectionKey]);
+
+  function selectBoardStableCard(cardId: string) {
+    const selection = boardStableSelection;
+    if (!selection || !selection.targets.has(cardId)) return;
+    if (selection.required === 1) {
+      socket.emit('select-stable-card', {
+        roomCode: gameState.roomCode,
+        cardId: selection.targets.get(cardId)!,
+      });
+      return;
+    }
+    setSelectedBoardCardIds((current) => {
+      const next = new Set(current);
+      if (next.has(cardId)) next.delete(cardId);
+      else if (next.size < selection.required) next.add(cardId);
+      return next;
+    });
   }
   const cardSelectedRef = useRef(false);
   const notificationTimerRef = useRef<number | null>(null);
@@ -414,6 +445,9 @@ export default function BoardLayout({
   const annoyingDiscardAction = gameState.pendingAction?.type === 'discard' &&
     gameState.pendingAction.reason === 'annoying_flying_unicorn' &&
     gameState.pendingAction.playerId === localPlayerId;
+  const directDiscardAction = gameState.pendingAction?.type === 'discard' &&
+    gameState.pendingAction.playerId === localPlayerId &&
+    gameState.pendingAction.cardsToDiscard === 1;
   const annoyingDiscardSelectableIds = annoyingDiscardAction
     ? new Set((localPlayer?.hand ?? []).map((card) => card.uid))
     : new Set<string>();
@@ -565,10 +599,13 @@ export default function BoardLayout({
           player={opp}
           isLocalPlayer={false}
           isMyTurn={opp.id === activePlayer.id}
-            selectableUpgradeIds={rhinocornAction ? rhinocornTargetIds : alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : darkAngelAction && opp.id === localPlayerId ? darkAngelTargets : mermaidAction ? mermaidTargetIds : undefined}
+            selectableUpgradeIds={boardStableSelection ? boardStableTargetIds : rhinocornAction ? rhinocornTargetIds : alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : darkAngelAction && opp.id === localPlayerId ? darkAngelTargets : mermaidAction ? mermaidTargetIds : undefined}
+            selectedBoardCardIds={selectedBoardCardIds}
            selectedUpgradeId={selectedAlluringUpgradeId ?? undefined}
             onUpgradeSelect={(cardId) => {
-              if (rhinocornAction && rhinocornTargetIds.has(cardId)) {
+              if (boardStableSelection && boardStableTargetIds.has(cardId)) {
+                selectBoardStableCard(cardId);
+              } else if (rhinocornAction && rhinocornTargetIds.has(cardId)) {
                 setSelectedRhinocornCardId(cardId);
               } else if (chainsawAction) {
                 setSelectedChainsawCardId(cardId);
@@ -792,6 +829,12 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {boardStableSelection && (
+                    <span className="draw-hint">
+                      {boardStableSelection.hint}
+                    </span>
+                  )}
+
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
                       Presiona <kbd className="space-key">Space</kbd> para robar
@@ -879,10 +922,12 @@ export default function BoardLayout({
                   isMyTurn={
                     layoutLocalPlayer.id === activePlayer?.id && !spectator
                   }
-                    selectableUpgradeIds={chainsawAction ? chainsawTargetIds : darkAngelAction ? darkAngelTargets : extremelyDestructiveAction ? extremelyDestructiveTargets : undefined}
+                    selectableUpgradeIds={boardStableSelection ? boardStableTargetIds : chainsawAction ? chainsawTargetIds : darkAngelAction ? darkAngelTargets : extremelyDestructiveAction ? extremelyDestructiveTargets : undefined}
+                    selectedBoardCardIds={selectedBoardCardIds}
                     selectedUpgradeId={undefined}
                     onUpgradeSelect={(cardId) => {
-                      if (chainsawAction && chainsawTargets.has(cardId)) setSelectedChainsawCardId(cardId);
+                      if (boardStableSelection && boardStableTargetIds.has(cardId)) selectBoardStableCard(cardId);
+                      else if (chainsawAction && chainsawTargets.has(cardId)) setSelectedChainsawCardId(cardId);
                       if (darkAngelAction && darkAngelTargets.has(cardId)) setSelectedDarkAngelCardId(cardId);
                       if (extremelyDestructiveAction && extremelyDestructiveTargets.has(cardId)) setSelectedExtremelyDestructiveCardId(cardId);
                     }}
@@ -1496,7 +1541,27 @@ export default function BoardLayout({
 
             {showPhases && (
               <div className="phase-action-anchor">
-                {canChooseBeginningEffect ? (
+                {boardStableSelection?.cancellable ? (
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-extrabold text-xs uppercase tracking-wider active:scale-95 transition-all cursor-pointer"
+                    onClick={() => socket.emit('cancel-action', { roomCode: gameState.roomCode })}
+                  >
+                    Cancelar
+                  </button>
+                ) : boardStableSelection && boardStableSelection.required > 1 ? (
+                  <button
+                    type="button"
+                    disabled={selectedBoardCardIds.size !== boardStableSelection.required}
+                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => socket.emit('select-stable-card', {
+                      roomCode: gameState.roomCode,
+                      cardId: [...selectedBoardCardIds].map((uid) => boardStableSelection.targets.get(uid)!),
+                    })}
+                  >
+                    Confirmar selección
+                  </button>
+                ) : canChooseBeginningEffect ? (
                   <button
                       type="button"
                       className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10"
@@ -1542,8 +1607,8 @@ export default function BoardLayout({
             gameId={gameId}
             sortHandMode={sortHandMode}
              discardSelection={annoyingDiscardAction}
-             selectionOnly={neighSelectionActive || llamacornAction || necromancerDiscardAction || rainbowAction}
-              selectableCardIds={rainbowAction ? rainbowSelectableIds : annoyingDiscardAction ? annoyingDiscardSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
+              selectionOnly={directDiscardAction || neighSelectionActive || llamacornAction || necromancerDiscardAction || rainbowAction}
+               selectableCardIds={directDiscardAction ? new Set(localPlayer?.hand.map((card) => card.uid)) : rainbowAction ? rainbowSelectableIds : annoyingDiscardAction ? annoyingDiscardSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
               selectedCardIds={rainbowAction && selectedRainbowCardId
                 ? new Set([selectedRainbowCardId])
                 : llamacornAction && selectedLlamacornCardId
@@ -1552,7 +1617,13 @@ export default function BoardLayout({
                  ? selectedNecromancerCardIds
                  : undefined}
              onCardSelect={(cardId) => {
-                if (rainbowAction) {
+                 if (directDiscardAction) {
+                   socket.emit('discard-cards', {
+                     roomCode: gameState.roomCode,
+                     playerId: localPlayerId,
+                     cardIds: [cardId],
+                   });
+                 } else if (rainbowAction) {
                   setSelectedRainbowCardId(cardId);
                 } else if (annoyingDiscardAction) {
                   socket.emit('discard-cards', {

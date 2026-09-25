@@ -69,7 +69,10 @@ export default function Game() {
   const [initialDealSimultaneous, setInitialDealSimultaneous] = useState<InitialDealAnimation[]>([]);
   const [initialDealHiddenCards, setInitialDealHiddenCards] = useState<Set<string>>(new Set());
   const [stealAnims, setStealAnims] = useState<StealAnimation[]>([]);
-  const [discardAnims, setDiscardAnims] = useState<DiscardAnimation[]>([]);
+  const [discardAnims, setDiscardAnims] = useState<{
+    animation: DiscardAnimation;
+    startRect?: { left: number; top: number; width: number; height: number };
+  }[]>([]);
   const [playAnims, setPlayAnims] = useState<PlayAnimation[]>([]);
   const [shuffleAnims, setShuffleAnims] = useState<ShuffleAnimation[]>([]);
   const [explosionAnims, setExplosionAnims] = useState<ExplosionAnimation[]>([]);
@@ -78,6 +81,7 @@ export default function Game() {
   const [shakeUpVisibleDraws, setShakeUpVisibleDraws] = useState<Set<string>>(new Set());
 
   const pendingGameStateRef = useRef<GameState | null>(null);
+  const discardAnimationCountRef = useRef(0);
   const pendingNeighThankYouStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
   const playCardSoundPendingRef = useRef(false);
@@ -150,7 +154,7 @@ export default function Game() {
         return;
       }
 
-      if (activeAnimationsCountRef.current > 0) {
+       if (activeAnimationsCountRef.current > 0 && discardAnimationCountRef.current === 0) {
         pendingGameStateRef.current = contextGameState;
       } else {
         setGameState(contextGameState);
@@ -200,7 +204,8 @@ export default function Game() {
 
       if (
         activeAnimationsCountRef.current > 0 &&
-        !eliminatedPlayerWonState
+        !eliminatedPlayerWonState &&
+        discardAnimationCountRef.current === 0
       ) {
         pendingGameStateRef.current = state;
         if (isNeighThankYouChoice) {
@@ -209,6 +214,9 @@ export default function Game() {
           pendingNeighThankYouStateRef.current = null;
         }
       } else {
+        if (discardAnimationCountRef.current > 0) {
+          pendingGameStateRef.current = null;
+        }
         pendingNeighThankYouStateRef.current = null;
         applyGameState(state);
       }
@@ -219,6 +227,7 @@ export default function Game() {
       prevTurnRef.current = null;
       pendingGameStateRef.current = null;
       pendingNeighThankYouStateRef.current = null;
+      discardAnimationCountRef.current = 0;
       activeAnimationsCountRef.current = 0;
       setInitialDealAnims([]);
       setInitialDealSimultaneous([]);
@@ -288,11 +297,20 @@ export default function Game() {
 
     const onDiscardAnimations = (animations: DiscardAnimation[]) => {
       if (animations.length > 0) {
+        discardAnimationCountRef.current += animations.length;
         const sound = new Audio('/sounds/discard-card.ogg');
         sound.volume = 0.3;
         sound.play().catch(() => {});
         activeAnimationsCountRef.current += animations.length;
-        setDiscardAnims((prev) => [...prev, ...animations]);
+        setDiscardAnims((prev) => [
+          ...prev,
+          ...animations.map((animation) => ({
+            animation,
+            startRect: document
+              .querySelector<HTMLElement>(`[data-card-uid="${animation.card.uid}"]`)
+              ?.getBoundingClientRect(),
+          })),
+        ]);
       }
     };
 
@@ -485,11 +503,12 @@ export default function Game() {
           onDone={() => removeStealAnim(animation.animId)}
         />
       ))}
-      {discardAnims.map((animation) => (
+      {discardAnims.map(({ animation, startRect }) => (
         <CardDiscardEffect
           key={animation.animId}
           animation={animation}
           localPlayerId={effectViewerId}
+          startRect={startRect}
           onDone={() => removeDiscardAnim(animation.animId)}
         />
       ))}
@@ -707,8 +726,9 @@ export default function Game() {
   }
 
   function removeDiscardAnim(animId: string) {
-    if (!discardAnims.some((animation) => animation.animId === animId)) return;
-    setDiscardAnims((prev) => prev.filter((animation) => animation.animId !== animId));
+    if (!discardAnims.some(({ animation }) => animation.animId === animId)) return;
+    setDiscardAnims((prev) => prev.filter(({ animation }) => animation.animId !== animId));
+    discardAnimationCountRef.current = Math.max(0, discardAnimationCountRef.current - 1);
     activeAnimationsCountRef.current = Math.max(0, activeAnimationsCountRef.current - 1);
 
     if (activeAnimationsCountRef.current === 0 && pendingGameStateRef.current) {

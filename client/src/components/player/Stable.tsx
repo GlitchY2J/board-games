@@ -11,6 +11,7 @@ interface Props {
   onUpgradeSelect?(cardId: string): void;
   beginningEffectIds?: Set<string>;
   onBeginningEffectSelect?(cardId: string): void;
+  selectedBoardCardIds?: Set<string>;
 }
 
 export default function Stable({
@@ -20,6 +21,7 @@ export default function Stable({
   onUpgradeSelect,
   beginningEffectIds,
   onBeginningEffectSelect,
+  selectedBoardCardIds,
 }: Props) {
   const hasUnicorns = player.stable.length > 0;
   const hasUpgrades = player.upgrades.length > 0;
@@ -41,7 +43,8 @@ export default function Stable({
                 className={`relative group transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
                   beginningEffectIds?.has(card.uid) ? 'beginning-effect-selectable' : ''
                 } ${
-                  selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''
+                   selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''
+                } ${selectedBoardCardIds?.has(card.uid) ? 'board-card-selected' : ''
                 }`}
                 onClick={beginningEffectIds?.has(card.uid)
                   ? () => onBeginningEffectSelect?.(card.uid)
@@ -75,7 +78,7 @@ export default function Stable({
                 <div
                   key={card.uid}
                   data-card-uid={card.uid}
-                  className={`${beginningEffectIds?.has(card.uid) ? 'beginning-effect-selectable' : ''} ${selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''}`}
+                  className={`${beginningEffectIds?.has(card.uid) ? 'beginning-effect-selectable' : ''} ${selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''} ${selectedBoardCardIds?.has(card.uid) ? 'board-card-selected' : ''}`}
                   onClick={beginningEffectIds?.has(card.uid)
                     ? () => onBeginningEffectSelect?.(card.uid)
                     : selectableUpgradeIds?.has(card.uid)
@@ -99,7 +102,7 @@ export default function Stable({
                   <div
                     key={card.uid}
                     data-card-uid={card.uid}
-                    className={`${beginningEffectIds?.has(card.uid) ? 'beginning-effect-selectable' : ''} ${selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''}`}
+                    className={`${beginningEffectIds?.has(card.uid) ? 'beginning-effect-selectable' : ''} ${selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''} ${selectedBoardCardIds?.has(card.uid) ? 'board-card-selected' : ''}`}
                     onClick={beginningEffectIds?.has(card.uid)
                       ? () => onBeginningEffectSelect?.(card.uid)
                       : selectableUpgradeIds?.has(card.uid)

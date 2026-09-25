@@ -6,6 +6,7 @@ import CardSelectionOverlay from './CardSelectionOverlay';
 import PlayingCard from '../card/PlayingCard';
 import CardFan from '../card/CardFan';
 import AlterTheFutureOverlay from './AlterTheFutureOverlay';
+import { getBoardStableSelection } from '../../lib/boardStableSelection';
 
 function isPandamoniumProtected(
   player: { downgrades: { id: string }[] },
@@ -129,6 +130,8 @@ export default function GameOverlay({
   if (!action || hide) {
     return null;
   }
+
+  if (getBoardStableSelection(gameState, localPlayerId)) return null;
 
   if (dismissedKey === actionKey) {
     return null;
@@ -296,6 +299,7 @@ export default function GameOverlay({
       case 'discard': {
         const player = gameState.players.find((p) => p.id === localPlayerId);
         if (!player || action.playerId !== localPlayerId) return null;
+        if (action.type === 'discard' && action.cardsToDiscard === 1) return null;
         if (action.reason === 'annoying_flying_unicorn') return null;
         if (action.reason === 'necromancer_unicorn') return null;
 
@@ -2564,6 +2568,64 @@ export default function GameOverlay({
       // DECISIÓN OPCIONAL (select_choice)
       // ───────────────────────────────────
       case 'select_choice': {
+        const optionValues = new Set(action.options.map((option) => option.value));
+        const isEffectConfirmation =
+          action.playerId === localPlayerId &&
+          action.options.length === 2 &&
+          optionValues.has('yes') &&
+          optionValues.has('no') &&
+          action.reason !== 'neigh_thank_you';
+
+        if (isEffectConfirmation) {
+          const player = gameState.players.find((candidate) => candidate.id === localPlayerId);
+          const playerCards = player
+            ? [...player.stable, ...player.upgrades, ...player.downgrades, ...player.hand]
+            : [];
+          const sourceCard = action.heldCard
+            ?? (action.effectCardId
+              ? playerCards.find((card) => card.uid === action.effectCardId)
+              : playerCards.find((card) => card.id === action.reason))
+            ?? gameState.discard.find((card) => card.uid === action.effectCardId || card.id === action.reason);
+          const title = sourceCard?.name ?? action.title.replace(/^\p{Extended_Pictographic}\s*/u, '');
+          const image = sourceCard?.image
+            ?? action.sourceCardImage
+            ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title={action.title}
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? action.effectCardId ?? action.reason,
+                value: 'yes',
+                title,
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
         if (action.reason === 'rainbow_unicorn') {
           if (action.playerId !== localPlayerId) return null;
 
@@ -3112,24 +3174,24 @@ export default function GameOverlay({
           );
         }
 
-        if (action.reason === 'rhinocorn') {
+        if (action.reason === 'seductive_unicorn' || action.reason === 'rhinocorn') {
           if (action.playerId !== localPlayerId) return null;
 
           const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
           const sourceCard = action.effectCardId
             ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
-            : sourcePlayer?.stable.find((card) => card.id === 'rhinocorn');
+            : sourcePlayer?.stable.find((card) => card.id === action.reason);
           const image = sourceCard?.image ?? '/cards/unstable-unicorns/base/card_back.png';
 
           return (
             <CardSelectionOverlay
               hide={hide}
-              title="🦏 Rhinocorn"
+              title={action.reason === 'rhinocorn' ? '🦏 Rhinocorn' : '💋 Seductive Unicorn'}
               subtitle={action.description}
               items={[{
                 id: sourceCard?.uid ?? 'rhinocorn',
                 value: 'yes',
-                title: sourceCard?.name ?? 'Rhinocorn',
+                title: sourceCard?.name ?? (action.reason === 'rhinocorn' ? 'Rhinocorn' : 'Seductive Unicorn'),
                 image,
               }]}
               maxSelection={1}

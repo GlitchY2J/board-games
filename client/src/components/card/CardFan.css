@@ -69,7 +69,10 @@
 }
 
 .fan-card.neigh-selectable .playing-card {
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.95), 0 0 24px rgba(251, 191, 36, 0.8);
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--platform-accent) 90%, transparent),
+    0 0 24px var(--platform-glow);
 }
 
 @keyframes neighFanSwing {
