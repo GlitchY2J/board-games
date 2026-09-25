@@ -2,6 +2,7 @@ import type { GameServer } from './socketTypes.ts';
 import type { Room } from '../game/models/Room.ts';
 import type { GameState } from '../game/models/GameState.ts';
 import type { Card } from '../game/models/Card.ts';
+import type { GameLogEntry } from '../../../shared/types/Game.ts';
 import { drainCardAnimations, drainNeighAnimations, drainExplosionAnimations, drainDrawAnimations, drainDiscardAnimations, drainPlayAnimations, drainStealAnimations, drainShuffleAnimations } from '../game/cardAnimations.ts';
 import { checkTinyStable } from '../game/cards/effects/tinyStable.ts';
 import { TurnManager } from '../game/turn/TurnManager.ts';
@@ -19,6 +20,22 @@ function createHiddenCard(id: string): Card {
     effect: null,
     copies: 0,
     expansion: '',
+  };
+}
+
+function createLogEntryForPlayer(entry: GameLogEntry, viewerId: string): GameLogEntry {
+  const { visibleToPlayerIds, publicText, ...clientEntry } = entry;
+  if (!visibleToPlayerIds || visibleToPlayerIds.includes(viewerId)) {
+    return clientEntry;
+  }
+
+  return {
+    ...clientEntry,
+    text: publicText ?? clientEntry.text,
+    cards: undefined,
+    cardImage: undefined,
+    cardImages: undefined,
+    relatedCardImage: undefined,
   };
 }
 
@@ -144,6 +161,7 @@ export function createGameStateForPlayer(
     }),
     nursery: game.nursery.map((card) => ({ ...card })),
     discard: game.discard.map((card) => ({ ...card })),
+    log: game.log.map((entry) => createLogEntryForPlayer(entry, viewerId)),
   };
 }
 
