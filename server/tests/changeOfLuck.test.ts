@@ -86,7 +86,7 @@ test('Change of Luck: tras descartar 3 cartas, inicia el turno extra y activa lo
 
   // La mano ahora tiene h1, h2 + 2 robadas = 4 cartas. Descartar 3 cartas.
   const toDiscard = p1.hand.slice(0, 3).map((c) => c.uid);
-  const resolved = ActionResolver.handleDiscard(state, p1.id, toDiscard);
+  const resolved = toDiscard.every((uid) => ActionResolver.handleDiscard(state, p1.id, [uid]));
 
   assert.equal(resolved, true);
   // El turno extra arrancó y activó Glitter Bomb
@@ -104,7 +104,7 @@ test('Change of Luck: si no hay efectos de inicio de turno, pasa a DRAW en el tu
   changeOfLuck.onPlay?.(state, p1);
 
   const toDiscard = p1.hand.slice(0, 3).map((c) => c.uid);
-  const resolved = ActionResolver.handleDiscard(state, p1.id, toDiscard);
+  const resolved = toDiscard.every((uid) => ActionResolver.handleDiscard(state, p1.id, [uid]));
 
   assert.equal(resolved, true);
   assert.equal(state.currentPlayer, 0);

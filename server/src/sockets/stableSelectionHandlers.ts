@@ -44,6 +44,26 @@ export function registerStableSelectionHandlers(io: GameServer, socket: GameSock
       ? room.gameState.pendingAction.reason
       : undefined;
     const pending = room.gameState.pendingAction;
+    const selectedIds = (Array.isArray(cardId) ? cardId : [cardId]).map((value) => {
+      if (typeof value !== 'string' || !value.startsWith('{')) return value;
+      try {
+        return (JSON.parse(value) as { cardId?: string }).cardId ?? value;
+      } catch {
+        return value;
+      }
+    });
+    const selectedCards = selectedIds
+      .map((uid) => room.gameState!.players.flatMap((candidate) => [
+        ...candidate.stable,
+        ...candidate.upgrades,
+        ...candidate.downgrades,
+      ]).find((card) => card.uid === uid))
+      .filter((card): card is NonNullable<typeof card> => !!card);
+    const sourceCardImage = pending && 'sourceCardImage' in pending
+      ? pending.sourceCardImage
+      : pending && 'effectCardImage' in pending
+        ? pending.effectCardImage
+        : undefined;
     const selectedCardId = Array.isArray(cardId) ? cardId[0] : cardId;
     const selectedOwnerId =
       pending?.type === 'select_stable_card'
@@ -143,6 +163,38 @@ export function registerStableSelectionHandlers(io: GameServer, socket: GameSock
         {
           playerId: sourcePlayer.id,
           cardImage: selectedCard?.image,
+          targetPlayerId: selectedOwner?.id,
+          targetPlayerName: selectedOwner?.name,
+          event: typeof pendingReason === 'string' && pendingReason.includes('steal')
+            ? 'steal-card'
+            : undefined,
+          action: typeof pendingReason === 'string' && (
+            pendingReason.includes('steal') ||
+            pendingReason === 'seductive_unicorn' ||
+            pendingReason === 'rainbow_lasso_steal'
+          )
+            ? 'steal-stable'
+            : typeof pendingReason === 'string' && (
+              pendingReason === 'back_kick' ||
+              pendingReason === 'dancing_clownicorn' ||
+              pendingReason === 're_target_card'
+            )
+              ? 'move'
+              : undefined,
+          cards: [
+            ...(sourceCardImage ? [{ image: sourceCardImage, role: 'source' as const }] : []),
+            ...selectedCards.map((card) => ({
+              uid: card.uid,
+              id: card.id,
+              name: card.name,
+              image: card.image,
+              role: 'target' as const,
+              status: typeof pendingReason === 'string' && (
+                pendingReason.includes('steal') ||
+                pendingReason === 'seductive_unicorn'
+              ) ? 'stolen' as const : 'moved' as const,
+            })),
+          ],
         },
       );
     }

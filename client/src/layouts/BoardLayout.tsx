@@ -132,6 +132,7 @@ export default function BoardLayout({
   const [selectedMermaidCardId, setSelectedMermaidCardId] = useState<string | null>(null);
   const [selectedNecromancerCardIds, setSelectedNecromancerCardIds] = useState<Set<string>>(new Set());
   const [selectedNecromancerCardId, setSelectedNecromancerCardId] = useState<string | null>(null);
+  const [selectedChangeOfLuckCardId, setSelectedChangeOfLuckCardId] = useState<string | null>(null);
   const [selectedRainbowCardId, setSelectedRainbowCardId] = useState<string | null>(null);
   const [selectedLlamacornCardId, setSelectedLlamacornCardId] = useState<string | null>(null);
   const [neighSelectionActive, setNeighSelectionActive] = useState(false);
@@ -400,10 +401,16 @@ export default function BoardLayout({
   const necromancerDiscardAction = gameState.pendingAction?.type === 'discard' &&
     gameState.pendingAction.reason === 'necromancer_unicorn' &&
     gameState.pendingAction.playerId === localPlayerId;
+  const changeOfLuckDiscardAction = gameState.pendingAction?.type === 'discard' &&
+    gameState.pendingAction.reason === 'change_of_luck' &&
+    gameState.pendingAction.playerId === localPlayerId;
   const necromancerSelectableIds = necromancerDiscardAction
     ? new Set((localPlayer?.hand ?? [])
       .filter((card) => card.cardType === 'unicorn')
       .map((card) => card.uid))
+      : new Set<string>();
+  const changeOfLuckSelectableIds = changeOfLuckDiscardAction
+    ? new Set((localPlayer?.hand ?? []).map((card) => card.uid))
     : new Set<string>();
   const rainbowAction = gameState.pendingAction?.type === 'select_own_hand_card' &&
     gameState.pendingAction.reason === 'rainbow_unicorn' &&
@@ -560,7 +567,8 @@ export default function BoardLayout({
     if (!mermaidAction) setSelectedMermaidCardId(null);
     if (!necromancerDiscardAction) setSelectedNecromancerCardIds(new Set());
     if (!necromancerDiscardAction) setSelectedNecromancerCardId(null);
-  }, [alluringAction, chainsawAction, darkAngelAction, extremelyDestructiveAction, mermaidAction, necromancerDiscardAction, rhinocornAction]);
+    if (!changeOfLuckDiscardAction) setSelectedChangeOfLuckCardId(null);
+  }, [alluringAction, chainsawAction, changeOfLuckDiscardAction, darkAngelAction, extremelyDestructiveAction, mermaidAction, necromancerDiscardAction, rhinocornAction]);
 
   useEffect(() => {
     if (!alluringAction || !selectedAlluringUpgrade) return;
@@ -1168,6 +1176,34 @@ export default function BoardLayout({
         );
       })()}
 
+      {changeOfLuckDiscardAction && selectedChangeOfLuckCardId && (() => {
+        const card = localPlayer?.hand.find((item) => item.uid === selectedChangeOfLuckCardId);
+        if (!card) return null;
+        return (
+          <CardSelectionOverlay
+            hide={false}
+            title="🍀 Change of Luck"
+            subtitle={`¿Deseas descartar "${card.name}"? Quedan ${gameState.pendingAction?.type === 'discard' ? gameState.pendingAction.cardsToDiscard : 0} carta(s) por descartar.`}
+            items={[{ id: card.uid, value: card.uid, title: card.name, image: card.image }]}
+            maxSelection={1}
+            confirmText="Descartar"
+            showSelection={false}
+            compact
+            keyboardNavigation={false}
+            buttonHotkeys
+            onConfirm={() => {
+              setSelectedChangeOfLuckCardId(null);
+              socket.emit('discard-cards', {
+                roomCode: gameState.roomCode,
+                playerId: localPlayerId,
+                cardIds: [card.uid],
+              });
+            }}
+            onCancel={() => setSelectedChangeOfLuckCardId(null)}
+          />
+        );
+      })()}
+
       {rainbowAction && selectedRainbowCardId && (() => {
         const card = localPlayer?.hand.find((item) => item.uid === selectedRainbowCardId);
         if (!card) return null;
@@ -1645,15 +1681,17 @@ export default function BoardLayout({
             gameId={gameId}
             sortHandMode={sortHandMode}
              discardSelection={annoyingDiscardAction}
-              selectionOnly={directDiscardAction || neighSelectionActive || llamacornAction || necromancerDiscardAction || rainbowAction}
-               selectableCardIds={directDiscardAction ? new Set(localPlayer?.hand.map((card) => card.uid)) : rainbowAction ? rainbowSelectableIds : annoyingDiscardAction ? annoyingDiscardSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : neighSelectableIds}
+              selectionOnly={directDiscardAction || neighSelectionActive || llamacornAction || necromancerDiscardAction || changeOfLuckDiscardAction || rainbowAction}
+                selectableCardIds={directDiscardAction ? new Set(localPlayer?.hand.map((card) => card.uid)) : rainbowAction ? rainbowSelectableIds : annoyingDiscardAction ? annoyingDiscardSelectableIds : llamacornAction ? llamacornSelectableIds : necromancerDiscardAction ? necromancerSelectableIds : changeOfLuckDiscardAction ? changeOfLuckSelectableIds : neighSelectableIds}
               selectedCardIds={rainbowAction && selectedRainbowCardId
                 ? new Set([selectedRainbowCardId])
                 : llamacornAction && selectedLlamacornCardId
                   ? new Set([selectedLlamacornCardId])
                 : necromancerDiscardAction
-                 ? selectedNecromancerCardIds
-                 : undefined}
+                  ? selectedNecromancerCardIds
+                  : changeOfLuckDiscardAction && selectedChangeOfLuckCardId
+                    ? new Set([selectedChangeOfLuckCardId])
+                  : undefined}
              onCardSelect={(cardId) => {
                  if (directDiscardAction) {
                    socket.emit('discard-cards', {
@@ -1669,10 +1707,12 @@ export default function BoardLayout({
                     playerId: localPlayerId,
                     cardIds: [cardId],
                   });
-                } else if (necromancerDiscardAction) {
-                 if (selectedNecromancerCardIds.has(cardId)) return;
-                 setSelectedNecromancerCardId(cardId);
-                } else if (llamacornAction) {
+                 } else if (necromancerDiscardAction) {
+                  if (selectedNecromancerCardIds.has(cardId)) return;
+                  setSelectedNecromancerCardId(cardId);
+                 } else if (changeOfLuckDiscardAction) {
+                   setSelectedChangeOfLuckCardId(cardId);
+                 } else if (llamacornAction) {
                   setSelectedLlamacornCardId(cardId);
                } else {
                  setNeighSelectionActive(false);

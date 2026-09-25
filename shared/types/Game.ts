@@ -48,7 +48,32 @@ export type GameLogEvent =
   | 'search-deck'
   | 'beginning-effect'
   | 'steal-card'
+  | 'destroy-card'
+  | 'sacrifice-card'
+  | 'recover-card'
+  | 'move-card'
   | 'neigh-chain';
+
+export type GameLogAction =
+  | 'activate-effect'
+  | 'discard'
+  | 'destroy'
+  | 'sacrifice'
+  | 'steal-hand'
+  | 'steal-stable'
+  | 'recover-hand'
+  | 'recover-stable'
+  | 'search-deck'
+  | 'move';
+
+export interface GameLogCardRef {
+  uid?: string;
+  id?: string;
+  name?: string;
+  image: string;
+  role: 'source' | 'cost' | 'target' | 'result';
+  status?: 'discarded' | 'destroyed' | 'sacrificed' | 'stolen' | 'recovered' | 'searched' | 'moved';
+}
 
 export interface GameLogEntry {
   id: string;
@@ -56,6 +81,10 @@ export interface GameLogEntry {
   event?: GameLogEvent;
   playerId?: string;
   playerName?: string;
+  targetPlayerId?: string;
+  targetPlayerName?: string;
+  action?: GameLogAction;
+  cards?: GameLogCardRef[];
   cardImage?: string;
   cardImages?: string[];
   reactionCardImage?: string;
@@ -66,6 +95,9 @@ export interface GameLogEntry {
   relatedCardImage?: string;
   cardStatus?: 'sacrificed' | 'destroyed';
   relatedCardStatus?: 'sacrificed' | 'destroyed';
+  /** Server-side visibility metadata. Removed before the entry is sent to clients. */
+  visibleToPlayerIds?: string[];
+  publicText?: string;
   turn: number;
   timestamp: number;
 }

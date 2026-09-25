@@ -290,8 +290,20 @@ socket.on('select-deck-card', ({ roomCode, cardId }) => {
     addLog(room.gameState, `${player.name} (debug) eligió ${upgrade.name} del mazo`, {
       playerId: player.id,
     });
-  } else if (pending.reason !== 'classy_narwhal') {
-    addDeckSearchLog(room.gameState, player.id);
+  } else {
+    const sourceCardImageValue = 'sourceCardImage' in pending ? pending.sourceCardImage : undefined;
+    const sourceCardImage = typeof sourceCardImageValue === 'string' ? sourceCardImageValue : undefined;
+    addDeckSearchLog(
+      room.gameState,
+      player.id,
+      upgrade,
+      1,
+      sourceCardImage ? { image: sourceCardImage } : undefined,
+      {
+        playerIds: [player.id],
+        publicText: `${player.name} buscó una carta en el mazo`,
+      },
+    );
   }
 
   emitGameState(io, room, 'game-updated');

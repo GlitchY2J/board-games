@@ -1,4 +1,4 @@
-import type { GameLogEvent } from '../../../shared/types/Game.ts';
+import type { GameLogAction, GameLogCardRef, GameLogEvent } from '../../../shared/types/Game.ts';
 import type { GameState } from './models/GameState.ts';
 
 let logSeq = 0;
@@ -8,6 +8,8 @@ export function addDeckSearchLog(
   playerId: string,
   card?: { name: string; image: string },
   count = 1,
+  sourceCard?: { name?: string; image: string },
+  visibility?: { playerIds: string[]; publicText: string },
 ): void {
   const player = game.players.find((candidate) => candidate.id === playerId);
   const text = card
@@ -18,6 +20,13 @@ export function addDeckSearchLog(
     playerId,
     event: 'search-deck',
     cardImage: card?.image,
+    action: 'search-deck',
+    cards: [
+      ...(sourceCard ? [{ ...sourceCard, role: 'source' as const }] : []),
+      ...(card ? [{ ...card, role: 'result' as const, status: 'searched' as const }] : []),
+    ],
+    visibleToPlayerIds: visibility?.playerIds,
+    publicText: visibility?.publicText,
   });
 }
 
@@ -27,6 +36,10 @@ function getBasicEvent(text: string): GameLogEvent | undefined {
   if (text.includes('jugó') || text.includes('apiló')) return 'play-card';
   if (text.includes('buscó') && text.includes('mazo')) return 'search-deck';
   if (text.includes('descartó')) return 'discard-card';
+  if (text.includes('destruyó')) return 'destroy-card';
+  if (text.includes('sacrificó')) return 'sacrifice-card';
+  if (text.includes('trajo') && text.includes('descarte')) return 'recover-card';
+  if (text.includes('robó') && (text.includes('mano') || text.includes('establo'))) return 'steal-card';
   if (
     text.includes('del mazo') ||
     text.includes('robó una carta y terminó su turno') ||
@@ -44,6 +57,10 @@ export function addLog(
   opts: {
     playerId?: string;
     playerName?: string;
+    targetPlayerId?: string;
+    targetPlayerName?: string;
+    action?: GameLogAction;
+    cards?: GameLogCardRef[];
     cardImage?: string;
     cardImages?: string[];
     reactionCardImage?: string;
@@ -55,6 +72,8 @@ export function addLog(
     cardStatus?: 'sacrificed' | 'destroyed';
     relatedCardStatus?: 'sacrificed' | 'destroyed';
     event?: GameLogEvent;
+    visibleToPlayerIds?: string[];
+    publicText?: string;
   } = {},
 ): void {
   const player = opts.playerId
@@ -67,6 +86,10 @@ export function addLog(
     event: opts.event ?? getBasicEvent(text),
     playerId: opts.playerId,
     playerName: opts.playerName ?? player?.name,
+    targetPlayerId: opts.targetPlayerId,
+    targetPlayerName: opts.targetPlayerName,
+    action: opts.action,
+    cards: opts.cards,
     cardImage: opts.cardImage,
     cardImages: opts.cardImages,
     reactionCardImage: opts.reactionCardImage,
@@ -77,6 +100,8 @@ export function addLog(
     relatedCardImage: opts.relatedCardImage,
     cardStatus: opts.cardStatus,
     relatedCardStatus: opts.relatedCardStatus,
+    visibleToPlayerIds: opts.visibleToPlayerIds,
+    publicText: opts.publicText,
     turn: game.turn,
     timestamp: Date.now(),
   });

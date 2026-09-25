@@ -190,7 +190,9 @@ export class ActionResolver {
       return false;
     }
 
-    const requiredCards = pending.reason === 'necromancer_unicorn' ? 1 : pending.cardsToDiscard;
+    const requiredCards = pending.reason === 'necromancer_unicorn' || pending.reason === 'change_of_luck'
+      ? 1
+      : pending.cardsToDiscard;
     if (cardIds.length !== requiredCards) {
       return false;
     }
@@ -200,6 +202,7 @@ export class ActionResolver {
 
     const reason = pending.reason;
     const isNecromancer = reason === 'necromancer_unicorn';
+    const isChangeOfLuck = reason === 'change_of_luck';
     const discardedImages: string[] = [];
     const discardedNames: string[] = [];
 
@@ -221,6 +224,14 @@ export class ActionResolver {
         cardsToDiscard: pending.cardsToDiscard - 1,
         discardedCardImages: [...(pending.discardedCardImages ?? []), ...discardedImages],
         discardedCardNames: [...(pending.discardedCardNames ?? []), ...discardedNames],
+      };
+      return true;
+    }
+
+    if (isChangeOfLuck && pending.cardsToDiscard > 1) {
+      state.pendingAction = {
+        ...pending,
+        cardsToDiscard: pending.cardsToDiscard - 1,
       };
       return true;
     }

@@ -170,6 +170,72 @@
   pointer-events: none;
 }
 
+.history-structured-entry {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.history-card-group,
+.history-structured-card {
+  display: inline-flex;
+  align-items: center;
+}
+
+.history-card-group.source {
+  padding-right: 3px;
+  border-right: 1px solid rgba(100, 116, 139, 0.35);
+}
+
+.history-structured-card {
+  position: relative;
+}
+
+.history-structured-card.source .history-card-thumbnail {
+  box-shadow: 0 0 8px var(--platform-glow);
+}
+
+.history-card-action {
+  position: absolute;
+  right: 0;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  min-width: 13px;
+  height: 13px;
+  padding: 0 2px;
+  border-radius: 999px;
+  color: #fff;
+  background: #0f172a;
+  font-size: 8px;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+
+.history-card-action.destroyed { background: #b91c1c; }
+.history-card-action.sacrificed { background: #7e22ce; }
+.history-card-action.discarded { background: #475569; }
+.history-card-action.stolen { background: #0369a1; }
+.history-card-action.recovered,
+.history-card-action.searched { background: #047857; }
+.history-card-action.moved { background: #b45309; }
+
+.history-action-label {
+  color: #94a3b8;
+}
+
+.history-target-player {
+  padding: 1px 5px;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+  border-radius: 5px;
+  color: #cbd5e1;
+  font-size: 9px;
+  font-weight: 800;
+}
+
 .history-blocked-symbol {
   position: absolute;
   inset: 0;

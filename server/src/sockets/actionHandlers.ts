@@ -830,7 +830,12 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           `${player.name} trajo una carta del descarte a su mano`,
-          { playerId: player.id },
+          {
+            playerId: player.id,
+            event: 'recover-card',
+            action: 'recover-hand',
+            cards: [{ ...removed, role: 'result', status: 'recovered' }],
+          },
         );
 
         emitGameState(io, room, 'game-updated');
@@ -872,6 +877,12 @@ export function registerActionHandlers(
               pending.effectCardImage,
             ].filter((image): image is string => !!image),
             event: 'play-card',
+            action: 'recover-stable',
+            cards: [
+              ...(pending.effectCardImage ? [{ image: pending.effectCardImage, role: 'source' as const }] : []),
+              ...(pending.sacrificedCardImage ? [{ image: pending.sacrificedCardImage, name: pending.sacrificedCardName, role: 'cost' as const, status: 'sacrificed' as const }] : []),
+              { ...broughtFromDiscard, role: 'result', status: 'recovered' },
+            ],
           },
         );
         emitGameState(io, room, 'game-updated');
@@ -890,6 +901,12 @@ export function registerActionHandlers(
               pending.sourceCardImage,
             ].filter((image): image is string => !!image),
             event: 'play-card',
+            action: 'recover-stable',
+            cards: [
+              ...(pending.sourceCardImage ? [{ image: pending.sourceCardImage, role: 'source' as const }] : []),
+              ...(pending.discardedCardImages ?? []).map((image) => ({ image, role: 'cost' as const, status: 'discarded' as const })),
+              { ...broughtFromDiscard, role: 'result', status: 'recovered' },
+            ],
           },
         );
         emitGameState(io, room, 'game-updated');
@@ -900,7 +917,12 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           `${player.name} trajo ${broughtFromDiscard.name} al establo por Zombie Unicorn y pasó a la fase de fin de turno`,
-          { playerId: player.id },
+          {
+            playerId: player.id,
+            event: 'recover-card',
+            action: 'recover-stable',
+            cards: [{ ...broughtFromDiscard, role: 'result', status: 'recovered' }],
+          },
         );
         room.gameState.phase = TurnPhase.END;
         TurnManager.skipEndIfNoTriggers(room.gameState);
@@ -936,7 +958,12 @@ export function registerActionHandlers(
         addLog(
           room.gameState,
           `${player.name} trajo ${broughtFromDiscard.name} del descarte y robó una carta por Reanimation`,
-          { playerId: player.id },
+          {
+            playerId: player.id,
+            event: 'recover-card',
+            action: 'recover-stable',
+            cards: [{ ...broughtFromDiscard, role: 'result', status: 'recovered' }],
+          },
         );
         emitGameState(io, room, 'game-updated');
         return;
@@ -952,7 +979,12 @@ export function registerActionHandlers(
       addLog(
         room.gameState,
         `${player.name} trajo ${broughtFromDiscard.name} del descarte a su establo`,
-        { playerId: player.id },
+        {
+          playerId: player.id,
+          event: 'recover-card',
+          action: 'recover-stable',
+          cards: [{ ...broughtFromDiscard, role: 'result', status: 'recovered' }],
+        },
       );
 
       emitGameState(io, room, 'game-updated');

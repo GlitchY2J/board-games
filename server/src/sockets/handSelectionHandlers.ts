@@ -48,7 +48,23 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
       game.actionUsed = false;
       game.actionPlaysRemaining = undefined;
       enqueueStealAnimation(game.roomCode, targetPlayer.id, sourcePlayer.id, stolenCard);
-      addLog(game, `${targetPlayer.name} entregó una carta a ${sourcePlayer.name} por Favor`, { playerId: sourcePlayer.id });
+      addLog(game, `${targetPlayer.name} entregó una carta a ${sourcePlayer.name} por Favor`, {
+        playerId: sourcePlayer.id,
+        targetPlayerId: targetPlayer.id,
+        targetPlayerName: targetPlayer.name,
+        event: 'steal-card',
+        action: 'steal-hand',
+        cards: [{
+          uid: stolenCard.uid,
+          id: stolenCard.id,
+          name: stolenCard.name,
+          image: stolenCard.image,
+          role: 'target',
+          status: 'stolen',
+        }],
+        visibleToPlayerIds: [sourcePlayer.id, targetPlayer.id],
+        publicText: `${targetPlayer.name} entregó una carta a ${sourcePlayer.name} por Favor`,
+      });
       emitGameState(io, room, 'game-updated');
       return;
     }
@@ -80,9 +96,8 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
       }
     }
 
-    const stolenCard = (pending.reason === 'americorn' || pending.reason === 'poltergeist_swipe' || pending.reason === 'blatant_thievery' || pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind')
-      ? game.players.find((candidate) => candidate.id === pending.targetPlayerId)?.hand.find((card) => card.uid === resolvedCardId)
-      : undefined;
+    const targetPlayerBeforeSelection = game.players.find((candidate) => candidate.id === pending.targetPlayerId);
+    const stolenCard = targetPlayerBeforeSelection?.hand.find((card) => card.uid === resolvedCardId);
     if (pending.reason === 'three_of_a_kind') {
       const targetPlayer = game.players.find((candidate) => candidate.id === pending.targetPlayerId);
       const selectedCard = targetPlayer?.hand.find((card) => card.uid === resolvedCardId);
@@ -128,13 +143,53 @@ export function registerHandSelectionHandlers(io: GameServer, socket: GameSocket
           cardImages: [americornImage].filter(
             (image): image is string => !!image,
           ),
-          event: pending.reason === 'americorn' ? 'steal-card' : undefined,
+          event: 'steal-card',
+          action: 'steal-hand',
+          targetPlayerId: targetPlayer?.id,
+          targetPlayerName: targetPlayer?.name,
+          cards: [
+            ...(americornImage ? [{ image: americornImage, role: 'source' as const }] : []),
+            ...(stolenCard ? [{
+              uid: stolenCard.uid,
+              id: stolenCard.id,
+              name: stolenCard.name,
+              image: stolenCard.image,
+              role: 'target' as const,
+              status: 'stolen' as const,
+            }] : []),
+          ],
+          visibleToPlayerIds: [player.id, ...(targetPlayer ? [targetPlayer.id] : [])],
+          publicText: targetPlayer
+            ? `${player.name} robó una carta de la mano de ${targetPlayer.name}`
+            : `${player.name} robó una carta de una mano`,
         },
       );
     } else if (pending.reason === 'two_of_a_kind' || pending.reason === 'three_of_a_kind') {
-      addLog(game, `${player.name} robó una carta con ${pending.reason === 'three_of_a_kind' ? 'Three' : 'Two'} of a Kind`, { playerId: player.id });
+      addLog(game, `${player.name} robó una carta con ${pending.reason === 'three_of_a_kind' ? 'Three' : 'Two'} of a Kind`, {
+        playerId: player.id,
+        targetPlayerId: targetPlayerBeforeSelection?.id,
+        targetPlayerName: targetPlayerBeforeSelection?.name,
+        event: 'steal-card',
+        action: 'steal-hand',
+        cards: stolenCard ? [{ ...stolenCard, role: 'target', status: 'stolen' }] : [],
+        visibleToPlayerIds: [player.id, ...(targetPlayerBeforeSelection ? [targetPlayerBeforeSelection.id] : [])],
+        publicText: targetPlayerBeforeSelection
+          ? `${player.name} robó una carta de la mano de ${targetPlayerBeforeSelection.name}`
+          : `${player.name} robó una carta de una mano`,
+      });
     } else {
-      addLog(game, `${player.name} eligió una carta de una mano`, { playerId: player.id });
+      addLog(game, `${player.name} robó una carta de una mano`, {
+        playerId: player.id,
+        targetPlayerId: targetPlayerBeforeSelection?.id,
+        targetPlayerName: targetPlayerBeforeSelection?.name,
+        event: 'steal-card',
+        action: 'steal-hand',
+        cards: stolenCard ? [{ ...stolenCard, role: 'target', status: 'stolen' }] : [],
+        visibleToPlayerIds: [player.id, ...(targetPlayerBeforeSelection ? [targetPlayerBeforeSelection.id] : [])],
+        publicText: targetPlayerBeforeSelection
+          ? `${player.name} robó una carta de la mano de ${targetPlayerBeforeSelection.name}`
+          : `${player.name} robó una carta de una mano`,
+      });
     }
     emitGameState(io, room, 'game-updated');
   });

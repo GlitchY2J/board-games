@@ -93,6 +93,8 @@ export class TurnManager {
         playerId: activePlayer.id,
         cardImage: card.image,
         event: 'beginning-effect',
+        action: 'activate-effect',
+        cards: [{ ...card, role: 'source' }],
       });
       return registeredEffect.onBeginningTurn(game, activePlayer, card) !== false;
     }

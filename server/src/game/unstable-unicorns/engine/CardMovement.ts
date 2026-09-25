@@ -34,6 +34,7 @@ import {
   type CardAnimType,
 } from '../../cardAnimations.ts';
 import { hasSavedByTheSigil } from '../../cards/effects/savedByTheSigil.ts';
+import { addLog } from '../../gameLog.ts';
 
 export class CardMovement {
   static removeFromStable(player: Player, cardUid: string): Card | undefined {
@@ -314,6 +315,56 @@ export class CardMovement {
       maybeTriggerBarbedWireLeave(state, player);
     }
 
+    const pending = state.pendingAction;
+    const pendingReason = pending && 'reason' in pending ? pending.reason : undefined;
+    const actorId = pending && 'sourcePlayerId' in pending
+      ? pending.sourcePlayerId
+      : pending && 'playerId' in pending
+        ? pending.playerId
+        : player.id;
+    const actor = state.players.find((candidate) => candidate.id === actorId);
+    const effectCardId = pending && 'effectCardId' in pending ? pending.effectCardId : undefined;
+    const sourceCardImage = pending && 'sourceCardImage' in pending
+      ? pending.sourceCardImage
+      : pending && 'effectCardImage' in pending
+        ? pending.effectCardImage
+        : undefined;
+    const sourceCard = effectCardId
+      ? state.players.flatMap((candidate) => [
+          ...candidate.stable,
+          ...candidate.upgrades,
+          ...candidate.downgrades,
+        ]).find((candidate) => candidate.uid === effectCardId)
+      : undefined;
+    const action = animType === 'sacrifice' ? 'sacrifice' : 'destroy';
+    addLog(
+      state,
+      `${actor?.name ?? player.name} ${animType === 'sacrifice' ? 'sacrificó' : 'destruyó'} una carta${pendingReason ? ` por ${pendingReason}` : ''}`,
+      {
+        playerId: actorId,
+        targetPlayerId: player.id,
+        targetPlayerName: player.name,
+        event: animType === 'sacrifice' ? 'sacrifice-card' : 'destroy-card',
+        action,
+        cards: [
+          ...(sourceCard || sourceCardImage ? [{
+            uid: sourceCard?.uid,
+            id: sourceCard?.id,
+            name: sourceCard?.name,
+            image: sourceCard?.image ?? sourceCardImage!,
+            role: 'source' as const,
+          }] : []),
+          {
+            uid: card.uid,
+            id: card.id,
+            name: card.name,
+            image: card.image,
+            role: animType === 'sacrifice' ? 'cost' as const : 'target' as const,
+            status: animType === 'sacrifice' ? 'sacrificed' as const : 'destroyed' as const,
+          },
+        ],
+      },
+    );
     enqueueCardAnimation(state.roomCode, animType, player.id, card);
     state.discard.push(card);
     return false;

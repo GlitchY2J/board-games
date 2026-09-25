@@ -28,7 +28,7 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
   const { showPreview, hidePreview } = useCardPreview();
   const localPlayer = gameState.players.find((p) => p.socketId === socket.id);
   const logEntries = useMemo(
-    () => (gameState.log ?? []).filter((entry) => entry.event),
+    () => gameState.log ?? [],
     [gameState.log],
   );
   const logRef = useRef<HTMLDivElement>(null);
@@ -179,6 +179,50 @@ export default function PhasePanel({ gameState, showRoundPhase = true }: Props) 
         </span>
       );
     };
+
+    if (entry.cards?.length) {
+      const labels: Record<NonNullable<GameLogEntry['action']>, string> = {
+        'activate-effect': 'activó el efecto de',
+        discard: 'descartó',
+        destroy: 'destruyó',
+        sacrifice: 'sacrificó',
+        'steal-hand': 'robó de la mano de',
+        'steal-stable': 'robó del establo de',
+        'recover-hand': 'trajo del descarte a su mano',
+        'recover-stable': 'trajo del descarte a su establo',
+        'search-deck': 'buscó en el mazo y llevó a su mano',
+        move: 'movió',
+      };
+      const statusIcons: Record<string, string> = {
+        discarded: '↘',
+        destroyed: '💥',
+        sacrificed: '🩸',
+        stolen: '◆',
+        recovered: '↥',
+        searched: '⌕',
+        moved: '→',
+      };
+      const renderCards = (role: 'source' | 'cost' | 'target' | 'result') => entry.cards!
+        .filter((card) => card.role === role)
+        .map((card, index) => (
+          <span key={`${role}-${card.uid ?? card.image}-${index}`} className={`history-structured-card ${role}`}>
+            {previewImage(card.image, card.name ?? `Carta ${role}`)}
+            {card.status && <span className={`history-card-action ${card.status}`} aria-hidden="true">{statusIcons[card.status]}</span>}
+          </span>
+        ));
+      const sourceCards = renderCards('source');
+      const affectedCards = [...renderCards('cost'), ...renderCards('target'), ...renderCards('result')];
+
+      return (
+        <span className="history-structured-entry">
+          {renderPlayerBadge()}
+          {sourceCards.length > 0 && <span className="history-card-group source">{sourceCards}</span>}
+          <span className="history-action-label">{entry.action ? labels[entry.action] ?? entry.text : entry.text}</span>
+          {entry.targetPlayerName && <span className="history-target-player">{entry.targetPlayerName}</span>}
+          {affectedCards.length > 0 && <span className="history-card-group affected">{affectedCards}</span>}
+        </span>
+      );
+    }
 
     if (reactionImages.length > 0 && entry.cardImage && entry.playerName) {
       return (

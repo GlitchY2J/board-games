@@ -39,6 +39,17 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
       ? game.pendingAction.reason
       : undefined;
     const isLlamacorn = game.pendingAction.type === 'llamacorn';
+    const pendingSourceImageValue = 'sourceCardImage' in game.pendingAction
+      ? game.pendingAction.sourceCardImage
+      : 'effectCardImage' in game.pendingAction
+        ? game.pendingAction.effectCardImage
+        : undefined;
+    const pendingSourceImage = typeof pendingSourceImageValue === 'string'
+      ? pendingSourceImageValue
+      : undefined;
+    const selectedDiscardCards = cardIds
+      .map((cardId) => player.hand.find((card) => card.uid === cardId))
+      .filter((card): card is NonNullable<typeof card> => !!card);
     const selectedDiscardedCard = discardReason === 'unicorn_on_the_cob'
       ? player.hand.find((card) => card.uid === cardIds[0])
       : undefined;
@@ -108,6 +119,20 @@ export function registerDiscardHandlers(io: GameServer, socket: GameSocket): voi
           )
           : discardedImages,
         event: isLlamacorn || discardReason === 'annoying_flying_unicorn' ? 'discard-card' : undefined,
+        action: 'discard',
+        cards: [
+          ...(pendingSourceImage || llamacornCard?.image || annoyingFlyingCard?.image
+            ? [{ image: pendingSourceImage ?? llamacornCard?.image ?? annoyingFlyingCard!.image, role: 'source' as const }]
+            : []),
+          ...selectedDiscardCards.map((card) => ({
+            uid: card.uid,
+            id: card.id,
+            name: card.name,
+            image: card.image,
+            role: 'cost' as const,
+            status: 'discarded' as const,
+          })),
+        ],
       },
     );
     if (discardReason === 'hand_limit') {
