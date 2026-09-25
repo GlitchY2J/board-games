@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -20,6 +20,21 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import PlayingCard from '../components/card/PlayingCard';
 import CardSelectionOverlay from '../components/overlay/CardSelectionOverlay';
+import CardDrawEffect from '../components/effects/CardDrawEffect';
+import CardDiscardEffect from '../components/effects/CardDiscardEffect';
+import CardMoveEffect from '../components/effects/CardMoveEffect';
+import CardPlayEffect from '../components/effects/CardPlayEffect';
+import CardRemovalAnimation from '../components/effects/CardRemovalAnimation';
+import CardStealEffect from '../components/effects/CardStealEffect';
+import ShuffleDeckEffect from '../components/effects/ShuffleDeckEffect';
+import type {
+  CardAnimation,
+  DiscardAnimation,
+  DrawAnimation,
+  PlayAnimation,
+  ShuffleAnimation,
+  StealAnimation,
+} from '../../../shared/types/SocketEvents.ts';
 import '../components/card/CardFan.css';
 import '../components/overlay/PendingPlayOverlay.css';
 import './LayoutShowcase.css';
@@ -33,7 +48,33 @@ const themes: { id: Theme; name: string; colors: string[] }[] = [
   { id: 'nebula', name: 'Nebulosa', colors: ['#1e1035', '#7e22ce', '#f472b6'] },
 ];
 
-const navItems = ['Fundamentos', 'Botones', 'Campos', 'Labels', 'Cartas', 'Layouts'];
+const navItems = ['Fundamentos', 'Botones', 'Campos', 'Labels', 'Cartas', 'Layouts', 'Animaciones'];
+
+const demoCard = {
+  uid: 'layout-demo-card',
+  id: 'rainbow_unicorn',
+  name: 'Rainbow Unicorn',
+  image: '/cards/unstable-unicorns/base/rainbow_unicorn.png',
+};
+
+const demoDraw: DrawAnimation = { animId: 'layout-draw', playerId: 'layout-player', card: demoCard };
+const demoDiscard: DiscardAnimation = { animId: 'layout-discard', playerId: 'layout-player', card: demoCard };
+const demoPlay: PlayAnimation = { animId: 'layout-play', playerId: 'layout-player', card: demoCard };
+const demoSteal: StealAnimation = {
+  animId: 'layout-steal',
+  sourcePlayerId: 'layout-opponent',
+  targetPlayerId: 'layout-player',
+  card: demoCard,
+};
+const demoDestroy: CardAnimation = { animId: 'layout-destroy', type: 'destroy', ownerId: 'layout-player', card: demoCard };
+const demoSacrifice: CardAnimation = { animId: 'layout-sacrifice', type: 'sacrifice', ownerId: 'layout-player', card: demoCard };
+const demoShuffle: ShuffleAnimation = {
+  animId: 'layout-shuffle',
+  playerId: 'layout-player',
+  returnedCards: [demoCard, { ...demoCard, uid: 'layout-demo-card-2', name: 'Basic Unicorn', image: '/cards/unstable-unicorns/base/basic_unicorn_red.png' }],
+};
+
+type DemoAnimation = 'draw' | 'discard' | 'move' | 'play' | 'destroy' | 'sacrifice' | 'steal' | 'shuffle';
 
 export default function LayoutShowcase() {
   const navigate = useNavigate();
@@ -42,18 +83,29 @@ export default function LayoutShowcase() {
   const [search, setSearch] = useState('');
   const [copied, setCopied] = useState(false);
   const [toggle, setToggle] = useState(true);
+  const [demoAnimation, setDemoAnimation] = useState<{ type: DemoAnimation; key: number } | null>(null);
+  const animationKeyRef = useRef(0);
   const [overlayDemo, setOverlayDemo] = useState<
     'confirmation' | 'selection' | 'pending-play' | 'card-play' | null
   >(null);
 
   function setTheme(theme: Theme) {
-    document.documentElement.dataset.platformTheme = theme;
+    document.documentElement.setAttribute('data-platform-theme', theme);
     localStorage.setItem('platform-theme', theme);
   }
 
   function copyRoomCode() {
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1200);
+  }
+
+  function playAnimation(type: DemoAnimation) {
+    animationKeyRef.current += 1;
+    setDemoAnimation({ type, key: animationKeyRef.current });
+  }
+
+  function stopAnimation() {
+    setDemoAnimation(null);
   }
 
   return (
@@ -302,6 +354,55 @@ export default function LayoutShowcase() {
             </div>
           </section>
 
+          <section className="layout-section" id="animaciones">
+            <div className="layout-section-heading">
+              <span>07</span>
+              <div><h2>Animaciones</h2><p>Transiciones que acompañan el movimiento de cartas y eventos de la partida.</p></div>
+            </div>
+            <Card className="layout-demo-card layout-animation-showcase">
+              <div className="layout-animation-intro">
+                <div>
+                  <span className="layout-eyebrow">Motion library</span>
+                  <h3>Prueba cada efecto</h3>
+                  <p>Las demostraciones usan los mismos componentes que aparecen durante una partida real.</p>
+                </div>
+                {demoAnimation && <Button variant="secondary" onClick={stopAnimation}>Detener</Button>}
+              </div>
+              <div className="layout-animation-grid">
+                {([
+                  ['draw', 'Robar carta', 'Del mazo a la mano'],
+                  ['discard', 'Descartar', 'De la mano al descarte'],
+                  ['move', 'Mover carta', 'Movimiento hacia la mano'],
+                  ['play', 'Jugar carta', 'Entrada al establo'],
+                  ['destroy', 'Destruir', 'La carta se rompe en fragmentos'],
+                  ['sacrifice', 'Sacrificar', 'La carta desaparece con energía'],
+                  ['steal', 'Robar a otro jugador', 'Trayectoria entre establos'],
+                  ['shuffle', 'Barajar', 'Las cartas vuelven al mazo'],
+                ] as [DemoAnimation, string, string][]).map(([type, title, description]) => (
+                  <button
+                    key={type}
+                    type="button"
+                    className={`layout-animation-tile ${demoAnimation?.type === type ? 'active' : ''}`}
+                    onClick={() => playAnimation(type)}
+                  >
+                    <span className="layout-animation-icon">{type === 'destroy' ? '✦' : type === 'shuffle' ? '↻' : '◆'}</span>
+                    <strong>{title}</strong>
+                    <small>{description}</small>
+                    <span className="layout-animation-action">Reproducir</span>
+                  </button>
+                ))}
+              </div>
+              <div className="layout-animation-stage" aria-live="polite">
+                <div className="layout-animation-stage-label">Vista previa en mesa</div>
+                <div className="layout-animation-anchor layout-animation-anchor-deck" data-deck><span>Mazo</span></div>
+                <div className="layout-animation-anchor layout-animation-anchor-player" data-player-id="layout-opponent"><span>Rival</span></div>
+                <div className="layout-animation-anchor layout-animation-anchor-hand" data-hand><span>Tu mano</span></div>
+                <div className="layout-animation-anchor layout-animation-anchor-stable" data-stable-id="layout-player"><span>Tu establo</span></div>
+                {!demoAnimation && <p>Selecciona una animación para verla aquí.</p>}
+              </div>
+            </Card>
+          </section>
+
           <footer className="layout-showcase-footer">
             <span>Board Games UI Library</span>
             <p>Una referencia viva de los componentes del proyecto.</p>
@@ -431,6 +532,15 @@ export default function LayoutShowcase() {
           </div>
         </div>
       )}
+
+      {demoAnimation?.type === 'draw' && <CardDrawEffect key={demoAnimation.key} animation={demoDraw} localPlayerId="layout-player" onDone={stopAnimation} />}
+      {demoAnimation?.type === 'discard' && <CardDiscardEffect key={demoAnimation.key} animation={demoDiscard} localPlayerId="layout-player" onDone={stopAnimation} />}
+      {demoAnimation?.type === 'move' && <CardMoveEffect key={demoAnimation.key} card={demoCard} onDone={stopAnimation} />}
+      {demoAnimation?.type === 'play' && <CardPlayEffect key={demoAnimation.key} animation={demoPlay} localPlayerId="layout-player" onDone={stopAnimation} />}
+      {demoAnimation?.type === 'steal' && <CardStealEffect key={demoAnimation.key} animation={demoSteal} localPlayerId="layout-player" onDone={stopAnimation} />}
+      {demoAnimation?.type === 'shuffle' && <ShuffleDeckEffect key={demoAnimation.key} animation={demoShuffle} localPlayerId="layout-player" onDone={stopAnimation} />}
+      {demoAnimation?.type === 'destroy' && <CardRemovalAnimation key={demoAnimation.key} animation={demoDestroy} rect={{ left: window.innerWidth / 2 - 44, top: window.innerHeight / 2 - 62, width: 88, height: 124 }} onDone={stopAnimation} />}
+      {demoAnimation?.type === 'sacrifice' && <CardRemovalAnimation key={demoAnimation.key} animation={demoSacrifice} rect={{ left: window.innerWidth / 2 - 44, top: window.innerHeight / 2 - 62, width: 88, height: 124 }} onDone={stopAnimation} />}
     </main>
   );
 }

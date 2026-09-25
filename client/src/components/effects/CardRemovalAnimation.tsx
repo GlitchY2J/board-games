@@ -75,7 +75,7 @@ export default function CardRemovalAnimation({ animation, rect, onDone }: Props)
     top: rect.top,
     width: rect.width,
     height: rect.height,
-    zIndex: 60,
+    zIndex: 10050,
     pointerEvents: 'none',
   };
 
@@ -109,5 +109,9 @@ export default function CardRemovalAnimation({ animation, rect, onDone }: Props)
     );
   });
 
-  return <div className="card-anim-break" style={baseStyle}>{shards}</div>;
+  return (
+    <div className="card-anim-break" style={baseStyle}>
+      {shards}
+    </div>
+  );
 }

@@ -29,6 +29,7 @@ interface Props {
   showSelection?: boolean;
   compact?: boolean;
   buttonHotkeys?: boolean;
+  initialSelectedIds?: string[];
 }
 
 export default function CardSelectionOverlay({
@@ -49,10 +50,11 @@ export default function CardSelectionOverlay({
   showSelection = true,
   compact = false,
   buttonHotkeys = false,
+  initialSelectedIds,
 }: Props) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string[]>(() =>
-    maxSelection === 1 && items.length === 1 ? [items[0].id] : [],
+    initialSelectedIds ?? (maxSelection === 1 && items.length === 1 ? [items[0].id] : []),
   );
 
   useEffect(() => {
@@ -183,7 +185,7 @@ export default function CardSelectionOverlay({
               <div
                 key={item.id}
                 className={`selection-card ${active && showSelection ? 'selected' : ''}`}
-                onClick={() => toggle(item.id)}
+                onClick={showSelection ? () => toggle(item.id) : undefined}
               >
                 {active && showSelection && <div className="selection-badge">✓</div>}
                 {item.image && keyboardNavigation && items.length <= 10 && (

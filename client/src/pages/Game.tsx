@@ -81,6 +81,8 @@ export default function Game() {
   const [shakeUpVisibleDraws, setShakeUpVisibleDraws] = useState<Set<string>>(new Set());
 
   const pendingGameStateRef = useRef<GameState | null>(null);
+  const displayedGameStateRef = useRef<GameState | null>(gameState);
+  const queuedRemovalCardIdsRef = useRef(new Set<string>());
   const discardAnimationCountRef = useRef(0);
   const pendingNeighThankYouStateRef = useRef<GameState | null>(null);
   const activeAnimationsCountRef = useRef(0);
@@ -143,6 +145,10 @@ export default function Game() {
   }, [contextPlayerId]);
 
   const applyGameState = useCallback((state: GameState) => {
+    state.players.forEach((player) => {
+      [...player.stable, ...player.upgrades, ...player.downgrades]
+        .forEach((card) => queuedRemovalCardIdsRef.current.delete(card.uid));
+    });
     setGameState(state);
     announceGameState(state);
   }, [announceGameState]);
@@ -154,7 +160,7 @@ export default function Game() {
         return;
       }
 
-       if (activeAnimationsCountRef.current > 0 && discardAnimationCountRef.current === 0) {
+      if (activeAnimationsCountRef.current > 0 && discardAnimationCountRef.current === 0) {
         pendingGameStateRef.current = contextGameState;
       } else {
         setGameState(contextGameState);
@@ -179,6 +185,43 @@ export default function Game() {
   }, [turnAnnounce]);
 
   useEffect(() => {
+    const enqueueRemovalAnimations = (animations: CardAnimation[]) => {
+      const pendingAnimations = animations.filter((animation) => {
+        if (queuedRemovalCardIdsRef.current.has(animation.card.uid)) return false;
+        queuedRemovalCardIdsRef.current.add(animation.card.uid);
+        return true;
+      });
+      if (pendingAnimations.length === 0) return;
+
+      const found = pendingAnimations.map((animation, index) => {
+        const el = document.querySelector<HTMLElement>(
+          `[data-card-uid="${animation.card.uid}"]`,
+        );
+        if (el) {
+          el.classList.add('card-animating-out');
+        }
+
+        const sourceRect = el?.getBoundingClientRect()
+          ?? document.querySelector<HTMLElement>(`[data-stable-id="${animation.ownerId}"]`)?.getBoundingClientRect()
+          ?? document.querySelector<HTMLElement>(`[data-player-id="${animation.ownerId}"]`)?.getBoundingClientRect();
+        const width = window.innerWidth <= 640 ? 32 : window.innerWidth <= 1024 ? 38 : 44;
+        const height = width * 1.4;
+        const fallbackOffset = (index - (pendingAnimations.length - 1) / 2) * width * 0.65;
+        const rect = el
+          ? sourceRect!
+          : {
+              left: (sourceRect ? sourceRect.left + sourceRect.width / 2 : window.innerWidth / 2) - width / 2 + fallbackOffset,
+              top: sourceRect ? sourceRect.top + sourceRect.height / 2 - height / 2 : window.innerHeight / 2 - height / 2,
+              width,
+              height,
+            };
+        return { animation, rect };
+      });
+
+      activeAnimationsCountRef.current += found.length;
+      setRemovalAnims((prev) => [...prev, ...found]);
+    };
+
     const onTurnOrderAssigned = (players: { id: string; name: string; avatar?: string }[]) => {
       navigate('/starting', {
         state: {
@@ -196,6 +239,36 @@ export default function Game() {
     };
 
     const onGameUpdated = (state: GameState) => {
+      const previousState = displayedGameStateRef.current;
+      if (previousState) {
+        const nextBoardCardIds = new Set(
+          state.players.flatMap((player) => [
+            ...player.stable,
+            ...player.upgrades,
+            ...player.downgrades,
+          ]).map((card) => card.uid),
+        );
+        const nextDiscardCardIds = new Set(state.discard.map((card) => card.uid));
+        const missedDestructions = previousState.players.flatMap((player) => [
+          ...player.stable,
+          ...player.upgrades,
+          ...player.downgrades,
+        ].filter((card) =>
+          !nextBoardCardIds.has(card.uid) && nextDiscardCardIds.has(card.uid),
+        ).map((card) => ({
+          animId: `destroy-fallback-${card.uid}-${Date.now()}`,
+          type: 'destroy' as const,
+          ownerId: player.id,
+          card: {
+            uid: card.uid,
+            id: card.id,
+            name: card.name,
+            image: card.image,
+          },
+        })));
+        enqueueRemovalAnimations(missedDestructions);
+      }
+
       const eliminatedPlayerWonState =
         !!state.winnerId && isSpectatorState(state);
       const isNeighThankYouChoice =
@@ -229,6 +302,7 @@ export default function Game() {
       pendingNeighThankYouStateRef.current = null;
       discardAnimationCountRef.current = 0;
       activeAnimationsCountRef.current = 0;
+      queuedRemovalCardIdsRef.current.clear();
       setInitialDealAnims([]);
       setInitialDealSimultaneous([]);
       setInitialDealHiddenCards(new Set());
@@ -242,22 +316,7 @@ export default function Game() {
     socket.on('game-terminated', onGameTerminated);
 
     const onCardAnimations = (animations: CardAnimation[]) => {
-      const found = animations
-        .map((animation) => {
-          const el = document.querySelector(
-            `[data-card-uid="${animation.card.uid}"]`,
-          );
-          if (!el) return null;
-          el.classList.add('card-animating-out');
-          const rect = el.getBoundingClientRect();
-          return { animation, rect };
-        })
-        .filter((x): x is NonNullable<typeof x> => x !== null);
-
-      if (found.length > 0) {
-        activeAnimationsCountRef.current += found.length;
-        setRemovalAnims((prev) => [...prev, ...found]);
-      }
+      enqueueRemovalAnimations(animations);
     };
 
     const onNeighAnimations = (animations: NeighAnimation[]) => {
@@ -384,6 +443,68 @@ export default function Game() {
       socket.off('three-of-a-kind-empty', onThreeOfAKindEmpty);
     };
   }, [applyGameState, contextPlayerId, deactivate, isSpectatorState, navigate]);
+
+  useEffect(() => {
+    if (!gameState) return;
+
+    const previousState = displayedGameStateRef.current;
+    displayedGameStateRef.current = gameState;
+    if (!previousState || previousState === gameState) return;
+
+    const boardCards = (state: GameState) => state.players.flatMap((player) => [
+      ...player.stable,
+      ...player.upgrades,
+      ...player.downgrades,
+    ]);
+    const nextBoardCardIds = new Set(boardCards(gameState).map((card) => card.uid));
+    const nextDiscardCardIds = new Set(gameState.discard.map((card) => card.uid));
+    const destroyedCards = previousState.players.flatMap((player) =>
+      boardCards({ ...previousState, players: [player] }).filter((card) =>
+        !nextBoardCardIds.has(card.uid) && nextDiscardCardIds.has(card.uid),
+      ).map((card) => ({
+        animId: `destroy-state-${card.uid}-${Date.now()}`,
+        type: 'destroy' as const,
+        ownerId: player.id,
+        card: {
+          uid: card.uid,
+          id: card.id,
+          name: card.name,
+          image: card.image,
+        },
+      })),
+    );
+
+    const pendingAnimations = destroyedCards.filter((animation) => {
+      if (queuedRemovalCardIdsRef.current.has(animation.card.uid)) return false;
+      queuedRemovalCardIdsRef.current.add(animation.card.uid);
+      return true;
+    });
+    if (pendingAnimations.length === 0) return;
+
+    const width = window.innerWidth <= 640 ? 32 : window.innerWidth <= 1024 ? 38 : 44;
+    const height = width * 1.4;
+    const animations = pendingAnimations.map((animation, index) => {
+      const source = document.querySelector<HTMLElement>(
+        `[data-stable-id="${animation.ownerId}"]`,
+      ) ?? document.querySelector<HTMLElement>(
+        `[data-player-id="${animation.ownerId}"]`,
+      );
+      const sourceRect = source?.getBoundingClientRect();
+      const offset = (index - (pendingAnimations.length - 1) / 2) * width * 0.65;
+      return {
+        animation,
+        rect: {
+          left: (sourceRect ? sourceRect.left + sourceRect.width / 2 : window.innerWidth / 2) - width / 2 + offset,
+          top: sourceRect ? sourceRect.top + sourceRect.height / 2 - height / 2 : window.innerHeight / 2 - height / 2,
+          width,
+          height,
+        },
+      };
+    });
+
+    activeAnimationsCountRef.current += animations.length;
+    setRemovalAnims((current) => [...current, ...animations]);
+  }, [gameState]);
 
   const activePlayer = gameState?.players[gameState.currentPlayer];
   const localPlayer = gameState?.players.find(

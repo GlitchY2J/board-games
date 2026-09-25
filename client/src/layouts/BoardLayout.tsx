@@ -127,6 +127,7 @@ export default function BoardLayout({
   const [selectedDarkAngelCardId, setSelectedDarkAngelCardId] = useState<string | null>(null);
   const [selectedRhinocornCardId, setSelectedRhinocornCardId] = useState<string | null>(null);
   const [selectedBoardCardIds, setSelectedBoardCardIds] = useState<Set<string>>(new Set());
+  const [boardSelectionConfirmationOpen, setBoardSelectionConfirmationOpen] = useState(false);
   const [selectedExtremelyDestructiveCardId, setSelectedExtremelyDestructiveCardId] = useState<string | null>(null);
   const [selectedMermaidCardId, setSelectedMermaidCardId] = useState<string | null>(null);
   const [selectedNecromancerCardIds, setSelectedNecromancerCardIds] = useState<Set<string>>(new Set());
@@ -203,24 +204,22 @@ export default function BoardLayout({
 
   useEffect(() => {
     setSelectedBoardCardIds(new Set());
+    setBoardSelectionConfirmationOpen(false);
   }, [boardSelectionKey]);
 
   function selectBoardStableCard(cardId: string) {
     const selection = boardStableSelection;
     if (!selection || !selection.targets.has(cardId)) return;
     if (selection.required === 1) {
-      socket.emit('select-stable-card', {
-        roomCode: gameState.roomCode,
-        cardId: selection.targets.get(cardId)!,
-      });
+      setSelectedBoardCardIds(new Set([cardId]));
+      setBoardSelectionConfirmationOpen(true);
       return;
     }
-    setSelectedBoardCardIds((current) => {
-      const next = new Set(current);
-      if (next.has(cardId)) next.delete(cardId);
-      else if (next.size < selection.required) next.add(cardId);
-      return next;
-    });
+    const next = new Set(selectedBoardCardIds);
+    if (next.has(cardId)) next.delete(cardId);
+    else if (next.size < selection.required) next.add(cardId);
+    setSelectedBoardCardIds(next);
+    if (next.size === selection.required) setBoardSelectionConfirmationOpen(true);
   }
   const cardSelectedRef = useRef(false);
   const notificationTimerRef = useRef<number | null>(null);
@@ -521,6 +520,16 @@ export default function BoardLayout({
   const selectedRhinocornCard = rhinocornAction && selectedRhinocornCardId
     ? gameState.players.flatMap((player) => player.stable).find((card) => card.uid === selectedRhinocornCardId)
     : undefined;
+  const selectedBoardCards = [...selectedBoardCardIds]
+    .map((cardId) => gameState.players
+      .flatMap((player) => [...player.stable, ...player.upgrades, ...player.downgrades])
+      .find((card) => card.uid === cardId))
+    .filter((card): card is NonNullable<typeof card> => Boolean(card));
+  const boardSelectionConfirmText = gameState.pendingAction?.type === 'select_stable_card' &&
+    gameState.pendingAction.reason === 'targeted_destruction' &&
+    selectedBoardCards.some((card) => localPlayer?.downgrades.some((downgrade) => downgrade.uid === card.uid))
+      ? 'Sacrificar'
+      : boardStableSelection?.confirmText ?? 'Confirmar';
   const extremelyDestructiveAction = gameState.pendingAction?.type === 'extremely_destructive_unicorn' &&
     gameState.pendingAction.remainingPlayerIds.includes(localPlayerId) &&
     !gameState.pendingAction.resolvedPlayerIds.includes(localPlayerId);
@@ -992,6 +1001,38 @@ export default function BoardLayout({
           </div>
         </div>
       )}
+
+      {boardStableSelection &&
+        boardSelectionConfirmationOpen &&
+        selectedBoardCards.length === boardStableSelection.required && (
+          <CardSelectionOverlay
+            hide={false}
+            title={boardStableSelection.hint.split(':')[0]}
+            subtitle={`¿Deseas ${boardSelectionConfirmText.toLocaleLowerCase()} ${selectedBoardCards.length === 1 ? 'esta carta' : 'estas cartas'}?`}
+            items={selectedBoardCards.map((card) => ({
+              id: card.uid,
+              value: card.uid,
+              title: card.name,
+              image: card.image,
+            }))}
+            maxSelection={selectedBoardCards.length}
+            initialSelectedIds={selectedBoardCards.map((card) => card.uid)}
+            confirmText={boardSelectionConfirmText}
+            showSelection={false}
+            compact
+            keyboardNavigation={false}
+            buttonHotkeys
+            onConfirm={() => {
+              const payloads = [...selectedBoardCardIds].map((uid) => boardStableSelection.targets.get(uid)!);
+              setBoardSelectionConfirmationOpen(false);
+              socket.emit('select-stable-card', {
+                roomCode: gameState.roomCode,
+                cardId: boardStableSelection.required === 1 ? payloads[0] : payloads,
+              });
+            }}
+            onCancel={() => setBoardSelectionConfirmationOpen(false)}
+          />
+        )}
 
       {rhinocornAction && selectedRhinocornCard && (
         <CardSelectionOverlay
@@ -1554,10 +1595,7 @@ export default function BoardLayout({
                     type="button"
                     disabled={selectedBoardCardIds.size !== boardStableSelection.required}
                     className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
-                    onClick={() => socket.emit('select-stable-card', {
-                      roomCode: gameState.roomCode,
-                      cardId: [...selectedBoardCardIds].map((uid) => boardStableSelection.targets.get(uid)!),
-                    })}
+                    onClick={() => setBoardSelectionConfirmationOpen(true)}
                   >
                     Confirmar selección
                   </button>
