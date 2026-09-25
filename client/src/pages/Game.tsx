@@ -382,6 +382,7 @@ export default function Game() {
     if (gameState.phase !== 'BEGINNING') return;
     if (turnAnnounce) return; // Esperar a que termine la animación de anuncio de turno
     if (gameState.pendingAction || gameState.pendingPlay) return;
+    if ((gameState.beginningEffectsQueue ?? []).length > 0) return;
 
     socket.emit('next-phase', gameState.roomCode);
   }, [

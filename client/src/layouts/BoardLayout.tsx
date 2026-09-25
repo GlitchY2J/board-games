@@ -124,6 +124,7 @@ export default function BoardLayout({
   const [selectedAlluringUpgradeId, setSelectedAlluringUpgradeId] = useState<string | null>(null);
   const [selectedChainsawCardId, setSelectedChainsawCardId] = useState<string | null>(null);
   const [selectedDarkAngelCardId, setSelectedDarkAngelCardId] = useState<string | null>(null);
+  const [selectedRhinocornCardId, setSelectedRhinocornCardId] = useState<string | null>(null);
   const [selectedExtremelyDestructiveCardId, setSelectedExtremelyDestructiveCardId] = useState<string | null>(null);
   const [selectedMermaidCardId, setSelectedMermaidCardId] = useState<string | null>(null);
   const [selectedNecromancerCardIds, setSelectedNecromancerCardIds] = useState<Set<string>>(new Set());
@@ -184,6 +185,12 @@ export default function BoardLayout({
   const localPlayer = spectator
     ? undefined
     : gameState.players.find((p) => p.socketId === socket.id);
+  const beginningEffectIds = new Set(gameState.beginningEffectsQueue ?? []);
+  const canChooseBeginningEffect = !spectator && isMyTurn && gameState.phase === 'BEGINNING' && !gameState.pendingAction && beginningEffectIds.size > 0;
+
+  function activateBeginningEffect(cardUid: string) {
+    socket.emit('activate-beginning-effect', { roomCode: gameState.roomCode, cardUid });
+  }
   const cardSelectedRef = useRef(false);
   const notificationTimerRef = useRef<number | null>(null);
 
@@ -461,6 +468,25 @@ export default function BoardLayout({
       )
       .map((card) => card.uid))
     : new Set<string>();
+  const rhinocornAction = gameState.pendingAction?.type === 'select_stable_card' &&
+    gameState.pendingAction.reason === 'rhinocorn' &&
+    gameState.pendingAction.sourcePlayerId === localPlayerId;
+  const rhinocornTargetIds = rhinocornAction
+    ? new Set(
+      gameState.players
+        .filter((player) => player.id !== localPlayerId)
+        .flatMap((player) => player.stable
+          .filter((card) =>
+            card.cardType === 'unicorn' &&
+            !player.downgrades.some((downgrade) => downgrade.id === 'pandamonium') &&
+            !['the_tiniest_unicorn', 'unicorn_of_war', 'saved_by_the_sigil'].includes(card.id),
+          )
+          .map((card) => card.uid)),
+    )
+    : new Set<string>();
+  const selectedRhinocornCard = rhinocornAction && selectedRhinocornCardId
+    ? gameState.players.flatMap((player) => player.stable).find((card) => card.uid === selectedRhinocornCardId)
+    : undefined;
   const extremelyDestructiveAction = gameState.pendingAction?.type === 'extremely_destructive_unicorn' &&
     gameState.pendingAction.remainingPlayerIds.includes(localPlayerId) &&
     !gameState.pendingAction.resolvedPlayerIds.includes(localPlayerId);
@@ -486,11 +512,12 @@ export default function BoardLayout({
     if (!alluringAction) setSelectedAlluringUpgradeId(null);
     if (!chainsawAction) setSelectedChainsawCardId(null);
     if (!darkAngelAction) setSelectedDarkAngelCardId(null);
+    if (!rhinocornAction) setSelectedRhinocornCardId(null);
     if (!extremelyDestructiveAction) setSelectedExtremelyDestructiveCardId(null);
     if (!mermaidAction) setSelectedMermaidCardId(null);
     if (!necromancerDiscardAction) setSelectedNecromancerCardIds(new Set());
     if (!necromancerDiscardAction) setSelectedNecromancerCardId(null);
-  }, [alluringAction, chainsawAction, darkAngelAction, extremelyDestructiveAction, mermaidAction, necromancerDiscardAction]);
+  }, [alluringAction, chainsawAction, darkAngelAction, extremelyDestructiveAction, mermaidAction, necromancerDiscardAction, rhinocornAction]);
 
   useEffect(() => {
     if (!alluringAction || !selectedAlluringUpgrade) return;
@@ -538,10 +565,12 @@ export default function BoardLayout({
           player={opp}
           isLocalPlayer={false}
           isMyTurn={opp.id === activePlayer.id}
-            selectableUpgradeIds={alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : darkAngelAction && opp.id === localPlayerId ? darkAngelTargets : mermaidAction ? mermaidTargetIds : undefined}
+            selectableUpgradeIds={rhinocornAction ? rhinocornTargetIds : alluringAction ? alluringUpgradeIds : chainsawAction ? chainsawTargetIds : darkAngelAction && opp.id === localPlayerId ? darkAngelTargets : mermaidAction ? mermaidTargetIds : undefined}
            selectedUpgradeId={selectedAlluringUpgradeId ?? undefined}
-           onUpgradeSelect={(cardId) => {
-              if (chainsawAction) {
+            onUpgradeSelect={(cardId) => {
+              if (rhinocornAction && rhinocornTargetIds.has(cardId)) {
+                setSelectedRhinocornCardId(cardId);
+              } else if (chainsawAction) {
                 setSelectedChainsawCardId(cardId);
               } else if (darkAngelAction) {
                 setSelectedDarkAngelCardId(cardId);
@@ -553,8 +582,10 @@ export default function BoardLayout({
               } else {
                setSelectedAlluringUpgradeId(cardId);
              }
-           }}
-        />
+            }}
+            beginningEffectIds={canChooseBeginningEffect ? beginningEffectIds : undefined}
+            onBeginningEffectSelect={activateBeginningEffect}
+         />
       )}
     </div>
   );
@@ -749,6 +780,18 @@ export default function BoardLayout({
                     </span>
                   )}
 
+                  {canChooseBeginningEffect && (
+                    <span className="draw-hint">
+                      selecciona una carta con efecto de inicio de turno
+                    </span>
+                  )}
+
+                  {rhinocornAction && (
+                    <span className="draw-hint">
+                      selecciona un unicornio de otro jugador para destruirlo
+                    </span>
+                  )}
+
                   {showPhases && isMyTurn && gameState.phase === 'DRAW' && (
                     <span className="draw-hint">
                       Presiona <kbd className="space-key">Space</kbd> para robar
@@ -843,7 +886,9 @@ export default function BoardLayout({
                       if (darkAngelAction && darkAngelTargets.has(cardId)) setSelectedDarkAngelCardId(cardId);
                       if (extremelyDestructiveAction && extremelyDestructiveTargets.has(cardId)) setSelectedExtremelyDestructiveCardId(cardId);
                     }}
-                />
+                    beginningEffectIds={canChooseBeginningEffect ? beginningEffectIds : undefined}
+                    onBeginningEffectSelect={activateBeginningEffect}
+                 />
               )}
             </div>
           )}
@@ -901,6 +946,33 @@ export default function BoardLayout({
             </div>
           </div>
         </div>
+      )}
+
+      {rhinocornAction && selectedRhinocornCard && (
+        <CardSelectionOverlay
+          title="🦏 Rhinocorn"
+          subtitle="¿Deseas destruir este unicornio? Pasarás a la fase de acción sin acciones."
+          items={[{
+            id: selectedRhinocornCard.uid,
+            value: selectedRhinocornCard.uid,
+            title: selectedRhinocornCard.name,
+            image: selectedRhinocornCard.image,
+          }]}
+          maxSelection={1}
+          confirmText="Confirmar"
+          showSelection={false}
+          compact
+          keyboardNavigation={false}
+          buttonHotkeys
+          onConfirm={() => {
+            socket.emit('select-stable-card', {
+              roomCode: gameState.roomCode,
+              cardId: selectedRhinocornCard.uid,
+            });
+            setSelectedRhinocornCardId(null);
+          }}
+          onCancel={() => setSelectedRhinocornCardId(null)}
+        />
       )}
 
       {chainsawAction && selectedChainsawCard && (
@@ -1424,10 +1496,20 @@ export default function BoardLayout({
 
             {showPhases && (
               <div className="phase-action-anchor">
-                <PhaseActionButton
-                  gameState={gameState}
-                  autoEnabled={autoEnabled}
-                />
+                {canChooseBeginningEffect ? (
+                  <button
+                      type="button"
+                      className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider glow-btn-emerald border border-emerald-400/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-emerald-500/10"
+                      onClick={() => socket.emit('skip-beginning-effects', gameState.roomCode)}
+                    >
+                      saltar inicio de turno
+                  </button>
+                ) : (
+                  <PhaseActionButton
+                    gameState={gameState}
+                    autoEnabled={autoEnabled}
+                  />
+                )}
               </div>
             )}
           </>

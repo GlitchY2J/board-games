@@ -14,6 +14,7 @@ interface Props {
   plain?: boolean;
   backImage?: string;
   onClick?: () => void;
+  hoverSound?: boolean;
 }
 
 export default function PlayingCard({
@@ -27,6 +28,7 @@ export default function PlayingCard({
   plain = false,
   backImage = '/cards/unstable-unicorns/base/card_back.png',
   onClick,
+  hoverSound = true,
 }: Props) {
   const { showPreview, hidePreview } = useCardPreview();
 
@@ -34,7 +36,7 @@ export default function PlayingCard({
   const shouldShowPreview = preview && !isCardBack && !!image;
 
   function handleMouseEnter(e: React.MouseEvent<HTMLDivElement>) {
-    playCardHoverSound();
+    if (hoverSound) playCardHoverSound();
     if (!shouldShowPreview) return;
     showPreview(image, e.clientX, e.clientY);
   }

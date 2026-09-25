@@ -10,6 +10,8 @@ interface Props {
   selectableUpgradeIds?: Set<string>;
   selectedUpgradeId?: string;
   onUpgradeSelect?(cardId: string): void;
+  beginningEffectIds?: Set<string>;
+  onBeginningEffectSelect?(cardId: string): void;
 }
 
 export default function PlayerBoard({
@@ -18,6 +20,8 @@ export default function PlayerBoard({
   selectableUpgradeIds,
   selectedUpgradeId,
   onUpgradeSelect,
+  beginningEffectIds,
+  onBeginningEffectSelect,
 }: Props) {
   return (
     <div
@@ -37,7 +41,9 @@ export default function PlayerBoard({
           player={player}
           selectableUpgradeIds={selectableUpgradeIds}
           selectedUpgradeId={selectedUpgradeId}
-          onUpgradeSelect={onUpgradeSelect}
+           onUpgradeSelect={onUpgradeSelect}
+           beginningEffectIds={beginningEffectIds}
+           onBeginningEffectSelect={onBeginningEffectSelect}
         />
       </div>
     </div>

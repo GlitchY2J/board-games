@@ -85,11 +85,13 @@
 }
 
 .card-selection-grid {
+  position: relative;
+  z-index: 2;
   display: flex;
   justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
-  padding: 16px;
+  padding: 24px 16px;
   max-height: 60vh;
   overflow-y: auto;
 }
@@ -103,12 +105,22 @@
 }
 
 .selection-card:hover {
-  transform: translateY(-8px) scale(1.04);
+  z-index: 10;
+  transform: translateY(-8px) scale(1.04) rotate(2deg);
 }
 
 .selection-card.selected {
   outline: 3px solid rgba(16, 185, 129, 0.7);
+  outline-offset: 2px;
   box-shadow: 0 0 30px rgba(16, 185, 129, 0.35);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    outline-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.selection-card.selected:hover {
+  outline-color: rgba(52, 211, 153, 0.95);
+  box-shadow: 0 0 38px rgba(16, 185, 129, 0.55);
 }
 
 /* Prevent double transform on inner PlayingCard inside selection overlay */
@@ -118,7 +130,8 @@
 }
 
 .card-selection-grid .selection-card:hover .playing-card {
-  transform: translateY(-6px) scale(1.06) !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .selection-card-content {

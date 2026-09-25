@@ -1462,45 +1462,7 @@ export default function GameOverlay({
         }
 
         if (action.reason === 'rhinocorn') {
-          const items = gameState.players
-            .filter((p) => p.id !== localPlayerId)
-            .flatMap((p) =>
-              p.stable
-                .filter(
-                  (c) =>
-                    c.cardType === 'unicorn' &&
-                      canBeDestroyedOrSacrificed(c) &&
-                      !isPandamoniumProtected(p, c) &&
-                     c.id !== 'the_tiniest_unicorn' &&
-                     c.id !== 'unicorn_of_war' &&
-                     c.id !== 'saved_by_the_sigil',
-                )
-                .map((card, idx) => ({
-                  id: `${card.id}_${p.id}_${idx}`,
-                  value: card.uid,
-                  title: card.name,
-                  subtitle: `Establo de ${p.name}`,
-                  image: card.image,
-                })),
-            );
-
-          return (
-            <CardSelectionOverlay
-              hide={hide}
-              title="🦏 Rhinocorn"
-              subtitle="Elige un unicornio de OTRO jugador para DESTRUIR. Pasarás a la fase de acción sin acciones."
-              items={items}
-              maxSelection={1}
-              confirmText="Destruir"
-              onConfirm={([cardId]) => {
-                dismiss();
-                socket.emit('select-stable-card', {
-                  roomCode: gameState.roomCode,
-                  cardId,
-                });
-              }}
-            />
-          );
+          return null;
         }
 
         if (action.reason === 'unicorn_of_war_destroy') {
@@ -3124,6 +3086,50 @@ export default function GameOverlay({
                 id: sourceCard?.uid ?? 'annoying-flying-unicorn',
                 value: 'yes',
                 title: sourceCard?.name ?? 'Annoying Flying Unicorn',
+                image,
+              }]}
+              maxSelection={1}
+              confirmText="Usar efecto"
+              showSelection={false}
+              compact
+              keyboardNavigation={false}
+              buttonHotkeys
+              onConfirm={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'yes',
+                });
+              }}
+              onCancel={() => {
+                dismiss();
+                socket.emit('select-choice', {
+                  roomCode: gameState.roomCode,
+                  choice: 'no',
+                });
+              }}
+            />
+          );
+        }
+
+        if (action.reason === 'rhinocorn') {
+          if (action.playerId !== localPlayerId) return null;
+
+          const sourcePlayer = gameState.players.find((player) => player.id === localPlayerId);
+          const sourceCard = action.effectCardId
+            ? sourcePlayer?.stable.find((card) => card.uid === action.effectCardId)
+            : sourcePlayer?.stable.find((card) => card.id === 'rhinocorn');
+          const image = sourceCard?.image ?? '/cards/unstable-unicorns/base/card_back.png';
+
+          return (
+            <CardSelectionOverlay
+              hide={hide}
+              title="🦏 Rhinocorn"
+              subtitle={action.description}
+              items={[{
+                id: sourceCard?.uid ?? 'rhinocorn',
+                value: 'yes',
+                title: sourceCard?.name ?? 'Rhinocorn',
                 image,
               }]}
               maxSelection={1}

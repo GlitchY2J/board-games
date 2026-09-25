@@ -460,6 +460,7 @@ export default function CardFan({
                 image={selectedCard.image}
                 size="large"
                 preview={false}
+                hoverSound={false}
               />
 
                <div className="card-select-actions flex items-center justify-center gap-4 px-6 py-4 rounded-3xl glass-panel bg-slate-950/90 shadow-2xl">

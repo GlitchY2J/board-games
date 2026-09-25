@@ -74,7 +74,7 @@ test('skipBeginningIfNoTriggers: mantiene BEGINNING si el jugador tiene Glitter 
   assert.equal(state.phase, TurnPhase.BEGINNING);
 });
 
-test('activateBeginningTriggers: presenta el efecto individual y genera pendingAction', () => {
+test('activateBeginningTriggers: expone el efecto individual para selección del jugador', () => {
   const p1 = makePlayer('P1');
   p1.upgrades = [card('glitter_bomb')];
   p1.stable = [card('baby_unicorn_red')];
@@ -84,8 +84,7 @@ test('activateBeginningTriggers: presenta el efecto individual y genera pendingA
 
   const presented = TurnManager.activateBeginningTriggers(state);
   assert.equal(presented, true);
-  assert.equal(state.pendingAction?.type, 'select_choice');
-  assert.equal(state.pendingAction?.reason, 'glitter_bomb');
+  assert.deepEqual(state.beginningEffectsQueue, [p1.upgrades[0].uid]);
 });
 
 test('Clairvoyant Unicorn: se activa al inicio del turno', () => {
@@ -99,8 +98,7 @@ test('Clairvoyant Unicorn: se activa al inicio del turno', () => {
   const state = makeGame([activePlayer, makePlayer('opponent')]);
 
   assert.equal(TurnManager.activateBeginningTriggers(state), true);
-  assert.equal(state.pendingAction?.type, 'select_choice');
-  assert.equal(state.pendingAction?.reason, 'clairvoyant_unicorn');
+  assert.deepEqual(state.beginningEffectsQueue, ['clairvoyant-test']);
 });
 
 test('Extremely Fertile Unicorn: descarta una carta y permite elegir un Baby de la Nursery', () => {
@@ -115,8 +113,8 @@ test('Extremely Fertile Unicorn: descarta una carta y permite elegir un Baby de 
   state.nursery = [baby];
 
   assert.equal(TurnManager.activateBeginningTriggers(state), true);
-  assert.equal(state.pendingAction?.type, 'select_choice');
-  assert.equal(state.pendingAction?.reason, 'extremely_fertile_unicorn');
+  assert.deepEqual(state.beginningEffectsQueue, [fertile.uid]);
+  assert.equal(TurnManager.startBeginningEffect(state, fertile.uid), true);
 
   state.pendingAction = {
     type: 'discard',
@@ -140,10 +138,10 @@ test('Zombie Unicorn: se ofrece al inicio solo si puede sacrificar y recuperar u
   state.discard = [card('basic_unicorn_blue')];
 
   assert.equal(TurnManager.activateBeginningTriggers(state), true);
-  assert.equal(state.pendingAction?.reason, 'zombie_unicorn');
+  assert.deepEqual(state.beginningEffectsQueue, [p1.stable[0].uid]);
 });
 
-test('activateBeginningTriggers: presenta beginning_effect_picker si hay 2+ efectos disponibles', () => {
+test('activateBeginningTriggers: expone todos los efectos disponibles sin picker', () => {
   const p1 = makePlayer('P1');
   p1.upgrades = [card('glitter_bomb'), card('claw_machine')];
   p1.stable = [card('baby_unicorn_red')];
@@ -153,8 +151,8 @@ test('activateBeginningTriggers: presenta beginning_effect_picker si hay 2+ efec
 
   const presented = TurnManager.activateBeginningTriggers(state);
   assert.equal(presented, true);
-  assert.equal(state.pendingAction?.type, 'select_choice');
-  assert.equal(state.pendingAction?.reason, 'beginning_effect_picker');
+  assert.equal(state.pendingAction, undefined);
+  assert.deepEqual(state.beginningEffectsQueue, p1.upgrades.map((card) => card.uid));
 });
 
 test('processBeginningQueue: avanza automáticamente a DRAW cuando se vacía la cola', () => {

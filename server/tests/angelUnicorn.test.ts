@@ -60,10 +60,7 @@ test('Angel Unicorn: se activa al inicio del turno si hay unicornios en el desca
   // Activa triggers de inicio de turno
   TurnManager.activateBeginningTriggers(state);
 
-  assert.equal(state.pendingAction?.type, 'select_choice');
-  if (state.pendingAction?.type === 'select_choice') {
-    assert.equal(state.pendingAction.reason, 'angel_unicorn');
-  }
+  assert.deepEqual(state.beginningEffectsQueue, [angel.uid]);
 });
 
 test('Angel Unicorn: NO se activa si el descarte NO tiene unicornios', () => {

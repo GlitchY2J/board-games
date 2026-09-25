@@ -348,6 +348,8 @@ export interface ClientToServerEvents {
 
   // Next Phase
   'next-phase': (roomCode: string) => void;
+  'activate-beginning-effect': (payload: { roomCode: string; cardUid: string }) => void;
+  'skip-beginning-effects': (roomCode: string) => void;
 
   // End Turn
   'end-turn': (roomCode: string) => void;

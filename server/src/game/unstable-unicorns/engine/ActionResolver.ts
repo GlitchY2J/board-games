@@ -2626,6 +2626,20 @@ export class ActionResolver {
         EffectStack.finish(state, pending);
         state.beginningEffectsQueue = [];
 
+        const sourcePlayer = state.players.find((player) => player.id === sourcePlayerId);
+        const rhinocorn = pending.effectCardId
+          ? sourcePlayer?.stable.find((card) => card.uid === pending.effectCardId)
+          : sourcePlayer?.stable.find((card) => card.id === 'rhinocorn');
+        addLog(
+          state,
+          `${sourcePlayer?.name ?? 'Jugador'} destruyó "${destroyed.name}" por el efecto de "${rhinocorn?.name ?? 'Rhinocorn'}"`,
+          {
+            playerId: sourcePlayerId,
+            cardImages: [destroyed.image, rhinocorn?.image ?? pending.sourceCardImage ?? ''],
+            event: 'beginning-effect',
+          },
+        );
+
         // Pasa a la fase de acción pero sin acciones, obligando a "Terminar Turno"
         if (state.phase === TurnPhase.BEGINNING) {
           state.phase = TurnPhase.ACTION;

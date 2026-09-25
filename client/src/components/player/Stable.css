@@ -20,15 +20,21 @@
 }
 
 .alluring-upgrade-selectable:hover {
-  transform: scale(1.12);
+  animation-play-state: paused;
+  transform: translateY(-3px) scale(1.22);
+}
+
+.alluring-upgrade-selectable .playing-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 @keyframes selectable-card-swing {
   0%, 100% {
-    transform: rotate(-4deg);
+    rotate: -4deg;
   }
   50% {
-    transform: rotate(4deg);
+    rotate: 4deg;
   }
 }
 
@@ -53,4 +59,23 @@
   .stable-compact .playing-card.small {
     width: 24px;
   }
+}
+.beginning-effect-selectable {
+  position: relative;
+  border-radius: 4px;
+  outline: 2px solid color-mix(in srgb, var(--platform-accent) 90%, transparent);
+  outline-offset: 2px;
+  box-shadow: 0 0 16px var(--platform-glow);
+  animation: selectable-card-swing 2.2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.beginning-effect-selectable .playing-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.beginning-effect-selectable:hover {
+  animation-play-state: paused;
+  transform: translateY(-3px) scale(1.22);
 }

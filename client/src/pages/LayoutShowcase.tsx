@@ -407,8 +407,9 @@ export default function LayoutShowcase() {
             <PlayingCard
               name="Rainbow Unicorn"
               image="/cards/unstable-unicorns/base/rainbow_unicorn.png"
-              size="large"
-              preview={false}
+               size="large"
+               preview={false}
+               hoverSound={false}
             />
             <div className="card-select-actions flex items-center justify-center gap-4 px-6 py-4 rounded-3xl glass-panel bg-slate-950/90 shadow-2xl">
               <button

@@ -267,7 +267,6 @@ export type PendingAction =
          | "unicorn_of_war"
          | "unicorn_rainbow_princess"
          | "zombie_unicorn"
-        | "beginning_effect_picker"
          | "rainbow_lasso"
          | "rainbow_sprinkles"
          | "special_delivery"

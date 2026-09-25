@@ -22,6 +22,30 @@ function continueBeginningPhaseIfReady(game: GameState): void {
 }
 
 export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void {
+  socket.on('activate-beginning-effect', ({ roomCode, cardUid }) => {
+    const room = roomManager.getRoom(roomCode);
+    const game = room?.gameState;
+    const player = game?.players.find((candidate) => candidate.socketId === socket.id);
+    if (!game || !player || game.phase !== TurnPhase.BEGINNING || game.pendingAction || game.currentPlayer !== game.players.indexOf(player)) return;
+    if (!game.beginningEffectsQueue?.includes(cardUid)) return;
+
+    const started = TurnManager.startBeginningEffect(game, cardUid);
+    if (!started || !game.pendingAction) TurnManager.processBeginningQueue(game);
+    emitGameState(io, room, 'game-updated');
+  });
+
+  socket.on('skip-beginning-effects', (roomCode) => {
+    const room = roomManager.getRoom(roomCode);
+    const game = room?.gameState;
+    const player = game?.players.find((candidate) => candidate.socketId === socket.id);
+    if (!game || !player || game.phase !== TurnPhase.BEGINNING || game.pendingAction || game.currentPlayer !== game.players.indexOf(player)) return;
+    if (!game.beginningEffectsQueue?.length) return;
+
+    game.beginningEffectsQueue = [];
+    TurnManager.processBeginningQueue(game);
+    emitGameState(io, room, 'game-updated');
+  });
+
   socket.on('select-choice', ({ roomCode, choice }) => {
     const room = roomManager.getRoom(roomCode);
     if (!room?.gameState) return;
@@ -100,25 +124,6 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
       );
       emitGameState(io, room, 'game-updated');
       startPendingTimer(io, room, startedAt);
-      return;
-    }
-
-    if (pending.reason === 'beginning_effect_picker') {
-      // El jugador elige en qué orden resolver sus efectos de inicio de turno.
-      const q = room.gameState.beginningEffectsQueue ?? [];
-      const idx = q.indexOf(choice);
-      if (idx !== -1) q.splice(idx, 1);
-      room.gameState.beginningEffectsQueue = q;
-
-      const started = TurnManager.startBeginningEffect(
-        room.gameState,
-        choice,
-      );
-      if (!started) {
-        TurnManager.processBeginningQueue(room.gameState);
-      }
-
-      emitGameState(io, room, 'game-updated');
       return;
     }
 
@@ -1207,11 +1212,13 @@ export function registerChoiceHandlers(io: GameServer, socket: GameSocket): void
       emitGameState(io, room, 'game-updated');
     } else if (pending.reason === 'rhinocorn') {
       if (choice === 'yes') {
-        room.gameState.pendingAction = {
-          type: 'select_stable_card',
-          reason: 'rhinocorn',
-          sourcePlayerId: player.id,
-        };
+          room.gameState.pendingAction = {
+            type: 'select_stable_card',
+            reason: 'rhinocorn',
+            sourcePlayerId: player.id,
+            effectCardId: pending.effectCardId,
+            sourceCardImage: player.stable.find((card) => card.uid === pending.effectCardId)?.image,
+          };
       } else {
         room.gameState.pendingAction = undefined;
         if (room.gameState.phase === TurnPhase.BEGINNING) {

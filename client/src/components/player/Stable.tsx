@@ -9,6 +9,8 @@ interface Props {
   selectableUpgradeIds?: Set<string>;
   selectedUpgradeId?: string;
   onUpgradeSelect?(cardId: string): void;
+  beginningEffectIds?: Set<string>;
+  onBeginningEffectSelect?(cardId: string): void;
 }
 
 export default function Stable({
@@ -16,6 +18,8 @@ export default function Stable({
   selectableUpgradeIds,
   selectedUpgradeId,
   onUpgradeSelect,
+  beginningEffectIds,
+  onBeginningEffectSelect,
 }: Props) {
   const hasUnicorns = player.stable.length > 0;
   const hasUpgrades = player.upgrades.length > 0;
@@ -35,9 +39,15 @@ export default function Stable({
                 key={card.uid}
                 data-card-uid={card.uid}
                 className={`relative group transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
+                  beginningEffectIds?.has(card.uid) ? 'beginning-effect-selectable' : ''
+                } ${
                   selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''
                 }`}
-                onClick={selectableUpgradeIds?.has(card.uid) ? () => onUpgradeSelect?.(card.uid) : undefined}
+                onClick={beginningEffectIds?.has(card.uid)
+                  ? () => onBeginningEffectSelect?.(card.uid)
+                  : selectableUpgradeIds?.has(card.uid)
+                    ? () => onUpgradeSelect?.(card.uid)
+                    : undefined}
               >
                 <div className="absolute inset-0 bg-amber-500/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <PlayingCard
@@ -65,8 +75,12 @@ export default function Stable({
                 <div
                   key={card.uid}
                   data-card-uid={card.uid}
-                  className={selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : undefined}
-                  onClick={selectableUpgradeIds?.has(card.uid) ? () => onUpgradeSelect?.(card.uid) : undefined}
+                  className={`${beginningEffectIds?.has(card.uid) ? 'beginning-effect-selectable' : ''} ${selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''}`}
+                  onClick={beginningEffectIds?.has(card.uid)
+                    ? () => onBeginningEffectSelect?.(card.uid)
+                    : selectableUpgradeIds?.has(card.uid)
+                      ? () => onUpgradeSelect?.(card.uid)
+                      : undefined}
                 >
                   <PlayingCard
                     name={card.name}
@@ -85,8 +99,12 @@ export default function Stable({
                   <div
                     key={card.uid}
                     data-card-uid={card.uid}
-                    className={selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : undefined}
-                    onClick={selectableUpgradeIds?.has(card.uid) ? () => onUpgradeSelect?.(card.uid) : undefined}
+                    className={`${beginningEffectIds?.has(card.uid) ? 'beginning-effect-selectable' : ''} ${selectableUpgradeIds?.has(card.uid) ? 'alluring-upgrade-selectable' : ''}`}
+                    onClick={beginningEffectIds?.has(card.uid)
+                      ? () => onBeginningEffectSelect?.(card.uid)
+                      : selectableUpgradeIds?.has(card.uid)
+                        ? () => onUpgradeSelect?.(card.uid)
+                        : undefined}
                   >
                   <PlayingCard
                     name={card.name}

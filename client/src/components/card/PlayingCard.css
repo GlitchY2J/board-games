@@ -40,13 +40,13 @@
 }
 
 .playing-card:hover {
-  transform: translateY(-15px) scale(1.12);
+  transform: translateY(-15px) scale(1.12) rotate(2deg);
   box-shadow: 0 0 24px rgba(255, 255, 255, 0.45);
   z-index: 30;
 }
 
 .playing-card.plain:hover {
-  transform: translateY(-4px) scale(1.03);
+  transform: translateY(-4px) scale(1.03) rotate(2deg);
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
 }
 
@@ -106,6 +106,6 @@
     width: 160px;
   }
   .playing-card:hover {
-    transform: translateY(-10px) scale(1.08);
+    transform: translateY(-10px) scale(1.08) rotate(2deg);
   }
 }

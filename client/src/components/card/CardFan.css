@@ -136,7 +136,7 @@
 }
 
 .fan-card:hover {
-  transform: translateY(-35px) scale(1.12) !important;
+  transform: translateY(-35px) scale(1.12) rotate(2deg) !important;
   z-index: 999;
 }
 

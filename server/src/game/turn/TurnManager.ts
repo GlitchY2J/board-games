@@ -89,59 +89,21 @@ export class TurnManager {
 
     const registeredEffect = card.effect ? effects[card.effect] : undefined;
     if (registeredEffect?.onBeginningTurn) {
+      addLog(game, `${activePlayer.name} activó el efecto de inicio de turno de "${card.name}"`, {
+        playerId: activePlayer.id,
+        cardImage: card.image,
+        event: 'beginning-effect',
+      });
       return registeredEffect.onBeginningTurn(game, activePlayer, card) !== false;
     }
 
     return false;
   }
 
-  /** Presenta el siguiente efecto pendiente: si hay 2+, abre el overlay selector; si queda 1, lo arranca. */
-  private static presentNextBeginningEffect(game: GameState): boolean {
-    const q = game.beginningEffectsQueue ?? [];
-    if (q.length === 0) return false;
-
-    const activePlayer = game.players[game.currentPlayer];
-    if (!activePlayer) {
-      game.beginningEffectsQueue = [];
-      return false;
-    }
-
-    if (q.length >= 2) {
-      const cards = [
-        ...activePlayer.stable,
-        ...activePlayer.upgrades,
-        ...activePlayer.downgrades,
-      ];
-      game.pendingAction = {
-        type: 'select_choice',
-        reason: 'beginning_effect_picker',
-        playerId: activePlayer.id,
-        title: '🃏 Efectos de inicio de turno',
-        description:
-          'Tienes varios efectos de inicio de turno disponibles. Elige cuál resolver primero.',
-        options: q.map((uid) => {
-          const card = cards.find((c) => c.uid === uid);
-          return { value: uid, text: card ? card.name : uid };
-        }),
-      };
-      return true;
-    }
-
-    const uid = q[0];
-    if (this.startBeginningEffect(game, uid)) {
-      game.beginningEffectsQueue = q.slice(1);
-      return true;
-    }
-
-    // Efecto obsoleto (la carta ya no está): se descarta y se continúa.
-    game.beginningEffectsQueue = q.slice(1);
-    return this.presentNextBeginningEffect(game);
-  }
-
-  /** Si quedan efectos de inicio de turno pendientes, presenta el siguiente.
+  /** Mantiene la fase abierta hasta que el jugador active o salte sus efectos.
    *  Si no quedan, avanza a la fase de robo. */
   static processBeginningQueue(game: GameState): boolean {
-    if (this.presentNextBeginningEffect(game)) return true;
+    if ((game.beginningEffectsQueue ?? []).length > 0) return true;
 
     game.beginningEffectsQueue = [];
     if (game.phase === TurnPhase.BEGINNING) {
@@ -201,7 +163,7 @@ export class TurnManager {
       return false;
     }
 
-    return this.presentNextBeginningEffect(game);
+    return true;
   }
 
   private static passTurn(game: GameState): void {

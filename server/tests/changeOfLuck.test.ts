@@ -92,8 +92,7 @@ test('Change of Luck: tras descartar 3 cartas, inicia el turno extra y activa lo
   // El turno extra arrancó y activó Glitter Bomb
   assert.equal(state.currentPlayer, 0); // Sigue siendo P1 (turno extra)
   assert.equal(state.phase, TurnPhase.BEGINNING);
-  assert.equal(state.pendingAction?.type, 'select_choice');
-  assert.equal(state.pendingAction?.reason, 'glitter_bomb');
+  assert.deepEqual(state.beginningEffectsQueue, [p1.upgrades[0].uid]);
 });
 
 test('Change of Luck: si no hay efectos de inicio de turno, pasa a DRAW en el turno extra', () => {
